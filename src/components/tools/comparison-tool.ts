@@ -111,6 +111,12 @@ export class ComparisonTool extends BaseComponent {
   private dyeSelectorPanel: CollapsiblePanel | null = null;
   private optionsPanel: CollapsiblePanel | null = null;
 
+  // Mobile drawer components
+  private drawerDyeSelector: DyeSelector | null = null;
+  private drawerDyeSelectorPanel: CollapsiblePanel | null = null;
+  private drawerOptionsPanel: CollapsiblePanel | null = null;
+  private drawerSelectedDyesContainer: HTMLElement | null = null;
+
   // DOM References
   private selectedDyesContainer: HTMLElement | null = null;
   private optionsContainer: HTMLElement | null = null;
@@ -183,7 +189,7 @@ export class ComparisonTool extends BaseComponent {
         this.calculateHSVValues();
         this.updateSelectedDyesDisplay();
         this.updateResults();
-        this.updateDrawerContent();
+        this.updateDrawerSelectedDyesDisplay();
         logger.info(`[ComparisonTool] Loaded ${dyes.length} persisted dyes`);
       }
     }
@@ -202,6 +208,11 @@ export class ComparisonTool extends BaseComponent {
     this.dyeSelector?.destroy();
     this.dyeSelectorPanel?.destroy();
     this.optionsPanel?.destroy();
+
+    // Clean up drawer components
+    this.drawerDyeSelector?.destroy();
+    this.drawerDyeSelectorPanel?.destroy();
+    this.drawerOptionsPanel?.destroy();
 
     this.selectedDyes = [];
     this.dyesWithHSV = [];
@@ -311,7 +322,7 @@ export class ComparisonTool extends BaseComponent {
         this.calculateHSVValues();
         this.updateSelectedDyesDisplay();
         this.updateResults();
-        this.updateDrawerContent();
+        this.updateDrawerSelectedDyesDisplay();
         this.saveSelectedDyes();
       }
     });
@@ -386,7 +397,7 @@ export class ComparisonTool extends BaseComponent {
         this.calculateHSVValues();
         this.updateSelectedDyesDisplay();
         this.updateResults();
-        this.updateDrawerContent();
+        this.updateDrawerSelectedDyesDisplay();
         this.saveSelectedDyes();
       });
 
@@ -811,7 +822,7 @@ export class ComparisonTool extends BaseComponent {
       const dyeName = LanguageService.getDyeName(d.dye.itemID) || d.dye.name;
       const label = this.createElement('div', { className: 'flex-1 text-center min-w-0' });
       label.innerHTML = `
-        <span class="text-xs font-medium block truncate max-w-20 mx-auto" style="color: var(--theme-text);" title="${dyeName}">${dyeName}</span>
+        <span class="text-xs font-medium block truncate max-w-24 md:max-w-20 mx-auto" style="color: var(--theme-text);" title="${dyeName}">${dyeName}</span>
         <span class="text-xs" style="color: var(--theme-text-muted);">${Math.round(d.v)}%</span>
       `;
       labels.appendChild(label);
@@ -844,7 +855,7 @@ export class ComparisonTool extends BaseComponent {
       html += `
         <th class="p-2 text-center">
           <div class="w-6 h-6 rounded mx-auto mb-1" style="background: ${dye.hex};"></div>
-          <span class="text-xs font-normal block truncate max-w-20" style="color: var(--theme-text-muted);">${dyeName}</span>
+          <span class="text-xs font-normal block truncate max-w-16 md:max-w-20" style="color: var(--theme-text-muted);">${dyeName}</span>
         </th>
       `;
     }
@@ -863,7 +874,7 @@ export class ComparisonTool extends BaseComponent {
           <td class="p-2" ${isRowClosest ? 'style="background: var(--theme-background-secondary);"' : ''}>
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded shrink-0" style="background: ${rowDye.hex};"></div>
-              <span class="text-xs truncate max-w-20" style="color: var(--theme-text);">${rowDyeName}</span>
+              <span class="text-xs truncate max-w-16 md:max-w-20" style="color: var(--theme-text);">${rowDyeName}</span>
             </div>
           </td>
       `;
@@ -921,60 +932,239 @@ export class ComparisonTool extends BaseComponent {
 
   private renderDrawerContent(): void {
     if (!this.options.drawerContent) return;
-    this.updateDrawerContent();
-  }
-
-  private updateDrawerContent(): void {
-    if (!this.options.drawerContent) return;
     const drawer = this.options.drawerContent;
     clearContainer(drawer);
 
-    const content = this.createElement('div', { className: 'p-4 space-y-4' });
+    // Clean up previous drawer components
+    this.drawerDyeSelector?.destroy();
+    this.drawerDyeSelectorPanel?.destroy();
+    this.drawerOptionsPanel?.destroy();
+    this.drawerDyeSelector = null;
+    this.drawerDyeSelectorPanel = null;
+    this.drawerOptionsPanel = null;
 
-    // Summary
-    const summary = this.createElement('p', {
-      className: 'text-sm',
-      textContent: `${LanguageService.t('comparison.comparing') || 'Comparing'} ${this.selectedDyes.length} ${LanguageService.t('common.dyes') || 'dyes'}`,
-      attributes: { style: 'color: var(--theme-text-muted);' },
+    // Section 1: Dye Selection (Collapsible)
+    const dyeContainer = this.createElement('div');
+    drawer.appendChild(dyeContainer);
+    this.renderDrawerDyePanel(dyeContainer);
+
+    // Section 2: Options (Collapsible)
+    const optionsContainer = this.createElement('div');
+    drawer.appendChild(optionsContainer);
+    this.renderDrawerOptionsPanel(optionsContainer);
+  }
+
+  /**
+   * Render collapsible Dye Selection panel for mobile drawer
+   */
+  private renderDrawerDyePanel(container: HTMLElement): void {
+    this.drawerDyeSelectorPanel = new CollapsiblePanel(container, {
+      title: LanguageService.t('comparison.compareDyes') || 'Compare Dyes',
+      defaultOpen: true,
+      storageKey: 'v3_comparison_dyes_drawer',
+      icon: ICON_BEAKER,
     });
-    content.appendChild(summary);
+    this.drawerDyeSelectorPanel.init();
 
-    // Selected dyes preview
+    const contentContainer = this.drawerDyeSelectorPanel.getContentContainer();
+    if (contentContainer) {
+      this.renderDrawerDyeSelector(contentContainer);
+    }
+  }
+
+  /**
+   * Render dye selector for mobile drawer
+   */
+  private renderDrawerDyeSelector(container: HTMLElement): void {
+    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+
+    // Selected dyes display
+    this.drawerSelectedDyesContainer = this.createElement('div', {
+      className: 'selected-dyes-display space-y-2',
+    });
+    this.updateDrawerSelectedDyesDisplay();
+    dyeContainer.appendChild(this.drawerSelectedDyesContainer);
+
+    // DyeSelector component
+    const selectorContainer = this.createElement('div');
+    dyeContainer.appendChild(selectorContainer);
+
+    this.drawerDyeSelector = new DyeSelector(selectorContainer, {
+      maxSelections: 4,
+      allowMultiple: true,
+      allowDuplicates: false,
+      showCategories: true,
+      showPrices: false,
+      excludeFacewear: true,
+      showFavorites: true,
+      compactMode: true,
+    });
+    this.drawerDyeSelector.init();
+
+    // Pre-select current dyes
     if (this.selectedDyes.length > 0) {
-      const dyesPreview = this.createElement('div', {
-        className: 'flex gap-2',
-      });
-
-      for (const dye of this.selectedDyes) {
-        const swatch = this.createElement('div', {
-          className: 'w-8 h-8 rounded border',
-          attributes: {
-            style: `background: ${dye.hex}; border-color: var(--theme-border);`,
-            title: LanguageService.getDyeName(dye.itemID) || dye.name,
-          },
-        });
-        dyesPreview.appendChild(swatch);
-      }
-
-      content.appendChild(dyesPreview);
+      this.drawerDyeSelector.setSelectedDyes(this.selectedDyes);
     }
 
-    // Options summary
-    if (this.selectedDyes.length >= 2) {
-      const optionsInfo = this.createElement('div', {
-        className: 'text-xs space-y-1',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      const enabledOptions = [];
-      if (this.comparisonOptions.showDistanceValues) enabledOptions.push('Distance values');
-      if (this.comparisonOptions.highlightClosestPair) enabledOptions.push('Closest pair');
+    // Listen for selection changes
+    selectorContainer.addEventListener('selection-changed', () => {
+      if (this.drawerDyeSelector) {
+        this.selectedDyes = this.drawerDyeSelector.getSelectedDyes();
+        this.calculateHSVValues();
 
-      if (enabledOptions.length > 0) {
-        optionsInfo.textContent = enabledOptions.join(' \u2022 ');
-        content.appendChild(optionsInfo);
+        // Sync desktop selector
+        this.dyeSelector?.setSelectedDyes(this.selectedDyes);
+
+        // Update displays
+        this.updateSelectedDyesDisplay();
+        this.updateDrawerSelectedDyesDisplay();
+        this.updateResults();
+        this.saveSelectedDyes();
       }
+    });
+
+    container.appendChild(dyeContainer);
+  }
+
+  /**
+   * Update the selected dyes display in mobile drawer
+   */
+  private updateDrawerSelectedDyesDisplay(): void {
+    if (!this.drawerSelectedDyesContainer) return;
+    clearContainer(this.drawerSelectedDyesContainer);
+
+    if (this.selectedDyes.length === 0) {
+      // Show placeholder
+      const placeholder = this.createElement('div', {
+        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
+        textContent: LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
+        attributes: {
+          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
+        },
+      });
+      this.drawerSelectedDyesContainer.appendChild(placeholder);
+      return;
     }
 
-    drawer.appendChild(content);
+    // Show selected dyes with remove buttons
+    for (const dye of this.selectedDyes) {
+      const dyeItem = this.createElement('div', {
+        className: 'flex items-center gap-3 p-2 rounded-lg',
+        attributes: { style: 'background: var(--theme-background-secondary);' },
+      });
+
+      const swatch = this.createElement('div', {
+        className: 'w-8 h-8 rounded border flex-shrink-0',
+        attributes: { style: `background: ${dye.hex}; border-color: var(--theme-border);` },
+      });
+
+      const name = this.createElement('span', {
+        className: 'flex-1 text-sm font-medium truncate',
+        textContent: LanguageService.getDyeName(dye.itemID) || dye.name,
+        attributes: { style: 'color: var(--theme-text);' },
+      });
+
+      const removeBtn = this.createElement('button', {
+        className: 'text-xs px-2 py-1 rounded transition-colors flex-shrink-0',
+        textContent: '\u00D7',
+        attributes: {
+          style: 'background: var(--theme-card-hover); color: var(--theme-text-muted);',
+        },
+      });
+
+      this.on(removeBtn, 'click', () => this.handleDrawerRemoveDye(dye));
+
+      dyeItem.appendChild(swatch);
+      dyeItem.appendChild(name);
+      dyeItem.appendChild(removeBtn);
+      this.drawerSelectedDyesContainer.appendChild(dyeItem);
+    }
+  }
+
+  /**
+   * Handle removing a dye from the mobile drawer
+   */
+  private handleDrawerRemoveDye(dye: Dye): void {
+    const newSelection = this.selectedDyes.filter((d) => d.id !== dye.id);
+
+    // Update both selectors
+    this.drawerDyeSelector?.setSelectedDyes(newSelection);
+    this.dyeSelector?.setSelectedDyes(newSelection);
+
+    this.selectedDyes = newSelection;
+    this.calculateHSVValues();
+    this.updateSelectedDyesDisplay();
+    this.updateDrawerSelectedDyesDisplay();
+    this.updateResults();
+    this.saveSelectedDyes();
+  }
+
+  /**
+   * Render collapsible Options panel for mobile drawer
+   */
+  private renderDrawerOptionsPanel(container: HTMLElement): void {
+    this.drawerOptionsPanel = new CollapsiblePanel(container, {
+      title: LanguageService.t('common.options') || 'Options',
+      defaultOpen: true,
+      storageKey: 'v3_comparison_options_drawer',
+      icon: ICON_SETTINGS,
+    });
+    this.drawerOptionsPanel.init();
+
+    const contentContainer = this.drawerOptionsPanel.getContentContainer();
+    if (contentContainer) {
+      this.renderDrawerOptions(contentContainer);
+    }
+  }
+
+  /**
+   * Render option checkboxes in the mobile drawer
+   */
+  private renderDrawerOptions(container: HTMLElement): void {
+    const optionsContainer = this.createElement('div', { className: 'space-y-2' });
+
+    const options = [
+      {
+        key: 'showDistanceValues' as const,
+        label: LanguageService.t('comparison.showDistanceValues') || 'Show Distance Values',
+      },
+      {
+        key: 'highlightClosestPair' as const,
+        label: LanguageService.t('comparison.highlightClosestPair') || 'Highlight Closest Pair',
+      },
+    ];
+
+    for (const option of options) {
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-2 cursor-pointer',
+      });
+
+      const checkbox = this.createElement('input', {
+        attributes: {
+          type: 'checkbox',
+          'data-option': option.key,
+        },
+        className: 'w-4 h-4 rounded',
+      }) as HTMLInputElement;
+      checkbox.checked = this.comparisonOptions[option.key];
+
+      this.on(checkbox, 'change', () => {
+        this.comparisonOptions[option.key] = checkbox.checked;
+        StorageService.setItem(STORAGE_KEYS[option.key], checkbox.checked);
+        this.updateResults();
+      });
+
+      const text = this.createElement('span', {
+        className: 'text-sm',
+        textContent: option.label,
+        attributes: { style: 'color: var(--theme-text);' },
+      });
+
+      label.appendChild(checkbox);
+      label.appendChild(text);
+      optionsContainer.appendChild(label);
+    }
+
+    container.appendChild(optionsContainer);
   }
 }
