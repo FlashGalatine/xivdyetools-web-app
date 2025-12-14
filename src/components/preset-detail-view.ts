@@ -401,7 +401,7 @@ export class PresetDetailView extends BaseComponent {
         className:
           'mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center text-sm text-gray-600 dark:text-gray-400',
       });
-      loginCTA.textContent = 'Login with Discord to vote for this preset';
+      loginCTA.textContent = 'Login with Discord or XIVAuth to vote for this preset';
       container.appendChild(loginCTA);
     }
   }
