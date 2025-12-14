@@ -480,12 +480,14 @@ describe('PaletteExporter', () => {
       });
       component.init();
 
-      const jsonBtn = container.querySelector('[data-export="json"]') as HTMLButtonElement;
+      let jsonBtn = container.querySelector('[data-export="json"]') as HTMLButtonElement;
       expect(jsonBtn.disabled).toBe(false);
 
       isEnabled = false;
       component.update();
 
+      // Re-query after update since DOM is re-rendered
+      jsonBtn = container.querySelector('[data-export="json"]') as HTMLButtonElement;
       expect(jsonBtn.disabled).toBe(true);
     });
   });

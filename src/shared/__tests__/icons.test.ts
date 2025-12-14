@@ -394,6 +394,7 @@ describe('UI Icons', () => {
         'upload',
         'warning',
         'dice',
+        'coins',
       ]);
     });
 

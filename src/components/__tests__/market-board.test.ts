@@ -117,7 +117,8 @@ describe('MarketBoard', () => {
       component = new MarketBoard(container);
       component.init();
 
-      expect(container.textContent).toContain('Market Board');
+      // Note: Title is provided by parent CollapsiblePanel, so we check for content this component renders
+      expect(container.textContent).toContain('Server');
     });
 
     it('should render server selection dropdown', () => {

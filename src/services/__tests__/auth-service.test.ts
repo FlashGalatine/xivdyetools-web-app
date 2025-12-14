@@ -418,6 +418,7 @@ describe('AuthService', () => {
       const futureTime = Math.floor(Date.now() / 1000) + 3600;
       const mockToken = createMockJWT({
         sub: '123456789',
+        discord_id: '123456789',
         username: 'testuser',
         global_name: 'Test User',
         avatar: 'abc123',
@@ -440,6 +441,7 @@ describe('AuthService', () => {
       const futureTime = Math.floor(Date.now() / 1000) + 3600;
       const mockToken = createMockJWT({
         sub: '123456789',
+        discord_id: '123456789',
         username: 'testuser',
         global_name: 'Test User',
         avatar: 'a_animated123',
