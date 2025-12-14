@@ -144,7 +144,9 @@ export class PresetTool extends BaseComponent {
 
   // Child components
   private authButton: AuthButton | null = null;
+  private mobileAuthButton: AuthButton | null = null;
   private collapsiblePanels: CollapsiblePanel[] = [];
+  private mobileCollapsiblePanels: CollapsiblePanel[] = [];
 
   // DOM References
   private categoryContainer: HTMLElement | null = null;
@@ -226,10 +228,15 @@ export class PresetTool extends BaseComponent {
     this.languageUnsubscribe?.();
     this.authUnsubscribe?.();
     this.authButton?.destroy();
+    this.mobileAuthButton?.destroy();
 
-    // Clean up collapsible panels
+    // Clean up collapsible panels (desktop)
     this.collapsiblePanels.forEach(panel => panel.destroy());
     this.collapsiblePanels = [];
+
+    // Clean up mobile collapsible panels
+    this.mobileCollapsiblePanels.forEach(panel => panel.destroy());
+    this.mobileCollapsiblePanels = [];
 
     if (this.searchDebounceTimeout) {
       clearTimeout(this.searchDebounceTimeout);
@@ -927,11 +934,10 @@ export class PresetTool extends BaseComponent {
 
     card.appendChild(meta);
 
-    // Show Edit/Delete buttons for user-owned presets
-    const isOwnPreset = this.currentTab === 'my-submissions' ||
-      (this.authState.isAuthenticated &&
-        this.authState.user &&
-        preset.author === (this.authState.user.global_name || this.authState.user.username));
+    // Show Edit/Delete buttons only in My Submissions tab
+    // This tab only shows the user's own presets (verified by backend)
+    // The API enforces ownership verification on actual edit/delete operations
+    const isOwnPreset = this.currentTab === 'my-submissions';
 
     if (isOwnPreset && preset.isFromAPI && preset.apiPresetId) {
       const actionsRow = this.createElement('div', {
@@ -1226,37 +1232,351 @@ export class PresetTool extends BaseComponent {
   private updateDrawerContent(): void {
     if (!this.options.drawerContent) return;
     const drawer = this.options.drawerContent;
+
+    // Clean up existing mobile panels
+    this.mobileCollapsiblePanels.forEach(panel => panel.destroy());
+    this.mobileCollapsiblePanels = [];
+    this.mobileAuthButton?.destroy();
+    this.mobileAuthButton = null;
+
+    // Preserve nav section if it exists
+    const navSection = drawer.querySelector('[data-drawer-nav]');
     clearContainer(drawer);
+    if (navSection) {
+      drawer.appendChild(navSection);
+    }
 
-    const content = this.createElement('div', { className: 'p-4 space-y-3' });
+    // Section 1: Search (with tabs if authenticated)
+    const searchPanel = new CollapsiblePanel(drawer, {
+      title: LanguageService.t('preset.search') || 'Search',
+      storageKey: 'preset_drawer_search',
+      defaultOpen: true,
+      icon: ICON_SEARCH,
+    });
+    searchPanel.init();
+    this.mobileCollapsiblePanels.push(searchPanel);
+    const searchContent = searchPanel.getContentContainer();
+    if (searchContent) {
+      this.renderMobileSearchAndTabs(searchContent);
+    }
 
-    // Current filters summary
-    const summary = this.createElement('div', {
-      className: 'text-sm space-y-1',
-      attributes: { style: 'color: var(--theme-text-muted);' },
+    // Section 2: Categories
+    const categoriesPanel = new CollapsiblePanel(drawer, {
+      title: LanguageService.t('preset.categoriesTitle') || 'Categories',
+      storageKey: 'preset_drawer_categories',
+      defaultOpen: true,
+      icon: ICON_GRID,
+    });
+    categoriesPanel.init();
+    this.mobileCollapsiblePanels.push(categoriesPanel);
+    const categoriesContent = categoriesPanel.getContentContainer();
+    if (categoriesContent) {
+      this.renderMobileCategories(categoriesContent);
+    }
+
+    // Section 3: Sort Options
+    const sortPanel = new CollapsiblePanel(drawer, {
+      title: LanguageService.t('preset.sortBy') || 'Sort By',
+      storageKey: 'preset_drawer_sort',
+      defaultOpen: true,
+      icon: ICON_SORT,
+    });
+    sortPanel.init();
+    this.mobileCollapsiblePanels.push(sortPanel);
+    const sortContent = sortPanel.getContentContainer();
+    if (sortContent) {
+      this.renderMobileSortOptions(sortContent);
+    }
+
+    // Section 4: Account
+    const accountPanel = new CollapsiblePanel(drawer, {
+      title: LanguageService.t('preset.account') || 'Account',
+      storageKey: 'preset_drawer_account',
+      defaultOpen: true,
+      icon: ICON_USER,
+    });
+    accountPanel.init();
+    this.mobileCollapsiblePanels.push(accountPanel);
+    const accountContent = accountPanel.getContentContainer();
+    if (accountContent) {
+      this.renderMobileAuthSection(accountContent);
+    }
+  }
+
+  /**
+   * Render search input and tab toggle for mobile drawer
+   */
+  private renderMobileSearchAndTabs(container: HTMLElement): void {
+    const wrapper = this.createElement('div', { className: 'space-y-3' });
+
+    // Tab toggle (only shown when authenticated)
+    const tabContainer = this.createElement('div', { className: 'flex gap-2 mb-3' });
+
+    if (this.authState.isAuthenticated) {
+      const browseBtn = this.createElement('button', {
+        className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
+        textContent: LanguageService.t('preset.browse') || 'Browse',
+        attributes: {
+          style: this.currentTab === 'browse'
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        },
+      });
+
+      const mySubmissionsBtn = this.createElement('button', {
+        className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
+        textContent: LanguageService.t('preset.mySubmissions') || 'My Submissions',
+        attributes: {
+          style: this.currentTab === 'my-submissions'
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        },
+      });
+
+      this.on(browseBtn, 'click', () => {
+        this.currentTab = 'browse';
+        StorageService.setItem(STORAGE_KEYS.tab, 'browse');
+        this.updateTabVisibility();
+        this.currentPage = 1;
+        void this.loadPresets();
+        this.updateDrawerContent();
+      });
+
+      this.on(mySubmissionsBtn, 'click', () => {
+        this.currentTab = 'my-submissions';
+        StorageService.setItem(STORAGE_KEYS.tab, 'my-submissions');
+        this.updateTabVisibility();
+        void this.loadUserSubmissions();
+        this.updateDrawerContent();
+      });
+
+      tabContainer.appendChild(browseBtn);
+      tabContainer.appendChild(mySubmissionsBtn);
+      wrapper.appendChild(tabContainer);
+    }
+
+    // Search input with icon
+    const searchWrapper = this.createElement('div', { className: 'relative' });
+
+    const searchIcon = this.createElement('span', {
+      className: 'absolute left-3 top-1/2 -translate-y-1/2 opacity-50',
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+    searchIcon.innerHTML = ICON_SEARCH;
+    searchWrapper.appendChild(searchIcon);
+
+    const searchInput = this.createElement('input', {
+      className: 'w-full pl-10 pr-3 py-2 rounded-lg border text-sm',
+      attributes: {
+        type: 'text',
+        placeholder: LanguageService.t('preset.searchPlaceholder') || 'Search presets...',
+        value: this.searchQuery,
+        style: 'background: var(--theme-background); border-color: var(--theme-border); color: var(--theme-text);',
+      },
+    }) as HTMLInputElement;
+
+    this.on(searchInput, 'input', () => {
+      // Debounce search
+      if (this.searchDebounceTimeout) {
+        clearTimeout(this.searchDebounceTimeout);
+      }
+      this.searchDebounceTimeout = setTimeout(() => {
+        this.searchQuery = searchInput.value || '';
+        this.currentPage = 1;
+        void this.loadPresets();
+        // Also update the desktop search input if present
+        if (this.searchInput && this.searchInput !== searchInput) {
+          this.searchInput.value = this.searchQuery;
+        }
+      }, 300);
     });
 
-    const categoryLabel = CATEGORIES.find(c => c.id === this.selectedCategory);
-    const sortLabel = SORT_OPTIONS.find(s => s.id === this.sortBy);
+    searchWrapper.appendChild(searchInput);
+    wrapper.appendChild(searchWrapper);
 
-    summary.innerHTML = `
-      <p><strong>${LanguageService.t('preset.category') || 'Category'}:</strong> ${categoryLabel ? (LanguageService.t(categoryLabel.labelKey) || categoryLabel.fallback) : this.selectedCategory}</p>
-      <p><strong>${LanguageService.t('preset.sortBy') || 'Sort'}:</strong> ${sortLabel ? (LanguageService.t(sortLabel.labelKey) || sortLabel.fallback) : this.sortBy}</p>
-      ${this.searchQuery ? `<p><strong>${LanguageService.t('preset.search') || 'Search'}:</strong> ${this.searchQuery}</p>` : ''}
-      ${this.authState.isAuthenticated ? `<p><strong>${LanguageService.t('preset.tab') || 'Tab'}:</strong> ${this.currentTab === 'browse' ? 'Browse' : 'My Submissions'}</p>` : ''}
-    `;
-    content.appendChild(summary);
+    container.appendChild(wrapper);
+  }
 
-    // Auth status
-    const authStatus = this.createElement('div', {
-      className: 'pt-3 border-t text-sm',
-      attributes: { style: 'border-color: var(--theme-border); color: var(--theme-text);' },
+  /**
+   * Render category filters for mobile drawer
+   */
+  private renderMobileCategories(container: HTMLElement): void {
+    const categoryWrapper = this.createElement('div', { className: 'space-y-1' });
+
+    CATEGORIES.forEach(cat => {
+      const isSelected = this.selectedCategory === cat.id;
+      const btn = this.createElement('button', {
+        className: 'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
+        textContent: LanguageService.t(cat.labelKey) || cat.fallback,
+        attributes: {
+          style: isSelected
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: transparent; color: var(--theme-text);',
+        },
+      });
+
+      this.on(btn, 'click', () => {
+        this.selectedCategory = cat.id;
+        StorageService.setItem(STORAGE_KEYS.category, cat.id);
+        this.updateCategoryButtons();
+        this.currentPage = 1;
+        void this.loadPresets();
+        this.updateDrawerContent();
+      });
+
+      categoryWrapper.appendChild(btn);
     });
-    authStatus.innerHTML = this.authState.isAuthenticated
-      ? `✓ ${LanguageService.t('auth.loggedInAs') || 'Logged in as'} ${this.authState.user?.global_name || this.authState.user?.username}`
-      : `○ ${LanguageService.t('auth.notLoggedIn') || 'Not logged in'}`;
-    content.appendChild(authStatus);
 
-    drawer.appendChild(content);
+    container.appendChild(categoryWrapper);
+  }
+
+  /**
+   * Render sort options for mobile drawer
+   */
+  private renderMobileSortOptions(container: HTMLElement): void {
+    const sortWrapper = this.createElement('div', { className: 'space-y-2' });
+
+    SORT_OPTIONS.forEach(opt => {
+      const isSelected = this.sortBy === opt.id;
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-2 cursor-pointer',
+      });
+
+      const radio = this.createElement('input', {
+        className: 'w-4 h-4',
+        attributes: {
+          type: 'radio',
+          name: 'mobile-preset-sort',
+          value: opt.id,
+          ...(isSelected && { checked: 'checked' }),
+        },
+      }) as HTMLInputElement;
+
+      this.on(radio, 'change', () => {
+        this.sortBy = opt.id;
+        StorageService.setItem(STORAGE_KEYS.sortBy, opt.id);
+        this.currentPage = 1;
+        void this.loadPresets();
+        // Update desktop sort options if present
+        if (this.sortContainer) {
+          const desktopRadios = this.sortContainer.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+          desktopRadios.forEach(r => {
+            r.checked = r.value === opt.id;
+          });
+        }
+        this.updateDrawerContent();
+      });
+
+      const text = this.createElement('span', {
+        className: 'text-sm',
+        textContent: LanguageService.t(opt.labelKey) || opt.fallback,
+        attributes: { style: 'color: var(--theme-text);' },
+      });
+
+      label.appendChild(radio);
+      label.appendChild(text);
+      sortWrapper.appendChild(label);
+    });
+
+    container.appendChild(sortWrapper);
+  }
+
+  /**
+   * Render auth section for mobile drawer
+   */
+  private renderMobileAuthSection(container: HTMLElement): void {
+    const wrapper = this.createElement('div', { className: 'space-y-3' });
+
+    if (this.authState.isAuthenticated && this.authState.user) {
+      // Logged in state
+      const userCard = this.createElement('div', {
+        className: 'flex items-center gap-3 p-3 rounded-lg',
+        attributes: { style: 'background: var(--theme-background-secondary);' },
+      });
+
+      // Avatar
+      const avatar = this.createElement('div', {
+        className: 'w-10 h-10 rounded-full flex items-center justify-center text-white font-medium',
+        attributes: { style: 'background: var(--theme-primary);' },
+      });
+
+      if (this.authState.user.avatar_url) {
+        const img = this.createElement('img', {
+          className: 'w-full h-full rounded-full object-cover',
+          attributes: {
+            src: this.authState.user.avatar_url,
+            alt: this.authState.user.global_name || this.authState.user.username,
+          },
+        });
+        avatar.appendChild(img);
+      } else {
+        avatar.textContent = (this.authState.user.global_name || this.authState.user.username).charAt(0).toUpperCase();
+      }
+
+      userCard.appendChild(avatar);
+
+      // User info
+      const userInfo = this.createElement('div', { className: 'flex-1' });
+      const userName = this.createElement('p', {
+        className: 'text-sm font-medium',
+        textContent: this.authState.user.global_name || this.authState.user.username,
+        attributes: { style: 'color: var(--theme-text);' },
+      });
+      const submissionCount = this.createElement('p', {
+        className: 'text-xs',
+        textContent: `${this.userSubmissions.length} ${LanguageService.t('preset.submissions') || 'submissions'}`,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      userInfo.appendChild(userName);
+      userInfo.appendChild(submissionCount);
+      userCard.appendChild(userInfo);
+
+      wrapper.appendChild(userCard);
+
+      // Submit Preset button
+      const submitBtn = this.createElement('button', {
+        className: 'w-full px-3 py-2 text-sm rounded-lg',
+        textContent: `+ ${LanguageService.t('preset.submitPreset') || 'Submit Preset'}`,
+        attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);' },
+      });
+      this.on(submitBtn, 'click', () => {
+        showPresetSubmissionForm((result) => {
+          if (result.success) {
+            void this.loadUserSubmissions();
+            void this.loadPresets();
+          }
+        });
+      });
+      wrapper.appendChild(submitBtn);
+
+      // Logout button
+      const logoutBtn = this.createElement('button', {
+        className: 'w-full px-3 py-2 text-sm rounded-lg text-red-500',
+        textContent: LanguageService.t('auth.logout') || 'Logout',
+        attributes: {
+          style: 'background: transparent; border: 1px solid var(--theme-border);',
+        },
+      });
+      this.on(logoutBtn, 'click', async () => {
+        await authService.logout();
+      });
+      wrapper.appendChild(logoutBtn);
+    } else {
+      // Logged out state
+      const message = this.createElement('p', {
+        className: 'text-sm mb-3',
+        textContent: LanguageService.t('preset.loginPrompt') || 'Log in to submit presets and vote',
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      wrapper.appendChild(message);
+
+      // Auth button
+      const authContainer = this.createElement('div');
+      this.mobileAuthButton = new AuthButton(authContainer, { returnTool: 'presets' });
+      this.mobileAuthButton.init();
+      wrapper.appendChild(authContainer);
+    }
+
+    container.appendChild(wrapper);
   }
 }
