@@ -381,7 +381,9 @@ export class PresetDetailView extends BaseComponent {
               'dark:text-green-300'
             );
             voteIcon.innerHTML = '✓';
-            voteText.textContent = `Voted (${result.vote_count})`;
+            // Use result.vote_count if available, otherwise fall back to preset's voteCount
+            const voteCount = result.vote_count ?? this.preset.voteCount;
+            voteText.textContent = `Voted (${voteCount})`;
           }
         });
       }
