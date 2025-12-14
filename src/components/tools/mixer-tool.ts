@@ -1449,28 +1449,60 @@ export class MixerTool extends BaseComponent {
   // ============================================================================
 
   /**
+   * Get an active MarketBoard instance that has showPrices enabled.
+   * This handles the case where prices are enabled on mobile vs desktop.
+   */
+  private getActiveMarketBoard(): MarketBoard | null {
+    // Check desktop MarketBoard first
+    if (this.marketBoard?.getShowPrices()) {
+      return this.marketBoard;
+    }
+    // Fall back to mobile MarketBoard
+    if (this.mobileMarketBoard?.getShowPrices()) {
+      return this.mobileMarketBoard;
+    }
+    // If showPrices is enabled but neither MarketBoard reports it,
+    // use desktop as fallback (this handles the case where the event
+    // was just fired and the MarketBoard state is in sync)
+    if (this.showPrices && this.marketBoard) {
+      return this.marketBoard;
+    }
+    if (this.showPrices && this.mobileMarketBoard) {
+      return this.mobileMarketBoard;
+    }
+    return null;
+  }
+
+  /**
    * Fetch prices for all displayed dyes (start, end, and intermediate matches)
    */
   private async fetchPricesForDisplayedDyes(): Promise<void> {
-    if (!this.showPrices || !this.marketBoard) {
+    if (!this.showPrices) {
+      return;
+    }
+
+    // Get whichever MarketBoard instance is active (desktop or mobile)
+    const activeMarketBoard = this.getActiveMarketBoard();
+    if (!activeMarketBoard) {
+      logger.warn('[MixerTool] No active MarketBoard found for price fetching');
       return;
     }
 
     const dyesToFetch: Dye[] = [];
 
     // Add start dye if selected
-    if (this.startDye && this.marketBoard.shouldFetchPrice(this.startDye)) {
+    if (this.startDye && activeMarketBoard.shouldFetchPrice(this.startDye)) {
       dyesToFetch.push(this.startDye);
     }
 
     // Add end dye if selected
-    if (this.endDye && this.marketBoard.shouldFetchPrice(this.endDye)) {
+    if (this.endDye && activeMarketBoard.shouldFetchPrice(this.endDye)) {
       dyesToFetch.push(this.endDye);
     }
 
     // Add intermediate dyes from interpolation steps
     for (const step of this.currentSteps) {
-      if (step.matchedDye && this.marketBoard.shouldFetchPrice(step.matchedDye)) {
+      if (step.matchedDye && activeMarketBoard.shouldFetchPrice(step.matchedDye)) {
         // Avoid duplicates
         if (!dyesToFetch.some((d) => d.id === step.matchedDye!.id)) {
           dyesToFetch.push(step.matchedDye);
@@ -1480,7 +1512,7 @@ export class MixerTool extends BaseComponent {
 
     if (dyesToFetch.length > 0) {
       try {
-        const prices = await this.marketBoard.fetchPricesForDyes(dyesToFetch);
+        const prices = await activeMarketBoard.fetchPricesForDyes(dyesToFetch);
         this.priceData = prices;
         logger.info(`[MixerTool] Fetched prices for ${prices.size} dyes`);
       } catch (error) {
