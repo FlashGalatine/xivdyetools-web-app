@@ -131,6 +131,13 @@
     "selectColorPrompt": "Grundfarbe auswählen",
     "selectColorMessage": "Gib eine Hex-Farbe ein oder wähle einen Farbstoff, um Harmonien zu generieren.",
     "selectColorAction": "Farbe eingeben",
+    "base": "Basis",
+    "harmony": "Harmonie",
+    "fromIdeal": "vom Ideal",
+    "closestDyes": "Nächste Farben:",
+    "acquisition": "Beschaffung",
+    "baseDye": "Basis-Farbstoff",
+    "harmonyType": "Harmonie-Typ",
     "types": {
       "complementaryDesc": "Farben, die sich im Farbkreis direkt gegenüberliegen, für maximalen Kontrast",
       "analogousDesc": "Benachbarte Farben im Farbkreis für ein harmonisches, einheitliches Erscheinungsbild",

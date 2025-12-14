@@ -127,6 +127,13 @@
     "selectColorPrompt": "选择基础颜色",
     "selectColorMessage": "输入十六进制颜色或选择染剂以生成和谐配色。",
     "selectColorAction": "输入颜色",
+    "base": "基础",
+    "harmony": "和谐",
+    "fromIdeal": "与理想值差距",
+    "closestDyes": "相近染剂：",
+    "acquisition": "获取方式",
+    "baseDye": "基础染剂",
+    "harmonyType": "和谐类型",
     "types": {
       "complementaryDesc": "色轮上正对面的颜色，实现最大对比度",
       "analogousDesc": "色轮上相邻的颜色，营造和谐统一的外观",

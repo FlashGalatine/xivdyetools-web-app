@@ -131,6 +131,13 @@
     "selectColorPrompt": "ベースカラーを選択",
     "selectColorMessage": "Hexカラーを入力するか、カララントを選択してハーモニーを生成します。",
     "selectColorAction": "カラーを入力",
+    "base": "ベース",
+    "harmony": "ハーモニー",
+    "fromIdeal": "理想との差",
+    "closestDyes": "近いカララント：",
+    "acquisition": "入手方法",
+    "baseDye": "ベースカララント",
+    "harmonyType": "ハーモニータイプ",
     "types": {
       "complementaryDesc": "カラーホイールで正反対の色、最大コントラストを実現",
       "analogousDesc": "カラーホイール上で隣接する色、調和のとれた統一感",

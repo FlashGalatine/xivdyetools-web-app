@@ -127,6 +127,13 @@
     "selectColorPrompt": "Sélectionnez une couleur de base",
     "selectColorMessage": "Entrez une couleur hex ou choisissez une teinture pour générer des harmonies.",
     "selectColorAction": "Entrer la couleur",
+    "base": "Base",
+    "harmony": "Harmonie",
+    "fromIdeal": "de l'idéal",
+    "closestDyes": "Teintures proches :",
+    "acquisition": "Acquisition",
+    "baseDye": "Teinture de base",
+    "harmonyType": "Type d'harmonie",
     "types": {
       "complementaryDesc": "Couleurs directement opposées sur le cercle chromatique pour un contraste maximal",
       "analogousDesc": "Couleurs adjacentes sur le cercle pour un aspect harmonieux et unifié",

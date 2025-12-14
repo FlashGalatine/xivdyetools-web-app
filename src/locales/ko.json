@@ -127,6 +127,13 @@
     "selectColorPrompt": "기본 색상 선택",
     "selectColorMessage": "Hex 색상을 입력하거나 염료를 선택하여 조화를 생성하세요.",
     "selectColorAction": "색상 입력",
+    "base": "기본",
+    "harmony": "하모니",
+    "fromIdeal": "이상과의 차이",
+    "closestDyes": "유사 염료:",
+    "acquisition": "획득 방법",
+    "baseDye": "기본 염료",
+    "harmonyType": "하모니 타입",
     "types": {
       "complementaryDesc": "색상환에서 정반대에 위치한 색상으로 최대 대비 효과",
       "analogousDesc": "색상환에서 인접한 색상으로 조화롭고 통일된 느낌",
