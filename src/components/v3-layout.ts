@@ -109,7 +109,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
     switch (toolId) {
       case 'harmony': {
         // Phase 2: Production HarmonyTool
-        const { HarmonyTool } = await import('@components/tools/harmony-tool');
+        const { HarmonyTool } = await import('@components/harmony-tool');
         const toolContainer = document.createElement('div');
         activeTool = new HarmonyTool(toolContainer, {
           leftPanel,
@@ -122,7 +122,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'matcher': {
         // Phase 3: Production MatcherTool
-        const { MatcherTool } = await import('@components/tools/matcher-tool');
+        const { MatcherTool } = await import('@components/matcher-tool');
         const toolContainer = document.createElement('div');
         activeTool = new MatcherTool(toolContainer, {
           leftPanel,
@@ -135,7 +135,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'accessibility': {
         // Phase 4: Production AccessibilityTool
-        const { AccessibilityTool } = await import('@components/tools/accessibility-tool');
+        const { AccessibilityTool } = await import('@components/accessibility-tool');
         const toolContainer = document.createElement('div');
         activeTool = new AccessibilityTool(toolContainer, {
           leftPanel,
@@ -148,7 +148,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'comparison': {
         // Phase 5: Production ComparisonTool
-        const { ComparisonTool } = await import('@components/tools/comparison-tool');
+        const { ComparisonTool } = await import('@components/comparison-tool');
         const toolContainer = document.createElement('div');
         activeTool = new ComparisonTool(toolContainer, {
           leftPanel,
@@ -161,7 +161,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'mixer': {
         // Phase 6: Production MixerTool
-        const { MixerTool } = await import('@components/tools/mixer-tool');
+        const { MixerTool } = await import('@components/mixer-tool');
         const toolContainer = document.createElement('div');
         activeTool = new MixerTool(toolContainer, {
           leftPanel,
@@ -174,7 +174,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'presets': {
         // Phase 7: Production PresetTool
-        const { PresetTool } = await import('@components/tools/preset-tool');
+        const { PresetTool } = await import('@components/preset-tool');
         const toolContainer = document.createElement('div');
         activeTool = new PresetTool(toolContainer, {
           leftPanel,
@@ -187,7 +187,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'budget': {
         // Phase 8: Production BudgetTool
-        const { BudgetTool } = await import('@components/tools/budget-tool');
+        const { BudgetTool } = await import('@components/budget-tool');
         const toolContainer = document.createElement('div');
         activeTool = new BudgetTool(toolContainer, {
           leftPanel,

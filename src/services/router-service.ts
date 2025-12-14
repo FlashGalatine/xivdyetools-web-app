@@ -57,7 +57,7 @@ export const ROUTES: RouteDefinition[] = [
 /**
  * Query parameters to preserve across navigation
  */
-const PRESERVED_PARAMS = ['dc', 'dye', 'ui'];
+const PRESERVED_PARAMS = ['dc', 'dye'];
 
 // ============================================================================
 // Router Service

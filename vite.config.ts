@@ -36,33 +36,8 @@ export default defineConfig({
             }
           }
 
-          // Split tool components into separate chunks (lazy-loaded)
-          // Each tool loads independently when user selects it
-          if (
-            id.includes('src/components/harmony-generator-tool.ts') ||
-            id.includes('src/components/harmony-type.ts') ||
-            id.includes('src/components/color-wheel-display.ts')
-          ) {
-            return 'tool-harmony';
-          }
-          if (
-            id.includes('src/components/color-matcher-tool.ts') ||
-            id.includes('src/components/image-upload-display.ts')
-          ) {
-            return 'tool-matcher';
-          }
-          if (id.includes('src/components/accessibility-checker-tool.ts')) {
-            return 'tool-accessibility';
-          }
-          if (
-            id.includes('src/components/dye-comparison-tool.ts') ||
-            id.includes('src/components/dye-comparison-chart.ts')
-          ) {
-            return 'tool-comparison';
-          }
-          if (id.includes('src/components/dye-mixer-tool.ts')) {
-            return 'tool-mixer';
-          }
+          // V3 tools are dynamically imported in v3-layout.ts
+          // Vite automatically creates separate chunks for them
 
           // Modal chunks (lazy-loaded, only shown once per user typically)
           if (

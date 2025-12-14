@@ -22,8 +22,6 @@ export { DyeService, dyeService } from './dye-service-wrapper';
 export { StorageService, appStorage, NamespacedStorage, SecureStorage } from './storage-service';
 export { ThemeService };
 export { LanguageService };
-export { FeatureFlagService } from './feature-flag-service';
-export type { UIVersion, FeatureFlagState } from './feature-flag-service';
 export { RouterService, ROUTES } from './router-service';
 export type { ToolId, RouteDefinition, RouteState } from './router-service';
 export { APIService, apiService } from './api-service-wrapper';
