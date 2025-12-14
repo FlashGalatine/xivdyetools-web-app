@@ -255,7 +255,10 @@
     "somewhatSimilar": "Ähnlich - einige Benutzer könnten Schwierigkeiten beim Unterscheiden haben",
     "redGreenWarning": "Rot-Grün-Farbenblinde könnten diese als andere Farbe wahrnehmen",
     "tritanopiaWarning": "Für Tritanopie (Blau-Gelb-Farbenblindheit) möglicherweise schwer sichtbar",
-    "achromatopsiaWarning": "Für vollständige Farbenblindheit möglicherweise schwer sichtbar"
+    "achromatopsiaWarning": "Für vollständige Farbenblindheit möglicherweise schwer sichtbar",
+    "dyesSelected": "Farbstoffe ausgewählt",
+    "visionTypesEnabled": "Sehtypen aktiviert",
+    "selectTwoDyes": "Wähle mindestens 2 Farbstoffe für Vergleiche"
   },
   "comparison": {
     "selectDyes": "Farbstoffe zum Vergleichen auswählen",

@@ -164,11 +164,17 @@ export class AccessibilityTool extends BaseComponent {
   private dyeResults: DyeAccessibilityResult[] = [];
   private pairResults: DyePairResult[] = [];
 
-  // Child components
+  // Child components (Desktop)
   private dyeSelector: DyeSelector | null = null;
   private dyePanel: CollapsiblePanel | null = null;
   private visionPanel: CollapsiblePanel | null = null;
   private displayPanel: CollapsiblePanel | null = null;
+
+  // Child components (Mobile Drawer) - separate instances for drawer vs desktop
+  private drawerDyeSelector: DyeSelector | null = null;
+  private drawerDyePanel: CollapsiblePanel | null = null;
+  private drawerVisionPanel: CollapsiblePanel | null = null;
+  private drawerDisplayPanel: CollapsiblePanel | null = null;
 
   // DOM References
   private visionTogglesContainer: HTMLElement | null = null;
@@ -230,10 +236,18 @@ export class AccessibilityTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+
+    // Destroy desktop components
     this.dyeSelector?.destroy();
     this.dyePanel?.destroy();
     this.visionPanel?.destroy();
     this.displayPanel?.destroy();
+
+    // Destroy drawer components
+    this.drawerDyeSelector?.destroy();
+    this.drawerDyePanel?.destroy();
+    this.drawerVisionPanel?.destroy();
+    this.drawerDisplayPanel?.destroy();
 
     this.selectedDyes = [];
     this.dyeResults = [];
@@ -806,39 +820,44 @@ export class AccessibilityTool extends BaseComponent {
       return;
     }
 
+    // Wrapper for scroll shadow effect on mobile
+    const matrixWrapper = this.createElement('div', {
+      className: 'relative',
+    });
+
     const matrix = this.createElement('div', {
-      className: 'rounded-lg p-4 overflow-x-auto',
+      className: 'rounded-lg p-3 sm:p-4 overflow-x-auto',
       attributes: {
         style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
       },
     });
 
-    // Build table HTML
-    let html = '<table class="w-full text-sm"><thead><tr><th></th>';
+    // Build table HTML with responsive sizing
+    let html = '<table class="w-full text-sm min-w-max"><thead><tr><th></th>';
 
-    // Column headers
+    // Column headers - larger swatches on mobile for better touch targets
     for (const dye of this.selectedDyes) {
       const dyeName = LanguageService.getDyeName(dye.itemID) || dye.name;
       html += `
-        <th class="p-2 text-center">
-          <div class="w-6 h-6 rounded mx-auto mb-1" style="background: ${dye.hex};"></div>
-          <span class="text-xs font-normal block truncate max-w-20" style="color: var(--theme-text-muted);">${dyeName}</span>
+        <th class="p-2 text-center min-w-[70px]">
+          <div class="w-8 h-8 rounded mx-auto mb-1" style="background: ${dye.hex};"></div>
+          <span class="text-xs font-normal block truncate max-w-[60px] sm:max-w-20 mx-auto" style="color: var(--theme-text-muted);">${dyeName}</span>
         </th>
       `;
     }
     html += '</tr></thead><tbody>';
 
-    // Data rows
+    // Data rows - improved for mobile with larger touch targets
     for (let i = 0; i < this.selectedDyes.length; i++) {
       const rowDye = this.selectedDyes[i];
       const rowDyeName = LanguageService.getDyeName(rowDye.itemID) || rowDye.name;
 
       html += `
         <tr>
-          <td class="p-2">
+          <td class="p-2 sticky left-0" style="background: var(--theme-card-background);">
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded shrink-0" style="background: ${rowDye.hex};"></div>
-              <span class="text-xs truncate max-w-20" style="color: var(--theme-text);">${rowDyeName}</span>
+              <div class="w-8 h-8 rounded shrink-0" style="background: ${rowDye.hex};"></div>
+              <span class="text-xs truncate max-w-[60px] sm:max-w-20" style="color: var(--theme-text);">${rowDyeName}</span>
             </div>
           </td>
       `;
@@ -887,54 +906,367 @@ export class AccessibilityTool extends BaseComponent {
     }
 
     matrix.innerHTML = html;
-    this.matrixContainer.appendChild(matrix);
+    matrixWrapper.appendChild(matrix);
+    this.matrixContainer.appendChild(matrixWrapper);
   }
 
   // ============================================================================
   // Mobile Drawer Content
   // ============================================================================
 
+  /**
+   * Render full interactive configuration controls in the mobile drawer
+   * Mirrors the left panel configuration but uses drawer-specific component instances
+   */
   private renderDrawerContent(): void {
-    if (!this.options.drawerContent) return;
-    this.updateDrawerContent();
-  }
-
-  private updateDrawerContent(): void {
     if (!this.options.drawerContent) return;
     const drawer = this.options.drawerContent;
     clearContainer(drawer);
 
-    const content = this.createElement('div', { className: 'p-4 space-y-4' });
+    // Destroy existing drawer components before re-rendering
+    this.drawerDyeSelector?.destroy();
+    this.drawerDyePanel?.destroy();
+    this.drawerVisionPanel?.destroy();
+    this.drawerDisplayPanel?.destroy();
 
-    // Summary
-    const summary = this.createElement('p', {
-      className: 'text-sm',
-      textContent: `${this.selectedDyes.length} ${LanguageService.t('accessibility.dyesSelected') || 'dyes selected'}, ${this.enabledVisionTypes.size} ${LanguageService.t('accessibility.visionTypesEnabled') || 'vision types enabled'}`,
-      attributes: { style: 'color: var(--theme-text-muted);' },
+    // Section 1: Dye Selection (Collapsible)
+    const dyeContainer = this.createElement('div');
+    drawer.appendChild(dyeContainer);
+    this.renderDrawerDyePanel(dyeContainer);
+
+    // Section 2: Vision Types (Collapsible)
+    const visionContainer = this.createElement('div');
+    drawer.appendChild(visionContainer);
+    this.renderDrawerVisionPanel(visionContainer);
+
+    // Section 3: Display Options (Collapsible)
+    const displayContainer = this.createElement('div');
+    drawer.appendChild(displayContainer);
+    this.renderDrawerDisplayPanel(displayContainer);
+  }
+
+  /**
+   * Render collapsible Dye Selection panel for mobile drawer
+   */
+  private renderDrawerDyePanel(container: HTMLElement): void {
+    this.drawerDyePanel = new CollapsiblePanel(container, {
+      title: LanguageService.t('accessibility.inspectDyes') || 'Inspect Dyes',
+      defaultOpen: true,
+      storageKey: 'accessibility_dyes_drawer',
+      icon: ICON_BEAKER,
     });
-    content.appendChild(summary);
+    this.drawerDyePanel.init();
 
-    // Selected dyes preview
+    const contentContainer = this.drawerDyePanel.getContentContainer();
+    if (contentContainer) {
+      this.renderDrawerDyeSelector(contentContainer);
+    }
+  }
+
+  /**
+   * Render dye selector for mobile drawer
+   */
+  private renderDrawerDyeSelector(container: HTMLElement): void {
+    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+
+    // Current selection display
+    const selectedDisplay = this.createElement('div', {
+      className: 'drawer-selected-dyes-display space-y-2',
+    });
+    this.updateDrawerSelectedDyesDisplay(selectedDisplay);
+    dyeContainer.appendChild(selectedDisplay);
+
+    // Dye selector component
+    const selectorContainer = this.createElement('div');
+    dyeContainer.appendChild(selectorContainer);
+
+    this.drawerDyeSelector = new DyeSelector(selectorContainer, {
+      maxSelections: 4,
+      allowMultiple: true,
+      allowDuplicates: false,
+      showCategories: true,
+      showPrices: false,
+      excludeFacewear: true,
+      showFavorites: true,
+      compactMode: true,
+    });
+    this.drawerDyeSelector.init();
+
+    // Pre-select persisted dyes if available
     if (this.selectedDyes.length > 0) {
-      const dyesPreview = this.createElement('div', {
-        className: 'flex gap-2',
-      });
-
-      for (const dye of this.selectedDyes) {
-        const swatch = this.createElement('div', {
-          className: 'w-8 h-8 rounded border',
-          attributes: {
-            style: `background: ${dye.hex}; border-color: var(--theme-border);`,
-            title: LanguageService.getDyeName(dye.itemID) || dye.name,
-          },
-        });
-        dyesPreview.appendChild(swatch);
-      }
-
-      content.appendChild(dyesPreview);
+      this.drawerDyeSelector.setSelectedDyes(this.selectedDyes);
     }
 
-    drawer.appendChild(content);
+    // Listen for dye selection changes
+    selectorContainer.addEventListener('selection-changed', () => {
+      if (this.drawerDyeSelector) {
+        this.selectedDyes = this.drawerDyeSelector.getSelectedDyes();
+        // Save selected dye IDs to localStorage
+        const dyeIds = this.selectedDyes.map((d) => d.id);
+        StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+
+        // Sync desktop selector if it exists
+        this.dyeSelector?.setSelectedDyes(this.selectedDyes);
+
+        // Update displays
+        this.updateDrawerSelectedDyesDisplay(selectedDisplay);
+        this.updateResults();
+        logger.info(`[AccessibilityTool] Drawer: Selected ${this.selectedDyes.length} dyes`);
+      }
+    });
+
+    container.appendChild(dyeContainer);
+  }
+
+  /**
+   * Update the selected dyes display in mobile drawer
+   */
+  private updateDrawerSelectedDyesDisplay(container: HTMLElement): void {
+    clearContainer(container);
+
+    if (this.selectedDyes.length === 0) {
+      const placeholder = this.createElement('div', {
+        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
+        textContent: LanguageService.t('accessibility.selectDyesToSeeAnalysis'),
+        attributes: {
+          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
+        },
+      });
+      container.appendChild(placeholder);
+      return;
+    }
+
+    for (const dye of this.selectedDyes) {
+      const dyeItem = this.createElement('div', {
+        className: 'flex items-center gap-3 p-2 rounded-lg',
+        attributes: { style: 'background: var(--theme-background-secondary);' },
+      });
+
+      const swatch = this.createElement('div', {
+        className: 'w-8 h-8 rounded border',
+        attributes: {
+          style: `background: ${dye.hex}; border-color: var(--theme-border);`,
+        },
+      });
+
+      const name = this.createElement('span', {
+        className: 'flex-1 text-sm font-medium truncate',
+        textContent: LanguageService.getDyeName(dye.itemID) || dye.name,
+        attributes: { style: 'color: var(--theme-text);' },
+      });
+
+      const removeBtn = this.createElement('button', {
+        className: 'text-xs px-2 py-1 rounded transition-colors',
+        textContent: LanguageService.t('common.remove') || 'Remove',
+        attributes: {
+          style: 'background: var(--theme-card-hover); color: var(--theme-text-muted);',
+        },
+      });
+
+      this.on(removeBtn, 'click', () => {
+        // Filter out this dye and update the selector
+        const newSelection = this.selectedDyes.filter((d) => d.id !== dye.id);
+        this.drawerDyeSelector?.setSelectedDyes(newSelection);
+        this.dyeSelector?.setSelectedDyes(newSelection);
+        this.selectedDyes = newSelection;
+        // Save updated selection to localStorage
+        const dyeIds = newSelection.map((d) => d.id);
+        StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+        this.updateDrawerSelectedDyesDisplay(container);
+        this.updateResults();
+      });
+
+      dyeItem.appendChild(swatch);
+      dyeItem.appendChild(name);
+      dyeItem.appendChild(removeBtn);
+      container.appendChild(dyeItem);
+    }
+  }
+
+  /**
+   * Render collapsible Vision Types panel for mobile drawer
+   */
+  private renderDrawerVisionPanel(container: HTMLElement): void {
+    this.drawerVisionPanel = new CollapsiblePanel(container, {
+      title: LanguageService.t('accessibility.visionTypes') || 'Vision Types',
+      defaultOpen: true,
+      storageKey: 'accessibility_vision_drawer',
+      icon: ICON_EYE,
+    });
+    this.drawerVisionPanel.init();
+
+    const contentContainer = this.drawerVisionPanel.getContentContainer();
+    if (contentContainer) {
+      this.renderDrawerVisionToggles(contentContainer);
+    }
+  }
+
+  /**
+   * Render vision type toggles for mobile drawer
+   */
+  private renderDrawerVisionToggles(container: HTMLElement): void {
+    const togglesContainer = this.createElement('div', { className: 'space-y-2' });
+
+    for (const type of VISION_TYPES) {
+      const isEnabled = this.enabledVisionTypes.has(type.id);
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-3 cursor-pointer',
+      });
+
+      const checkbox = this.createElement('input', {
+        attributes: {
+          type: 'checkbox',
+          'data-vision-type': type.id,
+        },
+        className: 'w-4 h-4 rounded',
+      }) as HTMLInputElement;
+      checkbox.checked = isEnabled;
+
+      this.on(checkbox, 'change', () => {
+        if (checkbox.checked) {
+          this.enabledVisionTypes.add(type.id);
+        } else {
+          this.enabledVisionTypes.delete(type.id);
+        }
+        StorageService.setItem(STORAGE_KEYS.enabledVisionTypes, Array.from(this.enabledVisionTypes));
+
+        // Sync desktop checkboxes
+        this.syncDesktopVisionCheckboxes();
+
+        this.updateResults();
+      });
+
+      const textContainer = this.createElement('div', { className: 'flex-1' });
+      const typeName = this.createElement('p', {
+        className: 'text-sm font-medium',
+        textContent: LanguageService.getVisionType(type.localeKey),
+        attributes: { style: 'color: var(--theme-text);' },
+      });
+      const typePrevalence = this.createElement('p', {
+        className: 'text-xs',
+        textContent: type.prevalence,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      textContainer.appendChild(typeName);
+      textContainer.appendChild(typePrevalence);
+
+      label.appendChild(checkbox);
+      label.appendChild(textContainer);
+      togglesContainer.appendChild(label);
+    }
+
+    container.appendChild(togglesContainer);
+  }
+
+  /**
+   * Render collapsible Display Options panel for mobile drawer
+   */
+  private renderDrawerDisplayPanel(container: HTMLElement): void {
+    this.drawerDisplayPanel = new CollapsiblePanel(container, {
+      title: LanguageService.t('accessibility.displayOptions') || 'Display Options',
+      defaultOpen: false,
+      storageKey: 'accessibility_display_drawer',
+      icon: ICON_SLIDERS,
+    });
+    this.drawerDisplayPanel.init();
+
+    const contentContainer = this.drawerDisplayPanel.getContentContainer();
+    if (contentContainer) {
+      this.renderDrawerDisplayOptions(contentContainer);
+    }
+  }
+
+  /**
+   * Render display options for mobile drawer
+   */
+  private renderDrawerDisplayOptions(container: HTMLElement): void {
+    const optionsContainer = this.createElement('div', { className: 'space-y-2' });
+
+    const options = [
+      { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') || 'Show Labels' },
+      { key: 'showHexValues', label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values' },
+      { key: 'highContrastMode', label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode' },
+    ] as const;
+
+    for (const option of options) {
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-2 cursor-pointer',
+      });
+
+      const checkbox = this.createElement('input', {
+        attributes: {
+          type: 'checkbox',
+          'data-display-option': option.key,
+        },
+        className: 'w-4 h-4 rounded',
+      }) as HTMLInputElement;
+      checkbox.checked = this.displayOptions[option.key];
+
+      this.on(checkbox, 'change', () => {
+        this.displayOptions[option.key] = checkbox.checked;
+        StorageService.setItem(STORAGE_KEYS.displayOptions, this.displayOptions);
+
+        // Sync desktop checkboxes
+        this.syncDesktopDisplayCheckboxes();
+
+        this.updateResults();
+      });
+
+      const text = this.createElement('span', {
+        className: 'text-sm',
+        textContent: option.label,
+        attributes: { style: 'color: var(--theme-text);' },
+      });
+
+      label.appendChild(checkbox);
+      label.appendChild(text);
+      optionsContainer.appendChild(label);
+    }
+
+    container.appendChild(optionsContainer);
+  }
+
+  /**
+   * Sync desktop vision type checkboxes with current state
+   */
+  private syncDesktopVisionCheckboxes(): void {
+    if (!this.visionTogglesContainer) return;
+    const checkboxes = this.visionTogglesContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    checkboxes.forEach((checkbox) => {
+      const visionType = checkbox.getAttribute('data-vision-type') as VisionTypeId;
+      if (visionType) {
+        checkbox.checked = this.enabledVisionTypes.has(visionType);
+      }
+    });
+  }
+
+  /**
+   * Sync desktop display options checkboxes with current state
+   */
+  private syncDesktopDisplayCheckboxes(): void {
+    if (!this.displayOptionsContainer) return;
+    const checkboxes = this.displayOptionsContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    checkboxes.forEach((checkbox) => {
+      const optionKey = checkbox.getAttribute('data-display-option') as keyof DisplayOptions;
+      if (optionKey) {
+        checkbox.checked = this.displayOptions[optionKey];
+      }
+    });
+  }
+
+  /**
+   * Update drawer content when desktop changes (sync drawer components)
+   */
+  private updateDrawerContent(): void {
+    // Sync drawer dye selector with current state
+    if (this.drawerDyeSelector) {
+      this.drawerDyeSelector.setSelectedDyes(this.selectedDyes);
+    }
+
+    // Re-render drawer if components don't exist yet
+    if (!this.drawerDyePanel && this.options.drawerContent) {
+      this.renderDrawerContent();
+    }
   }
 
   // ============================================================================

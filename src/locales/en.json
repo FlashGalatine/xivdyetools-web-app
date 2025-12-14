@@ -255,7 +255,10 @@
     "somewhatSimilar": "Similar - some users may have difficulty distinguishing",
     "redGreenWarning": "Red-green colorblind users may see this as a different color",
     "tritanopiaWarning": "May be hard to see for tritanopia (blue-yellow colorblindness)",
-    "achromatopsiaWarning": "May be hard to see for total colorblindness"
+    "achromatopsiaWarning": "May be hard to see for total colorblindness",
+    "dyesSelected": "dyes selected",
+    "visionTypesEnabled": "vision types enabled",
+    "selectTwoDyes": "Select at least 2 dyes to see comparisons"
   },
   "comparison": {
     "selectDyes": "Select Dyes",

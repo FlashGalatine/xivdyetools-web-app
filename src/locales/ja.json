@@ -255,7 +255,10 @@
     "somewhatSimilar": "似ている - 一部のユーザーには区別が難しい場合があります",
     "redGreenWarning": "赤緑色覚異常のユーザーには別の色に見える可能性があります",
     "tritanopiaWarning": "3型色覚（青黄色覚異常）の方には見えにくい可能性があります",
-    "achromatopsiaWarning": "全色盲の方には見えにくい可能性があります"
+    "achromatopsiaWarning": "全色盲の方には見えにくい可能性があります",
+    "dyesSelected": "個のカララントを選択中",
+    "visionTypesEnabled": "個の色覚タイプが有効",
+    "selectTwoDyes": "比較を見るには2つ以上のカララントを選択してください"
   },
   "comparison": {
     "selectDyes": "比較するカララントを選択",

@@ -251,7 +251,10 @@
     "somewhatSimilar": "相似 - 部分用户可能难以区分",
     "redGreenWarning": "红绿色盲用户可能会看到不同的颜色",
     "tritanopiaWarning": "蓝黄色盲患者可能难以看到",
-    "achromatopsiaWarning": "全色盲患者可能难以看到"
+    "achromatopsiaWarning": "全色盲患者可能难以看到",
+    "dyesSelected": "种染剂已选择",
+    "visionTypesEnabled": "种色觉类型已启用",
+    "selectTwoDyes": "请选择至少2种染剂以查看对比"
   },
   "comparison": {
     "selectDyes": "选择要比较的染剂",

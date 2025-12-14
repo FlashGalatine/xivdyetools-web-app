@@ -251,7 +251,10 @@
     "somewhatSimilar": "비슷함 - 일부 사용자는 구별하기 어려울 수 있습니다",
     "redGreenWarning": "적녹색맹 사용자는 이 색을 다르게 볼 수 있습니다",
     "tritanopiaWarning": "제3색맹(청황색맹)인 경우 보기 어려울 수 있습니다",
-    "achromatopsiaWarning": "전색맹인 경우 보기 어려울 수 있습니다"
+    "achromatopsiaWarning": "전색맹인 경우 보기 어려울 수 있습니다",
+    "dyesSelected": "개 염료 선택됨",
+    "visionTypesEnabled": "개 색각 유형 활성화됨",
+    "selectTwoDyes": "비교를 보려면 2개 이상의 염료를 선택하세요"
   },
   "comparison": {
     "selectDyes": "비교할 염료 선택",

@@ -251,7 +251,10 @@
     "somewhatSimilar": "Similaire - certains utilisateurs peuvent avoir du mal à distinguer",
     "redGreenWarning": "Les daltoniens rouge-vert peuvent voir cette couleur différemment",
     "tritanopiaWarning": "Peut être difficile à voir pour la tritanopie (daltonisme bleu-jaune)",
-    "achromatopsiaWarning": "Peut être difficile à voir pour le daltonisme total"
+    "achromatopsiaWarning": "Peut être difficile à voir pour le daltonisme total",
+    "dyesSelected": "teintures sélectionnées",
+    "visionTypesEnabled": "types de vision activés",
+    "selectTwoDyes": "Sélectionnez au moins 2 teintures pour voir les comparaisons"
   },
   "comparison": {
     "selectDyes": "Sélectionner des Teintures à Comparer",
