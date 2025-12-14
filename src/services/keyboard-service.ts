@@ -44,17 +44,19 @@ export class KeyboardService {
   /**
    * Initialize keyboard service
    * Attaches global keydown listener
+   * WEB-BUG-001: Always removes existing handler before adding new one to prevent duplicates
    */
   static initialize(): void {
-    if (this.isInitialized) {
-      logger.warn('KeyboardService already initialized');
-      return;
-    }
-
-    // Check feature flag
+    // Check feature flag first
     if (!FEATURE_FLAGS.ENABLE_KEYBOARD_SHORTCUTS) {
       logger.info('Keyboard shortcuts disabled by feature flag');
       return;
+    }
+
+    // WEB-BUG-001: Always remove existing handler to prevent duplicates
+    // This handles race conditions between initialize() and destroy()
+    if (this.boundHandler) {
+      document.removeEventListener('keydown', this.boundHandler);
     }
 
     // Bind and store handler for potential cleanup

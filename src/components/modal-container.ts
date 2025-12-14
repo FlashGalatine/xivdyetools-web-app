@@ -30,6 +30,8 @@ export class ModalContainer extends BaseComponent {
   private unsubscribe: (() => void) | null = null;
   private previousActiveElement: HTMLElement | null = null;
   private focusTrapElements: HTMLElement[] = [];
+  // WEB-PERF-002: Track rendered modal IDs for incremental rendering
+  private renderedModalIds: Set<string> = new Set();
 
   constructor(container: HTMLElement) {
     super(container);
@@ -37,11 +39,11 @@ export class ModalContainer extends BaseComponent {
 
   /**
    * Lifecycle: Called after initialization
+   * WEB-PERF-002: Removed debug console.log statements
    */
   onMount(): void {
     // Subscribe to modal service
     this.unsubscribe = ModalService.subscribe((modals) => {
-      console.log('[ModalContainer] subscription callback, received modals:', modals.length);
       const hadModals = this.modals.length > 0;
       const hasModals = modals.length > 0;
 
@@ -51,7 +53,6 @@ export class ModalContainer extends BaseComponent {
       }
 
       this.modals = modals;
-      console.log('[ModalContainer] calling update()');
       this.update();
 
       // Restore focus after closing last modal
@@ -308,36 +309,72 @@ export class ModalContainer extends BaseComponent {
 
   /**
    * Render the modal container
+   * WEB-PERF-002: Implements incremental rendering to avoid full DOM recreation
+   * Only adds new modals and removes dismissed ones instead of clearing everything
    */
   render(): void {
-    console.log('[ModalContainer] render() called, modals.length:', this.modals.length);
-    console.log('[ModalContainer] container children before clear:', this.container.children.length);
-    clearContainer(this.container);
-    console.log('[ModalContainer] container children after clear:', this.container.children.length);
-
-    // If no modals, don't render anything
+    // If no modals, clean up and return
     if (this.modals.length === 0) {
-      console.log('[ModalContainer] no modals, setting element to null and returning');
-      this.element = null;
+      if (this.element) {
+        clearContainer(this.container);
+        this.element = null;
+      }
+      this.renderedModalIds.clear();
       return;
     }
 
-    // Create container wrapper
-    this.element = this.createElement('div', {
-      id: 'modal-container',
-      className: 'modal-container',
-      attributes: {
-        'aria-label': 'Modal dialogs',
-      },
-    });
+    // Create container wrapper if it doesn't exist
+    if (!this.element) {
+      this.element = this.createElement('div', {
+        id: 'modal-container',
+        className: 'modal-container',
+        attributes: {
+          'aria-label': 'Modal dialogs',
+        },
+      });
+      this.container.appendChild(this.element);
+    }
 
-    // Render each modal
+    // WEB-PERF-002: Incremental rendering - only modify changed modals
+    const currentModalIds = new Set(this.modals.map((m) => m.id));
+
+    // Remove modals that are no longer in the list
+    for (const renderedId of this.renderedModalIds) {
+      if (!currentModalIds.has(renderedId as string)) {
+        const modalEl = this.element.querySelector(`[data-modal-id="${renderedId}"]`);
+        if (modalEl) {
+          modalEl.remove();
+        }
+        this.renderedModalIds.delete(renderedId);
+      }
+    }
+
+    // Add new modals that aren't rendered yet
     this.modals.forEach((modal, index) => {
-      const modalEl = this.createModalElement(modal, index);
-      this.element!.appendChild(modalEl);
+      if (!this.renderedModalIds.has(modal.id)) {
+        const modalEl = this.createModalElement(modal, index);
+        this.element!.appendChild(modalEl);
+        this.renderedModalIds.add(modal.id);
+      }
     });
 
-    this.container.appendChild(this.element);
+    // Update z-index and backdrop styling for all modals (order might have changed)
+    this.modals.forEach((modal, index) => {
+      const modalWrapper = this.element?.querySelector(`[data-modal-id="${modal.id}"]`) as HTMLElement;
+      if (modalWrapper) {
+        const isTopModal = index === this.modals.length - 1;
+        modalWrapper.style.zIndex = String(50 + index);
+
+        // Update backdrop visibility - only top modal has visible backdrop
+        if (isTopModal) {
+          modalWrapper.classList.add('bg-black/50');
+          modalWrapper.classList.remove('bg-transparent');
+        } else {
+          modalWrapper.classList.remove('bg-black/50');
+          modalWrapper.classList.add('bg-transparent');
+        }
+      }
+    });
 
     // WEB-BUG-005: Apply inert to background modals for proper focus containment
     // This prevents screen readers and keyboard navigation from reaching hidden modals
@@ -372,19 +409,12 @@ export class ModalContainer extends BaseComponent {
 
   /**
    * Called after update
+   * WEB-PERF-002: Removed debug console.log statements
    */
   onUpdate(): void {
-    console.log('[ModalContainer] onUpdate() called, modals.length:', this.modals.length);
     // Restore body scroll when no modals
     if (this.modals.length === 0) {
-      console.log('[ModalContainer] restoring body scroll');
       document.body.style.overflow = '';
-      // Debug: verify DOM state
-      console.log('[ModalContainer] container final state:', {
-        containerChildren: this.container.children.length,
-        hasModalBackdrop: !!document.querySelector('.modal-backdrop'),
-        bodyOverflow: document.body.style.overflow,
-      });
     }
   }
 
