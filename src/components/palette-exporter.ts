@@ -55,7 +55,7 @@ export class PaletteExporter extends BaseComponent {
   /**
    * Render the export section
    */
-  render(): void {
+  renderContent(): void {
     const section = this.createElement('div', {
       className: 'rounded-lg border p-6 space-y-4',
       attributes: {

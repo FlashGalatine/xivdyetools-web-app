@@ -62,7 +62,7 @@ export class LoadingSpinner extends BaseComponent {
   /**
    * Render the spinner
    */
-  render(): void {
+  renderContent(): void {
     clearContainer(this.container);
 
     // Wrapper element

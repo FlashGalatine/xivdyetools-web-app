@@ -33,7 +33,7 @@ export class ImageZoomController extends BaseComponent {
     this.onColorSampled = options.onColorSampled;
   }
 
-  render(): void {
+  renderContent(): void {
     // Container is expected to be provided by parent
     // We will append our controls and canvas to it
     this.container.classList.add('space-y-4');

@@ -40,7 +40,7 @@ export class TutorialSpotlight extends BaseComponent {
   private unsubscribe: (() => void) | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
-  render(): void {
+  renderContent(): void {
     // Create overlay container
     this.element = this.createElement('div', {
       className: 'tutorial-spotlight-container',

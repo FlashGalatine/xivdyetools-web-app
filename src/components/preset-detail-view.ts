@@ -48,7 +48,7 @@ export class PresetDetailView extends BaseComponent {
     this.callbacks = callbacks;
   }
 
-  render(): void {
+  renderContent(): void {
     const detail = this.createElement('div', {
       className:
         'bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6',

@@ -13,3 +13,6 @@
 
 /* Link to the config file for custom theme extensions */
 @config "../../tailwind.config.js";
+
+/* Import error boundary styles for graceful component failure handling */
+@import './error-boundary.css';

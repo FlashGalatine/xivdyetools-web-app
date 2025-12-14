@@ -48,7 +48,7 @@ export class ColorWheelDisplay extends BaseComponent {
   /**
    * Render the color wheel component with modern donut/ring design
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'flex justify-center',
     });

@@ -26,7 +26,7 @@ class TestComponent extends BaseComponent {
   private bindCount = 0;
   private buttonClickCount = 0;
 
-  render(): void {
+  renderContent(): void {
     this.renderCount++;
     const wrapper = this.createElement('div', {
       className: 'test-component',
@@ -538,9 +538,9 @@ describe('BaseComponent', () => {
   // ==========================================================================
 
   describe('Error Handling', () => {
-    it('should handle render errors gracefully', () => {
+    it('should handle render errors gracefully with error boundary', () => {
       class BrokenComponent extends BaseComponent {
-        render(): void {
+        renderContent(): void {
           throw new Error('Render error');
         }
         bindEvents(): void {
@@ -550,12 +550,20 @@ describe('BaseComponent', () => {
 
       const brokenComponent = new BrokenComponent(container);
 
+      // Error boundary catches errors and renders fallback UI instead of throwing
       expect(() => {
         brokenComponent.init();
-      }).toThrow('Render error');
+      }).not.toThrow();
 
-      // Clean up manually since component failed to initialize
-      cleanupTestContainer(container);
+      // Should show error state
+      expect(brokenComponent.hasErrorState()).toBe(true);
+      expect(brokenComponent.getError()?.message).toBe('Render error');
+
+      // Should render error fallback UI
+      const errorBoundary = container.querySelector('.component-error-boundary');
+      expect(errorBoundary).not.toBeNull();
+
+      cleanupComponent(brokenComponent, container);
       container = createTestContainer(); // Reset for afterEach
     });
 
@@ -563,7 +571,7 @@ describe('BaseComponent', () => {
       class BrokenUpdateComponent extends BaseComponent {
         private shouldThrow = false;
 
-        render(): void {
+        renderContent(): void {
           if (this.shouldThrow) {
             throw new Error('Update error');
           }
@@ -585,13 +593,240 @@ describe('BaseComponent', () => {
 
       brokenComponent.triggerError();
 
-      // Update should not throw, but log error
+      // Update should not throw - error boundary catches it
       expect(() => {
         brokenComponent.update();
       }).not.toThrow();
 
+      // Should show error state after failed update
+      expect(brokenComponent.hasErrorState()).toBe(true);
+      expect(brokenComponent.getError()?.message).toBe('Update error');
+
       cleanupComponent(brokenComponent, container);
       container = createTestContainer(); // Reset for afterEach
+    });
+  });
+
+  // ==========================================================================
+  // Error Boundary Tests
+  // ==========================================================================
+
+  describe('Error Boundary', () => {
+    it('should render fallback UI with retry and reset buttons', () => {
+      class ErrorComponent extends BaseComponent {
+        renderContent(): void {
+          throw new Error('Test error');
+        }
+        bindEvents(): void {
+          // No events
+        }
+      }
+
+      const errorComponent = new ErrorComponent(container);
+      errorComponent.init();
+
+      // Check fallback UI structure
+      const errorBoundary = container.querySelector('.component-error-boundary');
+      expect(errorBoundary).not.toBeNull();
+
+      const errorTitle = container.querySelector('.component-error-title');
+      expect(errorTitle?.textContent).toContain('Something went wrong');
+
+      const errorDetails = container.querySelector('.component-error-details');
+      expect(errorDetails?.textContent).toContain('Test error');
+
+      const retryBtn = container.querySelector('[data-action="retry"]');
+      expect(retryBtn).not.toBeNull();
+
+      const resetBtn = container.querySelector('[data-action="reset"]');
+      expect(resetBtn).not.toBeNull();
+
+      cleanupComponent(errorComponent, container);
+      container = createTestContainer();
+    });
+
+    it('should retry on retry button click', () => {
+      let renderAttempts = 0;
+
+      class RetryableComponent extends BaseComponent {
+        renderContent(): void {
+          renderAttempts++;
+          if (renderAttempts < 3) {
+            throw new Error('Not ready yet');
+          }
+          this.element = this.createElement('div', { textContent: 'Success!' });
+          this.container.appendChild(this.element);
+        }
+        bindEvents(): void {
+          // No events
+        }
+      }
+
+      const retryComponent = new RetryableComponent(container);
+      retryComponent.init();
+
+      // First render failed
+      expect(renderAttempts).toBe(1);
+      expect(retryComponent.hasErrorState()).toBe(true);
+
+      // Click retry - second attempt
+      const retryBtn = container.querySelector('[data-action="retry"]') as HTMLButtonElement;
+      retryBtn?.click();
+
+      expect(renderAttempts).toBe(2);
+      expect(retryComponent.hasErrorState()).toBe(true);
+
+      // Click retry - third attempt (should succeed)
+      const retryBtn2 = container.querySelector('[data-action="retry"]') as HTMLButtonElement;
+      retryBtn2?.click();
+
+      expect(renderAttempts).toBe(3);
+      expect(retryComponent.hasErrorState()).toBe(false);
+      expect(container.textContent).toContain('Success!');
+
+      cleanupComponent(retryComponent, container);
+      container = createTestContainer();
+    });
+
+    it('should hide retry button after max retries (3)', () => {
+      class AlwaysFailComponent extends BaseComponent {
+        renderContent(): void {
+          throw new Error('Always fails');
+        }
+        bindEvents(): void {
+          // No events
+        }
+      }
+
+      const failComponent = new AlwaysFailComponent(container);
+      failComponent.init();
+
+      // Initial render failed (retryCount = 0)
+      let retryBtn = container.querySelector('[data-action="retry"]') as HTMLButtonElement;
+      expect(retryBtn).not.toBeNull();
+
+      // Retry 1: retryCount increments to 1, then render fails
+      retryBtn?.click();
+      retryBtn = container.querySelector('[data-action="retry"]') as HTMLButtonElement;
+      expect(retryBtn).not.toBeNull();
+
+      // Retry 2: retryCount increments to 2, then render fails
+      retryBtn?.click();
+      retryBtn = container.querySelector('[data-action="retry"]') as HTMLButtonElement;
+      expect(retryBtn).not.toBeNull();
+
+      // Retry 3: retryCount increments to 3, then render fails
+      retryBtn?.click();
+      retryBtn = container.querySelector('[data-action="retry"]') as HTMLButtonElement;
+
+      // After 3 retries (retryCount = 3), retry button should be hidden (3 < 3 = false)
+      expect(retryBtn).toBeNull();
+
+      // Reset button should still be visible
+      const resetBtn = container.querySelector('[data-action="reset"]');
+      expect(resetBtn).not.toBeNull();
+
+      cleanupComponent(failComponent, container);
+      container = createTestContainer();
+    });
+
+    it('should reset component state on reset button click', () => {
+      let renderAttempts = 0;
+
+      class ResettableComponent extends BaseComponent {
+        renderContent(): void {
+          renderAttempts++;
+          if (renderAttempts < 2) {
+            throw new Error('First attempt fails');
+          }
+          this.element = this.createElement('div', { textContent: 'Reset worked!' });
+          this.container.appendChild(this.element);
+        }
+        bindEvents(): void {
+          // No events
+        }
+      }
+
+      const resetComponent = new ResettableComponent(container);
+      resetComponent.init();
+
+      // First render failed
+      expect(resetComponent.hasErrorState()).toBe(true);
+
+      // Click reset - resets retry count and re-initializes
+      const resetBtn = container.querySelector('[data-action="reset"]') as HTMLButtonElement;
+      resetBtn?.click();
+
+      // Second render should succeed
+      expect(resetComponent.hasErrorState()).toBe(false);
+      expect(container.textContent).toContain('Reset worked!');
+
+      cleanupComponent(resetComponent, container);
+      container = createTestContainer();
+    });
+
+    it('should clear error state on successful render after retry', () => {
+      let shouldFail = true;
+
+      class RecoverableComponent extends BaseComponent {
+        renderContent(): void {
+          if (shouldFail) {
+            throw new Error('Temporary failure');
+          }
+          this.element = this.createElement('div', { textContent: 'Recovered!' });
+          this.container.appendChild(this.element);
+        }
+        bindEvents(): void {
+          // No events
+        }
+      }
+
+      const recoverComponent = new RecoverableComponent(container);
+      recoverComponent.init();
+
+      expect(recoverComponent.hasErrorState()).toBe(true);
+      expect(recoverComponent.getError()?.message).toBe('Temporary failure');
+
+      // Fix the issue
+      shouldFail = false;
+
+      // Retry
+      const retryBtn = container.querySelector('[data-action="retry"]') as HTMLButtonElement;
+      retryBtn?.click();
+
+      // Should have recovered
+      expect(recoverComponent.hasErrorState()).toBe(false);
+      expect(recoverComponent.getError()).toBeNull();
+
+      cleanupComponent(recoverComponent, container);
+      container = createTestContainer();
+    });
+
+    it('should return correct values from error state getters', () => {
+      class GetterTestComponent extends BaseComponent {
+        renderContent(): void {
+          throw new Error('Getter test error');
+        }
+        bindEvents(): void {
+          // No events
+        }
+      }
+
+      const getterComponent = new GetterTestComponent(container);
+
+      // Before init - no error
+      expect(getterComponent.hasErrorState()).toBe(false);
+      expect(getterComponent.getError()).toBeNull();
+
+      getterComponent.init();
+
+      // After error
+      expect(getterComponent.hasErrorState()).toBe(true);
+      expect(getterComponent.getError()).toBeInstanceOf(Error);
+      expect(getterComponent.getError()?.message).toBe('Getter test error');
+
+      cleanupComponent(getterComponent, container);
+      container = createTestContainer();
     });
   });
 

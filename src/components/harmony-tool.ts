@@ -238,7 +238,7 @@ export class HarmonyTool extends BaseComponent {
   // Lifecycle Methods
   // ============================================================================
 
-  render(): void {
+  renderContent(): void {
     // CRITICAL: Destroy existing child components before re-rendering
     // This prevents orphaned components and memory leaks during update()
     this.destroyChildComponents();

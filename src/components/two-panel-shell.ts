@@ -57,7 +57,7 @@ export class TwoPanelShell extends BaseComponent {
     this.isMobile = window.innerWidth < 768;
   }
 
-  render(): void {
+  renderContent(): void {
     const shell = this.createElement('div', {
       className: 'two-panel-shell flex flex-col md:flex-row min-h-[600px]',
       attributes: {

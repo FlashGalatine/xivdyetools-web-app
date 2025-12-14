@@ -57,7 +57,7 @@ export class DyeGrid extends BaseComponent {
     this.updateSelectionVisuals();
   }
 
-  render(): void {
+  renderContent(): void {
     // Use compact 3-column layout when compactMode is enabled
     const gridClasses = this.options.compactMode
       ? 'grid grid-cols-3 gap-3 max-h-96 overflow-y-auto'

@@ -38,7 +38,7 @@ export class DyeComparisonChart extends BaseComponent {
   /**
    * Render the chart component
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-2',
     });

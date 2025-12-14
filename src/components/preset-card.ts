@@ -30,7 +30,7 @@ export class PresetCard extends BaseComponent {
     this.onClick = onClick;
   }
 
-  render(): void {
+  renderContent(): void {
     const card = this.createElement('div', {
       className: `bg-white dark:bg-gray-800 rounded-lg border overflow-hidden hover:shadow-lg transition-shadow cursor-pointer ${
         this.preset.isCurated

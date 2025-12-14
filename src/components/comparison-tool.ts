@@ -145,7 +145,7 @@ export class ComparisonTool extends BaseComponent {
   // Lifecycle Methods
   // ============================================================================
 
-  render(): void {
+  renderContent(): void {
     this.renderLeftPanel();
     this.renderRightPanel();
 

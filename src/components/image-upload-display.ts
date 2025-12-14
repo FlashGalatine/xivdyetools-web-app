@@ -29,7 +29,7 @@ export class ImageUploadDisplay extends BaseComponent {
   /**
    * Render the component
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-4',
     });

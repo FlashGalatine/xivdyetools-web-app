@@ -29,7 +29,7 @@ export class LanguageSelector extends BaseComponent {
   /**
    * Render the language selector component
    */
-  render(): void {
+  renderContent(): void {
     // Get current theme to determine border opacity
     const currentTheme = ThemeService.getCurrentTheme();
     const themeObject = ThemeService.getTheme(currentTheme);

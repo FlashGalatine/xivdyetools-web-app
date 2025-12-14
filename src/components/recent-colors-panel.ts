@@ -41,7 +41,7 @@ export class RecentColorsPanel extends BaseComponent {
     if (options.storageKey) this.recentColorsStorageKey = options.storageKey;
   }
 
-  render(): void {
+  renderContent(): void {
     this.container.id = 'recent-colors-section';
     this.container.className =
       'bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6';

@@ -50,7 +50,7 @@ export class ColorInterpolationDisplay extends BaseComponent {
   /**
    * Render the interpolation display
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-4',
     });

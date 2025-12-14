@@ -37,6 +37,18 @@ export interface ComponentLifecycle {
   onUpdate?(): void;
 }
 
+/**
+ * Component error state for error boundary handling
+ * Tracks whether a component has encountered a render error and provides
+ * information for the fallback UI
+ */
+export interface ComponentErrorState {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: string | null;
+  retryCount: number;
+}
+
 // ============================================================================
 // Base Component Class
 // ============================================================================
@@ -58,6 +70,17 @@ export abstract class BaseComponent implements ComponentLifecycle {
   private pendingTimeouts: Set<ReturnType<typeof setTimeout>> = new Set();
   // WEB-PERF-003: Use counter instead of Math.random() to prevent key collision
   private listenerCounter: number = 0;
+
+  // Error boundary state - tracks render errors for graceful degradation
+  protected errorState: ComponentErrorState = {
+    hasError: false,
+    error: null,
+    errorInfo: null,
+    retryCount: 0,
+  };
+
+  // Maximum retry attempts before hiding the retry button
+  protected static readonly MAX_RETRY_COUNT = 3;
 
   // Lifecycle hooks - optional for subclasses to override
   onMount?(): void;
@@ -186,14 +209,214 @@ export abstract class BaseComponent implements ComponentLifecycle {
   // ============================================================================
 
   /**
-   * Render the component to the DOM
+   * Render the component content to the DOM
+   * Override this method in child components (replaces previous render())
    */
-  abstract render(): void;
+  abstract renderContent(): void;
 
   /**
    * Bind event listeners
    */
   abstract bindEvents(): void;
+
+  // ============================================================================
+  // Error Boundary Methods
+  // ============================================================================
+
+  /**
+   * Render method with error boundary protection
+   * Wraps renderContent() in try/catch and shows error UI on failure
+   */
+  render(): void {
+    // Check if component should show error state
+    if (this.errorState.hasError) {
+      this.renderError();
+      return;
+    }
+
+    // Attempt safe render
+    this.safeRender();
+  }
+
+  /**
+   * Safely execute renderContent with error catching
+   */
+  protected safeRender(): void {
+    try {
+      this.renderContent();
+      // Clear error state on successful render after a retry
+      if (this.errorState.retryCount > 0) {
+        this.clearErrorState();
+      }
+    } catch (error) {
+      this.handleRenderError(error);
+    }
+  }
+
+  /**
+   * Handle render errors - log, store state, show fallback UI
+   */
+  protected handleRenderError(error: unknown): void {
+    const normalizedError = error instanceof Error ? error : new Error(String(error));
+
+    // Log the error
+    ErrorHandler.log(error);
+    logger.error(`[${this.constructor.name}] Render failed:`, normalizedError.message);
+
+    // Update error state
+    this.errorState = {
+      hasError: true,
+      error: normalizedError,
+      errorInfo: `Component: ${this.constructor.name}`,
+      retryCount: this.errorState.retryCount,
+    };
+
+    // Show error UI
+    this.renderError();
+  }
+
+  /**
+   * Render the error fallback UI
+   * Can be overridden by child components for custom error display
+   */
+  protected renderError(): void {
+    // Don't render if destroyed
+    if (this.isDestroyed) return;
+
+    clearContainer(this.container);
+
+    const errorWrapper = this.createElement('div', {
+      className: 'component-error-boundary',
+      attributes: {
+        role: 'alert',
+        'aria-live': 'assertive',
+      },
+    });
+
+    // Error icon
+    const iconWrapper = this.createElement('div', {
+      className: 'component-error-icon',
+      innerHTML: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4m0 4h.01"/>
+      </svg>`,
+      attributes: { 'aria-hidden': 'true' },
+    });
+    errorWrapper.appendChild(iconWrapper);
+
+    // Error message
+    const title = this.createElement('h3', {
+      className: 'component-error-title',
+      textContent: 'Something went wrong',
+    });
+    errorWrapper.appendChild(title);
+
+    // Error details
+    const details = this.createElement('p', {
+      className: 'component-error-details',
+      textContent: this.errorState.error?.message || 'An unexpected error occurred',
+    });
+    errorWrapper.appendChild(details);
+
+    // Actions container
+    const actions = this.createElement('div', {
+      className: 'component-error-actions',
+    });
+
+    // Retry button (if under max retries)
+    if (this.errorState.retryCount < BaseComponent.MAX_RETRY_COUNT) {
+      const retryBtn = this.createElement('button', {
+        className: 'component-error-btn component-error-btn-primary',
+        textContent: 'Try Again',
+        attributes: { type: 'button' },
+        dataAttributes: { action: 'retry' },
+      });
+      retryBtn.addEventListener('click', () => this.handleRetry());
+      actions.appendChild(retryBtn);
+    }
+
+    // Reset button (always available)
+    const resetBtn = this.createElement('button', {
+      className: 'component-error-btn component-error-btn-secondary',
+      textContent: 'Reset Component',
+      attributes: { type: 'button' },
+      dataAttributes: { action: 'reset' },
+    });
+    resetBtn.addEventListener('click', () => this.handleReset());
+    actions.appendChild(resetBtn);
+
+    errorWrapper.appendChild(actions);
+
+    // Show retry count info if retries have been attempted
+    if (this.errorState.retryCount > 0) {
+      const retryInfo = this.createElement('p', {
+        className: 'component-error-retry-info',
+        textContent: `Retry attempts: ${this.errorState.retryCount}/${BaseComponent.MAX_RETRY_COUNT}`,
+      });
+      errorWrapper.appendChild(retryInfo);
+    }
+
+    this.element = errorWrapper;
+    this.container.appendChild(this.element);
+  }
+
+  /**
+   * Handle retry button click
+   */
+  protected handleRetry(): void {
+    if (this.isDestroyed) return;
+
+    this.errorState.retryCount++;
+    this.errorState.hasError = false;
+
+    // Re-attempt render
+    this.render();
+
+    // Rebind events if render succeeded
+    if (!this.errorState.hasError) {
+      this.bindEvents();
+    }
+  }
+
+  /**
+   * Handle reset button click - full component reset
+   */
+  protected handleReset(): void {
+    if (this.isDestroyed) return;
+
+    this.clearErrorState();
+
+    // Full re-initialization
+    this.unbindAllEvents();
+    this.render();
+    this.bindEvents();
+  }
+
+  /**
+   * Clear error state
+   */
+  protected clearErrorState(): void {
+    this.errorState = {
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      retryCount: 0,
+    };
+  }
+
+  /**
+   * Check if component is in error state
+   */
+  public hasErrorState(): boolean {
+    return this.errorState.hasError;
+  }
+
+  /**
+   * Get current error (for debugging/logging)
+   */
+  public getError(): Error | null {
+    return this.errorState.error;
+  }
 
   // ============================================================================
   // DOM Creation Utilities
@@ -350,8 +573,9 @@ export abstract class BaseComponent implements ComponentLifecycle {
 
   /**
    * Remove all event listeners
+   * Protected to allow error boundary reset functionality
    */
-  private unbindAllEvents(): void {
+  protected unbindAllEvents(): void {
     for (const { target, event, handler } of this.listeners.values()) {
       try {
         target.removeEventListener(event, handler);

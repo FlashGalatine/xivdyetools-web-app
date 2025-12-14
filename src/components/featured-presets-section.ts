@@ -29,7 +29,7 @@ export class FeaturedPresetsSection extends BaseComponent {
     this.onClick = onClick;
   }
 
-  render(): void {
+  renderContent(): void {
     const section = this.createElement('div', {
       className: 'featured-section-gradient rounded-lg p-6 text-white',
     });

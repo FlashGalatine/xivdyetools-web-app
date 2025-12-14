@@ -55,7 +55,7 @@ export class HarmonyResultPanel extends BaseComponent {
     this.options = options;
   }
 
-  render(): void {
+  renderContent(): void {
     const { label, matchedDye, deviance, closestDyes, isBase, showPrices, priceData } = this.options;
 
     // Main card container

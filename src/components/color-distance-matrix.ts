@@ -29,7 +29,7 @@ export class ColorDistanceMatrix extends BaseComponent {
   /**
    * Render the matrix component
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-4',
     });

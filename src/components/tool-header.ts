@@ -15,7 +15,7 @@ export class ToolHeader extends BaseComponent {
     this.options = options;
   }
 
-  render(): void {
+  renderContent(): void {
     const header = this.createElement('div', {
       className: 'space-y-4 text-center mb-8',
     });

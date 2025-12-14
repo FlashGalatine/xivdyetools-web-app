@@ -203,7 +203,7 @@ export class AccessibilityTool extends BaseComponent {
   // Lifecycle Methods
   // ============================================================================
 
-  render(): void {
+  renderContent(): void {
     this.renderLeftPanel();
     this.renderRightPanel();
 

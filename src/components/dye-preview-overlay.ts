@@ -285,7 +285,7 @@ export class DyePreviewOverlay extends BaseComponent {
   /**
    * Render implementation (BaseComponent requirement)
    */
-  render(): void {
+  renderContent(): void {
     // Overlay is created dynamically, nothing to render statically
   }
 

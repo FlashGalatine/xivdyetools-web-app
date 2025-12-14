@@ -42,7 +42,7 @@ export class AppLayout extends BaseComponent {
   /**
    * Render the application layout
    */
-  render(): void {
+  renderContent(): void {
     const app = this.createElement('div', {
       className: 'app-shell flex flex-col min-h-screen transition-colors',
     });

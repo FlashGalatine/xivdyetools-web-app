@@ -28,7 +28,7 @@ export class ThemeSwitcher extends BaseComponent {
   /**
    * Render the theme switcher component
    */
-  render(): void {
+  renderContent(): void {
     // Get current theme to determine border opacity
     const currentTheme = ThemeService.getCurrentTheme();
     const themeObject = ThemeService.getTheme(currentTheme);

@@ -117,7 +117,7 @@ export class EmptyState extends BaseComponent {
   /**
    * Render the empty state
    */
-  render(): void {
+  renderContent(): void {
     clearContainer(this.container);
 
     // Main wrapper with styling from globals.css

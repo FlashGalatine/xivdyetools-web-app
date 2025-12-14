@@ -102,7 +102,7 @@ export class MarketBoard extends BaseComponent {
   /**
    * Render the market board component
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-4',
     });

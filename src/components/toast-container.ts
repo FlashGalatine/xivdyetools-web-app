@@ -166,7 +166,7 @@ export class ToastContainer extends BaseComponent {
   /**
    * Render the toast container
    */
-  render(): void {
+  renderContent(): void {
     clearContainer(this.container);
 
     // Create container wrapper

@@ -31,7 +31,7 @@ export class ColorPickerDisplay extends BaseComponent {
   /**
    * Render the component
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-4',
     });

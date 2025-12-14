@@ -58,7 +58,7 @@ export class AuthButton extends BaseComponent {
   /**
    * Render the auth button component
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'relative',
     });

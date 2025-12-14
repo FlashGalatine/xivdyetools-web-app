@@ -11,6 +11,7 @@ export {
   type ElementOptions,
   type EventHandler,
   type ComponentLifecycle,
+  type ComponentErrorState,
 } from './base-component';
 export { AppLayout } from './app-layout';
 export { ThemeSwitcher } from './theme-switcher';

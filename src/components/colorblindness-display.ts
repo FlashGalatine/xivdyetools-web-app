@@ -95,7 +95,7 @@ export class ColorblindnessDisplay extends BaseComponent {
   /**
    * Render the display
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-4',
     });

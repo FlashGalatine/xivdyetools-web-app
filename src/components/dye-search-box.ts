@@ -38,7 +38,7 @@ export class DyeSearchBox extends BaseComponent {
     this.searchQuery = this.options.initialSearch!;
   }
 
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', { className: 'space-y-4' });
 
     // Search Input Section

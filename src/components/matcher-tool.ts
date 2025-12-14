@@ -176,7 +176,7 @@ export class MatcherTool extends BaseComponent {
   // Lifecycle Methods
   // ============================================================================
 
-  render(): void {
+  renderContent(): void {
     this.renderLeftPanel();
     this.renderRightPanel();
 

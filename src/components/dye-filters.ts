@@ -79,7 +79,7 @@ export class DyeFilters extends BaseComponent {
   /**
    * Render the dye filters component
    */
-  render(): HTMLElement {
+  renderContent(): HTMLElement {
     // Dye Filters section with collapsible header
     const filtersSection = this.createElement('div', {
       className: 'space-y-3',

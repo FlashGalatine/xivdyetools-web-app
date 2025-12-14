@@ -50,7 +50,7 @@ export class ColorDisplay extends BaseComponent {
   /**
    * Render the color display component
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-4',
     });

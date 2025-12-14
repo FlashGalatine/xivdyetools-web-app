@@ -312,7 +312,7 @@ export class ModalContainer extends BaseComponent {
    * WEB-PERF-002: Implements incremental rendering to avoid full DOM recreation
    * Only adds new modals and removes dismissed ones instead of clearing everything
    */
-  render(): void {
+  renderContent(): void {
     // If no modals, clean up and return
     if (this.modals.length === 0) {
       if (this.element) {

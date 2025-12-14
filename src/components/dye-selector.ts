@@ -89,7 +89,7 @@ export class DyeSelector extends BaseComponent {
   /**
    * Render the dye selector component
    */
-  render(): void {
+  renderContent(): void {
     const wrapper = this.createElement('div', {
       className: 'space-y-4',
     });
