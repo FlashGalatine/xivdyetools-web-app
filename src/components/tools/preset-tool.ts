@@ -13,6 +13,7 @@
 import { BaseComponent } from '@components/base-component';
 import { AuthButton } from '@components/auth-button';
 import { CollapsiblePanel } from '@components/collapsible-panel';
+import { PresetDetailView } from '@components/preset-detail-view';
 import { showPresetSubmissionForm } from '@components/preset-submission-form';
 import { showPresetEditForm } from '@components/preset-edit-form';
 import {
@@ -147,6 +148,10 @@ export class PresetTool extends BaseComponent {
   private mobileAuthButton: AuthButton | null = null;
   private collapsiblePanels: CollapsiblePanel[] = [];
   private mobileCollapsiblePanels: CollapsiblePanel[] = [];
+  private detailView: PresetDetailView | null = null;
+
+  // Detail view state
+  private selectedPreset: UnifiedPreset | null = null;
 
   // DOM References
   private categoryContainer: HTMLElement | null = null;
@@ -229,6 +234,7 @@ export class PresetTool extends BaseComponent {
     this.authUnsubscribe?.();
     this.authButton?.destroy();
     this.mobileAuthButton?.destroy();
+    this.detailView?.destroy();
 
     // Clean up collapsible panels (desktop)
     this.collapsiblePanels.forEach(panel => panel.destroy());
@@ -245,6 +251,7 @@ export class PresetTool extends BaseComponent {
     this.presets = [];
     this.featuredPresets = [];
     this.userSubmissions = [];
+    this.selectedPreset = null;
 
     super.destroy();
     logger.info('[PresetTool] Destroyed');
@@ -1150,14 +1157,86 @@ export class PresetTool extends BaseComponent {
   }
 
   /**
-   * Handle preset card click
+   * Handle preset card click - show detail view
    */
   private handlePresetClick(preset: UnifiedPreset): void {
-    // For now, log the preset - future: open detail modal
     logger.info('[PresetTool] Preset clicked:', preset.name);
+    this.showDetailView(preset);
+  }
 
-    // TODO: Implement detail view
-    // Could use: showPresetDetailView(preset) or inline modal
+  /**
+   * Show detail view for a preset
+   */
+  private showDetailView(preset: UnifiedPreset): void {
+    this.selectedPreset = preset;
+
+    // Clean up existing detail view if any
+    this.detailView?.destroy();
+    this.detailView = null;
+
+    // Hide the grid content and show detail view
+    const right = this.options.rightPanel;
+    clearContainer(right);
+
+    // Create container for detail view
+    const detailContainer = this.createElement('div', {
+      className: 'preset-detail-container',
+    });
+    right.appendChild(detailContainer);
+
+    // Create and render the detail view
+    this.detailView = new PresetDetailView(detailContainer, preset, {
+      onBack: () => this.hideDetailView(),
+      onVoteUpdate: (updatedPreset) => this.handleVoteUpdate(updatedPreset),
+    });
+    this.detailView.init();
+
+    logger.info('[PresetTool] Detail view shown for:', preset.name);
+  }
+
+  /**
+   * Hide detail view and return to grid
+   */
+  private hideDetailView(): void {
+    this.selectedPreset = null;
+
+    // Clean up detail view
+    this.detailView?.destroy();
+    this.detailView = null;
+
+    // Re-render the right panel with grid content
+    this.renderRightPanel();
+
+    // Re-populate with current data
+    if (this.presets.length === 0 && this.featuredPresets.length === 0) {
+      this.renderEmptyState();
+      this.showEmptyState(true);
+    } else {
+      this.showEmptyState(false);
+      this.renderFeaturedPresets();
+      this.renderPresetsGrid();
+      this.renderLoadMore();
+    }
+
+    logger.info('[PresetTool] Returned to grid view');
+  }
+
+  /**
+   * Handle vote update from detail view
+   */
+  private handleVoteUpdate(updatedPreset: UnifiedPreset): void {
+    // Update the preset in our local arrays
+    const updateInArray = (arr: UnifiedPreset[]) => {
+      const index = arr.findIndex(p => p.id === updatedPreset.id);
+      if (index !== -1) {
+        arr[index] = updatedPreset;
+      }
+    };
+
+    updateInArray(this.presets);
+    updateInArray(this.featuredPresets);
+
+    logger.info('[PresetTool] Vote updated for:', updatedPreset.name, 'new count:', updatedPreset.voteCount);
   }
 
   /**
