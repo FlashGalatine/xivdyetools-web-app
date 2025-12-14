@@ -212,13 +212,21 @@ export class ModalService {
 
   /**
    * Subscribe to modal changes
+   * WEB-BUG-002: Added options parameter to control immediate notification
+   * @param listener - Callback function for modal changes
+   * @param options - Subscription options (immediate: whether to call listener immediately)
    * @returns Unsubscribe function
    */
-  static subscribe(listener: (modals: Modal[]) => void): () => void {
+  static subscribe(
+    listener: (modals: Modal[]) => void,
+    options: { immediate?: boolean } = { immediate: true }
+  ): () => void {
     this.listeners.add(listener);
 
-    // Immediately notify with current state
-    listener([...this.modals]);
+    // Immediately notify with current state (opt-in, default true for backwards compatibility)
+    if (options.immediate) {
+      listener([...this.modals]);
+    }
 
     // Return unsubscribe function
     return () => {

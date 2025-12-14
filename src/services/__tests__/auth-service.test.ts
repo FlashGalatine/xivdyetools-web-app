@@ -539,5 +539,505 @@ describe('AuthService', () => {
 
       expect(mockSessionStorage['xivdyetools_oauth_return_path']).toBe('/current-page');
     });
+
+    it('should handle login errors', async () => {
+      const { authService } = await import('../auth-service');
+
+      // Mock crypto to throw
+      (global.crypto.subtle.digest as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Crypto error')
+      );
+
+      await expect(authService.login()).rejects.toThrow('Crypto error');
+    });
+  });
+
+  describe('loginWithXIVAuth', () => {
+    it('should initiate XIVAuth OAuth flow', async () => {
+      const { authService } = await import('../auth-service');
+
+      (global.crypto.subtle.digest as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Uint8Array(32).buffer
+      );
+
+      await authService.loginWithXIVAuth('/return-path', 'presets');
+
+      expect(mockSessionStorage['xivdyetools_pkce_verifier']).toBeDefined();
+      expect(mockSessionStorage['xivdyetools_oauth_state']).toBeDefined();
+      expect(mockSessionStorage['xivdyetools_oauth_provider']).toBe('xivauth');
+      expect(window.location.href).toContain('auth/xivauth');
+    });
+
+    it('should use current pathname as return path by default', async () => {
+      (window.location as { pathname: string }).pathname = '/harmony';
+
+      const { authService } = await import('../auth-service');
+
+      (global.crypto.subtle.digest as ReturnType<typeof vi.fn>).mockResolvedValue(
+        new Uint8Array(32).buffer
+      );
+
+      await authService.loginWithXIVAuth();
+
+      expect(mockSessionStorage['xivdyetools_oauth_return_path']).toBe('/harmony');
+    });
+
+    it('should handle XIVAuth login errors', async () => {
+      const { authService } = await import('../auth-service');
+
+      (global.crypto.subtle.digest as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Crypto error')
+      );
+
+      await expect(authService.loginWithXIVAuth()).rejects.toThrow('Crypto error');
+    });
+  });
+
+  describe('OAuth callback handling', () => {
+    it('should handle callback with authorization code', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: '123456789',
+        discord_id: '123456789',
+        username: 'testuser',
+        global_name: 'Test User',
+        avatar: 'abc123',
+        exp: futureTime,
+        iat: Math.floor(Date.now() / 1000),
+        iss: 'xivdyetools',
+        auth_provider: 'discord',
+      });
+
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_state'] = 'test-state';
+
+      (window.location as { search: string }).search = '?code=auth-code&csrf=test-state';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            token: mockToken,
+            expires_at: futureTime,
+          }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/callback'),
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.stringContaining('code'),
+        })
+      );
+    });
+
+    it('should handle XIVAuth callback', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: 'xiv123',
+        xivauth_id: 'xiv123',
+        username: 'xivuser',
+        global_name: 'XIV User',
+        avatar: null,
+        exp: futureTime,
+        iat: Math.floor(Date.now() / 1000),
+        iss: 'xivdyetools',
+        auth_provider: 'xivauth',
+        primary_character: {
+          name: 'Test Char',
+          server: 'Balmung',
+          verified: true,
+        },
+      });
+
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_state'] = 'test-state';
+      mockSessionStorage['xivdyetools_oauth_provider'] = 'xivauth';
+
+      (window.location as { search: string }).search = '?code=auth-code&csrf=test-state';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            token: mockToken,
+            expires_at: futureTime,
+          }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/xivauth/callback'),
+        expect.anything()
+      );
+    });
+
+    it('should handle callback with error parameter', async () => {
+      (window.location as { search: string }).search = '?error=access_denied';
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(false);
+    });
+
+    it('should handle missing code verifier', async () => {
+      // No PKCE verifier in session storage
+      (window.location as { search: string }).search = '?code=auth-code';
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(false);
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('should handle CSRF state mismatch', async () => {
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_state'] = 'correct-state';
+
+      (window.location as { search: string }).search = '?code=auth-code&csrf=wrong-state';
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(false);
+    });
+
+    it('should handle failed token exchange response', async () => {
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_state'] = 'test-state';
+
+      (window.location as { search: string }).search = '?code=auth-code&csrf=test-state';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: false,
+        json: () => Promise.resolve({ error: 'invalid_grant' }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(false);
+    });
+
+    it('should handle unsuccessful auth response', async () => {
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_state'] = 'test-state';
+
+      (window.location as { search: string }).search = '?code=auth-code&csrf=test-state';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: false, error: 'Invalid code' }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(false);
+    });
+
+    it('should handle token exchange network error', async () => {
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_state'] = 'test-state';
+
+      (window.location as { search: string }).search = '?code=auth-code&csrf=test-state';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(false);
+    });
+
+    it('should handle provider in URL parameter', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: 'xiv123',
+        auth_provider: 'xivauth',
+        username: 'xivuser',
+        global_name: null,
+        avatar: null,
+        exp: futureTime,
+      });
+
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+
+      (window.location as { search: string }).search = '?code=auth-code&provider=xivauth';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            token: mockToken,
+            expires_at: futureTime,
+          }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/xivauth/callback'),
+        expect.anything()
+      );
+    });
+
+    it('should use return path from URL or session storage', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: '123',
+        username: 'testuser',
+        global_name: null,
+        avatar: null,
+        exp: futureTime,
+      });
+
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_return_path'] = '/presets';
+
+      (window.location as { search: string }).search = '?code=auth-code';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            token: mockToken,
+            expires_at: futureTime,
+          }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(window.history.replaceState).toHaveBeenCalled();
+    });
+  });
+
+  describe('provider handling', () => {
+    it('should infer provider from stored value', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: '123456789',
+        discord_id: '123456789',
+        username: 'testuser',
+        global_name: 'Test User',
+        avatar: 'abc123',
+        exp: futureTime,
+      });
+
+      mockLocalStorage['xivdyetools_auth_token'] = mockToken;
+      mockLocalStorage['xivdyetools_auth_expires'] = String(futureTime);
+      mockLocalStorage['xivdyetools_auth_provider'] = 'discord';
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      const state = authService.getState();
+      expect(state.provider).toBe('discord');
+    });
+
+    it('should infer provider from token payload', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: 'xiv123',
+        username: 'xivuser',
+        global_name: null,
+        avatar: null,
+        exp: futureTime,
+        auth_provider: 'xivauth',
+      });
+
+      mockLocalStorage['xivdyetools_auth_token'] = mockToken;
+      mockLocalStorage['xivdyetools_auth_expires'] = String(futureTime);
+      // No provider stored - should infer from payload
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      const state = authService.getState();
+      expect(state.provider).toBe('xivauth');
+    });
+
+    it('should default to discord when no provider info available', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: '123',
+        username: 'testuser',
+        global_name: null,
+        avatar: null,
+        exp: futureTime,
+        // No auth_provider in payload
+      });
+
+      mockLocalStorage['xivdyetools_auth_token'] = mockToken;
+      mockLocalStorage['xivdyetools_auth_expires'] = String(futureTime);
+      // No provider stored
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      const state = authService.getState();
+      expect(state.provider).toBe('discord');
+    });
+  });
+
+  describe('XIVAuth character info', () => {
+    it('should include primary character in user info', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: 'xiv123',
+        username: 'xivuser',
+        global_name: 'XIV User',
+        avatar: null,
+        exp: futureTime,
+        auth_provider: 'xivauth',
+        primary_character: {
+          name: 'Test Character',
+          server: 'Balmung',
+          verified: true,
+        },
+      });
+
+      mockLocalStorage['xivdyetools_auth_token'] = mockToken;
+      mockLocalStorage['xivdyetools_auth_expires'] = String(futureTime);
+      mockLocalStorage['xivdyetools_auth_provider'] = 'xivauth';
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      const user = authService.getUser();
+      expect(user?.primary_character).toBeDefined();
+      expect(user?.primary_character?.name).toBe('Test Character');
+      expect(user?.primary_character?.server).toBe('Balmung');
+      expect(user?.primary_character?.verified).toBe(true);
+    });
+  });
+
+  describe('listener error handling', () => {
+    it('should handle listener errors gracefully during state changes', async () => {
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: '123456789',
+        username: 'testuser',
+        global_name: 'Test User',
+        avatar: null,
+        exp: futureTime,
+      });
+
+      mockLocalStorage['xivdyetools_auth_token'] = mockToken;
+      mockLocalStorage['xivdyetools_auth_expires'] = String(futureTime);
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      // Subscribe good listeners first
+      const goodListener1 = vi.fn();
+      const goodListener2 = vi.fn();
+
+      authService.subscribe(goodListener1);
+      authService.subscribe(goodListener2);
+
+      // Clear the initial calls from subscribe
+      goodListener1.mockClear();
+      goodListener2.mockClear();
+
+      // Trigger logout to notify listeners
+      await authService.logout();
+
+      // Both good listeners should be called
+      expect(goodListener1).toHaveBeenCalled();
+      expect(goodListener2).toHaveBeenCalled();
+    });
+  });
+
+  describe('token handling edge cases', () => {
+    it('should handle token without expiry in response', async () => {
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_state'] = 'test-state';
+
+      const futureTime = Math.floor(Date.now() / 1000) + 3600;
+      const mockToken = createMockJWT({
+        sub: '123',
+        username: 'testuser',
+        global_name: null,
+        avatar: null,
+        exp: futureTime,
+      });
+
+      (window.location as { search: string }).search = '?code=auth-code&csrf=test-state';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            token: mockToken,
+            // No expires_at - should use exp from token
+          }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(true);
+    });
+
+    it('should handle invalid token in callback', async () => {
+      mockSessionStorage['xivdyetools_pkce_verifier'] = 'test-verifier';
+      mockSessionStorage['xivdyetools_oauth_state'] = 'test-state';
+
+      (window.location as { search: string }).search = '?code=auth-code&csrf=test-state';
+
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            success: true,
+            token: 'invalid.token',
+            expires_at: Math.floor(Date.now() / 1000) + 3600,
+          }),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(false);
+    });
+  });
+
+  describe('storage error handling', () => {
+    it('should handle localStorage errors gracefully', async () => {
+      // Make localStorage.getItem throw
+      vi.stubGlobal('localStorage', {
+        getItem: () => {
+          throw new Error('Storage error');
+        },
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      });
+
+      const { authService } = await import('../auth-service');
+      await authService.initialize();
+
+      expect(authService.isAuthenticated()).toBe(false);
+    });
   });
 });

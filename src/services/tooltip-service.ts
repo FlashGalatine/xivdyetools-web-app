@@ -303,8 +303,11 @@ export class TooltipService {
   private static positionTooltip(target: HTMLElement, state: TooltipState): void {
     if (!state.element) return;
 
-    // Guard against detached DOM (BUG-020)
-    if (!target.isConnected || !state.element.isConnected) return;
+    // WEB-BUG-006: Clean up state when DOM elements are detached to prevent memory leaks
+    if (!target.isConnected || !state.element.isConnected) {
+      this.detach(target);
+      return;
+    }
 
     const targetRect = target.getBoundingClientRect();
     const tooltipRect = state.element.getBoundingClientRect();

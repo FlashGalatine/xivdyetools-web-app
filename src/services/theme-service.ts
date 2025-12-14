@@ -161,11 +161,19 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
 export class ThemeService {
   private static currentTheme: ThemeName = DEFAULT_THEME;
   private static listeners: Set<(theme: ThemeName) => void> = new Set();
+  // WEB-BUG-003: Track initialization to prevent double initialization
+  private static isInitialized: boolean = false;
 
   /**
    * Initialize theme service
+   * WEB-BUG-003: Protected against double initialization
    */
   static initialize(): void {
+    if (this.isInitialized) {
+      logger.debug('Theme service already initialized, skipping');
+      return;
+    }
+
     const saved = appStorage.getItem<ThemeName>(STORAGE_KEYS.THEME);
     if (saved && this.isValidThemeName(saved)) {
       this.currentTheme = saved;
@@ -174,6 +182,7 @@ export class ThemeService {
     }
 
     this.applyTheme(this.currentTheme);
+    this.isInitialized = true;
     logger.info(`✅ Theme service initialized: ${this.currentTheme}`);
   }
 

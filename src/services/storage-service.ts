@@ -64,6 +64,8 @@ export class StorageService {
 
   /**
    * Set an item in localStorage with error handling
+   * WEB-BUG-004: Now returns false instead of throwing on quota exceeded
+   * for consistent behavior with the boolean return type
    */
   static setItem<T>(key: string, value: T): boolean {
     try {
@@ -79,11 +81,10 @@ export class StorageService {
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'QuotaExceededError') {
-          throw new AppError(
-            ErrorCode.STORAGE_QUOTA_EXCEEDED,
-            'Storage quota exceeded. Please clear some data.',
-            'error'
-          );
+          // WEB-BUG-004: Log error and return false instead of throwing
+          // to match the boolean return type contract
+          logger.error(`Storage quota exceeded when setting key: ${key}`);
+          return false;
         }
       }
 

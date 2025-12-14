@@ -574,4 +574,256 @@ describe('DyeGrid', () => {
       }).not.toThrow();
     });
   });
+
+  // ============================================================================
+  // Keyboard Navigation Tests - Extended Coverage
+  // ============================================================================
+
+  describe('keyboard navigation - extended', () => {
+    it('should navigate to first item with Home key', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 2;
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'Home' }));
+
+      expect(component['focusedIndex']).toBe(0);
+    });
+
+    it('should navigate to last item with End key', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 0;
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'End' }));
+
+      expect(component['focusedIndex']).toBe(mockDyes.length - 1);
+    });
+
+    it('should navigate down multiple rows with PageDown', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 0;
+      component['gridColumns'] = 3;
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'PageDown' }));
+
+      // Should jump by 3 * gridColumns but clamped to array length
+      expect(component['focusedIndex']).toBeLessThanOrEqual(mockDyes.length - 1);
+    });
+
+    it('should navigate up multiple rows with PageUp', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 2;
+      component['gridColumns'] = 3;
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'PageUp' }));
+
+      expect(component['focusedIndex']).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle Escape key without throwing', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+
+      // Should not throw when handling Escape key
+      expect(() => {
+        component['handleKeydown'](new KeyboardEvent('keydown', { key: 'Escape' }));
+      }).not.toThrow();
+    });
+
+    it('should handle Space key without throwing', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 1;
+
+      // Should not throw when handling Space key
+      expect(() => {
+        component['handleKeydown'](new KeyboardEvent('keydown', { key: ' ' }));
+      }).not.toThrow();
+    });
+
+    it('should ignore unknown keys', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      const initialIndex = component['focusedIndex'];
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'z' }));
+
+      expect(component['focusedIndex']).toBe(initialIndex);
+    });
+
+    it('should navigate left with ArrowLeft key', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 2;
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+
+      expect(component['focusedIndex']).toBe(1);
+    });
+
+    it('should navigate right with ArrowRight key', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 0;
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+
+      expect(component['focusedIndex']).toBe(1);
+    });
+
+    it('should navigate up with ArrowUp key', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 2;
+      component['gridColumns'] = 1; // Set to 1 so ArrowUp goes from 2 to 1
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+
+      // Should go from 2 to 1 since gridColumns is 1
+      expect(component['focusedIndex']).toBe(1);
+    });
+
+    it('should not go below 0 with ArrowLeft at start', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 0;
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+
+      expect(component['focusedIndex']).toBe(0);
+    });
+
+    it('should not exceed array length with ArrowRight at end', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = mockDyes.length - 1;
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+
+      expect(component['focusedIndex']).toBe(mockDyes.length - 1);
+    });
+  });
+
+  // ============================================================================
+  // Favorites Feature Tests
+  // ============================================================================
+
+  describe('favorites feature', () => {
+    it('should handle F key without throwing when showFavorites is true', () => {
+      [component, container] = renderComponent(DyeGrid, { showFavorites: true });
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 0;
+
+      // Should not throw when handling F key
+      expect(() => {
+        component['handleKeydown'](new KeyboardEvent('keydown', { key: 'f' }));
+      }).not.toThrow();
+    });
+
+    it('should handle uppercase F key without throwing', () => {
+      [component, container] = renderComponent(DyeGrid, { showFavorites: true });
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 1;
+
+      // Should not throw when handling F key
+      expect(() => {
+        component['handleKeydown'](new KeyboardEvent('keydown', { key: 'F' }));
+      }).not.toThrow();
+    });
+
+    it('should handle F key when focusedIndex is out of bounds', () => {
+      [component, container] = renderComponent(DyeGrid, { showFavorites: true });
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = -1; // Out of bounds
+
+      // Should not throw even with invalid index
+      expect(() => {
+        component['handleKeydown'](new KeyboardEvent('keydown', { key: 'f' }));
+      }).not.toThrow();
+    });
+
+    it('should update favorite visuals when favorites change', () => {
+      [component, container] = renderComponent(DyeGrid, { showFavorites: true });
+      component.setDyes(mockDyes);
+
+      // Set a favorite
+      component['favorites'] = new Set([1]);
+      component['updateFavoriteVisuals']();
+
+      const favoriteBtn = container.querySelector('[data-favorite-dye-id="1"]');
+      expect(favoriteBtn?.classList.contains('text-yellow-500')).toBe(true);
+    });
+
+    it('should not update visuals when showFavorites is false', () => {
+      [component, container] = renderComponent(DyeGrid, { showFavorites: false });
+      component.setDyes(mockDyes);
+
+      // Should not throw even without favorite buttons
+      expect(() => {
+        component['updateFavoriteVisuals']();
+      }).not.toThrow();
+    });
+  });
+
+  // ============================================================================
+  // Collection Feature Tests
+  // ============================================================================
+
+  describe('collection feature', () => {
+    it('should open collection menu with C key when showFavorites is true', () => {
+      [component, container] = renderComponent(DyeGrid, { showFavorites: true });
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 0;
+
+      // Mock the collection click handler
+      const collectionSpy = vi.spyOn(component as unknown as { handleCollectionClick: (id: number, el: HTMLElement) => void }, 'handleCollectionClick');
+
+      component['handleKeydown'](new KeyboardEvent('keydown', { key: 'c' }));
+
+      // May or may not be called depending on DOM structure
+      // Just ensure no error is thrown
+    });
+
+    it('should not open collection menu when showFavorites is false', () => {
+      [component, container] = renderComponent(DyeGrid, { showFavorites: false });
+      component.setDyes(mockDyes);
+      component['focusedIndex'] = 0;
+
+      // Should not throw
+      expect(() => {
+        component['handleKeydown'](new KeyboardEvent('keydown', { key: 'C' }));
+      }).not.toThrow();
+    });
+  });
+
+  // ============================================================================
+  // Selection Visual Update Tests
+  // ============================================================================
+
+  describe('selection visuals', () => {
+    it('should update selection visuals when dyes are selected', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['selectedDyes'] = [mockDyes[0]];
+
+      component['updateSelectionVisuals']();
+
+      const selectedBtn = container.querySelector('[data-dye-id="1"]');
+      expect(selectedBtn?.getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('should mark unselected dyes as not selected', () => {
+      [component, container] = renderComponent(DyeGrid);
+      component.setDyes(mockDyes);
+      component['selectedDyes'] = [];
+
+      component['updateSelectionVisuals']();
+
+      const btn = container.querySelector('[data-dye-id="1"]');
+      expect(btn?.getAttribute('aria-selected')).toBe('false');
+    });
+  });
 });

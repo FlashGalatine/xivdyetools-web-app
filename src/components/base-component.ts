@@ -56,6 +56,8 @@ export abstract class BaseComponent implements ComponentLifecycle {
   protected isDestroyed: boolean = false;
   // Track pending timers for cleanup to prevent memory leaks
   private pendingTimeouts: Set<ReturnType<typeof setTimeout>> = new Set();
+  // WEB-PERF-003: Use counter instead of Math.random() to prevent key collision
+  private listenerCounter: number = 0;
 
   // Lifecycle hooks - optional for subclasses to override
   onMount?(): void;
@@ -317,7 +319,8 @@ export abstract class BaseComponent implements ComponentLifecycle {
     }
 
     // Store listener for cleanup with event name
-    const key = `${eventName}_${Math.random()}`;
+    // WEB-PERF-003: Use counter instead of Math.random() to prevent key collision
+    const key = `${eventName}_${++this.listenerCounter}`;
     this.listeners.set(key, { target, event: eventName, handler: boundHandler });
   }
 

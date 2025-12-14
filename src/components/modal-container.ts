@@ -336,6 +336,21 @@ export class ModalContainer extends BaseComponent {
 
     this.container.appendChild(this.element);
 
+    // WEB-BUG-005: Apply inert to background modals for proper focus containment
+    // This prevents screen readers and keyboard navigation from reaching hidden modals
+    this.modals.forEach((modal, index) => {
+      const modalWrapper = this.element?.querySelector(`[data-modal-id="${modal.id}"]`);
+      if (modalWrapper) {
+        if (index < this.modals.length - 1) {
+          // Background modal - mark as inert
+          modalWrapper.setAttribute('inert', '');
+        } else {
+          // Top modal - ensure inert is removed
+          modalWrapper.removeAttribute('inert');
+        }
+      }
+    });
+
     // Set up focus trap for topmost modal
     const topModalEl = this.element.querySelector(
       `[data-modal-id="${this.modals[this.modals.length - 1].id}"] .modal-dialog`

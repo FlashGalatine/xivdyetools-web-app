@@ -188,7 +188,9 @@ export class AppLayout extends BaseComponent {
     });
 
     // Copyright info
+    // WEB-BUG-007: Use IDs instead of fragile CSS class selectors
     const copyright = this.createElement('div', {
+      id: 'footer-copyright',
       className: 'text-center text-sm text-gray-600 dark:text-gray-400 mb-6',
       innerHTML: `${LanguageService.t('app.title')} v${APP_VERSION}<br>Built with TypeScript, Vite, and Tailwind CSS`,
     });
@@ -226,14 +228,18 @@ export class AppLayout extends BaseComponent {
     footerContent.appendChild(socialLinks);
 
     // Creator info
+    // WEB-BUG-007: Use IDs instead of fragile CSS class selectors
     const creator = this.createElement('div', {
+      id: 'footer-creator',
       className: 'text-center text-xs text-gray-500 dark:text-gray-500',
       innerHTML: `${LanguageService.t('footer.createdBy')} <span class="inline-block w-3 h-3 ml-0.5" aria-hidden="true" style="vertical-align: middle;">${ICON_CRYSTAL}</span>`,
     });
     footerContent.appendChild(creator);
 
     // FFXIV Copyright disclaimer
+    // WEB-BUG-007: Use IDs instead of fragile CSS class selectors
     const disclaimer = this.createElement('div', {
+      id: 'footer-disclaimer',
       className:
         'text-center text-xs text-gray-500 dark:text-gray-500 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700',
       innerHTML: `${LanguageService.t('footer.disclaimer')}<br>${LanguageService.t('footer.notAffiliated')}`,
@@ -316,21 +322,26 @@ export class AppLayout extends BaseComponent {
       title.textContent = LanguageService.t('app.title');
     }
 
+    // WEB-BUG-007: Use IDs instead of fragile CSS class selectors
     // Update footer text
-    const footerCopyright = this.querySelector<HTMLElement>('footer .text-sm');
+    const footerCopyright = this.querySelector<HTMLElement>('#footer-copyright');
     if (footerCopyright) {
       footerCopyright.innerHTML = `${LanguageService.t('app.title')} v${APP_VERSION}<br>Built with TypeScript, Vite, and Tailwind CSS`;
     }
 
-    const footerCreator = this.querySelector<HTMLElement>('footer .text-xs:not(.border-t)');
+    const footerCreator = this.querySelector<HTMLElement>('#footer-creator');
     if (footerCreator) {
       footerCreator.innerHTML = `${LanguageService.t('footer.createdBy')} <span class="inline-block w-4 h-4 align-text-bottom">${ICON_CRYSTAL}</span>`;
     }
 
-    const footerDisclaimer = this.querySelector<HTMLElement>('footer .border-t');
+    const footerDisclaimer = this.querySelector<HTMLElement>('#footer-disclaimer');
     if (footerDisclaimer) {
       footerDisclaimer.innerHTML = `${LanguageService.t('footer.disclaimer')}<br>${LanguageService.t('footer.notAffiliated')}`;
     }
+
+    // WEB-REF-006: Announce language change for screen reader users
+    const currentLocale = LanguageService.getCurrentLocale();
+    AnnouncerService.announce(`Language changed to ${currentLocale}`, 'polite');
   }
 
   /**
