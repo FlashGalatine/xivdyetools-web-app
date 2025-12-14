@@ -7,16 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.0.0-beta] - 2025-12-13
+## [3.0.0] - 2025-12-14
 
 ### 🔐 XIVAuth Integration (Multi-Provider Authentication)
 
-**Status**: ✅ BETA
+**Status**: ✅ RELEASE
 **Focus**: Add XIVAuth as a second OAuth provider alongside Discord, enabling FFXIV character-based authentication.
 
-> ⚠️ **Beta Note**: Mobile support has not been fully tested yet. Desktop browsers are the primary target for this release.
-
 #### New Features ✅
+
+**Budget Suggestions Tool - Mobile Drawer Controls**
+- Full accordion configuration controls in mobile drawer
+- All 7 sections from desktop now available on mobile:
+  - Target Dye selector with DyeSelector component
+  - Quick Picks grid for popular expensive dyes
+  - Budget Limit slider (0-1M gil)
+  - Color Distance slider (25-100 Delta-E)
+  - Sort By radio options (Best Match, Lowest Price, Best Value)
+  - Dye Filters with DyeFilters component
+  - Market Board with MarketBoard component
+- Mobile and desktop controls sync state automatically
+- Independent panel open/closed states for mobile vs desktop
 
 **XIVAuth OAuth Provider**
 - Login with XIVAuth button alongside existing Discord login
