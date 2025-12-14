@@ -214,7 +214,9 @@
     "paletteExtracted": "이미지에서 {count}개 색상 추출됨",
     "copiedHex": "복사됨",
     "imageLoaded": "이미지가 성공적으로 로드되었습니다",
-    "imageTooLarge": "이미지가 너무 커서 저장할 수 없습니다"
+    "imageTooLarge": "이미지가 너무 커서 저장할 수 없습니다",
+    "noColorSelected": "색상이 선택되지 않았습니다",
+    "selectedColor": "선택된 색상"
   },
   "accessibility": {
     "inspectDyes": "염료 검사",

@@ -135,6 +135,24 @@ export class MatcherTool extends BaseComponent {
   private canvasContainer: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
 
+  // Mobile-specific DOM References (separate from desktop to avoid conflicts)
+  private mobileSampleSlider: HTMLInputElement | null = null;
+  private mobileSampleDisplay: HTMLElement | null = null;
+  private mobilePaletteModeCheckbox: HTMLInputElement | null = null;
+  private mobilePaletteOptionsContainer: HTMLElement | null = null;
+  private mobileColorCountSlider: HTMLInputElement | null = null;
+  private mobileColorCountDisplay: HTMLElement | null = null;
+  private mobileExtractPaletteBtn: HTMLButtonElement | null = null;
+  private mobileDyeFilters: DyeFilters | null = null;
+  private mobileImageUpload: ImageUploadDisplay | null = null;
+  private mobileColorPicker: ColorPickerDisplay | null = null;
+  private mobileMarketBoard: MarketBoard | null = null;
+  private mobileImageSourceExpanded: boolean = true;
+  private mobileColorSelectionExpanded: boolean = true;
+  private mobileOptionsExpanded: boolean = false;
+  private mobileFiltersExpanded: boolean = false;
+  private mobileMarketExpanded: boolean = false;
+
   // Palette extraction state
   private lastPaletteResults: PaletteMatch[] = [];
 
@@ -356,6 +374,12 @@ export class MatcherTool extends BaseComponent {
     this.imageSourcePanel?.destroy();
     this.colorSelectionPanel?.destroy();
     this.optionsPanel?.destroy();
+
+    // Cleanup mobile components
+    this.mobileDyeFilters?.destroy();
+    this.mobileImageUpload?.destroy();
+    this.mobileColorPicker?.destroy();
+    this.mobileMarketBoard?.destroy();
 
     super.destroy();
     logger.info('[MatcherTool] Destroyed');
@@ -760,65 +784,659 @@ export class MatcherTool extends BaseComponent {
     const drawer = this.options.drawerContent;
     clearContainer(drawer);
 
-    const content = this.createElement('div', { className: 'p-4 space-y-3' });
+    // Destroy previous mobile components if they exist (clean slate)
+    this.mobileDyeFilters?.destroy();
+    this.mobileDyeFilters = null;
+    this.mobileImageUpload?.destroy();
+    this.mobileImageUpload = null;
+    this.mobileColorPicker?.destroy();
+    this.mobileColorPicker = null;
+    this.mobileMarketBoard?.destroy();
+    this.mobileMarketBoard = null;
 
-    // Selected color display
-    if (this.selectedColor) {
-      const colorDisplay = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-background-secondary);' },
-      });
+    const content = this.createElement('div', { className: 'space-y-0' });
 
-      const swatch = this.createElement('div', {
-        className: 'w-10 h-10 rounded-lg border',
-        attributes: {
-          style: `background: ${this.selectedColor}; border-color: var(--theme-border);`,
-        },
-      });
+    // === Image Source Accordion Section ===
+    const imageSourceSection = this.renderMobileImageSourceAccordion();
+    content.appendChild(imageSourceSection);
 
-      const info = this.createElement('div');
-      info.innerHTML = `
-        <p class="font-medium" style="color: var(--theme-text);">${LanguageService.t('matcher.selectedColor') || 'Selected Color'}</p>
-        <p class="text-xs font-mono" style="color: var(--theme-text-muted);">${this.selectedColor}</p>
-      `;
+    // === Color Selection Accordion Section ===
+    const colorSelectionSection = this.renderMobileColorSelectionAccordion();
+    content.appendChild(colorSelectionSection);
 
-      colorDisplay.appendChild(swatch);
-      colorDisplay.appendChild(info);
-      content.appendChild(colorDisplay);
-    } else {
-      const placeholder = this.createElement('p', {
-        className: 'text-sm',
-        textContent: LanguageService.t('matcher.noColorSelected') || 'No color selected',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      content.appendChild(placeholder);
-    }
+    // === Options Accordion Section ===
+    const optionsSection = this.renderMobileOptionsAccordion();
+    content.appendChild(optionsSection);
 
-    // Image status
-    if (this.currentImage) {
-      const imageStatus = this.createElement('div', {
-        className: 'flex items-center gap-2 text-sm',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      imageStatus.innerHTML = `
-        <span class="w-4 h-4">${ICON_UPLOAD}</span>
-        <span>${LanguageService.t('matcher.imageLoaded') || 'Image loaded'}</span>
-      `;
-      content.appendChild(imageStatus);
-    }
+    // === Dye Filters Accordion Section ===
+    const filtersSection = this.renderMobileFiltersAccordion();
+    content.appendChild(filtersSection);
 
-    // Settings summary
-    const settingsInfo = this.createElement('div', {
-      className: 'text-xs space-y-1',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    settingsInfo.innerHTML = `
-      <p>${LanguageService.t('matcher.sampleSize') || 'Sample Size'}: ${this.sampleSize}px</p>
-      <p>${LanguageService.t('matcher.paletteMode') || 'Palette Mode'}: ${this.paletteMode ? 'On' : 'Off'}</p>
-    `;
-    content.appendChild(settingsInfo);
+    // === Market Board Accordion Section ===
+    const marketSection = this.renderMobileMarketAccordion();
+    content.appendChild(marketSection);
 
     drawer.appendChild(content);
+  }
+
+  /**
+   * Render mobile options accordion section
+   */
+  private renderMobileOptionsAccordion(): HTMLElement {
+    const section = this.createElement('div', {
+      className: 'border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+
+    // Accordion header
+    const header = this.createElement('button', {
+      className: 'w-full flex items-center justify-between px-4 py-3 text-left transition-colors',
+      attributes: {
+        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        type: 'button',
+        'aria-expanded': String(this.mobileOptionsExpanded),
+      },
+    });
+
+    const titleContainer = this.createElement('span', {
+      className: 'flex items-center gap-2 font-medium text-sm',
+    });
+    const iconSpan = this.createElement('span', {
+      className: 'w-4 h-4 flex-shrink-0',
+      innerHTML: ICON_SETTINGS,
+    });
+    const titleText = this.createElement('span', {
+      textContent: LanguageService.t('matcher.options') || 'Options',
+    });
+    titleContainer.appendChild(iconSpan);
+    titleContainer.appendChild(titleText);
+    header.appendChild(titleContainer);
+
+    // Chevron
+    const chevron = this.createElement('span', {
+      className: 'w-5 h-5 transition-transform duration-200',
+      innerHTML: `<svg viewBox="0 0 20 20" fill="currentColor" class="w-full h-full">
+        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+      </svg>`,
+      attributes: {
+        style: this.mobileOptionsExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+      },
+    });
+    header.appendChild(chevron);
+    section.appendChild(header);
+
+    // Content area
+    const contentWrapper = this.createElement('div', {
+      className: 'overflow-hidden transition-all duration-200',
+      attributes: {
+        style: this.mobileOptionsExpanded
+          ? 'max-height: 500px; opacity: 1;'
+          : 'max-height: 0; opacity: 0;',
+      },
+    });
+
+    const contentInner = this.createElement('div', {
+      className: 'px-4 py-3 space-y-4',
+      attributes: { style: 'background: var(--theme-card-background);' },
+    });
+
+    // Sample size slider
+    const sampleGroup = this.createElement('div');
+    const sampleLabel = this.createElement('label', {
+      className: 'flex items-center justify-between text-sm mb-2',
+    });
+    sampleLabel.innerHTML = `
+      <span style="color: var(--theme-text);">${LanguageService.t('matcher.sampleSize') || 'Sample Size'}</span>
+      <span class="font-mono" style="color: var(--theme-text-muted);">${this.sampleSize}px</span>
+    `;
+    this.mobileSampleDisplay = sampleLabel.querySelector('span:last-child') as HTMLElement;
+
+    this.mobileSampleSlider = this.createElement('input', {
+      attributes: { type: 'range', min: '1', max: '10', value: String(this.sampleSize) },
+      className: 'w-full',
+    }) as HTMLInputElement;
+
+    this.on(this.mobileSampleSlider, 'input', () => {
+      if (this.mobileSampleSlider && this.mobileSampleDisplay) {
+        this.sampleSize = parseInt(this.mobileSampleSlider.value, 10);
+        this.mobileSampleDisplay.textContent = `${this.sampleSize}px`;
+        StorageService.setItem(STORAGE_KEYS.sampleSize, this.sampleSize);
+        // Sync desktop slider if visible
+        if (this.sampleSlider) {
+          this.sampleSlider.value = String(this.sampleSize);
+        }
+        if (this.sampleDisplay) {
+          this.sampleDisplay.textContent = `${this.sampleSize}px`;
+        }
+      }
+    });
+
+    sampleGroup.appendChild(sampleLabel);
+    sampleGroup.appendChild(this.mobileSampleSlider);
+    contentInner.appendChild(sampleGroup);
+
+    // Palette mode toggle
+    const paletteToggle = this.createElement('label', {
+      className: 'flex items-center gap-3 cursor-pointer',
+    });
+
+    this.mobilePaletteModeCheckbox = this.createElement('input', {
+      attributes: { type: 'checkbox' },
+      className: 'w-5 h-5 rounded',
+    }) as HTMLInputElement;
+    this.mobilePaletteModeCheckbox.checked = this.paletteMode;
+
+    this.on(this.mobilePaletteModeCheckbox, 'change', () => {
+      if (this.mobilePaletteModeCheckbox) {
+        this.paletteMode = this.mobilePaletteModeCheckbox.checked;
+        StorageService.setItem(STORAGE_KEYS.paletteMode, this.paletteMode);
+        // Sync desktop checkbox if visible
+        if (this.paletteModeCheckbox) {
+          this.paletteModeCheckbox.checked = this.paletteMode;
+        }
+        this.updatePaletteOptionsVisibility();
+        this.updateMobilePaletteOptionsVisibility();
+      }
+    });
+
+    const toggleText = this.createElement('div');
+    toggleText.innerHTML = `
+      <p class="text-sm font-medium" style="color: var(--theme-text);">${LanguageService.t('matcher.extractPalette') || 'Extract Palette'}</p>
+      <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('matcher.extractPaletteDesc') || 'Get multiple colors from image'}</p>
+    `;
+
+    paletteToggle.appendChild(this.mobilePaletteModeCheckbox);
+    paletteToggle.appendChild(toggleText);
+    contentInner.appendChild(paletteToggle);
+
+    // Palette options (color count + extract button)
+    this.mobilePaletteOptionsContainer = this.createElement('div', {
+      className: 'space-y-3 pt-3 border-t',
+      attributes: {
+        style: `border-color: var(--theme-border); ${this.paletteMode ? '' : 'display: none;'}`,
+      },
+    });
+
+    // Color count slider
+    const colorCountGroup = this.createElement('div');
+    const colorCountLabel = this.createElement('label', {
+      className: 'flex items-center justify-between text-sm mb-2',
+    });
+    colorCountLabel.innerHTML = `
+      <span style="color: var(--theme-text);">${LanguageService.t('matcher.colorCount') || 'Colors to Extract'}</span>
+      <span class="font-mono font-bold" style="color: var(--theme-primary);">${this.paletteColorCount}</span>
+    `;
+    this.mobileColorCountDisplay = colorCountLabel.querySelector('span:last-child') as HTMLElement;
+
+    this.mobileColorCountSlider = this.createElement('input', {
+      attributes: { type: 'range', min: '3', max: '5', value: String(this.paletteColorCount) },
+      className: 'w-full',
+    }) as HTMLInputElement;
+
+    this.on(this.mobileColorCountSlider, 'input', () => {
+      if (this.mobileColorCountSlider && this.mobileColorCountDisplay) {
+        this.paletteColorCount = parseInt(this.mobileColorCountSlider.value, 10);
+        this.mobileColorCountDisplay.textContent = String(this.paletteColorCount);
+        StorageService.setItem(STORAGE_KEYS.paletteColorCount, this.paletteColorCount);
+        // Sync desktop slider if visible
+        if (this.colorCountSlider) {
+          this.colorCountSlider.value = String(this.paletteColorCount);
+        }
+        if (this.colorCountDisplay) {
+          this.colorCountDisplay.textContent = String(this.paletteColorCount);
+        }
+      }
+    });
+
+    colorCountGroup.appendChild(colorCountLabel);
+    colorCountGroup.appendChild(this.mobileColorCountSlider);
+    this.mobilePaletteOptionsContainer.appendChild(colorCountGroup);
+
+    // Extract palette button
+    this.mobileExtractPaletteBtn = this.createElement('button', {
+      className: 'w-full py-2 px-4 rounded-lg font-medium text-sm transition-colors',
+      textContent: LanguageService.t('matcher.extractPaletteBtn') || 'Extract Palette from Image',
+      attributes: {
+        style: 'background: var(--theme-primary); color: white;',
+      },
+    }) as HTMLButtonElement;
+
+    this.on(this.mobileExtractPaletteBtn, 'click', () => {
+      void this.extractPalette();
+    });
+
+    this.mobilePaletteOptionsContainer.appendChild(this.mobileExtractPaletteBtn);
+    contentInner.appendChild(this.mobilePaletteOptionsContainer);
+
+    contentWrapper.appendChild(contentInner);
+    section.appendChild(contentWrapper);
+
+    // Toggle event
+    this.on(header, 'click', () => {
+      this.mobileOptionsExpanded = !this.mobileOptionsExpanded;
+      header.setAttribute('aria-expanded', String(this.mobileOptionsExpanded));
+      chevron.style.transform = this.mobileOptionsExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+      contentWrapper.style.maxHeight = this.mobileOptionsExpanded ? '500px' : '0';
+      contentWrapper.style.opacity = this.mobileOptionsExpanded ? '1' : '0';
+    });
+
+    return section;
+  }
+
+  /**
+   * Render mobile dye filters accordion section
+   */
+  private renderMobileFiltersAccordion(): HTMLElement {
+    const section = this.createElement('div', {
+      className: 'border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+
+    // Accordion header
+    const header = this.createElement('button', {
+      className: 'w-full flex items-center justify-between px-4 py-3 text-left transition-colors',
+      attributes: {
+        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        type: 'button',
+        'aria-expanded': String(this.mobileFiltersExpanded),
+      },
+    });
+
+    const titleContainer = this.createElement('span', {
+      className: 'flex items-center gap-2 font-medium text-sm',
+    });
+    const iconSpan = this.createElement('span', {
+      className: 'w-4 h-4 flex-shrink-0',
+      innerHTML: ICON_FILTER,
+    });
+    const titleText = this.createElement('span', {
+      textContent: LanguageService.t('filters.advancedFilters') || 'Dye Filters',
+    });
+    titleContainer.appendChild(iconSpan);
+    titleContainer.appendChild(titleText);
+    header.appendChild(titleContainer);
+
+    // Chevron
+    const chevron = this.createElement('span', {
+      className: 'w-5 h-5 transition-transform duration-200',
+      innerHTML: `<svg viewBox="0 0 20 20" fill="currentColor" class="w-full h-full">
+        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+      </svg>`,
+      attributes: {
+        style: this.mobileFiltersExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+      },
+    });
+    header.appendChild(chevron);
+    section.appendChild(header);
+
+    // Content area
+    const contentWrapper = this.createElement('div', {
+      className: 'overflow-hidden transition-all duration-200',
+      attributes: {
+        style: this.mobileFiltersExpanded
+          ? 'max-height: 500px; opacity: 1;'
+          : 'max-height: 0; opacity: 0;',
+      },
+    });
+
+    const contentInner = this.createElement('div', {
+      className: 'px-4 py-3',
+      attributes: { style: 'background: var(--theme-card-background);' },
+    });
+
+    // Create mobile DyeFilters instance
+    const filtersContainer = this.createElement('div', {
+      attributes: { id: 'mobile-dye-filters' },
+    });
+    contentInner.appendChild(filtersContainer);
+
+    this.mobileDyeFilters = new DyeFilters(filtersContainer, {
+      storageKeyPrefix: 'v3_matcher',
+      hideHeader: true, // We have our own accordion header
+      onFilterChange: (filters) => {
+        this.filterConfig = filters;
+        if (this.selectedColor) {
+          this.matchColor(this.selectedColor);
+        }
+      },
+    });
+    this.mobileDyeFilters.init();
+
+    contentWrapper.appendChild(contentInner);
+    section.appendChild(contentWrapper);
+
+    // Toggle event
+    this.on(header, 'click', () => {
+      this.mobileFiltersExpanded = !this.mobileFiltersExpanded;
+      header.setAttribute('aria-expanded', String(this.mobileFiltersExpanded));
+      chevron.style.transform = this.mobileFiltersExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+      contentWrapper.style.maxHeight = this.mobileFiltersExpanded ? '500px' : '0';
+      contentWrapper.style.opacity = this.mobileFiltersExpanded ? '1' : '0';
+    });
+
+    return section;
+  }
+
+  /**
+   * Update mobile palette options visibility based on paletteMode
+   */
+  private updateMobilePaletteOptionsVisibility(): void {
+    if (this.mobilePaletteOptionsContainer) {
+      this.mobilePaletteOptionsContainer.style.display = this.paletteMode ? '' : 'none';
+    }
+  }
+
+  /**
+   * Render mobile image source accordion section
+   */
+  private renderMobileImageSourceAccordion(): HTMLElement {
+    const section = this.createElement('div', {
+      className: 'border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+
+    // Accordion header
+    const header = this.createElement('button', {
+      className: 'w-full flex items-center justify-between px-4 py-3 text-left transition-colors',
+      attributes: {
+        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        type: 'button',
+        'aria-expanded': String(this.mobileImageSourceExpanded),
+      },
+    });
+
+    const titleContainer = this.createElement('span', {
+      className: 'flex items-center gap-2 font-medium text-sm',
+    });
+    const iconSpan = this.createElement('span', {
+      className: 'w-4 h-4 flex-shrink-0',
+      innerHTML: ICON_UPLOAD,
+    });
+    const titleText = this.createElement('span', {
+      textContent: LanguageService.t('matcher.imageSource') || 'Image Source',
+    });
+    titleContainer.appendChild(iconSpan);
+    titleContainer.appendChild(titleText);
+    header.appendChild(titleContainer);
+
+    // Chevron
+    const chevron = this.createElement('span', {
+      className: 'w-5 h-5 transition-transform duration-200',
+      innerHTML: `<svg viewBox="0 0 20 20" fill="currentColor" class="w-full h-full">
+        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+      </svg>`,
+      attributes: {
+        style: this.mobileImageSourceExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+      },
+    });
+    header.appendChild(chevron);
+    section.appendChild(header);
+
+    // Content area
+    const contentWrapper = this.createElement('div', {
+      className: 'overflow-hidden transition-all duration-200',
+      attributes: {
+        style: this.mobileImageSourceExpanded
+          ? 'max-height: 800px; opacity: 1;'
+          : 'max-height: 0; opacity: 0;',
+      },
+    });
+
+    const contentInner = this.createElement('div', {
+      className: 'px-4 py-3',
+      attributes: { style: 'background: var(--theme-card-background);' },
+    });
+
+    // Create mobile ImageUploadDisplay instance
+    const uploadContainer = this.createElement('div');
+    contentInner.appendChild(uploadContainer);
+
+    this.mobileImageUpload = new ImageUploadDisplay(uploadContainer);
+    this.mobileImageUpload.init();
+
+    // Listen for image-loaded events from mobile uploader
+    this.onPanelEvent(uploadContainer, 'image-loaded', (event: CustomEvent) => {
+      const { image, dataUrl } = event.detail;
+      this.currentImage = image;
+      this.currentImageDataUrl = dataUrl;
+
+      // Persist image to storage if it's small enough
+      if (dataUrl && dataUrl.length < MAX_IMAGE_STORAGE_SIZE) {
+        StorageService.setItem(STORAGE_KEYS.imageDataUrl, dataUrl);
+      } else if (dataUrl) {
+        StorageService.removeItem(STORAGE_KEYS.imageDataUrl);
+      }
+
+      ToastService.success(LanguageService.t('matcher.imageLoaded') || 'Image loaded');
+
+      if (this.imageZoom) {
+        this.imageZoom.setImage(image);
+      }
+
+      this.showEmptyState(false);
+    });
+
+    contentWrapper.appendChild(contentInner);
+    section.appendChild(contentWrapper);
+
+    // Toggle event
+    this.on(header, 'click', () => {
+      this.mobileImageSourceExpanded = !this.mobileImageSourceExpanded;
+      header.setAttribute('aria-expanded', String(this.mobileImageSourceExpanded));
+      chevron.style.transform = this.mobileImageSourceExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+      contentWrapper.style.maxHeight = this.mobileImageSourceExpanded ? '800px' : '0';
+      contentWrapper.style.opacity = this.mobileImageSourceExpanded ? '1' : '0';
+    });
+
+    return section;
+  }
+
+  /**
+   * Render mobile color selection accordion section
+   */
+  private renderMobileColorSelectionAccordion(): HTMLElement {
+    const section = this.createElement('div', {
+      className: 'border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+
+    // Accordion header
+    const header = this.createElement('button', {
+      className: 'w-full flex items-center justify-between px-4 py-3 text-left transition-colors',
+      attributes: {
+        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        type: 'button',
+        'aria-expanded': String(this.mobileColorSelectionExpanded),
+      },
+    });
+
+    const titleContainer = this.createElement('span', {
+      className: 'flex items-center gap-2 font-medium text-sm',
+    });
+    const iconSpan = this.createElement('span', {
+      className: 'w-4 h-4 flex-shrink-0',
+      innerHTML: ICON_PALETTE,
+    });
+    const titleText = this.createElement('span', {
+      textContent: LanguageService.t('matcher.colorSelection') || 'Color Selection',
+    });
+    titleContainer.appendChild(iconSpan);
+    titleContainer.appendChild(titleText);
+    header.appendChild(titleContainer);
+
+    // Chevron
+    const chevron = this.createElement('span', {
+      className: 'w-5 h-5 transition-transform duration-200',
+      innerHTML: `<svg viewBox="0 0 20 20" fill="currentColor" class="w-full h-full">
+        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+      </svg>`,
+      attributes: {
+        style: this.mobileColorSelectionExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+      },
+    });
+    header.appendChild(chevron);
+    section.appendChild(header);
+
+    // Content area
+    const contentWrapper = this.createElement('div', {
+      className: 'overflow-hidden transition-all duration-200',
+      attributes: {
+        style: this.mobileColorSelectionExpanded
+          ? 'max-height: 500px; opacity: 1;'
+          : 'max-height: 0; opacity: 0;',
+      },
+    });
+
+    const contentInner = this.createElement('div', {
+      className: 'px-4 py-3',
+      attributes: { style: 'background: var(--theme-card-background);' },
+    });
+
+    // Create mobile ColorPickerDisplay instance
+    const pickerContainer = this.createElement('div');
+    contentInner.appendChild(pickerContainer);
+
+    this.mobileColorPicker = new ColorPickerDisplay(pickerContainer);
+    this.mobileColorPicker.init();
+
+    // Listen for color-selected events from mobile picker
+    this.onPanelEvent(pickerContainer, 'color-selected', (event: CustomEvent) => {
+      const { color } = event.detail;
+      this.matchColor(color);
+    });
+
+    contentWrapper.appendChild(contentInner);
+    section.appendChild(contentWrapper);
+
+    // Toggle event
+    this.on(header, 'click', () => {
+      this.mobileColorSelectionExpanded = !this.mobileColorSelectionExpanded;
+      header.setAttribute('aria-expanded', String(this.mobileColorSelectionExpanded));
+      chevron.style.transform = this.mobileColorSelectionExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+      contentWrapper.style.maxHeight = this.mobileColorSelectionExpanded ? '500px' : '0';
+      contentWrapper.style.opacity = this.mobileColorSelectionExpanded ? '1' : '0';
+    });
+
+    return section;
+  }
+
+  /**
+   * Render mobile market board accordion section
+   */
+  private renderMobileMarketAccordion(): HTMLElement {
+    const section = this.createElement('div', {
+      className: 'border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+
+    // Accordion header
+    const header = this.createElement('button', {
+      className: 'w-full flex items-center justify-between px-4 py-3 text-left transition-colors',
+      attributes: {
+        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        type: 'button',
+        'aria-expanded': String(this.mobileMarketExpanded),
+      },
+    });
+
+    const titleContainer = this.createElement('span', {
+      className: 'flex items-center gap-2 font-medium text-sm',
+    });
+    const iconSpan = this.createElement('span', {
+      className: 'w-4 h-4 flex-shrink-0',
+      innerHTML: ICON_MARKET,
+    });
+    const titleText = this.createElement('span', {
+      textContent: LanguageService.t('marketBoard.title') || 'Market Board',
+    });
+    titleContainer.appendChild(iconSpan);
+    titleContainer.appendChild(titleText);
+    header.appendChild(titleContainer);
+
+    // Chevron
+    const chevron = this.createElement('span', {
+      className: 'w-5 h-5 transition-transform duration-200',
+      innerHTML: `<svg viewBox="0 0 20 20" fill="currentColor" class="w-full h-full">
+        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+      </svg>`,
+      attributes: {
+        style: this.mobileMarketExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+      },
+    });
+    header.appendChild(chevron);
+    section.appendChild(header);
+
+    // Content area
+    const contentWrapper = this.createElement('div', {
+      className: 'overflow-hidden transition-all duration-200',
+      attributes: {
+        style: this.mobileMarketExpanded
+          ? 'max-height: 600px; opacity: 1;'
+          : 'max-height: 0; opacity: 0;',
+      },
+    });
+
+    const contentInner = this.createElement('div', {
+      className: 'px-4 py-3',
+      attributes: { style: 'background: var(--theme-card-background);' },
+    });
+
+    // Create mobile MarketBoard instance
+    const marketContainer = this.createElement('div');
+    contentInner.appendChild(marketContainer);
+
+    this.mobileMarketBoard = new MarketBoard(marketContainer);
+    this.mobileMarketBoard.init();
+
+    // Load server data for the dropdown
+    void this.mobileMarketBoard.loadServerData();
+
+    // Listen for market board events
+    this.onPanelEvent(marketContainer, 'showPricesChanged', (event: CustomEvent) => {
+      this.showPrices = event.detail.showPrices;
+      if (this.showPrices) {
+        void this.fetchPricesForMatches();
+      } else {
+        this.priceData.clear();
+        if (this.lastPaletteResults.length > 0) {
+          this.renderPaletteResults(this.lastPaletteResults);
+        } else {
+          this.renderMatchedResults();
+        }
+      }
+    });
+
+    this.onPanelEvent(marketContainer, 'server-changed', () => {
+      if (this.showPrices) {
+        void this.fetchPricesForMatches();
+      }
+    });
+
+    this.onPanelEvent(marketContainer, 'categories-changed', () => {
+      if (this.showPrices) {
+        void this.fetchPricesForMatches();
+      }
+    });
+
+    this.onPanelEvent(marketContainer, 'refresh-requested', () => {
+      if (this.showPrices) {
+        void this.fetchPricesForMatches();
+      }
+    });
+
+    contentWrapper.appendChild(contentInner);
+    section.appendChild(contentWrapper);
+
+    // Toggle event
+    this.on(header, 'click', () => {
+      this.mobileMarketExpanded = !this.mobileMarketExpanded;
+      header.setAttribute('aria-expanded', String(this.mobileMarketExpanded));
+      chevron.style.transform = this.mobileMarketExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+      contentWrapper.style.maxHeight = this.mobileMarketExpanded ? '600px' : '0';
+      contentWrapper.style.opacity = this.mobileMarketExpanded ? '1' : '0';
+    });
+
+    return section;
   }
 
   // ============================================================================

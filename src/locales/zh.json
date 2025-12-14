@@ -214,7 +214,9 @@
     "paletteExtracted": "已从图片提取 {count} 种颜色",
     "copiedHex": "已复制",
     "imageLoaded": "图片加载成功",
-    "imageTooLarge": "图片太大无法保存"
+    "imageTooLarge": "图片太大无法保存",
+    "noColorSelected": "未选择颜色",
+    "selectedColor": "已选颜色"
   },
   "accessibility": {
     "inspectDyes": "检查染剂",

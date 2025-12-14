@@ -218,7 +218,9 @@
     "paletteExtracted": "{count}色を抽出しました",
     "copiedHex": "コピーしました",
     "imageLoaded": "画像を読み込みました",
-    "imageTooLarge": "画像が大きすぎて保存できません"
+    "imageTooLarge": "画像が大きすぎて保存できません",
+    "noColorSelected": "色が選択されていません",
+    "selectedColor": "選択された色"
   },
   "accessibility": {
     "inspectDyes": "カララントを検査",

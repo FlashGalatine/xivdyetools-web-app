@@ -214,7 +214,9 @@
     "paletteExtracted": "{count} couleurs extraites de l'image",
     "copiedHex": "Copié",
     "imageLoaded": "Image chargée avec succès",
-    "imageTooLarge": "Image trop grande pour être sauvegardée"
+    "imageTooLarge": "Image trop grande pour être sauvegardée",
+    "noColorSelected": "Aucune couleur sélectionnée",
+    "selectedColor": "Couleur sélectionnée"
   },
   "accessibility": {
     "inspectDyes": "Inspecter les Teintures",
