@@ -231,10 +231,38 @@ export class RouterService {
 
   /**
    * Get tool ID from a URL path
+   * Supports both exact matches (/presets) and nested routes (/presets/:id)
    */
   static getToolFromPath(path: string): ToolId | null {
-    const route = ROUTES.find(r => r.path === path || r.path === `/${path}`);
-    return route?.id ?? null;
+    // First try exact match
+    const exactMatch = ROUTES.find(r => r.path === path || r.path === `/${path}`);
+    if (exactMatch) return exactMatch.id;
+
+    // Try prefix match for nested routes (e.g., /presets/community-xxx)
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    const prefixMatch = ROUTES.find(r => normalizedPath.startsWith(r.path + '/'));
+    return prefixMatch?.id ?? null;
+  }
+
+  /**
+   * Get the sub-path after the tool path
+   * e.g., /presets/community-xxx returns "community-xxx"
+   */
+  static getSubPath(): string | null {
+    const path = window.location.pathname;
+    const toolId = this.getToolFromPath(path);
+    if (!toolId) return null;
+
+    const route = this.getRouteForTool(toolId);
+    if (!route) return null;
+
+    // Extract the part after the tool path
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    if (normalizedPath.startsWith(route.path + '/')) {
+      return normalizedPath.slice(route.path.length + 1); // +1 for the slash
+    }
+
+    return null;
   }
 
   /**

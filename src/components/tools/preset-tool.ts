@@ -21,6 +21,7 @@ import {
   hybridPresetService,
   presetSubmissionService,
   LanguageService,
+  RouterService,
   StorageService,
 } from '@services/index';
 import { ICON_TOOL_PRESETS } from '@shared/tool-icons';
@@ -226,7 +227,47 @@ export class PresetTool extends BaseComponent {
     // Load initial data
     await this.loadPresets();
 
+    // Check for deep link to a specific preset
+    await this.handleDeepLink();
+
     logger.info('[PresetTool] Mounted');
+  }
+
+  /**
+   * Handle deep links to specific presets (e.g., /presets/community-xxx)
+   */
+  private async handleDeepLink(): Promise<void> {
+    const presetId = RouterService.getSubPath();
+    if (!presetId) return;
+
+    logger.info('[PresetTool] Deep link detected, loading preset:', presetId);
+
+    try {
+      // First check if the preset is already in our loaded presets
+      let preset = this.presets.find(p => p.id === presetId);
+      if (!preset) {
+        preset = this.featuredPresets.find(p => p.id === presetId);
+      }
+
+      // If not found locally, fetch from API via hybridPresetService
+      if (!preset) {
+        const fetchedPreset = await hybridPresetService.getPreset(presetId);
+        if (fetchedPreset) {
+          preset = fetchedPreset;
+        }
+      }
+
+      if (preset) {
+        this.showDetailView(preset);
+      } else {
+        logger.warn('[PresetTool] Preset not found for deep link:', presetId);
+        // Show a toast notification
+        const { ToastService } = await import('@services/index');
+        ToastService.warning(LanguageService.t('preset.notFound') || 'Preset not found');
+      }
+    } catch (error) {
+      logger.error('[PresetTool] Failed to load deep linked preset:', error);
+    }
   }
 
   destroy(): void {
