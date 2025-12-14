@@ -19,6 +19,12 @@ import { logger } from '@shared/logger';
 export type ModalType = 'welcome' | 'changelog' | 'confirm' | 'custom';
 
 /**
+ * Branded type for Modal IDs (WEB-TYPE-001)
+ * Prevents accidental use of arbitrary strings as modal identifiers
+ */
+export type ModalId = string & { readonly __brand: 'ModalId' };
+
+/**
  * Modal configuration for creating a modal
  */
 export interface ModalConfig {
@@ -39,7 +45,7 @@ export interface ModalConfig {
  * Modal instance with ID and timestamp
  */
 export interface Modal extends ModalConfig {
-  id: string;
+  id: ModalId;
   timestamp: number;
 }
 
@@ -65,10 +71,10 @@ export class ModalService {
   private static listeners: Set<(modals: Modal[]) => void> = new Set();
 
   /**
-   * Generate unique modal ID
+   * Generate unique modal ID (WEB-TYPE-001: returns branded ModalId type)
    */
-  private static generateId(): string {
-    return `modal_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  private static generateId(): ModalId {
+    return `modal_${Date.now()}_${Math.random().toString(36).substring(2, 9)}` as ModalId;
   }
 
   /**
@@ -83,7 +89,7 @@ export class ModalService {
    * Show a modal dialog
    * @returns Modal ID for programmatic dismissal
    */
-  static show(config: ModalConfig): string {
+  static show(config: ModalConfig): ModalId {
     const id = this.generateId();
 
     const modal: Modal = {
@@ -114,21 +120,21 @@ export class ModalService {
   /**
    * Show a welcome modal
    */
-  static showWelcome(config: Omit<ModalConfig, 'type'>): string {
+  static showWelcome(config: Omit<ModalConfig, 'type'>): ModalId {
     return this.show({ ...config, type: 'welcome' });
   }
 
   /**
    * Show a changelog modal
    */
-  static showChangelog(config: Omit<ModalConfig, 'type'>): string {
+  static showChangelog(config: Omit<ModalConfig, 'type'>): ModalId {
     return this.show({ ...config, type: 'changelog' });
   }
 
   /**
    * Show a confirmation modal
    */
-  static showConfirm(config: Omit<ModalConfig, 'type'>): string {
+  static showConfirm(config: Omit<ModalConfig, 'type'>): ModalId {
     return this.show({
       ...config,
       type: 'confirm',
@@ -140,7 +146,7 @@ export class ModalService {
   /**
    * Dismiss a specific modal by ID
    */
-  static dismiss(id: string): void {
+  static dismiss(id: ModalId | string): void {
     console.log('[ModalService] dismiss called for id:', id);
     const index = this.modals.findIndex((m) => m.id === id);
     console.log('[ModalService] modal index:', index, 'total modals:', this.modals.length);

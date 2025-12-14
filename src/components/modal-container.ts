@@ -55,8 +55,11 @@ export class ModalContainer extends BaseComponent {
       this.update();
 
       // Restore focus after closing last modal
+      // WEB-A11Y-002: Check isConnected to handle case where element was removed from DOM
       if (hadModals && !hasModals && this.previousActiveElement) {
-        this.previousActiveElement.focus();
+        if (this.previousActiveElement.isConnected) {
+          this.previousActiveElement.focus();
+        }
         this.previousActiveElement = null;
       }
     });
