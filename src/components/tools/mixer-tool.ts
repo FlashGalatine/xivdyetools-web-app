@@ -113,7 +113,7 @@ export class MixerTool extends BaseComponent {
   private showPrices: boolean = false;
   private priceData: Map<number, PriceData> = new Map();
 
-  // Child components
+  // Child components (desktop)
   private startDyeSelector: DyeSelector | null = null;
   private endDyeSelector: DyeSelector | null = null;
   private dyeFilters: DyeFilters | null = null;
@@ -123,6 +123,18 @@ export class MixerTool extends BaseComponent {
   private settingsPanel: CollapsiblePanel | null = null;
   private filtersPanel: CollapsiblePanel | null = null;
   private marketPanel: CollapsiblePanel | null = null;
+
+  // Child components (mobile drawer - separate instances for independent panel states)
+  private mobileStartDyePanel: CollapsiblePanel | null = null;
+  private mobileEndDyePanel: CollapsiblePanel | null = null;
+  private mobileSettingsPanel: CollapsiblePanel | null = null;
+  private mobileFiltersPanel: CollapsiblePanel | null = null;
+  private mobileMarketPanel: CollapsiblePanel | null = null;
+  private mobileStartDyeSelector: DyeSelector | null = null;
+  private mobileEndDyeSelector: DyeSelector | null = null;
+  private mobileDyeFilters: DyeFilters | null = null;
+  private mobileMarketBoard: MarketBoard | null = null;
+  private mobileStepValueDisplay: HTMLElement | null = null;
 
   // DOM References
   private startDyeContainer: HTMLElement | null = null;
@@ -191,6 +203,8 @@ export class MixerTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+
+    // Destroy desktop components
     this.startDyeSelector?.destroy();
     this.endDyeSelector?.destroy();
     this.dyeFilters?.destroy();
@@ -200,6 +214,17 @@ export class MixerTool extends BaseComponent {
     this.settingsPanel?.destroy();
     this.filtersPanel?.destroy();
     this.marketPanel?.destroy();
+
+    // Destroy mobile drawer components
+    this.mobileStartDyeSelector?.destroy();
+    this.mobileEndDyeSelector?.destroy();
+    this.mobileDyeFilters?.destroy();
+    this.mobileMarketBoard?.destroy();
+    this.mobileStartDyePanel?.destroy();
+    this.mobileEndDyePanel?.destroy();
+    this.mobileSettingsPanel?.destroy();
+    this.mobileFiltersPanel?.destroy();
+    this.mobileMarketPanel?.destroy();
 
     this.startDye = null;
     this.endDye = null;
@@ -1040,70 +1065,383 @@ export class MixerTool extends BaseComponent {
 
   private renderDrawerContent(): void {
     if (!this.options.drawerContent) return;
-    this.updateDrawerContent();
-  }
 
-  private updateDrawerContent(): void {
-    if (!this.options.drawerContent) return;
     const drawer = this.options.drawerContent;
     clearContainer(drawer);
 
-    const content = this.createElement('div', { className: 'p-4 space-y-3' });
+    // Section 1: Start Dye (collapsible)
+    const startContainer = this.createElement('div');
+    drawer.appendChild(startContainer);
+    this.mobileStartDyePanel = new CollapsiblePanel(startContainer, {
+      title: LanguageService.t('mixer.startDye') || 'Start Dye',
+      storageKey: 'v3_mixer_mobile_start_dye_panel',
+      defaultOpen: true,
+      icon: ICON_TEST_TUBE,
+    });
+    this.mobileStartDyePanel.init();
+    const mobileStartContent = this.createElement('div', { className: 'p-4' });
+    this.renderMobileDyeSelector(mobileStartContent, 'start');
+    this.mobileStartDyePanel.setContent(mobileStartContent);
 
-    // Dye swatches preview
-    const preview = this.createElement('div', { className: 'flex items-center gap-2' });
+    // Section 2: End Dye (collapsible)
+    const endContainer = this.createElement('div');
+    drawer.appendChild(endContainer);
+    this.mobileEndDyePanel = new CollapsiblePanel(endContainer, {
+      title: LanguageService.t('mixer.endDye') || 'End Dye',
+      storageKey: 'v3_mixer_mobile_end_dye_panel',
+      defaultOpen: true,
+      icon: ICON_BEAKER_PIPE,
+    });
+    this.mobileEndDyePanel.init();
+    const mobileEndContent = this.createElement('div', { className: 'p-4' });
+    this.renderMobileDyeSelector(mobileEndContent, 'end');
+    this.mobileEndDyePanel.setContent(mobileEndContent);
 
-    if (this.startDye) {
-      const startSwatch = this.createElement('div', {
-        className: 'w-8 h-8 rounded',
-        attributes: {
-          style: `background: ${this.startDye.hex};`,
-          title: LanguageService.getDyeName(this.startDye.itemID) || this.startDye.name,
-        },
+    // Section 3: Interpolation Settings (collapsible)
+    const settingsContainer = this.createElement('div');
+    drawer.appendChild(settingsContainer);
+    this.mobileSettingsPanel = new CollapsiblePanel(settingsContainer, {
+      title: LanguageService.t('mixer.interpolationSettings') || 'Interpolation Settings',
+      storageKey: 'v3_mixer_mobile_settings_panel',
+      defaultOpen: true,
+      icon: ICON_STAIRS,
+    });
+    this.mobileSettingsPanel.init();
+    const mobileSettingsContent = this.createElement('div', { className: 'p-4' });
+    this.renderMobileSettings(mobileSettingsContent);
+    this.mobileSettingsPanel.setContent(mobileSettingsContent);
+
+    // Section 4: Dye Filters (collapsible)
+    const filtersContainer = this.createElement('div');
+    drawer.appendChild(filtersContainer);
+    this.mobileFiltersPanel = new CollapsiblePanel(filtersContainer, {
+      title: LanguageService.t('filters.advancedFilters') || 'Advanced Dye Filters',
+      storageKey: 'v3_mixer_mobile_filters',
+      defaultOpen: false,
+      icon: ICON_FILTER,
+    });
+    this.mobileFiltersPanel.init();
+
+    const mobileFiltersContent = this.createElement('div');
+    this.mobileDyeFilters = new DyeFilters(mobileFiltersContent, {
+      storageKeyPrefix: 'v3_mixer', // Share filter state with desktop
+      hideHeader: true,
+      onFilterChange: () => {
+        this.updateInterpolation();
+      },
+    });
+    this.mobileDyeFilters.render();
+    this.mobileDyeFilters.bindEvents();
+    this.mobileFiltersPanel.setContent(mobileFiltersContent);
+
+    // Section 5: Market Board (collapsible)
+    const marketContainer = this.createElement('div');
+    drawer.appendChild(marketContainer);
+    this.mobileMarketPanel = new CollapsiblePanel(marketContainer, {
+      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      storageKey: 'v3_mixer_mobile_market',
+      defaultOpen: false,
+      icon: ICON_MARKET,
+    });
+    this.mobileMarketPanel.init();
+
+    const mobileMarketContent = this.createElement('div');
+    this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
+    this.mobileMarketBoard.init();
+
+    // Listen for price toggle changes (mobile)
+    mobileMarketContent.addEventListener('showPricesChanged', ((event: Event) => {
+      const customEvent = event as CustomEvent<{ showPrices: boolean }>;
+      this.showPrices = customEvent.detail.showPrices;
+      if (this.showPrices) {
+        void this.fetchPricesForDisplayedDyes();
+      } else {
+        this.priceData.clear();
+        this.updateDyeDisplay('start');
+        this.updateDyeDisplay('end');
+        this.renderIntermediateMatches();
+      }
+    }) as EventListener);
+
+    // Listen for server changes (mobile)
+    mobileMarketContent.addEventListener('server-changed', (() => {
+      if (this.showPrices) {
+        this.fetchPricesForDisplayedDyes();
+      }
+    }) as EventListener);
+
+    // Listen for category changes (mobile)
+    mobileMarketContent.addEventListener('categories-changed', (() => {
+      if (this.showPrices) {
+        this.fetchPricesForDisplayedDyes();
+      }
+    }) as EventListener);
+
+    // Listen for refresh requests (mobile)
+    mobileMarketContent.addEventListener('refresh-requested', (() => {
+      if (this.showPrices) {
+        this.fetchPricesForDisplayedDyes();
+      }
+    }) as EventListener);
+
+    this.mobileMarketPanel.setContent(mobileMarketContent);
+  }
+
+  /**
+   * Render mobile dye selector section (start or end)
+   */
+  private renderMobileDyeSelector(container: HTMLElement, type: 'start' | 'end'): void {
+    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+
+    // Selected dye display (compact)
+    const displayContainer = this.createElement('div', {
+      className: 'mobile-selected-dye-display',
+    });
+
+    const dye = type === 'start' ? this.startDye : this.endDye;
+    if (dye) {
+      const card = this.createElement('div', {
+        className: 'flex items-center gap-3 p-2 rounded-lg',
+        attributes: { style: 'background: var(--theme-primary);' },
       });
-      preview.appendChild(startSwatch);
+      const swatch = this.createElement('div', {
+        className: 'w-8 h-8 rounded border-2 border-white/30',
+        attributes: { style: `background: ${dye.hex};` },
+      });
+      const name = this.createElement('span', {
+        className: 'text-sm font-medium truncate',
+        textContent: LanguageService.getDyeName(dye.itemID) || dye.name,
+        attributes: { style: 'color: var(--theme-text-header) !important;' },
+      });
+      card.appendChild(swatch);
+      card.appendChild(name);
+      displayContainer.appendChild(card);
     } else {
       const placeholder = this.createElement('div', {
-        className: 'w-8 h-8 rounded border-2 border-dashed',
-        attributes: { style: 'border-color: var(--theme-border);' },
-      });
-      preview.appendChild(placeholder);
-    }
-
-    const arrow = this.createElement('span', {
-      textContent: '\u2192',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    preview.appendChild(arrow);
-
-    if (this.endDye) {
-      const endSwatch = this.createElement('div', {
-        className: 'w-8 h-8 rounded',
+        className: 'p-2 rounded-lg border-2 border-dashed text-center text-sm',
+        textContent: LanguageService.t('mixer.selectDye') || 'Select a dye',
         attributes: {
-          style: `background: ${this.endDye.hex};`,
-          title: LanguageService.getDyeName(this.endDye.itemID) || this.endDye.name,
+          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
       });
-      preview.appendChild(endSwatch);
-    } else {
-      const placeholder = this.createElement('div', {
-        className: 'w-8 h-8 rounded border-2 border-dashed',
-        attributes: { style: 'border-color: var(--theme-border);' },
-      });
-      preview.appendChild(placeholder);
+      displayContainer.appendChild(placeholder);
     }
 
-    content.appendChild(preview);
+    dyeContainer.appendChild(displayContainer);
 
-    // Settings summary
-    const summary = this.createElement('p', {
-      className: 'text-sm',
-      textContent: `${this.stepCount} ${LanguageService.t('mixer.steps') || 'steps'}, ${this.colorSpace.toUpperCase()}`,
+    // Dye selector component
+    const selectorContainer = this.createElement('div', { className: 'mt-2' });
+    dyeContainer.appendChild(selectorContainer);
+
+    const selector = new DyeSelector(selectorContainer, {
+      maxSelections: 1,
+      allowMultiple: false,
+      allowDuplicates: false,
+      showCategories: true,
+      showPrices: true,
+      excludeFacewear: true,
+      showFavorites: true,
+      compactMode: true,
+    });
+    selector.init();
+
+    // Store reference
+    if (type === 'start') {
+      this.mobileStartDyeSelector = selector;
+    } else {
+      this.mobileEndDyeSelector = selector;
+    }
+
+    // Listen for selection changes
+    selectorContainer.addEventListener('selection-changed', () => {
+      const selectedDyes = selector.getSelectedDyes();
+      if (type === 'start') {
+        this.startDye = selectedDyes[0] || null;
+        if (this.startDye) {
+          StorageService.setItem(STORAGE_KEYS.startDyeId, this.startDye.id);
+        } else {
+          StorageService.removeItem(STORAGE_KEYS.startDyeId);
+        }
+        // Sync to desktop selector
+        this.startDyeSelector?.setSelectedDyes(selectedDyes);
+      } else {
+        this.endDye = selectedDyes[0] || null;
+        if (this.endDye) {
+          StorageService.setItem(STORAGE_KEYS.endDyeId, this.endDye.id);
+        } else {
+          StorageService.removeItem(STORAGE_KEYS.endDyeId);
+        }
+        // Sync to desktop selector
+        this.endDyeSelector?.setSelectedDyes(selectedDyes);
+      }
+      this.updateDyeDisplay(type);
+      this.updateMobileDyeDisplay(displayContainer, type);
+      this.updateInterpolation();
+    });
+
+    // Set initial selection if dye was loaded from storage
+    const persistedDye = type === 'start' ? this.startDye : this.endDye;
+    if (persistedDye) {
+      selector.setSelectedDyes([persistedDye]);
+    }
+
+    container.appendChild(dyeContainer);
+  }
+
+  /**
+   * Update mobile dye display after selection change
+   */
+  private updateMobileDyeDisplay(displayContainer: HTMLElement, type: 'start' | 'end'): void {
+    const dye = type === 'start' ? this.startDye : this.endDye;
+    clearContainer(displayContainer);
+
+    if (dye) {
+      const card = this.createElement('div', {
+        className: 'flex items-center gap-3 p-2 rounded-lg',
+        attributes: { style: 'background: var(--theme-primary);' },
+      });
+      const swatch = this.createElement('div', {
+        className: 'w-8 h-8 rounded border-2 border-white/30',
+        attributes: { style: `background: ${dye.hex};` },
+      });
+      const name = this.createElement('span', {
+        className: 'text-sm font-medium truncate',
+        textContent: LanguageService.getDyeName(dye.itemID) || dye.name,
+        attributes: { style: 'color: var(--theme-text-header) !important;' },
+      });
+      card.appendChild(swatch);
+      card.appendChild(name);
+      displayContainer.appendChild(card);
+    } else {
+      const placeholder = this.createElement('div', {
+        className: 'p-2 rounded-lg border-2 border-dashed text-center text-sm',
+        textContent: LanguageService.t('mixer.selectDye') || 'Select a dye',
+        attributes: {
+          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
+        },
+      });
+      displayContainer.appendChild(placeholder);
+    }
+  }
+
+  /**
+   * Render mobile interpolation settings
+   */
+  private renderMobileSettings(container: HTMLElement): void {
+    const settingsContainer = this.createElement('div', { className: 'space-y-4' });
+
+    // Steps slider
+    const stepsGroup = this.createElement('div');
+    const stepsLabel = this.createElement('label', {
+      className: 'flex items-center justify-between text-sm mb-2',
+    });
+    const stepsText = this.createElement('span', {
+      textContent: LanguageService.t('mixer.steps') || 'Steps',
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+    this.mobileStepValueDisplay = this.createElement('span', {
+      className: 'font-mono',
+      textContent: String(this.stepCount),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
-    content.appendChild(summary);
+    stepsLabel.appendChild(stepsText);
+    stepsLabel.appendChild(this.mobileStepValueDisplay);
+    stepsGroup.appendChild(stepsLabel);
 
-    drawer.appendChild(content);
+    const stepsInput = this.createElement('input', {
+      className: 'w-full',
+      attributes: {
+        type: 'range',
+        min: '2',
+        max: '10',
+        value: String(this.stepCount),
+        style: 'accent-color: var(--theme-primary);',
+      },
+    }) as HTMLInputElement;
+
+    this.on(stepsInput, 'input', () => {
+      this.stepCount = parseInt(stepsInput.value, 10);
+      // Update both displays
+      if (this.mobileStepValueDisplay) {
+        this.mobileStepValueDisplay.textContent = String(this.stepCount);
+      }
+      if (this.stepValueDisplay) {
+        this.stepValueDisplay.textContent = String(this.stepCount);
+      }
+      StorageService.setItem(STORAGE_KEYS.stepCount, this.stepCount);
+      this.updateInterpolation();
+    });
+
+    stepsGroup.appendChild(stepsInput);
+    settingsContainer.appendChild(stepsGroup);
+
+    // Color space toggle
+    const colorSpaceGroup = this.createElement('div');
+    const colorSpaceLabel = this.createElement('label', {
+      className: 'block text-sm mb-2',
+      textContent: LanguageService.t('mixer.colorSpace') || 'Color Space',
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+    colorSpaceGroup.appendChild(colorSpaceLabel);
+
+    const buttonContainer = this.createElement('div', { className: 'flex gap-2' });
+
+    const rgbBtn = this.createElement('button', {
+      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
+      textContent: 'RGB',
+      attributes: {
+        style: this.colorSpace === 'rgb'
+          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+      },
+    });
+
+    const hsvBtn = this.createElement('button', {
+      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
+      textContent: 'HSV',
+      attributes: {
+        style: this.colorSpace === 'hsv'
+          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+      },
+    });
+
+    this.on(rgbBtn, 'click', () => {
+      this.colorSpace = 'rgb';
+      StorageService.setItem(STORAGE_KEYS.colorSpace, 'rgb');
+      rgbBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
+      hsvBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
+      this.updateInterpolation();
+    });
+
+    this.on(hsvBtn, 'click', () => {
+      this.colorSpace = 'hsv';
+      StorageService.setItem(STORAGE_KEYS.colorSpace, 'hsv');
+      hsvBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
+      rgbBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
+      this.updateInterpolation();
+    });
+
+    buttonContainer.appendChild(rgbBtn);
+    buttonContainer.appendChild(hsvBtn);
+    colorSpaceGroup.appendChild(buttonContainer);
+    settingsContainer.appendChild(colorSpaceGroup);
+
+    container.appendChild(settingsContainer);
+  }
+
+  /**
+   * Update drawer content (called when state changes from desktop)
+   * Syncs mobile selectors with current state
+   */
+  private updateDrawerContent(): void {
+    // Sync mobile selectors with current state (if they exist)
+    if (this.mobileStartDyeSelector && this.startDye) {
+      this.mobileStartDyeSelector.setSelectedDyes([this.startDye]);
+    }
+    if (this.mobileEndDyeSelector && this.endDye) {
+      this.mobileEndDyeSelector.setSelectedDyes([this.endDye]);
+    }
   }
 
   // ============================================================================
