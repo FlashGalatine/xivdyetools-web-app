@@ -146,6 +146,22 @@ export class BudgetTool extends BaseComponent {
   private alternativesListContainer: HTMLElement | null = null;
   private quickPickButtons: HTMLButtonElement[] = [];
 
+  // Mobile drawer components (separate from desktop)
+  private mobileDyeSelector: DyeSelector | null = null;
+  private mobileDyeFilters: DyeFilters | null = null;
+  private mobileMarketBoard: MarketBoard | null = null;
+  private mobileTargetDyePanel: CollapsiblePanel | null = null;
+  private mobileQuickPicksPanel: CollapsiblePanel | null = null;
+  private mobileBudgetLimitPanel: CollapsiblePanel | null = null;
+  private mobileSortByPanel: CollapsiblePanel | null = null;
+  private mobileColorDistancePanel: CollapsiblePanel | null = null;
+  private mobileFiltersPanel: CollapsiblePanel | null = null;
+  private mobileMarketPanel: CollapsiblePanel | null = null;
+  private mobileTargetDyeContainer: HTMLElement | null = null;
+  private mobileBudgetValueDisplay: HTMLElement | null = null;
+  private mobileDistanceValueDisplay: HTMLElement | null = null;
+  private mobileQuickPickButtons: HTMLButtonElement[] = [];
+
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
 
@@ -203,6 +219,8 @@ export class BudgetTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+
+    // Desktop components
     this.dyeSelector?.destroy();
     this.dyeFilters?.destroy();
     this.marketBoard?.destroy();
@@ -214,10 +232,23 @@ export class BudgetTool extends BaseComponent {
     this.sortByPanel?.destroy();
     this.colorDistancePanel?.destroy();
 
+    // Mobile components
+    this.mobileDyeSelector?.destroy();
+    this.mobileDyeFilters?.destroy();
+    this.mobileMarketBoard?.destroy();
+    this.mobileTargetDyePanel?.destroy();
+    this.mobileQuickPicksPanel?.destroy();
+    this.mobileBudgetLimitPanel?.destroy();
+    this.mobileSortByPanel?.destroy();
+    this.mobileColorDistancePanel?.destroy();
+    this.mobileFiltersPanel?.destroy();
+    this.mobileMarketPanel?.destroy();
+
     this.targetDye = null;
     this.alternatives = [];
     this.priceData.clear();
     this.quickPickButtons = [];
+    this.mobileQuickPickButtons = [];
 
     super.destroy();
     logger.info('[BudgetTool] Destroyed');
@@ -1197,54 +1228,516 @@ export class BudgetTool extends BaseComponent {
 
   private renderDrawerContent(): void {
     if (!this.options.drawerContent) return;
-    this.updateDrawerContent();
-  }
-
-  private updateDrawerContent(): void {
-    if (!this.options.drawerContent) return;
     const drawer = this.options.drawerContent;
     clearContainer(drawer);
 
-    const content = this.createElement('div', { className: 'p-4 space-y-3' });
+    // Section 1: Target Dye (collapsible, default open)
+    const targetContainer = this.createElement('div');
+    drawer.appendChild(targetContainer);
+    this.mobileTargetDyePanel = new CollapsiblePanel(targetContainer, {
+      title: LanguageService.t('budget.targetDye') || 'Target Dye',
+      storageKey: 'v3_budget_mobile_target_panel',
+      defaultOpen: true,
+      icon: ICON_TARGET,
+    });
+    this.mobileTargetDyePanel.init();
+    const targetContent = this.createElement('div');
+    this.renderMobileTargetDyeSection(targetContent);
+    this.mobileTargetDyePanel.setContent(targetContent);
 
-    // Quick summary
-    const summary = this.createElement('div', {
-      className: 'p-3 rounded-lg',
-      attributes: { style: 'background: var(--theme-card-background);' },
+    // Section 2: Quick Picks (collapsible, default open)
+    const quickContainer = this.createElement('div');
+    drawer.appendChild(quickContainer);
+    this.mobileQuickPicksPanel = new CollapsiblePanel(quickContainer, {
+      title: LanguageService.t('budget.quickPicks') || 'Quick Picks',
+      storageKey: 'v3_budget_mobile_quickpicks_panel',
+      defaultOpen: true,
+      icon: ICON_SPARKLES,
+    });
+    this.mobileQuickPicksPanel.init();
+    const quickContent = this.createElement('div');
+    this.renderMobileQuickPicksSection(quickContent);
+    this.mobileQuickPicksPanel.setContent(quickContent);
+
+    // Section 3: Budget Limit (collapsible, default open)
+    const budgetContainer = this.createElement('div');
+    drawer.appendChild(budgetContainer);
+    this.mobileBudgetLimitPanel = new CollapsiblePanel(budgetContainer, {
+      title: LanguageService.t('budget.budgetLimit') || 'Budget Limit',
+      storageKey: 'v3_budget_mobile_limit_panel',
+      defaultOpen: true,
+      icon: ICON_COINS,
+    });
+    this.mobileBudgetLimitPanel.init();
+    const budgetContent = this.createElement('div');
+    this.renderMobileBudgetSection(budgetContent);
+    this.mobileBudgetLimitPanel.setContent(budgetContent);
+
+    // Section 4: Color Distance (collapsible, default closed)
+    const distanceContainer = this.createElement('div');
+    drawer.appendChild(distanceContainer);
+    this.mobileColorDistancePanel = new CollapsiblePanel(distanceContainer, {
+      title: LanguageService.t('budget.colorDistance') || 'Color Distance',
+      storageKey: 'v3_budget_mobile_distance_panel',
+      defaultOpen: false,
+      icon: ICON_DISTANCE,
+    });
+    this.mobileColorDistancePanel.init();
+    const distanceContent = this.createElement('div');
+    this.renderMobileColorDistanceSection(distanceContent);
+    this.mobileColorDistancePanel.setContent(distanceContent);
+
+    // Section 5: Sort Options (collapsible, default closed)
+    const sortContainer = this.createElement('div');
+    drawer.appendChild(sortContainer);
+    this.mobileSortByPanel = new CollapsiblePanel(sortContainer, {
+      title: LanguageService.t('budget.sortBy') || 'Sort By',
+      storageKey: 'v3_budget_mobile_sort_panel',
+      defaultOpen: false,
+      icon: ICON_SORT,
+    });
+    this.mobileSortByPanel.init();
+    const sortContent = this.createElement('div');
+    this.renderMobileSortSection(sortContent);
+    this.mobileSortByPanel.setContent(sortContent);
+
+    // Section 6: Dye Filters (collapsible)
+    const filtersContainer = this.createElement('div');
+    drawer.appendChild(filtersContainer);
+    this.mobileFiltersPanel = new CollapsiblePanel(filtersContainer, {
+      title: LanguageService.t('filters.title') || 'Dye Filters',
+      storageKey: 'v3_budget_mobile_filters',
+      defaultOpen: false,
+      icon: ICON_FILTER,
+    });
+    this.mobileFiltersPanel.init();
+
+    const filtersContent = this.createElement('div');
+    this.mobileDyeFilters = new DyeFilters(filtersContent, {
+      storageKeyPrefix: 'v3_budget', // Share filter state with desktop
+      onFilterChange: () => {
+        this.findAlternatives();
+      },
+      hideHeader: true,
+    });
+    this.mobileDyeFilters.render();
+    this.mobileDyeFilters.bindEvents();
+    this.mobileFiltersPanel.setContent(filtersContent);
+
+    // Section 7: Market Board (collapsible)
+    const marketContainer = this.createElement('div');
+    drawer.appendChild(marketContainer);
+    this.mobileMarketPanel = new CollapsiblePanel(marketContainer, {
+      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      storageKey: 'v3_budget_mobile_market',
+      defaultOpen: false,
+      icon: ICON_MARKET,
+    });
+    this.mobileMarketPanel.init();
+
+    const marketContent = this.createElement('div');
+    this.mobileMarketBoard = new MarketBoard(marketContent);
+    this.mobileMarketBoard.init();
+
+    // Listen for server changes to refresh prices
+    marketContent.addEventListener('server-changed', () => {
+      this.findAlternatives();
     });
 
-    if (this.targetDye) {
-      const dyePreview = this.createElement('div', { className: 'flex items-center gap-2 mb-2' });
-      const swatch = this.createElement('div', {
-        className: 'w-6 h-6 rounded',
-        attributes: { style: `background: ${this.targetDye.hex}; border: 1px solid var(--theme-border);` },
+    this.mobileMarketPanel.setContent(marketContent);
+  }
+
+  /**
+   * Render mobile target dye display and selector
+   */
+  private renderMobileTargetDyeSection(container: HTMLElement): void {
+    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+
+    // Selected dye display
+    this.mobileTargetDyeContainer = this.createElement('div');
+    dyeContainer.appendChild(this.mobileTargetDyeContainer);
+    this.updateMobileTargetDyeDisplay();
+
+    // Dye selector component
+    const selectorContainer = this.createElement('div', { className: 'mt-2' });
+    dyeContainer.appendChild(selectorContainer);
+
+    this.mobileDyeSelector = new DyeSelector(selectorContainer, {
+      maxSelections: 1,
+      allowMultiple: false,
+      allowDuplicates: false,
+      showCategories: true,
+      showPrices: true,
+      excludeFacewear: true,
+      showFavorites: true,
+      compactMode: true,
+    });
+    this.mobileDyeSelector.init();
+
+    // Listen for selection changes
+    selectorContainer.addEventListener('selection-changed', () => {
+      const selectedDyes = this.mobileDyeSelector?.getSelectedDyes() || [];
+      this.targetDye = selectedDyes[0] || null;
+      this.updateTargetDyeDisplay();
+      this.updateMobileTargetDyeDisplay();
+      this.updateQuickPickSelection();
+      this.updateMobileQuickPickSelection();
+
+      if (this.targetDye) {
+        StorageService.setItem(STORAGE_KEYS.targetDyeId, this.targetDye.id);
+      }
+
+      this.findAlternatives();
+    });
+
+    container.appendChild(dyeContainer);
+  }
+
+  /**
+   * Update mobile target dye display card
+   */
+  private updateMobileTargetDyeDisplay(): void {
+    if (!this.mobileTargetDyeContainer) return;
+    clearContainer(this.mobileTargetDyeContainer);
+
+    if (!this.targetDye) {
+      const placeholder = this.createElement('div', {
+        className: 'p-4 rounded-lg border-2 border-dashed text-center',
+        textContent: LanguageService.t('budget.selectTargetDye') || 'Select a target dye',
+        attributes: {
+          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
+        },
       });
-      const name = this.createElement('span', {
-        className: 'font-medium',
-        textContent: LanguageService.getDyeName(this.targetDye.itemID) || this.targetDye.name,
-        attributes: { style: 'color: var(--theme-text);' },
-      });
-      dyePreview.appendChild(swatch);
-      dyePreview.appendChild(name);
-      summary.appendChild(dyePreview);
+      this.mobileTargetDyeContainer.appendChild(placeholder);
+      return;
     }
 
-    const budgetText = this.createElement('p', {
+    const isLight = this.isLightColor(this.targetDye.hex);
+    const textColor = isLight ? '#1A1A1A' : '#FFFFFF';
+    const textShadow = isLight
+      ? '0 1px 2px rgba(255, 255, 255, 0.3)'
+      : '0 1px 2px rgba(0, 0, 0, 0.3)';
+
+    const card = this.createElement('div', {
+      className: 'p-4 rounded-lg',
+      attributes: {
+        style: `background: ${this.targetDye.hex}; border: 1px solid var(--theme-border);`,
+      },
+    });
+
+    const name = this.createElement('p', {
+      className: 'font-semibold text-lg mb-1',
+      textContent: LanguageService.getDyeName(this.targetDye.itemID) || this.targetDye.name,
+      attributes: { style: `color: ${textColor} !important; text-shadow: ${textShadow};` },
+    });
+
+    const hex = this.createElement('p', {
+      className: 'text-sm font-mono mb-2',
+      textContent: this.targetDye.hex,
+      attributes: { style: `color: ${textColor} !important; opacity: 0.8; text-shadow: ${textShadow};` },
+    });
+
+    const price = this.createElement('p', {
+      className: 'text-sm font-medium',
+      textContent: this.targetPrice > 0
+        ? `~${this.targetPrice.toLocaleString()} gil`
+        : LanguageService.t('budget.loadingPrice') || 'Loading price...',
+      attributes: { style: `color: ${textColor} !important; text-shadow: ${textShadow};` },
+    });
+
+    card.appendChild(name);
+    card.appendChild(hex);
+    card.appendChild(price);
+    this.mobileTargetDyeContainer.appendChild(card);
+  }
+
+  /**
+   * Render mobile quick picks grid
+   */
+  private renderMobileQuickPicksSection(container: HTMLElement): void {
+    const grid = this.createElement('div', {
+      className: 'grid grid-cols-3 gap-2',
+    });
+
+    this.mobileQuickPickButtons = [];
+
+    POPULAR_EXPENSIVE_DYE_NAMES.forEach(dyeName => {
+      const matches = dyeService.searchByName(dyeName);
+      const dye = matches.find(d => d.name === dyeName) || matches[0];
+      if (!dye) return;
+
+      const isSelected = this.targetDye?.id === dye.id;
+      const btn = this.createElement('button', {
+        className: 'flex flex-col items-center gap-1 p-2 rounded-lg transition-colors',
+        attributes: {
+          style: isSelected
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-card-background); color: var(--theme-text);',
+          type: 'button',
+          title: LanguageService.getDyeName(dye.itemID) || dye.name,
+        },
+      }) as HTMLButtonElement;
+
+      const swatch = this.createElement('div', {
+        className: 'w-6 h-6 rounded',
+        attributes: { style: `background: ${dye.hex}; border: 1px solid var(--theme-border);` },
+      });
+
+      const label = this.createElement('span', {
+        className: 'text-xs truncate w-full text-center',
+        textContent: dyeName.split(' ')[0],
+      });
+
+      btn.appendChild(swatch);
+      btn.appendChild(label);
+
+      this.on(btn, 'click', () => {
+        this.targetDye = dye;
+        this.updateTargetDyeDisplay();
+        this.updateMobileTargetDyeDisplay();
+        this.updateQuickPickSelection();
+        this.updateMobileQuickPickSelection();
+        StorageService.setItem(STORAGE_KEYS.targetDyeId, dye.id);
+        this.findAlternatives();
+      });
+
+      this.mobileQuickPickButtons.push(btn);
+      grid.appendChild(btn);
+    });
+
+    container.appendChild(grid);
+  }
+
+  /**
+   * Update mobile quick pick button selection state
+   */
+  private updateMobileQuickPickSelection(): void {
+    this.mobileQuickPickButtons.forEach((btn, index) => {
+      const dyeName = POPULAR_EXPENSIVE_DYE_NAMES[index];
+      const matches = dyeService.searchByName(dyeName);
+      const dye = matches.find(d => d.name === dyeName) || matches[0];
+      const isSelected = dye && this.targetDye?.id === dye.id;
+
+      btn.setAttribute('style', isSelected
+        ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+        : 'background: var(--theme-card-background); color: var(--theme-text);');
+    });
+  }
+
+  /**
+   * Render mobile budget limit slider
+   */
+  private renderMobileBudgetSection(container: HTMLElement): void {
+    const valueDisplay = this.createElement('div', {
+      className: 'flex items-center justify-between mb-3',
+    });
+
+    const labelSpan = this.createElement('span', {
       className: 'text-sm',
-      textContent: `${LanguageService.t('budget.budget') || 'Budget'}: ${this.budgetLimit.toLocaleString()} gil`,
+      textContent: LanguageService.t('budget.maxPrice') || 'Max Price',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
-    summary.appendChild(budgetText);
 
-    const sortText = this.createElement('p', {
+    this.mobileBudgetValueDisplay = this.createElement('span', {
+      className: 'font-semibold',
+      textContent: `${this.budgetLimit.toLocaleString()} gil`,
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+
+    valueDisplay.appendChild(labelSpan);
+    valueDisplay.appendChild(this.mobileBudgetValueDisplay);
+    container.appendChild(valueDisplay);
+
+    const slider = this.createElement('input', {
+      className: 'w-full',
+      attributes: {
+        type: 'range',
+        min: '0',
+        max: '1000000',
+        value: String(this.budgetLimit),
+        step: '1000',
+        style: 'accent-color: var(--theme-primary);',
+      },
+    }) as HTMLInputElement;
+
+    this.on(slider, 'input', () => {
+      this.budgetLimit = parseInt(slider.value, 10);
+      if (this.mobileBudgetValueDisplay) {
+        this.mobileBudgetValueDisplay.textContent = `${this.budgetLimit.toLocaleString()} gil`;
+      }
+      if (this.budgetValueDisplay) {
+        this.budgetValueDisplay.textContent = `${this.budgetLimit.toLocaleString()} gil`;
+      }
+      StorageService.setItem(STORAGE_KEYS.budgetLimit, this.budgetLimit);
+      this.filterAndSortAlternatives();
+    });
+
+    container.appendChild(slider);
+
+    const ticksContainer = this.createElement('div', {
+      className: 'flex justify-between mt-1',
+    });
+    ['0', '100K', '500K', '1M'].forEach(tick => {
+      const tickLabel = this.createElement('span', {
+        className: 'text-xs',
+        textContent: tick,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      ticksContainer.appendChild(tickLabel);
+    });
+    container.appendChild(ticksContainer);
+  }
+
+  /**
+   * Render mobile color distance slider
+   */
+  private renderMobileColorDistanceSection(container: HTMLElement): void {
+    const valueDisplay = this.createElement('div', {
+      className: 'flex items-center justify-between mb-3',
+    });
+
+    const labelSpan = this.createElement('span', {
       className: 'text-sm',
-      textContent: `${this.alternatives.length} ${LanguageService.t('budget.alternativesFound') || 'alternatives found'}`,
+      textContent: LanguageService.t('budget.maxDistance') || 'Max Delta-E',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
-    summary.appendChild(sortText);
 
-    content.appendChild(summary);
-    drawer.appendChild(content);
+    this.mobileDistanceValueDisplay = this.createElement('span', {
+      className: 'font-semibold',
+      textContent: String(this.colorDistance),
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+
+    valueDisplay.appendChild(labelSpan);
+    valueDisplay.appendChild(this.mobileDistanceValueDisplay);
+    container.appendChild(valueDisplay);
+
+    const description = this.createElement('p', {
+      className: 'text-xs mb-3',
+      textContent: LanguageService.t('budget.distanceDesc') || 'Higher values show more alternatives, lower values show closer matches',
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+    container.appendChild(description);
+
+    const slider = this.createElement('input', {
+      className: 'w-full',
+      attributes: {
+        type: 'range',
+        min: '25',
+        max: '100',
+        value: String(this.colorDistance),
+        step: '5',
+        style: 'accent-color: var(--theme-primary);',
+      },
+    }) as HTMLInputElement;
+
+    this.on(slider, 'input', () => {
+      this.colorDistance = parseInt(slider.value, 10);
+      if (this.mobileDistanceValueDisplay) {
+        this.mobileDistanceValueDisplay.textContent = String(this.colorDistance);
+      }
+      if (this.distanceValueDisplay) {
+        this.distanceValueDisplay.textContent = String(this.colorDistance);
+      }
+      StorageService.setItem(STORAGE_KEYS.colorDistance, this.colorDistance);
+      this.findAlternatives();
+    });
+
+    container.appendChild(slider);
+
+    const ticksContainer = this.createElement('div', {
+      className: 'flex justify-between mt-1',
+    });
+    ['25', '50', '75', '100'].forEach(tick => {
+      const tickLabel = this.createElement('span', {
+        className: 'text-xs',
+        textContent: tick,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      ticksContainer.appendChild(tickLabel);
+    });
+    container.appendChild(ticksContainer);
+  }
+
+  /**
+   * Render mobile sort options
+   */
+  private renderMobileSortSection(container: HTMLElement): void {
+    const options = [
+      { id: 'match', label: LanguageService.t('budget.sortMatch') || 'Best Match', desc: LanguageService.t('budget.sortMatchDesc') || 'Closest color first' },
+      { id: 'price', label: LanguageService.t('budget.sortPrice') || 'Lowest Price', desc: LanguageService.t('budget.sortPriceDesc') || 'Cheapest first' },
+      { id: 'value', label: LanguageService.t('budget.sortValue') || 'Best Value', desc: LanguageService.t('budget.sortValueDesc') || 'Balance of match + price' },
+    ];
+
+    const optionsContainer = this.createElement('div', { className: 'space-y-2' });
+
+    options.forEach(opt => {
+      const isSelected = this.sortBy === opt.id;
+      const label = this.createElement('label', {
+        className: 'flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors',
+        attributes: {
+          style: isSelected
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: transparent;',
+        },
+      });
+
+      const radio = this.createElement('input', {
+        className: 'mt-1',
+        attributes: {
+          type: 'radio',
+          name: 'mobileSortBy',
+          value: opt.id,
+          ...(isSelected && { checked: '' }),
+        },
+      }) as HTMLInputElement;
+
+      const text = this.createElement('div');
+      const labelText = this.createElement('span', {
+        className: 'font-medium text-sm',
+        textContent: opt.label,
+      });
+      const descText = this.createElement('p', {
+        className: 'text-xs',
+        textContent: opt.desc,
+        attributes: { style: isSelected ? '' : 'color: var(--theme-text-muted);' },
+      });
+      text.appendChild(labelText);
+      text.appendChild(descText);
+
+      this.on(radio, 'change', () => {
+        this.sortBy = opt.id as 'match' | 'price' | 'value';
+        StorageService.setItem(STORAGE_KEYS.sortBy, this.sortBy);
+
+        // Update mobile label styles
+        optionsContainer.querySelectorAll('label').forEach((lbl, idx) => {
+          const selected = options[idx].id === opt.id;
+          lbl.setAttribute('style', selected
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: transparent;');
+          const pEl = lbl.querySelector('p');
+          if (pEl) {
+            pEl.setAttribute('style', selected ? '' : 'color: var(--theme-text-muted);');
+          }
+        });
+
+        this.filterAndSortAlternatives();
+      });
+
+      label.appendChild(radio);
+      label.appendChild(text);
+      optionsContainer.appendChild(label);
+    });
+
+    container.appendChild(optionsContainer);
+  }
+
+  /**
+   * Update drawer content (lightweight update for dynamic data only)
+   */
+  private updateDrawerContent(): void {
+    this.updateMobileTargetDyeDisplay();
+    this.updateMobileQuickPickSelection();
   }
 
   // ============================================================================
