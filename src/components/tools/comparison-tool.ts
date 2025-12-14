@@ -722,7 +722,8 @@ export class ComparisonTool extends BaseComponent {
    * Create Hue-Saturation SVG plot
    */
   private createHueSatPlot(): HTMLElement {
-    const plot = this.createElement('div', { className: 'relative aspect-square' });
+    // Use smaller max-height on mobile to save vertical space
+    const plot = this.createElement('div', { className: 'relative aspect-square max-h-[200px] md:max-h-none mx-auto' });
 
     // Generate data points
     const points = this.dyesWithHSV.map((d, index) => {
@@ -790,10 +791,11 @@ export class ComparisonTool extends BaseComponent {
    * Create Brightness Distribution bar chart
    */
   private createBrightnessChart(): HTMLElement {
-    const container = this.createElement('div', { className: 'flex flex-col flex-1 h-full min-h-[150px]' });
+    // Smaller min-height on mobile to save vertical space
+    const container = this.createElement('div', { className: 'flex flex-col flex-1 h-full min-h-[120px] md:min-h-[150px]' });
 
-    // Bar chart area
-    const chart = this.createElement('div', { className: 'flex items-end gap-4 flex-1 h-full' });
+    // Bar chart area - smaller gap on mobile
+    const chart = this.createElement('div', { className: 'flex items-end gap-2 md:gap-4 flex-1 h-full' });
 
     for (let i = 0; i < this.dyesWithHSV.length; i++) {
       const d = this.dyesWithHSV[i];
@@ -812,9 +814,9 @@ export class ComparisonTool extends BaseComponent {
     }
     container.appendChild(chart);
 
-    // Labels row
+    // Labels row - smaller gap on mobile to match bars
     const labels = this.createElement('div', {
-      className: 'flex gap-4 mt-2 pt-2 border-t flex-shrink-0',
+      className: 'flex gap-2 md:gap-4 mt-2 pt-2 border-t flex-shrink-0',
       attributes: { style: 'border-color: var(--theme-border);' },
     });
 
@@ -846,8 +848,8 @@ export class ComparisonTool extends BaseComponent {
       attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
     });
 
-    // Build table HTML
-    let html = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th></th>';
+    // Build table HTML - use sticky first column for row labels
+    let html = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="sticky left-0 z-10" style="background: var(--theme-card-background);"></th>';
 
     // Column headers
     for (const dye of this.selectedDyes) {
@@ -869,9 +871,11 @@ export class ComparisonTool extends BaseComponent {
         this.closestPair &&
         (i === this.closestPair[0] || i === this.closestPair[1]);
 
+      // Use sticky positioning for the first column so row labels stay visible when scrolling
+      const rowBgColor = isRowClosest ? 'var(--theme-background-secondary)' : 'var(--theme-card-background)';
       html += `
         <tr>
-          <td class="p-2" ${isRowClosest ? 'style="background: var(--theme-background-secondary);"' : ''}>
+          <td class="p-2 sticky left-0 z-10" style="background: ${rowBgColor};">
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded shrink-0" style="background: ${rowDye.hex};"></div>
               <span class="text-xs truncate max-w-16 md:max-w-20" style="color: var(--theme-text);">${rowDyeName}</span>
