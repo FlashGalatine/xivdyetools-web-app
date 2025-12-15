@@ -90,6 +90,9 @@ export function initErrorTracking(tracker: import('@xivdyetools/logger').ErrorTr
  * Centralized logger with dev-mode filtering and error tracking
  *
  * Wraps @xivdyetools/logger/browser with backward-compatible API.
+ *
+ * @deprecated Use `createBrowserLogger()` from '@xivdyetools/logger/browser' instead.
+ * This backward-compatible logger object will be removed in the next major version.
  */
 export const logger = {
   debug(...args: unknown[]): void {

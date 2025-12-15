@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.1] - 2025-12-14
+
+### Deprecated
+
+#### Type Re-exports
+The following re-exports from `src/shared/types.ts` are deprecated and will be removed in the next major version:
+
+- **Color Types** (RGB, HSV, HexColor, etc.): Import from `@xivdyetools/types` instead
+- **Dye Types** (Dye, DyeDatabase, etc.): Import from `@xivdyetools/types` instead
+- **API Types**: Import from `@xivdyetools/types` instead
+- **Error Types**: Import from `@xivdyetools/types` instead
+- **Utility Types** (Result, AsyncResult, etc.): Import from `@xivdyetools/types` instead
+
+#### Logger Re-exports
+The `logger` object from `src/shared/logger.ts` is deprecated:
+
+- Use `createBrowserLogger()` from `@xivdyetools/logger/browser` instead
+
+**Migration Guide:**
+```typescript
+// Before (deprecated)
+import { RGB, Dye, ErrorCode } from '@/shared/types';
+import { logger } from '@/shared/logger';
+
+// After (recommended)
+import type { RGB, Dye } from '@xivdyetools/types';
+import { ErrorCode } from '@xivdyetools/types';
+import { createBrowserLogger } from '@xivdyetools/logger/browser';
+
+const logger = createBrowserLogger();
+```
+
+---
+
 ## [3.0.0] - 2025-12-14
 
 ### 🔐 XIVAuth Integration (Multi-Provider Authentication)
