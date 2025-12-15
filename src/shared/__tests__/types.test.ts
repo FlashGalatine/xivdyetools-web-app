@@ -32,30 +32,32 @@ describe('createHexColor function', () => {
     expect(hex).toBe('#AABBCC');
   });
 
-  it('should work with lowercase hex strings', () => {
+  it('should normalize lowercase hex strings to uppercase', () => {
+    // The @xivdyetools/types package normalizes to uppercase
     const hex = createHexColor('#aabbcc');
-    expect(hex).toBe('#aabbcc');
+    expect(hex).toBe('#AABBCC');
   });
 
-  it('should work with mixed case hex strings', () => {
+  it('should normalize mixed case hex strings to uppercase', () => {
+    // The @xivdyetools/types package normalizes to uppercase
     const hex = createHexColor('#AaBbCc');
-    expect(hex).toBe('#AaBbCc');
+    expect(hex).toBe('#AABBCC');
   });
 
-  it('should work with shorthand hex strings', () => {
+  it('should expand shorthand hex strings to full format', () => {
+    // The @xivdyetools/types package expands shorthand (#RGB -> #RRGGBB)
     const hex = createHexColor('#F00');
-    expect(hex).toBe('#F00');
+    expect(hex).toBe('#FF0000');
   });
 
-  it('should work with 8-digit hex strings (with alpha)', () => {
-    const hex = createHexColor('#FF0000FF');
-    expect(hex).toBe('#FF0000FF');
+  it('should throw error for 8-digit hex strings (alpha not supported)', () => {
+    // The @xivdyetools/types package only supports #RGB and #RRGGBB formats
+    expect(() => createHexColor('#FF0000FF')).toThrow('Invalid hex color format');
   });
 
-  it('should accept any string (no runtime validation)', () => {
-    // Note: createHexColor is a branding function, not a validation function
-    const hex = createHexColor('not-a-hex');
-    expect(hex).toBe('not-a-hex');
+  it('should throw error for invalid hex strings', () => {
+    // The @xivdyetools/types package validates input
+    expect(() => createHexColor('not-a-hex')).toThrow('Invalid hex color format');
   });
 
   it('should return a value usable as HexColor type', () => {
@@ -63,9 +65,9 @@ describe('createHexColor function', () => {
     expect(typeof hex).toBe('string');
   });
 
-  it('should work with empty string', () => {
-    const hex = createHexColor('');
-    expect(hex).toBe('');
+  it('should throw error for empty string', () => {
+    // The @xivdyetools/types package validates input
+    expect(() => createHexColor('')).toThrow('Invalid hex color format');
   });
 
   it('should work with various color values', () => {

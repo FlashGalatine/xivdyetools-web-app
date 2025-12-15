@@ -155,9 +155,10 @@ describe('Logger Module', () => {
         expect(duration).toBeGreaterThanOrEqual(0);
       });
 
-      it('should return -1 for non-existent timer', () => {
+      it('should return 0 for non-existent timer', () => {
+        // The @xivdyetools/logger package returns 0 for non-existent timers
         const duration = perf.end('non-existent-timer');
-        expect(duration).toBe(-1);
+        expect(duration).toBe(0);
         expect(consoleWarnSpy).toHaveBeenCalled();
       });
 
@@ -171,7 +172,8 @@ describe('Logger Module', () => {
         expect(metrics?.minTime).toBeGreaterThanOrEqual(0);
         expect(metrics?.maxTime).toBeGreaterThanOrEqual(0);
         expect(metrics?.avgTime).toBeGreaterThanOrEqual(0);
-        expect(metrics?.lastTime).toBeGreaterThanOrEqual(0);
+        // Note: @xivdyetools/logger uses totalTime instead of lastTime
+        expect(metrics?.totalTime).toBeGreaterThanOrEqual(0);
       });
 
       it('should accumulate metrics over multiple calls', () => {
@@ -199,7 +201,8 @@ describe('Logger Module', () => {
         const metrics = perf.getMetrics('async-test');
         expect(metrics).not.toBeNull();
         // Allow some timing variance - setTimeout(10) may complete slightly faster
-        expect(metrics?.lastTime).toBeGreaterThanOrEqual(5);
+        // Use avgTime since @xivdyetools/logger doesn't track lastTime
+        expect(metrics?.avgTime).toBeGreaterThanOrEqual(5);
       });
 
       it('should record metrics even if function throws', async () => {
@@ -260,7 +263,8 @@ describe('Logger Module', () => {
         expect(metrics).toHaveProperty('avgTime');
         expect(metrics).toHaveProperty('minTime');
         expect(metrics).toHaveProperty('maxTime');
-        expect(metrics).toHaveProperty('lastTime');
+        // @xivdyetools/logger uses totalTime instead of lastTime
+        expect(metrics).toHaveProperty('totalTime');
       });
     });
 
@@ -289,14 +293,17 @@ describe('Logger Module', () => {
 
         perf.logMetrics();
 
-        expect(consoleGroupSpy).toHaveBeenCalledWith('📊 Performance Metrics');
-        expect(consoleInfoSpy).toHaveBeenCalled();
+        // The @xivdyetools/logger package uses console.group and console.log
+        expect(consoleGroupSpy).toHaveBeenCalledWith('Performance Metrics');
+        expect(consoleLogSpy).toHaveBeenCalled();
         expect(consoleGroupEndSpy).toHaveBeenCalled();
       });
 
       it('should handle no metrics gracefully', () => {
+        // The @xivdyetools/logger package logs an empty group when no metrics
         perf.logMetrics();
-        expect(consoleInfoSpy).toHaveBeenCalledWith('📊 No performance metrics recorded');
+        expect(consoleGroupSpy).toHaveBeenCalledWith('Performance Metrics');
+        expect(consoleGroupEndSpy).toHaveBeenCalled();
       });
     });
 
@@ -318,9 +325,9 @@ describe('Logger Module', () => {
 
         perf.clearMetrics();
 
-        // Timer should no longer exist
+        // Timer should no longer exist - returns 0 in @xivdyetools/logger package
         const duration = perf.end('active-timer');
-        expect(duration).toBe(-1);
+        expect(duration).toBe(0);
       });
     });
   });
@@ -550,13 +557,16 @@ describe('Dev Mode Logging Behavior', () => {
 // ==========================================================================
 
 describe('Performance Monitoring Dev Mode', () => {
-  let consoleDebugSpy: MockInstance;
+  let consoleWarnSpy: MockInstance;
+  let consoleLogSpy: MockInstance;
+  let consoleGroupSpy: MockInstance;
+  let consoleGroupEndSpy: MockInstance;
 
   beforeEach(() => {
-    consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => { });
-    vi.spyOn(console, 'info').mockImplementation(() => { });
-    vi.spyOn(console, 'group').mockImplementation(() => { });
-    vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+    consoleGroupSpy = vi.spyOn(console, 'group').mockImplementation(() => { });
+    consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
     perf.clearMetrics();
   });
 
@@ -564,22 +574,34 @@ describe('Performance Monitoring Dev Mode', () => {
     vi.restoreAllMocks();
   });
 
-  it('should log perf timing in dev mode', () => {
+  it('should record metrics when timing operations', () => {
+    // The @xivdyetools/logger package's perf.end() returns duration but doesn't
+    // log it - use logMetrics() to display collected metrics
     perf.start('dev-timer');
-    perf.end('dev-timer');
+    const duration = perf.end('dev-timer');
 
-    // In dev mode, timing should be logged
-    expect(consoleDebugSpy).toHaveBeenCalled();
-    const callArg = consoleDebugSpy.mock.calls[0][0] as string;
-    expect(callArg).toMatch(/⏱️ dev-timer:/);
+    // Duration should be returned
+    expect(duration).toBeGreaterThanOrEqual(0);
+
+    // Metrics should be recorded
+    const metrics = perf.getMetrics('dev-timer');
+    expect(metrics).not.toBeNull();
+    expect(metrics?.count).toBe(1);
   });
 
-  it('should include duration in timing output', () => {
+  it('should log metrics via logMetrics()', () => {
     perf.start('duration-test');
     perf.end('duration-test');
 
-    const callArg = consoleDebugSpy.mock.calls[0][0] as string;
-    expect(callArg).toMatch(/\d+\.\d+ms/);
+    // Use logMetrics() to display collected metrics
+    perf.logMetrics();
+
+    expect(consoleGroupSpy).toHaveBeenCalledWith('Performance Metrics');
+    expect(consoleLogSpy).toHaveBeenCalled();
+    // The output format includes label and timing info
+    const logCall = consoleLogSpy.mock.calls[0][0] as string;
+    expect(logCall).toMatch(/duration-test/);
+    expect(logCall).toMatch(/\d+\.\d+ms/);
   });
 });
 

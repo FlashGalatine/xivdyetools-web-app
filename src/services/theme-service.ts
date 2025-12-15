@@ -349,6 +349,15 @@ export class ThemeService {
   }
 
   /**
+   * Reset initialization state (for testing only)
+   * Allows testing initialize() behavior with different storage states
+   * @internal
+   */
+  static __resetForTesting(): void {
+    this.isInitialized = false;
+  }
+
+  /**
    * Get theme names by base (e.g., 'standard' returns both light and dark)
    */
   static getThemeVariants(baseName: string): ThemeName[] {

@@ -603,6 +603,8 @@ describe('ThemeService getThemeVariants', () => {
 
 describe('ThemeService Initialize Edge Cases', () => {
   beforeEach(() => {
+    // Reset initialization state to test initialize() behavior
+    ThemeService.__resetForTesting();
     if (StorageService.isAvailable()) {
       StorageService.clear();
     }

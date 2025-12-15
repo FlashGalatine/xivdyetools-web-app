@@ -56,8 +56,11 @@ export const ROUTES: RouteDefinition[] = [
 
 /**
  * Query parameters to preserve across navigation
+ * - dc: Data Center selection
+ * - dye: Selected dye
+ * - ui: UI preference (e.g., compact mode)
  */
-const PRESERVED_PARAMS = ['dc', 'dye'];
+const PRESERVED_PARAMS = ['dc', 'dye', 'ui'];
 
 // ============================================================================
 // Router Service
