@@ -1,14 +1,61 @@
 /**
  * XIV Dye Tools - Component Testing Utilities
  *
- * Provides helpers for testing BaseComponent and its subclasses
+ * Provides helpers for testing BaseComponent and its subclasses.
+ * DOM utilities are imported from @xivdyetools/test-utils.
  *
  * @module components/__tests__/test-utils
  */
 
 import userEvent from '@testing-library/user-event';
 import type { BaseComponent } from '../base-component';
+
 import { vi } from 'vitest';
+
+// Import shared DOM utilities from @xivdyetools/test-utils
+import {
+  MockLocalStorage,
+  setupMockLocalStorage,
+  setupResizeObserverMock,
+  setupCanvasMocks,
+  setupFetchMock as setupFetchMockFromPackage,
+} from '@xivdyetools/test-utils';
+
+// Re-export shared utilities for convenience
+export {
+  MockLocalStorage,
+  setupMockLocalStorage,
+  setupResizeObserverMock,
+  setupCanvasMocks,
+};
+
+// Re-export the package version as well for cases that use the new API
+export { setupFetchMockFromPackage };
+
+/**
+ * Backwards-compatible setupFetchMock that returns a Vitest mock function.
+ * This allows tests to use .mockImplementation() on the returned mock.
+ *
+ * @returns A vi.fn() mock that replaces global.fetch
+ */
+export function setupFetchMock(): ReturnType<typeof vi.fn> {
+  const originalFetch = globalThis.fetch;
+  const mockFetch = vi.fn();
+
+  // Replace global fetch with our mock
+  globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+  // Attach restore method to the mock for cleanup
+  (mockFetch as ReturnType<typeof vi.fn> & { restore: () => void }).restore = () => {
+    globalThis.fetch = originalFetch;
+  };
+
+  return mockFetch;
+}
+
+// ============================================
+// PROJECT-SPECIFIC: COMPONENT TESTING HELPERS
+// ============================================
 
 /**
  * Create a container element for testing components
@@ -68,49 +115,9 @@ export async function waitForComponent(delay = 0): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
-/**
- * Mock localStorage for testing
- */
-export class MockLocalStorage {
-  private store: Map<string, string> = new Map();
-
-  getItem(key: string): string | null {
-    return this.store.get(key) ?? null;
-  }
-
-  setItem(key: string, value: string): void {
-    this.store.set(key, value);
-  }
-
-  removeItem(key: string): void {
-    this.store.delete(key);
-  }
-
-  clear(): void {
-    this.store.clear();
-  }
-
-  get length(): number {
-    return this.store.size;
-  }
-
-  key(index: number): string | null {
-    return Array.from(this.store.keys())[index] ?? null;
-  }
-}
-
-/**
- * Setup mock localStorage
- */
-export function setupMockLocalStorage(): MockLocalStorage {
-  const mockStorage = new MockLocalStorage();
-  Object.defineProperty(window, 'localStorage', {
-    value: mockStorage,
-    writable: true,
-    configurable: true,
-  });
-  return mockStorage;
-}
+// ============================================
+// PROJECT-SPECIFIC: MOCK DATA
+// ============================================
 
 /**
  * Mock dye data for testing
@@ -187,6 +194,10 @@ export const mockThemes = [
   { name: 'hydaelyn-light', palette: 'hydaelyn', isDark: false },
 ];
 
+// ============================================
+// TESTING LIBRARY RE-EXPORTS
+// ============================================
+
 /**
  * Query helpers (re-export from @testing-library/dom)
  */
@@ -196,6 +207,10 @@ export { screen, waitFor, within } from '@testing-library/dom';
  * User interaction helpers (re-export from @testing-library/user-event)
  */
 export { userEvent };
+
+// ============================================
+// PROJECT-SPECIFIC: DOM ELEMENT ASSERTIONS
+// ============================================
 
 /**
  * Assertions for DOM elements
@@ -238,84 +253,3 @@ export const expectElement = {
     }
   },
 };
-
-/**
- * Mock ResizeObserver in test environment
- */
-export function setupResizeObserverMock(): void {
-  class ResizeObserverMock {
-    private callback: ResizeObserverCallback;
-
-    constructor(callback: ResizeObserverCallback) {
-      this.callback = callback;
-    }
-
-    observe(): void {
-      // Immediately invoke once to simulate measurement
-      this.callback([], this as unknown as ResizeObserver);
-    }
-
-    unobserve(): void {
-      // noop
-    }
-
-    disconnect(): void {
-      // noop
-    }
-  }
-
-  vi.stubGlobal('ResizeObserver', ResizeObserverMock);
-}
-
-/**
- * Mock canvas context utilities required by chart components
- */
-export function setupCanvasMocks(): void {
-  const mockContext = {
-    fillRect: vi.fn(),
-    clearRect: vi.fn(),
-    getImageData: vi.fn(() => ({ data: new Uint8ClampedArray() })),
-    putImageData: vi.fn(),
-    createImageData: vi.fn(),
-    setTransform: vi.fn(),
-    drawImage: vi.fn(),
-    beginPath: vi.fn(),
-    moveTo: vi.fn(),
-    lineTo: vi.fn(),
-    stroke: vi.fn(),
-    strokeRect: vi.fn(),
-    fill: vi.fn(),
-    arc: vi.fn(),
-    fillText: vi.fn(),
-    measureText: vi.fn(() => ({ width: 0 })),
-    save: vi.fn(),
-    restore: vi.fn(),
-    translate: vi.fn(),
-    scale: vi.fn(),
-    rotate: vi.fn(),
-    // Properties
-    fillStyle: '',
-    strokeStyle: '',
-    lineWidth: 1,
-    font: '',
-    textAlign: 'left',
-    textBaseline: 'alphabetic',
-  } as unknown as CanvasRenderingContext2D;
-
-  vi.spyOn(window.HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockContext);
-  vi.spyOn(window.HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(
-    'data:image/png;base64,mock'
-  );
-}
-
-/**
- * Mock global fetch
- */
-export function setupFetchMock(data: unknown = {}): ReturnType<typeof vi.fn> {
-  const fetchMock = vi.fn().mockResolvedValue({
-    ok: true,
-    json: async () => data,
-  });
-  vi.stubGlobal('fetch', fetchMock);
-  return fetchMock;
-}
