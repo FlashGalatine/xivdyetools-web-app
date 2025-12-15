@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.0.1] - 2025-12-14
+## [3.1.0] - 2025-12-14
+
+### Added
+
+- **Error Boundaries**: Added error boundaries to BaseComponent for improved error handling (WEB-REF-001)
+- **Shared Package Integration**: Integrated `@xivdyetools/types` and `@xivdyetools/logger` for ecosystem consistency
+- **Test Utils Integration**: Migrated DOM utilities to `@xivdyetools/test-utils` shared package
+
+### Changed
+
+- **Dependency Migration**: Migrated from `xivdyetools-core` to `@xivdyetools/core`
+- **UI Enhancement**: Replaced Clear button text with broom SVG icon for cleaner interface
+
+### Fixed
+
+- **High Severity**: Addressed HIGH severity web app audit findings
+- **Medium Severity**: Addressed MEDIUM severity audit findings
+- **Low Severity**: Addressed LOW severity audit findings
+- **Tests**: Fixed tests for @xivdyetools/types and @xivdyetools/logger integration
 
 ### Deprecated
 
