@@ -1,6 +1,6 @@
 import { BaseComponent } from './base-component';
 import { LanguageService, DyeService } from '@services/index';
-import { ICON_DICE } from '@shared/ui-icons';
+import { ICON_DICE, ICON_BROOM } from '@shared/ui-icons';
 
 export type SortOption =
   | 'alphabetical'
@@ -58,15 +58,22 @@ export class DyeSearchBox extends BaseComponent {
     });
 
     const clearBtn = this.createElement('button', {
-      textContent: LanguageService.t('common.clear'),
-      className: 'px-4 py-2 rounded-lg transition-all duration-200 w-full sm:w-auto',
+      className: 'p-2 rounded-lg transition-all duration-200 flex items-center justify-center',
       attributes: {
         id: 'dye-selector-clear-btn',
         type: 'button',
         'aria-label': LanguageService.t('dyeSelector.clearAriaLabel'),
+        title: LanguageService.t('common.clear'),
         style: 'background-color: var(--theme-background-secondary); color: var(--theme-text);',
       },
     });
+
+    // Add broom icon
+    const broomIcon = this.createElement('span', {
+      className: 'w-5 h-5 inline-block',
+    });
+    broomIcon.innerHTML = ICON_BROOM;
+    clearBtn.appendChild(broomIcon);
 
     // Hover effects for clear button
     clearBtn.addEventListener('mouseenter', () => (clearBtn.style.filter = 'brightness(0.9)'));

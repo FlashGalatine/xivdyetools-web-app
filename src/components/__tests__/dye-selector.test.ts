@@ -88,12 +88,14 @@ describe('DyeSelector', () => {
       expect(searchInput?.getAttribute('placeholder')).toContain('Search');
     });
 
-    it('should render clear button', () => {
+    it('should render clear button with broom icon', () => {
       [component, container] = renderComponent(DyeSelector);
 
       const clearBtn = container.querySelector('#dye-selector-clear-btn');
       expect(clearBtn).not.toBeNull();
-      expect(clearBtn?.textContent).toBe('Clear');
+      // Button now uses a broom SVG icon instead of text
+      expect(clearBtn?.querySelector('svg')).not.toBeNull();
+      expect(clearBtn?.getAttribute('title')).toBe('Clear');
     });
 
     it('should render category buttons when showCategories is true', () => {

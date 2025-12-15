@@ -137,6 +137,16 @@ export const ICON_COINS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 </svg>`;
 
 /**
+ * Broom icon - Clear/sweep action
+ */
+export const ICON_BROOM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 2L12 10" />
+  <path d="M9 10L15 10L17 22L7 22L9 10Z" />
+  <path d="M9 14L15 14" opacity="0.5" />
+  <path d="M8 18L16 18" opacity="0.5" />
+</svg>`;
+
+/**
  * Map of UI icon names to SVG strings
  */
 export const UI_ICONS: Record<string, string> = {
@@ -153,6 +163,7 @@ export const UI_ICONS: Record<string, string> = {
   warning: ICON_WARNING,
   dice: ICON_DICE,
   coins: ICON_COINS,
+  broom: ICON_BROOM,
 };
 
 /**
