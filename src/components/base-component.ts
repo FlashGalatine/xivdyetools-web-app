@@ -533,10 +533,20 @@ export abstract class BaseComponent implements ComponentLifecycle {
     const boundHandler = handler.bind(this) as EventListener;
     const eventName = event as string;
 
-    if (target instanceof HTMLElement) {
-      target.addEventListener(eventName, boundHandler);
-    } else if (target instanceof Document || target instanceof Window) {
-      target.addEventListener(eventName, boundHandler);
+    // Check if target can receive events (handles fake timer environments where
+    // window may not pass instanceof Window check)
+    const isValidTarget =
+      target instanceof HTMLElement ||
+      target instanceof Document ||
+      target instanceof Window ||
+      target === globalThis.window ||
+      target === globalThis ||
+      (typeof target === 'object' &&
+        target !== null &&
+        typeof (target as EventTarget).addEventListener === 'function');
+
+    if (isValidTarget) {
+      (target as EventTarget).addEventListener(eventName, boundHandler);
     } else {
       console.error('BaseComponent.on: Target is not HTMLElement, Document, or Window', target);
     }

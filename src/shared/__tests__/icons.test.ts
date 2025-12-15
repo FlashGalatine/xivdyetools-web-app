@@ -395,6 +395,7 @@ describe('UI Icons', () => {
         'warning',
         'dice',
         'coins',
+        'broom',
       ]);
     });
 

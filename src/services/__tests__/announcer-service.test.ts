@@ -165,8 +165,10 @@ describe('AnnouncerService', () => {
       AnnouncerService.announce('Polite message', 'polite');
       AnnouncerService.announce('Assertive message', 'assertive');
 
-      // Wait for debounce
+      // Wait for debounce (150ms) + extra time for requestAnimationFrame callbacks
       await new Promise((resolve) => setTimeout(resolve, 200));
+      // Additional wait for RAF to execute (jsdom implements RAF as setTimeout)
+      await new Promise((resolve) => requestAnimationFrame(resolve));
 
       const politeRegion = document.getElementById('sr-announcements-polite');
       const assertiveRegion = document.getElementById('sr-announcements-assertive');
