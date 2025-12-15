@@ -763,11 +763,10 @@ export class AccessibilityTool extends BaseComponent {
       attributes: { style: 'border-color: var(--theme-border); background: var(--theme-background-secondary);' },
     });
     headerRow.innerHTML = `
-      <div class="grid grid-cols-4 gap-2 text-xs font-medium" style="color: var(--theme-text-muted);">
+      <div class="grid grid-cols-3 gap-2 text-xs font-medium" style="color: var(--theme-text-muted);">
         <span>${LanguageService.t('common.dye') || 'Dye'}</span>
         <span>${LanguageService.t('accessibility.vsWhite')}</span>
         <span>${LanguageService.t('accessibility.vsBlack')}</span>
-        <span>${LanguageService.t('accessibility.level') || 'Level'}</span>
       </div>
     `;
     table.appendChild(headerRow);
@@ -779,21 +778,20 @@ export class AccessibilityTool extends BaseComponent {
         attributes: { style: 'border-color: var(--theme-border);' },
       });
 
-      const bestLevel = result.contrastVsWhite.wcagLevel === 'Fail' && result.contrastVsBlack.wcagLevel === 'Fail'
-        ? 'Fail'
-        : result.contrastVsWhite.ratio > result.contrastVsBlack.ratio
-          ? result.contrastVsWhite.wcagLevel
-          : result.contrastVsBlack.wcagLevel;
-
       row.innerHTML = `
-        <div class="grid grid-cols-4 gap-2 items-center text-sm">
+        <div class="grid grid-cols-3 gap-2 items-center text-sm">
           <div class="flex items-center gap-2">
             <div class="w-4 h-4 rounded" style="background: ${result.hex};"></div>
             <span class="truncate" style="color: var(--theme-text);">${result.dyeName}</span>
           </div>
-          <span style="color: var(--theme-text);">${result.contrastVsWhite.ratio}:1</span>
-          <span style="color: var(--theme-text);">${result.contrastVsBlack.ratio}:1</span>
-          <span class="px-2 py-0.5 rounded text-xs font-medium inline-block w-fit" style="${this.getWCAGBadgeStyle(bestLevel)}">${bestLevel}</span>
+          <div class="flex items-center gap-2">
+            <span style="color: var(--theme-text);">${result.contrastVsWhite.ratio}:1</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-medium" style="${this.getWCAGBadgeStyle(result.contrastVsWhite.wcagLevel)}">${result.contrastVsWhite.wcagLevel}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span style="color: var(--theme-text);">${result.contrastVsBlack.ratio}:1</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-medium" style="${this.getWCAGBadgeStyle(result.contrastVsBlack.wcagLevel)}">${result.contrastVsBlack.wcagLevel}</span>
+          </div>
         </div>
       `;
 

@@ -208,20 +208,25 @@ export class AccessibilityMockup extends BaseComponent {
 
     table.innerHTML = `
       <div class="p-3 border-b" style="border-color: var(--theme-border); background: var(--theme-background-secondary);">
-        <div class="grid grid-cols-4 gap-2 text-xs font-medium" style="color: var(--theme-text-muted);">
-          <span>Dye</span><span>vs White</span><span>vs Black</span><span>Level</span>
+        <div class="grid grid-cols-3 gap-2 text-xs font-medium" style="color: var(--theme-text-muted);">
+          <span>Dye</span><span>vs White</span><span>vs Black</span>
         </div>
       </div>
       ${this.selectedDyes.map(dye => `
         <div class="p-3 border-b last:border-b-0" style="border-color: var(--theme-border);">
-          <div class="grid grid-cols-4 gap-2 items-center text-sm">
+          <div class="grid grid-cols-3 gap-2 items-center text-sm">
             <div class="flex items-center gap-2">
               <div class="w-4 h-4 rounded" style="background: ${dye.hex};"></div>
               <span class="truncate" style="color: var(--theme-text);">${dye.name}</span>
             </div>
-            <span style="color: var(--theme-text);">4.5:1</span>
-            <span style="color: var(--theme-text);">8.2:1</span>
-            <span class="px-2 py-0.5 rounded text-xs font-medium" style="background: #22c55e20; color: #22c55e;">AA</span>
+            <div class="flex items-center gap-2">
+              <span style="color: var(--theme-text);">4.5:1</span>
+              <span class="px-1.5 py-0.5 rounded text-xs font-medium" style="background: #3b82f620; color: #3b82f6;">AA</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span style="color: var(--theme-text);">8.2:1</span>
+              <span class="px-1.5 py-0.5 rounded text-xs font-medium" style="background: #22c55e20; color: #22c55e;">AAA</span>
+            </div>
           </div>
         </div>
       `).join('')}
