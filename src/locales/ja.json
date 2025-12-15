@@ -306,6 +306,8 @@
     }
   },
   "mixer": {
+    "dyeSelection": "カララント選択",
+    "selectDyes": "下からカララントを選択してください",
     "selectStartEnd": "開始と終了のカララントを選択",
     "interpolationSettings": "補間設定",
     "interpolationSteps": "補間ステップ",

@@ -359,6 +359,7 @@ export class AccessibilityTool extends BaseComponent {
       excludeFacewear: true,
       showFavorites: true,
       compactMode: true,
+      hideSelectedChips: true, // Selections shown above in dedicated display
     });
     this.dyeSelector.init();
 
@@ -987,6 +988,7 @@ export class AccessibilityTool extends BaseComponent {
       excludeFacewear: true,
       showFavorites: true,
       compactMode: true,
+      hideSelectedChips: true, // Selections shown above in dedicated display
     });
     this.drawerDyeSelector.init();
 

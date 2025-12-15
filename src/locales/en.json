@@ -306,7 +306,12 @@
     }
   },
   "mixer": {
+    "dyeSelection": "Dye Selection",
+    "selectDyes": "Select dyes below",
+    "selectTwoDyes": "Select 2 dyes to see interpolation",
     "selectStartEnd": "Select Start & End Dyes",
+    "startDye": "Start Dye",
+    "endDye": "End Dye",
     "interpolationSettings": "Interpolation Settings",
     "interpolationSteps": "Interpolation Steps",
     "stepsHint": "More steps provide a smoother transition but may result in more repeated dyes",
@@ -314,7 +319,6 @@
     "colorSpaceRgb": "RGB (Linear)",
     "colorSpaceHsv": "HSV (Perceptual)",
     "colorSpaceHint": "HSV typically produces more natural-looking transitions. RGB is linear but more mathematically straightforward.",
-    "selectTwoDyes": "Select 2 dyes to see interpolation",
     "quickActions": "Quick Actions",
     "saveGradient": "Save Gradient",
     "copyShareUrl": "Copy Share URL",

@@ -30,6 +30,8 @@ export interface DyeSelectorOptions {
   showFavorites?: boolean;
   /** Use compact 3-column grid layout for narrow panels */
   compactMode?: boolean;
+  /** Hide the "Selected X/Y" chips container at the bottom (useful when parent shows selections elsewhere) */
+  hideSelectedChips?: boolean;
 }
 
 /**
@@ -64,6 +66,7 @@ export class DyeSelector extends BaseComponent {
       excludeFacewear: options.excludeFacewear ?? true,
       showFavorites: options.showFavorites ?? true,
       compactMode: options.compactMode ?? false,
+      hideSelectedChips: options.hideSelectedChips ?? false,
     };
     this.allowDuplicates = this.options.allowDuplicates ?? false;
 
@@ -113,8 +116,8 @@ export class DyeSelector extends BaseComponent {
       wrapper.appendChild(favoritesPanel);
     }
 
-    // 3. Selected Dyes Display
-    if (this.options.allowMultiple) {
+    // 3. Selected Dyes Display (can be hidden if parent manages display)
+    if (this.options.allowMultiple && !this.options.hideSelectedChips) {
       const selectedContainer = this.createElement('div', {
         id: 'selected-dyes-container',
         className:
