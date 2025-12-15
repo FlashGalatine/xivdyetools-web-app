@@ -386,8 +386,8 @@ describe('RouterService', () => {
 
       RouterService.navigateTo('accessibility');
 
-      expect(receivedState).toBeDefined();
-      expect(receivedState?.toolId).toBe('accessibility');
+      expect(receivedState).not.toBeNull();
+      expect((receivedState as unknown as RouteState).toolId).toBe('accessibility');
     });
 
     it('should return unsubscribe function', () => {

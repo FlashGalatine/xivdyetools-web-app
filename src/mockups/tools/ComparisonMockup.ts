@@ -38,7 +38,7 @@ export class ComparisonMockup extends BaseComponent {
     this.options = options;
   }
 
-  render(): void {
+  renderContent(): void {
     this.renderLeftPanel();
     this.renderRightPanel();
     if (this.options.drawerContent) this.renderDrawerContent();

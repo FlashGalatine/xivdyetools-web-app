@@ -15,7 +15,7 @@ import { vi } from 'vitest';
 // Import shared DOM utilities from @xivdyetools/test-utils
 import {
   MockLocalStorage,
-  setupMockLocalStorage,
+  setupLocalStorageMock,
   setupResizeObserverMock,
   setupCanvasMocks,
   setupFetchMock as setupFetchMockFromPackage,
@@ -24,7 +24,7 @@ import {
 // Re-export shared utilities for convenience
 export {
   MockLocalStorage,
-  setupMockLocalStorage,
+  setupLocalStorageMock,
   setupResizeObserverMock,
   setupCanvasMocks,
 };
@@ -77,26 +77,50 @@ export function cleanupTestContainer(container: HTMLElement): void {
 /**
  * Setup and render a component for testing
  * @returns Tuple of [component instance, container element]
+ * @param ComponentClass - The component class constructor
+ * @param optionsOrContainerId - Either component options object or container ID string
+ * @param containerId - Container ID if options were provided
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function renderComponent<T extends BaseComponent>(
-  ComponentClass: new (container: HTMLElement) => T,
+  ComponentClass: new (container: HTMLElement, ...args: any[]) => T,
+  optionsOrContainerId?: Record<string, unknown> | string,
   containerId = 'test-container'
 ): [T, HTMLElement] {
-  const container = createTestContainer(containerId);
-  const component = new ComponentClass(container);
+  // Determine if second arg is options or containerId
+  const isOptions = typeof optionsOrContainerId === 'object';
+  const actualContainerId = isOptions ? containerId : (optionsOrContainerId ?? containerId);
+  const options = isOptions ? optionsOrContainerId : undefined;
+
+  const container = createTestContainer(actualContainerId as string);
+  const component = options !== undefined
+    ? new ComponentClass(container, options)
+    : new ComponentClass(container);
   component.init();
   return [component, container];
 }
 
 /**
  * Setup component without initializing (for testing constructor)
+ * @param ComponentClass - The component class constructor
+ * @param optionsOrContainerId - Either component options object or container ID string
+ * @param containerId - Container ID if options were provided
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createComponent<T extends BaseComponent>(
-  ComponentClass: new (container: HTMLElement) => T,
+  ComponentClass: new (container: HTMLElement, ...args: any[]) => T,
+  optionsOrContainerId?: Record<string, unknown> | string,
   containerId = 'test-container'
 ): [T, HTMLElement] {
-  const container = createTestContainer(containerId);
-  const component = new ComponentClass(container);
+  // Determine if second arg is options or containerId
+  const isOptions = typeof optionsOrContainerId === 'object';
+  const actualContainerId = isOptions ? containerId : (optionsOrContainerId ?? containerId);
+  const options = isOptions ? optionsOrContainerId : undefined;
+
+  const container = createTestContainer(actualContainerId as string);
+  const component = options !== undefined
+    ? new ComponentClass(container, options)
+    : new ComponentClass(container);
   return [component, container];
 }
 

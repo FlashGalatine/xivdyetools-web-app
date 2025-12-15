@@ -8,7 +8,7 @@
  */
 
 import { BaseComponent } from './base-component';
-import { ModalService, Modal } from '@services/modal-service';
+import { ModalService, Modal, ModalId } from '@services/modal-service';
 import { clearContainer } from '@shared/utils';
 
 // ============================================================================
@@ -31,7 +31,7 @@ export class ModalContainer extends BaseComponent {
   private previousActiveElement: HTMLElement | null = null;
   private focusTrapElements: HTMLElement[] = [];
   // WEB-PERF-002: Track rendered modal IDs for incremental rendering
-  private renderedModalIds: Set<string> = new Set();
+  private renderedModalIds: Set<ModalId> = new Set();
 
   constructor(container: HTMLElement) {
     super(container);
@@ -340,7 +340,7 @@ export class ModalContainer extends BaseComponent {
 
     // Remove modals that are no longer in the list
     for (const renderedId of this.renderedModalIds) {
-      if (!currentModalIds.has(renderedId as string)) {
+      if (!currentModalIds.has(renderedId)) {
         const modalEl = this.element.querySelector(`[data-modal-id="${renderedId}"]`);
         if (modalEl) {
           modalEl.remove();

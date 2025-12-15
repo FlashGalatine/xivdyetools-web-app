@@ -55,7 +55,7 @@ export class IconRail extends BaseComponent {
     this.activeToolId = options.activeToolId ?? 'harmony';
   }
 
-  render(): void {
+  renderContent(): void {
     const rail = this.createElement('div', {
       className: 'icon-rail flex flex-col h-full',
       attributes: {

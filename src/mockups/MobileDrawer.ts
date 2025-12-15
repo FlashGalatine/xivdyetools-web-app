@@ -20,7 +20,7 @@ export class MobileDrawer extends BaseComponent {
   private contentSlot: HTMLElement | null = null;
   private previousActiveElement: HTMLElement | null = null;
 
-  render(): void {
+  renderContent(): void {
     // Create overlay backdrop
     this.overlay = this.createElement('div', {
       className: 'drawer-overlay fixed inset-0 z-40 transition-opacity duration-300',

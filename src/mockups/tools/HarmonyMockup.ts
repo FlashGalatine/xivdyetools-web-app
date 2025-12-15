@@ -77,7 +77,7 @@ export class HarmonyMockup extends BaseComponent {
     this.options = options;
   }
 
-  render(): void {
+  renderContent(): void {
     this.renderLeftPanel();
     this.renderRightPanel();
 

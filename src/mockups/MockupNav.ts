@@ -105,7 +105,7 @@ export class MockupNav extends BaseComponent {
     this.activeToolId = options.activeToolId ?? 'harmony';
   }
 
-  render(): void {
+  renderContent(): void {
     const nav = this.createElement('nav', {
       className: 'mockup-nav flex flex-col h-full',
       attributes: {

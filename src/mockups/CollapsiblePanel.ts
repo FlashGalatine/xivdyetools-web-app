@@ -39,7 +39,7 @@ export class CollapsiblePanel extends BaseComponent {
     }
   }
 
-  render(): void {
+  renderContent(): void {
     const panel = this.createElement('div', {
       className: 'collapsible-panel border-t',
       attributes: {

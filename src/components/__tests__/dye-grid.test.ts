@@ -40,7 +40,7 @@ describe('DyeGrid', () => {
   ];
 
   beforeEach(() => {
-    setupFetchMock({});
+    setupFetchMock();
     container = createTestContainer();
     // Mock scrollIntoView
     HTMLElement.prototype.scrollIntoView = vi.fn();

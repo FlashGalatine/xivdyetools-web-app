@@ -1,5 +1,5 @@
 import { ModalContainer } from '../modal-container';
-import { ModalService, Modal, ModalType } from '@services/modal-service';
+import { ModalService, Modal, ModalType, ModalId } from '@services/modal-service';
 import {
   createTestContainer,
   cleanupTestContainer,
@@ -9,10 +9,12 @@ import {
 } from './test-utils';
 
 // Helper to create a modal with required fields
-const createModal = (overrides: Partial<Modal> & { id: string; title: string }): Modal => ({
+// Use Omit to exclude the branded id type and replace with string for test convenience
+const createModal = (overrides: Omit<Partial<Modal>, 'id'> & { id: string; title: string }): Modal => ({
   type: 'custom' as ModalType,
   timestamp: Date.now(),
   ...overrides,
+  id: overrides.id as ModalId,
 });
 
 // Mock ModalService
@@ -558,8 +560,8 @@ describe('ModalContainer', () => {
       [component, container] = renderComponent(ModalContainer);
 
       const modals: Modal[] = [
-        { id: 'modal-1', title: 'Modal 1', content: 'Content 1', type: 'custom', timestamp: Date.now() },
-        { id: 'modal-2', title: 'Modal 2', content: 'Content 2', type: 'custom', timestamp: Date.now() + 1 },
+        { id: 'modal-1' as ModalId, title: 'Modal 1', content: 'Content 1', type: 'custom', timestamp: Date.now() },
+        { id: 'modal-2' as ModalId, title: 'Modal 2', content: 'Content 2', type: 'custom', timestamp: Date.now() + 1 },
       ];
 
       // @ts-ignore

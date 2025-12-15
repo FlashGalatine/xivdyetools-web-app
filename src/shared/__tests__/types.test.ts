@@ -359,6 +359,7 @@ describe('ErrorCode enum', () => {
       [ErrorCode.IMAGE_LOAD_FAILED]: 'Failed to load image',
       [ErrorCode.INVALID_INPUT]: 'Invalid input provided',
       [ErrorCode.UNKNOWN_ERROR]: 'An unknown error occurred',
+      [ErrorCode.LOCALE_LOAD_FAILED]: 'Failed to load locale',
     };
 
     expect(errorMessages[ErrorCode.API_CALL_FAILED]).toBe('API request failed');

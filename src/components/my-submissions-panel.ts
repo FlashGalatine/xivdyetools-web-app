@@ -29,6 +29,14 @@ export class MySubmissionsPanel extends BaseComponent {
     super(container);
   }
 
+  /**
+   * Required by BaseComponent abstract class.
+   * Note: This component uses async render() directly instead of renderContent().
+   */
+  renderContent(): void {
+    // Rendering handled by async render() override
+  }
+
   async render(): Promise<void> {
     // Remove old element if it exists to prevent duplicates on re-render
     if (this.element) {
