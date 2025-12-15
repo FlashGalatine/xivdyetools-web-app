@@ -556,15 +556,24 @@ export class MarketBoard extends BaseComponent {
 
   /**
    * Fetch prices for multiple dyes
+   * @param dyes - Array of dyes to fetch prices for
+   * @param onProgress - Optional callback to report progress (current, total)
    */
-  async fetchPricesForDyes(dyes: Dye[]): Promise<Map<number, PriceData>> {
+  async fetchPricesForDyes(
+    dyes: Dye[],
+    onProgress?: (current: number, total: number) => void
+  ): Promise<Map<number, PriceData>> {
     const results = new Map<number, PriceData>();
+    const total = dyes.length;
 
-    for (const dye of dyes) {
+    for (let i = 0; i < dyes.length; i++) {
+      const dye = dyes[i];
       const price = await this.fetchPrice(dye);
       if (price) {
         results.set(dye.itemID, price);
       }
+      // Report progress after each fetch
+      onProgress?.(i + 1, total);
     }
 
     return results;

@@ -463,7 +463,8 @@
     "budgetOptions": "Budget Options",
     "colorDistance": "Color Distance",
     "maxDistance": "Max Delta-E",
-    "distanceDesc": "Higher values show more alternatives, lower values show closer matches"
+    "distanceDesc": "Higher values show more alternatives, lower values show closer matches",
+    "fetchingPrices": "Fetching prices"
   },
   "export": {
     "title": "Export Palette",

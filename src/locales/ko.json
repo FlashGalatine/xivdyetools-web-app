@@ -456,7 +456,8 @@
     "budgetOptions": "예산 옵션",
     "colorDistance": "색상 거리",
     "maxDistance": "최대 Delta-E",
-    "distanceDesc": "높은 값은 더 많은 대안을, 낮은 값은 더 유사한 색상을 표시합니다"
+    "distanceDesc": "높은 값은 더 많은 대안을, 낮은 값은 더 유사한 색상을 표시합니다",
+    "fetchingPrices": "가격 조회 중"
   },
   "export": {
     "title": "팔레트 내보내기",

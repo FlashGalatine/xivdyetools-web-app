@@ -123,6 +123,7 @@ export class BudgetTool extends BaseComponent {
   private priceData: Map<number, PriceData> = new Map();
   private targetPrice: number = 0;
   private isLoading: boolean = false;
+  private fetchProgress: { current: number; total: number } = { current: 0, total: 0 };
 
   // Child components
   private dyeSelector: DyeSelector | null = null;
@@ -980,14 +981,26 @@ export class BudgetTool extends BaseComponent {
 
     if (this.isLoading) {
       const loading = this.createElement('div', {
-        className: 'text-center py-8 flex flex-col items-center gap-3',
+        className: 'text-center py-8 flex flex-col items-center gap-4',
       });
+
+      const { current, total } = this.fetchProgress;
+      const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+
       loading.innerHTML = `
         <svg class="animate-spin h-8 w-8" style="color: var(--theme-primary);" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p style="color: var(--theme-text-muted);">${LanguageService.t('budget.loading') || 'Loading alternatives...'}</p>
+        <div class="w-full max-w-xs">
+          <div class="flex justify-between text-xs mb-1" style="color: var(--theme-text-muted);">
+            <span>${LanguageService.t('budget.fetchingPrices') || 'Fetching prices'}</span>
+            <span>${current} / ${total}</span>
+          </div>
+          <div class="w-full h-2 rounded-full overflow-hidden" style="background: var(--theme-background-secondary);">
+            <div class="h-full rounded-full transition-all duration-150" style="background: var(--theme-primary); width: ${percentage}%;"></div>
+          </div>
+        </div>
       `;
       this.alternativesListContainer.appendChild(loading);
       return;
@@ -1207,13 +1220,20 @@ export class BudgetTool extends BaseComponent {
   }
 
   /**
-   * Fetch prices for dyes
+   * Fetch prices for dyes with progress tracking
    */
   private async fetchPrices(dyes: Dye[]): Promise<void> {
     if (!this.marketBoard) return;
 
+    // Initialize progress
+    this.fetchProgress = { current: 0, total: dyes.length };
+    this.renderAlternativesList();
+
     try {
-      const prices = await this.marketBoard.fetchPricesForDyes(dyes);
+      const prices = await this.marketBoard.fetchPricesForDyes(dyes, (current, total) => {
+        this.fetchProgress = { current, total };
+        this.renderAlternativesList();
+      });
       prices.forEach((data, itemId) => {
         this.priceData.set(itemId, data);
       });

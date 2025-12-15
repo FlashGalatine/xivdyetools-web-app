@@ -460,7 +460,8 @@
     "budgetOptions": "予算オプション",
     "colorDistance": "色距離",
     "maxDistance": "最大Delta-E",
-    "distanceDesc": "値が高いほど多くの代替品が表示され、低いほど近い色が表示されます"
+    "distanceDesc": "値が高いほど多くの代替品が表示され、低いほど近い色が表示されます",
+    "fetchingPrices": "価格を取得中"
   },
   "export": {
     "title": "パレットをエクスポート",

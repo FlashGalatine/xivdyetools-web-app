@@ -456,7 +456,8 @@
     "budgetOptions": "预算选项",
     "colorDistance": "颜色距离",
     "maxDistance": "最大 Delta-E",
-    "distanceDesc": "较高的值显示更多替代品，较低的值显示更相似的颜色"
+    "distanceDesc": "较高的值显示更多替代品，较低的值显示更相似的颜色",
+    "fetchingPrices": "正在获取价格"
   },
   "export": {
     "title": "导出调色板",
