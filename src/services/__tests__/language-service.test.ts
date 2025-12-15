@@ -979,7 +979,7 @@ describe('LanguageService getCurrentLocaleDisplay fallback', () => {
 describe('LanguageService setLocale error propagation', () => {
   it('should propagate errors from core LocalizationService.setLocale', async () => {
     // Mock LocalizationService.setLocale to throw
-    const { LocalizationService } = await import('xivdyetools-core');
+    const { LocalizationService } = await import('@xivdyetools/core');
     const originalSetLocale = LocalizationService.setLocale;
     
     vi.spyOn(LocalizationService, 'setLocale').mockRejectedValueOnce(

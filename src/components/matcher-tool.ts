@@ -30,7 +30,7 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, DyeWithDistance, PriceData } from '@shared/types';
-import { PaletteService, type PaletteMatch } from 'xivdyetools-core';
+import { PaletteService, type PaletteMatch } from '@xivdyetools/core';
 
 // ============================================================================
 // Types and Constants

@@ -9,7 +9,7 @@ import {
   type ICacheBackend,
   type PriceData,
   type CachedData,
-} from 'xivdyetools-core';
+} from '@xivdyetools/core';
 import { indexedDBService, STORES } from './indexeddb-service';
 import { logger } from '@shared/logger';
 

@@ -12,7 +12,7 @@ import {
   type PresetData,
   type CategoryMeta,
   type Dye,
-} from 'xivdyetools-core';
+} from '@xivdyetools/core';
 import { dyeService as sharedDyeService } from './dye-service-wrapper';
 import {
   CommunityPresetService,

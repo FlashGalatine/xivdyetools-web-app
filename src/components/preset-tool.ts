@@ -28,7 +28,7 @@ import { ICON_TOOL_PRESETS } from '@shared/tool-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { UnifiedPreset, PresetSortOption } from '@services/hybrid-preset-service';
-import type { PresetCategory } from 'xivdyetools-core';
+import type { PresetCategory } from '@xivdyetools/core';
 import type { AuthState } from '@services/auth-service';
 import type { CommunityPreset } from '@services/community-preset-service';
 

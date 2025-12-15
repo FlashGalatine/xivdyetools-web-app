@@ -7,7 +7,7 @@
  * @module services/language-service
  */
 
-import { LocalizationService } from 'xivdyetools-core';
+import { LocalizationService } from '@xivdyetools/core';
 import type { LocaleCode, LocaleDisplay, LocaleChangeListener } from '@shared/i18n-types';
 import { StorageService } from './storage-service';
 import {

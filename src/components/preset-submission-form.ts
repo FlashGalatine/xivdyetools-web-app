@@ -16,7 +16,7 @@ import {
   validateSubmission,
 } from '@services/index';
 import type { Dye } from '@shared/types';
-import type { PresetCategory } from 'xivdyetools-core';
+import type { PresetCategory } from '@xivdyetools/core';
 import type { PresetSubmission, SubmissionResult } from '@services/preset-submission-service';
 
 // ============================================

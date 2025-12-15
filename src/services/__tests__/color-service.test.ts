@@ -3,7 +3,7 @@
  * Tests for color conversion and colorblindness simulation
  */
 
-import { ColorService } from 'xivdyetools-core';
+import { ColorService } from '@xivdyetools/core';
 
 describe('ColorService', () => {
   // ============================================================================
