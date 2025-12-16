@@ -78,13 +78,13 @@ interface AuthResponse {
  * OAuth Worker URL - handles Discord OAuth flow
  */
 const OAUTH_WORKER_URL =
-  import.meta.env.VITE_OAUTH_WORKER_URL || 'https://xivdyetools-oauth.ashejunius.workers.dev';
+  import.meta.env.VITE_OAUTH_WORKER_URL || 'https://auth.xivdyetools.projectgalatine.com';
 
 /**
  * Presets API URL - handles preset operations
  */
 const PRESETS_API_URL =
-  import.meta.env.VITE_PRESETS_API_URL || 'https://xivdyetools-presets-api.ashejunius.workers.dev';
+  import.meta.env.VITE_PRESETS_API_URL || 'https://api.xivdyetools.projectgalatine.com';
 
 /**
  * Storage key for auth token
