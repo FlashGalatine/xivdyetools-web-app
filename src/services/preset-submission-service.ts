@@ -67,7 +67,7 @@ export interface EditResult {
  * Presets API URL
  */
 const PRESETS_API_URL =
-  import.meta.env.VITE_PRESETS_API_URL || 'https://xivdyetools-presets-api.ashejunius.workers.dev';
+  import.meta.env.VITE_PRESETS_API_URL || 'https://api.xivdyetools.projectgalatine.com';
 
 /**
  * Valid categories for submissions
