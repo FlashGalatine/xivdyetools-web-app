@@ -1,10 +1,10 @@
-# XIV Dye Tools v3.0.0
+# XIV Dye Tools v3.1.0
 
-**Status**: ✅ Stable | **Version**: 3.0.0 | **Release**: December 14, 2025 | **Phase**: XIVAuth Integration
+**Status**: ✅ Stable | **Version**: 3.1.0 | **Release**: December 2025 | **Phase**: XIVAuth Integration
 
 A comprehensive web-based toolset for Final Fantasy XIV players to explore dye colors, create harmonious color palettes, match colors from images, find smooth color transitions, compare dyes side-by-side, browse community presets, and simulate how dye combinations appear to colorblind players for in-game gear and housing projects.
 
-> **v3.0.0 Release Notes**: XIVAuth Integration - Login with your FFXIV character via XIVAuth alongside Discord. Multi-provider authentication with account merging support. Budget Suggestions tool with full mobile drawer controls. See [CHANGELOG.md](CHANGELOG.md) for detailed release information.
+> **v3.1.0 Release Notes**: XIVAuth Integration - Login with your FFXIV character via XIVAuth alongside Discord. Multi-provider authentication with account merging support. Budget Suggestions tool with full mobile drawer controls. See [CHANGELOG.md](CHANGELOG.md) for detailed release information.
 
 **Six Powerful Tools:**
 - **Dye Mixer** - Find smooth color transitions between two dyes with HSV interpolation
