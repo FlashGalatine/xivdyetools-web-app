@@ -9,9 +9,41 @@ import {
   type ICacheBackend,
   type PriceData,
   type CachedData,
+  UNIVERSALIS_API_BASE,
 } from '@xivdyetools/core';
 import { indexedDBService, STORES } from './indexeddb-service';
 import { logger } from '@shared/logger';
+
+/**
+ * Get the Universalis API base URL
+ * Uses proxy URL in production to avoid CORS issues with rate limit responses
+ *
+ * Order of precedence:
+ * 1. VITE_UNIVERSALIS_PROXY_URL environment variable (for local development)
+ * 2. Production proxy URL (for deployed app)
+ * 3. Direct Universalis API URL (fallback - not recommended for browser)
+ */
+function getUniversalisBaseUrl(): string {
+  // Check for environment variable (local dev)
+  const envUrl = import.meta.env.VITE_UNIVERSALIS_PROXY_URL;
+  if (envUrl) {
+    logger.info(`Using Universalis proxy from env: ${envUrl}`);
+    return envUrl;
+  }
+
+  // In production, use the deployed proxy worker
+  // This ensures CORS headers are always present, even on error responses (like 429)
+  if (import.meta.env.PROD) {
+    const proxyUrl = 'https://xivdyetools-universalis-proxy.projectgalatine.workers.dev/api/v2';
+    logger.info(`Using production Universalis proxy: ${proxyUrl}`);
+    return proxyUrl;
+  }
+
+  // Fallback to direct API (development without proxy)
+  // Note: This may cause CORS issues if Universalis returns 429 errors
+  logger.warn('Using direct Universalis API - CORS issues may occur on rate limit');
+  return UNIVERSALIS_API_BASE;
+}
 
 /**
  * IndexedDB Cache Backend for browser environment (F4)
@@ -207,7 +239,15 @@ export class APIService {
     if (!APIService.instance) {
       // Use IndexedDB cache backend (F4)
       APIService.cacheBackend = new IndexedDBCacheBackend();
-      APIService.instance = new CoreAPIService(APIService.cacheBackend);
+
+      // Get the appropriate base URL (proxy in production, direct in dev)
+      const baseUrl = getUniversalisBaseUrl();
+
+      // Create APIService with cache backend and proxy URL
+      APIService.instance = new CoreAPIService({
+        cacheBackend: APIService.cacheBackend,
+        baseUrl,
+      });
       logger.info('✅ APIService initialized from xivdyetools-core with IndexedDB cache');
 
       // Initialize cache backend asynchronously (won't block)
