@@ -195,7 +195,7 @@ export class DyeGrid extends BaseComponent {
         content.appendChild(
           this.createElement('div', {
             textContent: dye.hex,
-            className: 'text-xs text-gray-600 dark:text-gray-400 font-mono',
+            className: 'text-xs text-gray-600 dark:text-gray-400 number',
           })
         );
         // Category

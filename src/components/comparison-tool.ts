@@ -671,7 +671,7 @@ export class ComparisonTool extends BaseComponent {
     for (const stat of statItems) {
       const item = this.createElement('div', { className: 'text-center' });
       item.innerHTML = `
-        <p class="text-lg font-semibold" style="color: var(--theme-text);">${stat.value}</p>
+        <p class="text-lg font-semibold number" style="color: var(--theme-text);">${stat.value}</p>
         <p class="text-xs" style="color: var(--theme-text-muted);">${stat.label}</p>
       `;
       grid.appendChild(item);
@@ -903,7 +903,7 @@ export class ComparisonTool extends BaseComponent {
             (isRowClosest && isColClosest ? 'background: var(--theme-background-secondary);' : '');
 
           if (this.comparisonOptions.showDistanceValues) {
-            html += `<td class="p-2 text-center font-mono" style="${bgStyle || `color: ${color};`}">${distStr}</td>`;
+            html += `<td class="p-2 text-center number" style="${bgStyle || `color: ${color};`}">${distStr}</td>`;
           } else {
             html += `<td class="p-2 text-center"><div class="w-4 h-4 rounded mx-auto" style="background: ${color};"></div></td>`;
           }

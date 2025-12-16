@@ -175,7 +175,7 @@ export class DyeComparisonChart extends BaseComponent {
 
     // Draw axis labels
     ctx.fillStyle = textColor;
-    ctx.font = '12px sans-serif';
+    ctx.font = '12px Habibi, serif';
     ctx.textAlign = 'center';
 
     // X-axis labels (Hue: 0-360)
@@ -225,7 +225,7 @@ export class DyeComparisonChart extends BaseComponent {
 
       // Draw label
       ctx.fillStyle = textColor;
-      ctx.font = 'bold 12px sans-serif';
+      ctx.font = 'bold 12px Habibi, serif';
       ctx.textAlign = 'center';
       ctx.fillText(String(i + 1), x, y - 12);
     }
@@ -277,7 +277,7 @@ export class DyeComparisonChart extends BaseComponent {
 
     // Draw axis labels
     ctx.fillStyle = textColor;
-    ctx.font = '12px sans-serif';
+    ctx.font = '12px Habibi, serif';
     ctx.textAlign = 'center';
 
     // X-axis labels (Hue: 0-360)
@@ -327,7 +327,7 @@ export class DyeComparisonChart extends BaseComponent {
 
       // Draw label
       ctx.fillStyle = textColor;
-      ctx.font = 'bold 12px sans-serif';
+      ctx.font = 'bold 12px Habibi, serif';
       ctx.textAlign = 'center';
       ctx.fillText(String(i + 1), x, y - 12);
     }

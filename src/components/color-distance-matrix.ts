@@ -159,7 +159,7 @@ export class ColorDistanceMatrix extends BaseComponent {
       for (let j = 0; j < this.dyes.length; j++) {
         const cell = document.createElement('td');
         cell.className =
-          'px-3 py-2 text-center border border-gray-200 dark:border-gray-700 font-mono text-sm';
+          'px-3 py-2 text-center border border-gray-200 dark:border-gray-700 text-sm number';
 
         if (i === j) {
           // Diagonal: same color

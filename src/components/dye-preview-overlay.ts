@@ -232,7 +232,7 @@ export class DyePreviewOverlay extends BaseComponent {
 
     // Hex comparison
     const hexRow = document.createElement('div');
-    hexRow.className = 'text-xs text-center font-mono text-gray-600 dark:text-gray-400';
+    hexRow.className = 'text-xs text-center number text-gray-600 dark:text-gray-400';
     hexRow.textContent = `${config.sampledColor} → ${config.dye.hex}`;
     container.appendChild(hexRow);
 

@@ -166,7 +166,7 @@ export class ColorDisplay extends BaseComponent {
       const hexValue = this.createElement('button', {
         textContent: dye.hex,
         className:
-          'font-mono text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1',
+          'text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1 number',
         attributes: {
           type: 'button',
           'data-copy': dye.hex,
@@ -195,7 +195,7 @@ export class ColorDisplay extends BaseComponent {
       const rgbValue = this.createElement('button', {
         textContent: `${dye.rgb.r}, ${dye.rgb.g}, ${dye.rgb.b}`,
         className:
-          'font-mono text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1',
+          'text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1 number',
         attributes: {
           type: 'button',
           'data-copy': rgbCopyValue,
@@ -227,7 +227,7 @@ export class ColorDisplay extends BaseComponent {
       const hsvValue = this.createElement('button', {
         textContent: `${h}°, ${s}%, ${v}%`,
         className:
-          'font-mono text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1',
+          'text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded px-1 -mx-1 number',
         attributes: {
           type: 'button',
           'data-copy': hsvCopyValue,
@@ -273,7 +273,13 @@ export class ColorDisplay extends BaseComponent {
     const distanceLabel = this.createElement('div', {});
     const distanceStrong = this.createElement('strong', { textContent: 'Color Distance:' });
     distanceLabel.appendChild(distanceStrong);
-    distanceLabel.appendChild(document.createTextNode(` ${distance.toFixed(2)} (0-441.67 scale)`));
+    distanceLabel.appendChild(document.createTextNode(' '));
+    const distanceValueSpan = this.createElement('span', {
+      textContent: distance.toFixed(2),
+      className: 'number',
+    });
+    distanceLabel.appendChild(distanceValueSpan);
+    distanceLabel.appendChild(document.createTextNode(' (0-441.67 scale)'));
     distanceDiv.appendChild(distanceLabel);
 
     const progressContainer = this.createElement('div', {
@@ -291,9 +297,14 @@ export class ColorDisplay extends BaseComponent {
     // Contrast ratio
     const contrast = ColorService.getContrastRatio(this.displayDye!.hex, this.comparisonDye.hex);
     const contrastDiv = this.createElement('div', {
-      textContent: `Contrast Ratio: ${contrast.toFixed(2)}:1`,
       className: 'text-sm text-blue-800 dark:text-blue-200',
     });
+    contrastDiv.appendChild(document.createTextNode('Contrast Ratio: '));
+    const contrastValueSpan = this.createElement('span', {
+      textContent: `${contrast.toFixed(2)}:1`,
+      className: 'number',
+    });
+    contrastDiv.appendChild(contrastValueSpan);
     section.appendChild(contrastDiv);
 
     // WCAG compliance
@@ -345,15 +356,16 @@ export class ColorDisplay extends BaseComponent {
     section.appendChild(title);
 
     const properties = [
-      { label: 'Category', value: this.displayDye.category },
-      { label: 'Acquisition', value: this.displayDye.acquisition },
-      { label: 'Item ID', value: String(this.displayDye.itemID) },
+      { label: 'Category', value: this.displayDye.category, isNumeric: false },
+      { label: 'Acquisition', value: this.displayDye.acquisition, isNumeric: false },
+      { label: 'Item ID', value: String(this.displayDye.itemID), isNumeric: true },
       {
         label: 'Cost',
         value: this.displayDye.cost ? `${this.displayDye.cost.toLocaleString()} Gil` : 'N/A',
+        isNumeric: true,
       },
-      { label: 'Brightness', value: `${Math.round(this.displayDye.hsv.v)}%` },
-      { label: 'Saturation', value: `${Math.round(this.displayDye.hsv.s)}%` },
+      { label: 'Brightness', value: `${Math.round(this.displayDye.hsv.v)}%`, isNumeric: true },
+      { label: 'Saturation', value: `${Math.round(this.displayDye.hsv.s)}%`, isNumeric: true },
     ];
 
     for (const prop of properties) {
@@ -368,7 +380,7 @@ export class ColorDisplay extends BaseComponent {
 
       const value = this.createElement('span', {
         textContent: prop.value,
-        className: 'text-gray-900 dark:text-white font-mono',
+        className: `text-gray-900 dark:text-white ${prop.isNumeric ? 'number' : ''}`,
       });
 
       propDiv.appendChild(label);
@@ -405,9 +417,13 @@ export class ColorDisplay extends BaseComponent {
       className: 'text-sm text-purple-800 dark:text-purple-200 space-y-1',
     });
 
-    const luminanceValue = this.createElement('div', {
-      textContent: `Perceived Luminance: ${(luminance * 100).toFixed(1)}%`,
+    const luminanceValue = this.createElement('div', {});
+    luminanceValue.appendChild(document.createTextNode('Perceived Luminance: '));
+    const luminanceSpan = this.createElement('span', {
+      textContent: `${(luminance * 100).toFixed(1)}%`,
+      className: 'number',
     });
+    luminanceValue.appendChild(luminanceSpan);
 
     const brightnessValue = this.createElement('div', {
       textContent: `Brightness Classification: ${isLight ? 'Light' : 'Dark'}`,
@@ -419,6 +435,7 @@ export class ColorDisplay extends BaseComponent {
     textColorValue.appendChild(document.createTextNode('Optimal Text Color: '));
     const textColorSpan = this.createElement('span', {
       textContent: textColor,
+      className: 'number',
       attributes: {
         style: `color: ${textColor}; font-weight: bold;`,
       },

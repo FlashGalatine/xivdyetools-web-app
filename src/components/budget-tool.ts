@@ -516,13 +516,13 @@ export class BudgetTool extends BaseComponent {
     });
 
     const hex = this.createElement('p', {
-      className: 'text-sm font-mono mb-2',
+      className: 'text-sm number mb-2',
       textContent: this.targetDye.hex,
       attributes: { style: `color: ${textColor} !important; opacity: 0.8; text-shadow: ${textShadow};` },
     });
 
     const price = this.createElement('p', {
-      className: 'text-sm font-medium',
+      className: 'text-sm font-medium number',
       textContent: this.targetPrice > 0
         ? `~${this.targetPrice.toLocaleString()} gil`
         : LanguageService.t('budget.loadingPrice') || 'Loading price...',
@@ -982,7 +982,7 @@ export class BudgetTool extends BaseComponent {
       attributes: { style: 'color: var(--theme-text);' },
     });
     const hex = this.createElement('p', {
-      className: 'text-sm font-mono',
+      className: 'text-sm number',
       textContent: this.targetDye.hex,
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
@@ -997,7 +997,7 @@ export class BudgetTool extends BaseComponent {
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     const priceValue = this.createElement('p', {
-      className: 'font-semibold text-lg',
+      className: 'font-semibold text-lg number',
       textContent: this.targetPrice > 0 ? `~${this.targetPrice.toLocaleString()} gil` : '---',
       attributes: { style: 'color: var(--theme-text);' },
     });
@@ -1079,7 +1079,7 @@ export class BudgetTool extends BaseComponent {
         <div class="w-full max-w-xs">
           <div class="flex justify-between text-xs mb-1" style="color: var(--theme-text-muted);">
             <span>${LanguageService.t('budget.fetchingPrices') || 'Fetching prices'}</span>
-            <span>${current} / ${total}</span>
+            <span class="number">${current} / ${total}</span>
           </div>
           <div class="w-full h-2 rounded-full overflow-hidden" style="background: var(--theme-background-secondary);">
             <div class="h-full rounded-full transition-all duration-150" style="background: var(--theme-primary); width: ${percentage}%;"></div>
@@ -1114,7 +1114,7 @@ export class BudgetTool extends BaseComponent {
 
       // Rank badge
       const rankBadge = this.createElement('div', {
-        className: 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
+        className: 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 number',
         textContent: String(index + 1),
         attributes: {
           style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);',
@@ -1155,7 +1155,7 @@ export class BudgetTool extends BaseComponent {
         className: 'text-xs',
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
-      dyeDetails.innerHTML = `<span class="font-mono">${alt.dye.hex}</span> · Δ${alt.distance.toFixed(1)}`;
+      dyeDetails.innerHTML = `<span class="number">${alt.dye.hex}</span> · <span class="number">Δ${alt.distance.toFixed(1)}</span>`;
       info.appendChild(dyeName);
       info.appendChild(dyeDetails);
 
@@ -1180,12 +1180,12 @@ export class BudgetTool extends BaseComponent {
         className: 'text-right flex-shrink-0',
       });
       const priceText = this.createElement('p', {
-        className: 'font-semibold',
+        className: 'font-semibold number',
         textContent: `${alt.price.toLocaleString()} gil`,
         attributes: { style: 'color: var(--theme-text);' },
       });
       const savingsText = this.createElement('p', {
-        className: 'text-xs font-bold',
+        className: 'text-xs font-bold number',
         textContent: alt.savings > 0 ? `${LanguageService.t('budget.save') || 'Save'} ${alt.savings.toLocaleString()}` : '',
         attributes: { style: 'color: #22C55E;' },
       });
@@ -1540,13 +1540,13 @@ export class BudgetTool extends BaseComponent {
     });
 
     const hex = this.createElement('p', {
-      className: 'text-sm font-mono mb-2',
+      className: 'text-sm number mb-2',
       textContent: this.targetDye.hex,
       attributes: { style: `color: ${textColor} !important; opacity: 0.8; text-shadow: ${textShadow};` },
     });
 
     const price = this.createElement('p', {
-      className: 'text-sm font-medium',
+      className: 'text-sm font-medium number',
       textContent: this.targetPrice > 0
         ? `~${this.targetPrice.toLocaleString()} gil`
         : LanguageService.t('budget.loadingPrice') || 'Loading price...',

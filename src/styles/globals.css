@@ -1,6 +1,37 @@
 /* XIV Dye Tools v2.0.0 - Global Styles */
 
-/* Modern Typography */
+/* ============================================================================
+   Custom Font Faces
+   ============================================================================ */
+
+/* Habibi - Used for numerical values (HEX codes, prices, distances, etc.) */
+@font-face {
+  font-family: 'Habibi';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/habibi-v22-latin_latin-ext-regular.woff2') format('woff2');
+}
+
+/* ============================================================================
+   Numerical Values Typography
+   ============================================================================ */
+
+/* 
+ * The .number class applies the Habibi serif font to numerical values
+ * including: HEX codes, market prices, delta-E values, distance values,
+ * contrast ratios, degrees, percentages, and chart values.
+ */
+.number,
+.font-numeric {
+  font-family: 'Habibi', serif !important;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================================
+   Modern Typography
+   ============================================================================ */
+
 h1,
 h2,
 h3,

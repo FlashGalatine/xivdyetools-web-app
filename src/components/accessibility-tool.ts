@@ -720,7 +720,7 @@ export class AccessibilityTool extends BaseComponent {
 
         if (this.displayOptions.showHexValues) {
           const hex = this.createElement('p', {
-            className: 'text-xs font-mono',
+            className: 'text-xs number',
             textContent: simColor,
             attributes: { style: 'color: var(--theme-text-muted);' },
           });
@@ -734,7 +734,7 @@ export class AccessibilityTool extends BaseComponent {
 
       // Prevalence
       const prevalence = this.createElement('p', {
-        className: 'text-xs',
+        className: 'text-xs number',
         textContent: type.prevalence,
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
@@ -786,11 +786,11 @@ export class AccessibilityTool extends BaseComponent {
             <span class="truncate" style="color: var(--theme-text);">${result.dyeName}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span style="color: var(--theme-text);">${result.contrastVsWhite.ratio}:1</span>
+            <span class="number" style="color: var(--theme-text);">${result.contrastVsWhite.ratio}:1</span>
             <span class="px-1.5 py-0.5 rounded text-xs font-medium" style="${this.getWCAGBadgeStyle(result.contrastVsWhite.wcagLevel)}">${result.contrastVsWhite.wcagLevel}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span style="color: var(--theme-text);">${result.contrastVsBlack.ratio}:1</span>
+            <span class="number" style="color: var(--theme-text);">${result.contrastVsBlack.ratio}:1</span>
             <span class="px-1.5 py-0.5 rounded text-xs font-medium" style="${this.getWCAGBadgeStyle(result.contrastVsBlack.wcagLevel)}">${result.contrastVsBlack.wcagLevel}</span>
           </div>
         </div>
@@ -875,7 +875,7 @@ export class AccessibilityTool extends BaseComponent {
           if (pairResult) {
             const score = pairResult.distinguishability;
             const color = this.getDistinguishabilityColor(score);
-            html += `<td class="p-2 text-center font-mono" style="color: ${color};">${score}%</td>`;
+            html += `<td class="p-2 text-center number" style="color: ${color};">${score}%</td>`;
           } else {
             html += '<td class="p-2 text-center">-</td>';
           }

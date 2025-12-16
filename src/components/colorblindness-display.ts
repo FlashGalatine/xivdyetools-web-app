@@ -184,7 +184,7 @@ export class ColorblindnessDisplay extends BaseComponent {
 
     const prevalence = this.createElement('div', {
       textContent: `${visionType.prevalence} population`,
-      className: 'text-xs font-mono text-gray-500 dark:text-gray-500 italic',
+      className: 'text-xs number text-gray-500 dark:text-gray-500 italic',
     });
 
     info.appendChild(name);
@@ -221,14 +221,14 @@ export class ColorblindnessDisplay extends BaseComponent {
     // Hex value
     const hex = this.createElement('div', {
       textContent: this.simulatedColors[visionType.type],
-      className: 'font-mono text-xs text-gray-600 dark:text-gray-400 w-20',
+      className: 'number text-xs text-gray-600 dark:text-gray-400 w-20',
     });
 
     // RGB values
     const rgb = ColorService.hexToRgb(this.simulatedColors[visionType.type]);
     const rgbText = this.createElement('div', {
       textContent: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
-      className: 'font-mono text-xs text-gray-600 dark:text-gray-400 flex-1',
+      className: 'number text-xs text-gray-600 dark:text-gray-400 flex-1',
     });
 
     row.appendChild(label);

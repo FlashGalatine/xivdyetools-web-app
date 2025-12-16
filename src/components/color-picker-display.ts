@@ -120,7 +120,7 @@ export class ColorPickerDisplay extends BaseComponent {
 
     const rgbText = this.createElement('div', {
       textContent: `RGB: rgb(${rgbVal.r}, ${rgbVal.g}, ${rgbVal.b})`,
-      className: 'text-xs font-mono text-gray-600 dark:text-gray-400',
+      className: 'text-xs number text-gray-600 dark:text-gray-400',
       attributes: {
         id: 'rgb-display',
       },
@@ -128,7 +128,7 @@ export class ColorPickerDisplay extends BaseComponent {
 
     const hsvText = this.createElement('div', {
       textContent: `HSV: ${Math.round(hsvVal.h)}° ${Math.round(hsvVal.s)}% ${Math.round(hsvVal.v)}%`,
-      className: 'text-xs font-mono text-gray-600 dark:text-gray-400',
+      className: 'text-xs number text-gray-600 dark:text-gray-400',
       attributes: {
         id: 'hsv-display',
       },

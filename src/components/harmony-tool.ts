@@ -625,7 +625,7 @@ export class HarmonyTool extends BaseComponent {
     }) as HTMLInputElement;
 
     this.companionDisplay = this.createElement('span', {
-      className: 'text-sm font-mono w-6 text-center',
+      className: 'text-sm number w-6 text-center',
       textContent: String(this.companionDyesCount),
       attributes: { style: 'color: var(--theme-text);' },
     });
@@ -1154,7 +1154,7 @@ export class HarmonyTool extends BaseComponent {
     }) as HTMLInputElement;
 
     this.drawerCompanionDisplay = this.createElement('span', {
-      className: 'text-sm font-mono w-6 text-center',
+      className: 'text-sm number w-6 text-center',
       textContent: String(this.companionDyesCount),
       attributes: { style: 'color: var(--theme-text);' },
     });

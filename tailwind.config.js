@@ -34,6 +34,10 @@ export default {
           'Courier New',
           'monospace',
         ],
+        numeric: [
+          'Habibi',
+          'serif',
+        ],
       },
     },
   },

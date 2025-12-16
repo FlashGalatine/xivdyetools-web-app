@@ -189,7 +189,7 @@ export class HarmonyType extends BaseComponent {
       const avgDeviance =
         this.matchedDyes.reduce((sum, { deviance }) => sum + deviance, 0) / this.matchedDyes.length;
       const devianceDiv = this.createElement('div', {
-        className: 'text-xs mt-2 harmony-deviance-info',
+        className: 'text-xs mt-2 harmony-deviance-info number',
         textContent: `${LanguageService.t('harmony.avgHueDiff')}: ${avgDeviance.toFixed(1)}°`,
         attributes: {
           style: 'color: var(--theme-text-header);',
@@ -212,7 +212,7 @@ export class HarmonyType extends BaseComponent {
 
     const devianceValue = this.createElement('div', {
       textContent: `${deviance.toFixed(1)}°`,
-      className: `text-sm font-bold ${this.getDevianceColor(deviance)}`,
+      className: `text-sm font-bold number ${this.getDevianceColor(deviance)}`,
       attributes: {
         title: 'Hue Difference (lower is better)',
       },

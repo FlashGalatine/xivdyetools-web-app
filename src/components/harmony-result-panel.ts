@@ -109,7 +109,7 @@ export class HarmonyResultPanel extends BaseComponent {
       const priceInfo = priceData.get(matchedDye.itemID);
       if (priceInfo) {
         const priceEl = this.createElement('p', {
-          className: 'text-sm font-medium',
+          className: 'text-sm font-medium number',
           textContent: APIService.formatPrice(priceInfo.currentAverage),
           attributes: { style: 'color: var(--theme-accent);' },
         });
@@ -159,7 +159,7 @@ export class HarmonyResultPanel extends BaseComponent {
     });
 
     const hexBadge = this.createElement('span', {
-      className: 'text-xs font-mono px-2 py-0.5 rounded',
+      className: 'text-xs px-2 py-0.5 rounded number',
       textContent: hex.toUpperCase(),
       attributes: {
         style: 'background: var(--theme-background); color: var(--theme-text-muted);',
@@ -194,7 +194,7 @@ export class HarmonyResultPanel extends BaseComponent {
 
     const colorClass = this.getDevianceColorStyle(deviance);
     const valueEl = this.createElement('span', {
-      className: 'text-sm font-semibold',
+      className: 'text-sm font-semibold number',
       textContent: `${deviance.toFixed(1)}°`,
       attributes: { style: colorClass },
     });

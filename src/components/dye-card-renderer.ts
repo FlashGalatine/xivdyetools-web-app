@@ -130,7 +130,7 @@ export class DyeCardRenderer {
 
       const distanceText = this.createElement('div', {
         textContent: `${LanguageService.t('matcher.distance')}: ${distance.toFixed(1)}`,
-        className: 'text-xs text-gray-600 dark:text-gray-400 font-mono',
+        className: 'text-xs text-gray-600 dark:text-gray-400 number',
       });
       info.appendChild(distanceText);
     }
@@ -175,7 +175,7 @@ export class DyeCardRenderer {
 
       if (price) {
         const priceValue = this.createElement('div', {
-          className: 'text-xs font-mono font-bold',
+          className: 'text-xs font-bold number',
           attributes: {
             style: 'color: var(--theme-primary);',
           },

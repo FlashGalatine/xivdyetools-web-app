@@ -498,7 +498,7 @@ export class MatcherTool extends BaseComponent {
     });
     sampleLabel.innerHTML = `
       <span style="color: var(--theme-text);">${LanguageService.t('matcher.sampleSize') || 'Sample Size'}</span>
-      <span class="font-mono" style="color: var(--theme-text-muted);">${this.sampleSize}px</span>
+      <span class="number" style="color: var(--theme-text-muted);">${this.sampleSize}px</span>
     `;
     this.sampleDisplay = sampleLabel.querySelector('span:last-child') as HTMLElement;
 
@@ -565,7 +565,7 @@ export class MatcherTool extends BaseComponent {
     });
     colorCountLabel.innerHTML = `
       <span style="color: var(--theme-text);">${LanguageService.t('matcher.colorCount') || 'Colors to Extract'}</span>
-      <span class="font-mono font-bold" style="color: var(--theme-primary);">${this.paletteColorCount}</span>
+      <span class="number font-bold" style="color: var(--theme-primary);">${this.paletteColorCount}</span>
     `;
     this.colorCountDisplay = colorCountLabel.querySelector('span:last-child') as HTMLElement;
 
@@ -887,7 +887,7 @@ export class MatcherTool extends BaseComponent {
     });
     sampleLabel.innerHTML = `
       <span style="color: var(--theme-text);">${LanguageService.t('matcher.sampleSize') || 'Sample Size'}</span>
-      <span class="font-mono" style="color: var(--theme-text-muted);">${this.sampleSize}px</span>
+      <span class="number" style="color: var(--theme-text-muted);">${this.sampleSize}px</span>
     `;
     this.mobileSampleDisplay = sampleLabel.querySelector('span:last-child') as HTMLElement;
 
@@ -964,7 +964,7 @@ export class MatcherTool extends BaseComponent {
     });
     colorCountLabel.innerHTML = `
       <span style="color: var(--theme-text);">${LanguageService.t('matcher.colorCount') || 'Colors to Extract'}</span>
-      <span class="font-mono font-bold" style="color: var(--theme-primary);">${this.paletteColorCount}</span>
+      <span class="number font-bold" style="color: var(--theme-primary);">${this.paletteColorCount}</span>
     `;
     this.mobileColorCountDisplay = colorCountLabel.querySelector('span:last-child') as HTMLElement;
 
@@ -1595,7 +1595,7 @@ export class MatcherTool extends BaseComponent {
     const dyeName = LanguageService.getDyeName(dye.itemID) ?? dye.name;
     info.innerHTML = `
       <p class="text-sm font-medium truncate" style="color: var(--theme-text);">${dyeName}</p>
-      <p class="text-xs" style="color: var(--theme-text-muted);">
+      <p class="text-xs number" style="color: var(--theme-text-muted);">
         Δ ${dye.distance.toFixed(1)}
         ${this.showPrices && this.priceData.has(dye.itemID) ? ` · ${this.priceData.get(dye.itemID)!.currentMinPrice.toLocaleString()} gil` : ''}
       </p>
@@ -1959,7 +1959,7 @@ export class MatcherTool extends BaseComponent {
 
     info.innerHTML = `
       <p class="text-sm font-medium truncate" style="color: var(--theme-text);">${dyeName}</p>
-      <p class="text-xs" style="color: var(--theme-text-muted);">
+      <p class="text-xs number" style="color: var(--theme-text-muted);">
         ${detailsText}
       </p>
     `;

@@ -340,7 +340,7 @@ export class ColorInterpolationDisplay extends BaseComponent {
     // Position label below (only for selected or on hover via CSS)
     const posLabel = this.createElement('div', {
       textContent: `${Math.round(position)}%`,
-      className: `absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs font-mono whitespace-nowrap
+      className: `absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs number whitespace-nowrap
         ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`,
       attributes: {
         style: 'color: var(--theme-text);',
@@ -560,7 +560,7 @@ export class ColorInterpolationDisplay extends BaseComponent {
 
       const distance = this.createElement('div', {
         textContent: `${LanguageService.t('mixer.distance')} ${step.distance.toFixed(1)}`,
-        className: `text-xs ${this.getDistanceColor(step.distance)} font-mono`,
+        className: `text-xs ${this.getDistanceColor(step.distance)} number`,
       });
 
       info.appendChild(name);
@@ -662,7 +662,7 @@ export class ColorInterpolationDisplay extends BaseComponent {
 
     const avgValue = this.createElement('span', {
       textContent: avgDistance.toFixed(1),
-      className: 'font-mono',
+      className: 'number',
     });
 
     avgDiv.appendChild(avgLabel);
@@ -680,7 +680,7 @@ export class ColorInterpolationDisplay extends BaseComponent {
 
     const maxValue = this.createElement('span', {
       textContent: maxDistance.toFixed(1),
-      className: 'font-mono',
+      className: 'number',
     });
 
     maxDiv.appendChild(maxLabel);

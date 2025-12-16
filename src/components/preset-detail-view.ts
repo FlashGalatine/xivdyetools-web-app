@@ -265,7 +265,7 @@ export class PresetDetailView extends BaseComponent {
     info.appendChild(name);
 
     const hex = this.createElement('div', {
-      className: 'text-xs text-gray-500 dark:text-gray-400 font-mono',
+      className: 'text-xs text-gray-500 dark:text-gray-400 number',
       textContent: dye.hex.toUpperCase(),
     });
     info.appendChild(hex);

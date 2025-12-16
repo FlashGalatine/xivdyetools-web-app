@@ -550,7 +550,7 @@ export class MixerTool extends BaseComponent {
 
       // Hex and price
       const details = this.createElement('p', {
-        className: 'text-xs font-mono',
+        className: 'text-xs number',
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       let detailText = dye.hex;
@@ -605,7 +605,7 @@ export class MixerTool extends BaseComponent {
       attributes: { style: 'color: var(--theme-text);' },
     });
     this.stepValueDisplay = this.createElement('span', {
-      className: 'font-mono',
+      className: 'number',
       textContent: String(this.stepCount),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
@@ -886,7 +886,7 @@ export class MixerTool extends BaseComponent {
       const marker = this.createElement('div', { className: 'text-center' });
       marker.innerHTML = `
         <div class="w-8 h-8 rounded mx-auto mb-1" style="background: ${step.theoreticalColor}; border: 1px solid var(--theme-border);"></div>
-        <span class="text-xs font-mono" style="color: var(--theme-text-muted);">${i}</span>
+        <span class="text-xs number" style="color: var(--theme-text-muted);">${i}</span>
       `;
       markers.appendChild(marker);
     }
@@ -956,7 +956,7 @@ export class MixerTool extends BaseComponent {
           attributes: { style: 'color: var(--theme-text);' },
         });
         const distance = this.createElement('p', {
-          className: 'text-xs',
+          className: 'text-xs number',
           textContent: `${LanguageService.t('mixer.distance') || 'Distance'}: ${step.distance.toFixed(1)}`,
           attributes: { style: 'color: var(--theme-text-muted);' },
         });
@@ -967,7 +967,7 @@ export class MixerTool extends BaseComponent {
         const priceText = this.formatPrice(step.matchedDye);
         if (priceText) {
           const price = this.createElement('p', {
-            className: 'text-xs',
+            className: 'text-xs number',
             textContent: priceText,
             attributes: { style: 'color: var(--theme-text-muted);' },
           });
@@ -1401,7 +1401,7 @@ export class MixerTool extends BaseComponent {
       attributes: { style: 'color: var(--theme-text);' },
     });
     this.mobileStepValueDisplay = this.createElement('span', {
-      className: 'font-mono',
+      className: 'number',
       textContent: String(this.stepCount),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });

@@ -135,7 +135,7 @@ export class AppLayout extends BaseComponent {
     const versionText = `v${APP_VERSION}`;
     const version = this.createElement('span', {
       textContent: versionText,
-      className: 'text-sm font-mono',
+      className: 'text-sm number',
       attributes: {
         'data-app-version': versionText,
         style: 'color: var(--theme-text-header); opacity: 0.8;',
