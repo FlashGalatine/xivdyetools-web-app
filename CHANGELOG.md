@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.1] - 2025-12-16
+
+### Fixed
+
+- **Performance**: Fixed Budget Suggestions (and all tools using MarketBoard) making sequential API requests instead of batched requests. Now uses Core's `getPricesForDataCenter()` to fetch all prices in 1-2 API calls instead of N individual requests, reducing fetch time from O(N x 200ms) to ~400ms for typical use cases.
+
+---
+
 ## [3.1.0] - 2025-12-14
 
 ### Added

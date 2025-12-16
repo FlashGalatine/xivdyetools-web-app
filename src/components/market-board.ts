@@ -555,25 +555,54 @@ export class MarketBoard extends BaseComponent {
   }
 
   /**
-   * Fetch prices for multiple dyes
+   * Fetch prices for multiple dyes using batch API
    * @param dyes - Array of dyes to fetch prices for
    * @param onProgress - Optional callback to report progress (current, total)
+   *
+   * PERFORMANCE: Uses batched API request to fetch all prices in 1-2 requests
+   * instead of N sequential requests. This significantly reduces fetch time
+   * from O(N * rate_limit_delay) to O(1-2 requests).
    */
   async fetchPricesForDyes(
     dyes: Dye[],
     onProgress?: (current: number, total: number) => void
   ): Promise<Map<number, PriceData>> {
     const results = new Map<number, PriceData>();
-    const total = dyes.length;
 
-    for (let i = 0; i < dyes.length; i++) {
-      const dye = dyes[i];
-      const price = await this.fetchPrice(dye);
-      if (price) {
-        results.set(dye.itemID, price);
+    // Filter dyes that should have prices fetched (based on settings)
+    const dyesToFetch = dyes.filter((dye) => this.showPrices && this.shouldFetchPrice(dye));
+    const total = dyesToFetch.length;
+
+    if (total === 0) {
+      onProgress?.(0, 0);
+      return results;
+    }
+
+    // Report initial progress
+    onProgress?.(0, total);
+
+    try {
+      // Extract item IDs for batch fetch
+      const itemIDs = dyesToFetch.map((dye) => dye.itemID);
+
+      // Use batch API to fetch all prices in a single request
+      // The Core's getPricesForDataCenter handles caching internally
+      const batchResults = await this.apiService.getPricesForDataCenter(
+        itemIDs,
+        this.selectedServer
+      );
+
+      // Copy results to our map
+      for (const [itemID, priceData] of batchResults) {
+        results.set(itemID, priceData);
       }
-      // Report progress after each fetch
-      onProgress?.(i + 1, total);
+
+      // Report completion
+      onProgress?.(total, total);
+    } catch (error) {
+      logger.error('Failed to fetch batch prices:', error);
+      // Report completion even on error
+      onProgress?.(total, total);
     }
 
     return results;
