@@ -461,7 +461,9 @@
     "colorDistance": "색상 거리",
     "maxDistance": "최대 Delta-E",
     "distanceDesc": "높은 값은 더 많은 대안을, 낮은 값은 더 유사한 색상을 표시합니다",
-    "fetchingPrices": "가격 조회 중"
+    "fetchingPrices": "가격 조회 중",
+    "maxResults": "최대 결과 수",
+    "showingXOfY": "{total}개 중 {showing}개 표시"
   },
   "export": {
     "title": "팔레트 내보내기",

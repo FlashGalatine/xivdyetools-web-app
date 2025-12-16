@@ -463,7 +463,9 @@
     "colorDistance": "色距離",
     "maxDistance": "最大Delta-E",
     "distanceDesc": "値が高いほど多くの代替品が表示され、低いほど近い色が表示されます",
-    "fetchingPrices": "価格を取得中"
+    "fetchingPrices": "価格を取得中",
+    "maxResults": "最大表示件数",
+    "showingXOfY": "{total}件中{showing}件を表示"
   },
   "export": {
     "title": "パレットをエクスポート",

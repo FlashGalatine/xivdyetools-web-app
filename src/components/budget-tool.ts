@@ -51,6 +51,7 @@ const STORAGE_KEYS = {
   budgetLimit: 'v3_budget_limit',
   sortBy: 'v3_budget_sort',
   colorDistance: 'v3_budget_distance',
+  resultLimit: 'v3_budget_result_limit',
 } as const;
 
 /**
@@ -60,6 +61,7 @@ const DEFAULTS = {
   budgetLimit: 50000,
   sortBy: 'match' as const,
   colorDistance: 50,
+  resultLimit: 3,
 };
 
 /**
@@ -119,7 +121,9 @@ export class BudgetTool extends BaseComponent {
   private budgetLimit: number;
   private sortBy: 'match' | 'price' | 'value';
   private colorDistance: number;
+  private resultLimit: number;
   private alternatives: AlternativeDye[] = [];
+  private totalAffordableCount: number = 0; // Track total before limit applied
   private priceData: Map<number, PriceData> = new Map();
   private targetPrice: number = 0;
   private isLoading: boolean = false;
@@ -141,6 +145,7 @@ export class BudgetTool extends BaseComponent {
   private targetDyeContainer: HTMLElement | null = null;
   private budgetValueDisplay: HTMLElement | null = null;
   private distanceValueDisplay: HTMLElement | null = null;
+  private resultLimitValueDisplay: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
   private targetOverviewContainer: HTMLElement | null = null;
   private alternativesHeaderContainer: HTMLElement | null = null;
@@ -161,6 +166,7 @@ export class BudgetTool extends BaseComponent {
   private mobileTargetDyeContainer: HTMLElement | null = null;
   private mobileBudgetValueDisplay: HTMLElement | null = null;
   private mobileDistanceValueDisplay: HTMLElement | null = null;
+  private mobileResultLimitValueDisplay: HTMLElement | null = null;
   private mobileQuickPickButtons: HTMLButtonElement[] = [];
 
   // Subscriptions
@@ -174,6 +180,7 @@ export class BudgetTool extends BaseComponent {
     this.budgetLimit = StorageService.getItem<number>(STORAGE_KEYS.budgetLimit) ?? DEFAULTS.budgetLimit;
     this.sortBy = StorageService.getItem<'match' | 'price' | 'value'>(STORAGE_KEYS.sortBy) ?? DEFAULTS.sortBy;
     this.colorDistance = StorageService.getItem<number>(STORAGE_KEYS.colorDistance) ?? DEFAULTS.colorDistance;
+    this.resultLimit = StorageService.getItem<number>(STORAGE_KEYS.resultLimit) ?? DEFAULTS.resultLimit;
 
     // Load persisted target dye
     const savedDyeId = StorageService.getItem<number>(STORAGE_KEYS.targetDyeId);
@@ -631,8 +638,8 @@ export class BudgetTool extends BaseComponent {
       attributes: {
         type: 'range',
         min: '0',
-        max: '1000000',
-        value: String(this.budgetLimit),
+        max: '200000',
+        value: String(Math.min(this.budgetLimit, 200000)),
         step: '1000',
         style: 'accent-color: var(--theme-primary);',
       },
@@ -654,7 +661,7 @@ export class BudgetTool extends BaseComponent {
     const ticksContainer = this.createElement('div', {
       className: 'flex justify-between mt-1',
     });
-    ['0', '100K', '500K', '1M'].forEach(tick => {
+    ['0', '50K', '100K', '150K', '200K'].forEach(tick => {
       const tickLabel = this.createElement('span', {
         className: 'text-xs',
         textContent: tick,
@@ -663,6 +670,73 @@ export class BudgetTool extends BaseComponent {
       ticksContainer.appendChild(tickLabel);
     });
     container.appendChild(ticksContainer);
+
+    // Divider
+    const divider = this.createElement('div', {
+      className: 'my-4',
+      attributes: { style: 'border-top: 1px solid var(--theme-border);' },
+    });
+    container.appendChild(divider);
+
+    // Result Limit section
+    const resultLimitDisplay = this.createElement('div', {
+      className: 'flex items-center justify-between mb-3',
+    });
+
+    const resultLimitLabel = this.createElement('span', {
+      className: 'text-sm',
+      textContent: LanguageService.t('budget.maxResults') || 'Max Results',
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+
+    this.resultLimitValueDisplay = this.createElement('span', {
+      className: 'font-semibold',
+      textContent: String(this.resultLimit),
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+
+    resultLimitDisplay.appendChild(resultLimitLabel);
+    resultLimitDisplay.appendChild(this.resultLimitValueDisplay);
+    container.appendChild(resultLimitDisplay);
+
+    // Result Limit Slider
+    const resultLimitSlider = this.createElement('input', {
+      className: 'w-full',
+      attributes: {
+        type: 'range',
+        min: '1',
+        max: '10',
+        value: String(this.resultLimit),
+        step: '1',
+        style: 'accent-color: var(--theme-primary);',
+      },
+    }) as HTMLInputElement;
+
+    this.on(resultLimitSlider, 'input', () => {
+      this.resultLimit = parseInt(resultLimitSlider.value, 10);
+      if (this.resultLimitValueDisplay) {
+        this.resultLimitValueDisplay.textContent = String(this.resultLimit);
+      }
+      StorageService.setItem(STORAGE_KEYS.resultLimit, this.resultLimit);
+      this.filterAndSortAlternatives();
+      this.updateDrawerContent();
+    });
+
+    container.appendChild(resultLimitSlider);
+
+    // Result Limit Tick labels
+    const resultLimitTicks = this.createElement('div', {
+      className: 'flex justify-between mt-1',
+    });
+    ['1', '3', '5', '7', '10'].forEach(tick => {
+      const tickLabel = this.createElement('span', {
+        className: 'text-xs',
+        textContent: tick,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      resultLimitTicks.appendChild(tickLabel);
+    });
+    container.appendChild(resultLimitTicks);
   }
 
   /**
@@ -948,10 +1022,20 @@ export class BudgetTool extends BaseComponent {
       className: 'flex items-center justify-between',
     });
 
-    const count = this.alternatives.length;
+    const displayCount = this.alternatives.length;
+    const totalCount = this.totalAffordableCount;
+    const isLimited = displayCount < totalCount;
+
+    // Show "Showing X of Y" when results are limited, otherwise show total count
+    const countLabel = isLimited
+      ? `${LanguageService.t('budget.showingXOfY') || 'Showing {showing} of {total}'}`
+          .replace('{showing}', String(displayCount))
+          .replace('{total}', String(totalCount))
+      : `${totalCount} ${LanguageService.t('budget.alternativesWithinBudget') || 'alternatives within budget'}`;
+
     const countText = this.createElement('h3', {
       className: 'font-semibold',
-      textContent: `${count} ${LanguageService.t('budget.alternativesWithinBudget') || 'alternatives within budget'}`,
+      textContent: countLabel,
       attributes: { style: 'color: var(--theme-text);' },
     });
 
@@ -1203,7 +1287,11 @@ export class BudgetTool extends BaseComponent {
       }
     });
 
-    this.alternatives = affordable;
+    // Track total count before applying result limit
+    this.totalAffordableCount = affordable.length;
+
+    // Apply result limit
+    this.alternatives = affordable.slice(0, this.resultLimit);
     this.renderAlternativesHeader();
     this.renderAlternativesList();
   }
@@ -1213,7 +1301,7 @@ export class BudgetTool extends BaseComponent {
    */
   private calculateValueScore(distance: number, price: number): number {
     const maxDistance = 50;
-    const maxPrice = 1000000;
+    const maxPrice = 200000;
     const normalizedDistance = (distance / maxDistance) * 100;
     const normalizedPrice = (price / maxPrice) * 100;
     return (normalizedDistance * 0.7) + (normalizedPrice * 0.3);
@@ -1573,8 +1661,8 @@ export class BudgetTool extends BaseComponent {
       attributes: {
         type: 'range',
         min: '0',
-        max: '1000000',
-        value: String(this.budgetLimit),
+        max: '200000',
+        value: String(Math.min(this.budgetLimit, 200000)),
         step: '1000',
         style: 'accent-color: var(--theme-primary);',
       },
@@ -1597,7 +1685,7 @@ export class BudgetTool extends BaseComponent {
     const ticksContainer = this.createElement('div', {
       className: 'flex justify-between mt-1',
     });
-    ['0', '100K', '500K', '1M'].forEach(tick => {
+    ['0', '50K', '100K', '150K', '200K'].forEach(tick => {
       const tickLabel = this.createElement('span', {
         className: 'text-xs',
         textContent: tick,
@@ -1606,6 +1694,75 @@ export class BudgetTool extends BaseComponent {
       ticksContainer.appendChild(tickLabel);
     });
     container.appendChild(ticksContainer);
+
+    // Divider
+    const divider = this.createElement('div', {
+      className: 'my-4',
+      attributes: { style: 'border-top: 1px solid var(--theme-border);' },
+    });
+    container.appendChild(divider);
+
+    // Result Limit section
+    const resultLimitDisplay = this.createElement('div', {
+      className: 'flex items-center justify-between mb-3',
+    });
+
+    const resultLimitLabel = this.createElement('span', {
+      className: 'text-sm',
+      textContent: LanguageService.t('budget.maxResults') || 'Max Results',
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+
+    this.mobileResultLimitValueDisplay = this.createElement('span', {
+      className: 'font-semibold',
+      textContent: String(this.resultLimit),
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+
+    resultLimitDisplay.appendChild(resultLimitLabel);
+    resultLimitDisplay.appendChild(this.mobileResultLimitValueDisplay);
+    container.appendChild(resultLimitDisplay);
+
+    // Result Limit Slider
+    const resultLimitSlider = this.createElement('input', {
+      className: 'w-full',
+      attributes: {
+        type: 'range',
+        min: '1',
+        max: '10',
+        value: String(this.resultLimit),
+        step: '1',
+        style: 'accent-color: var(--theme-primary);',
+      },
+    }) as HTMLInputElement;
+
+    this.on(resultLimitSlider, 'input', () => {
+      this.resultLimit = parseInt(resultLimitSlider.value, 10);
+      if (this.mobileResultLimitValueDisplay) {
+        this.mobileResultLimitValueDisplay.textContent = String(this.resultLimit);
+      }
+      if (this.resultLimitValueDisplay) {
+        this.resultLimitValueDisplay.textContent = String(this.resultLimit);
+      }
+      StorageService.setItem(STORAGE_KEYS.resultLimit, this.resultLimit);
+      this.filterAndSortAlternatives();
+    });
+
+    container.appendChild(resultLimitSlider);
+
+    // Result Limit Tick labels
+    const resultLimitTicks = this.createElement('div', {
+      className: 'flex justify-between mt-1',
+    });
+    ['1', '3', '5', '7', '10'].forEach(tick => {
+      const tickLabel = this.createElement('span', {
+        className: 'text-xs',
+        textContent: tick,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      resultLimitTicks.appendChild(tickLabel);
+    });
+    container.appendChild(resultLimitTicks);
   }
 
   /**

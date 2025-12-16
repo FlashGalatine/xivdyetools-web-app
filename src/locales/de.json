@@ -463,7 +463,9 @@
     "colorDistance": "Farbabstand",
     "maxDistance": "Max Delta-E",
     "distanceDesc": "Höhere Werte zeigen mehr Alternativen, niedrigere Werte zeigen ähnlichere Farben",
-    "fetchingPrices": "Preise werden abgerufen"
+    "fetchingPrices": "Preise werden abgerufen",
+    "maxResults": "Max Ergebnisse",
+    "showingXOfY": "Zeige {showing} von {total}"
   },
   "export": {
     "title": "Palette exportieren",
