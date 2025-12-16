@@ -2,17 +2,18 @@
 
 **Status**: ✅ Stable | **Version**: 3.1.0 | **Release**: December 2025 | **Phase**: XIVAuth Integration
 
-A comprehensive web-based toolset for Final Fantasy XIV players to explore dye colors, create harmonious color palettes, match colors from images, find smooth color transitions, compare dyes side-by-side, browse community presets, and simulate how dye combinations appear to colorblind players for in-game gear and housing projects.
+A comprehensive web-based toolset for Final Fantasy XIV players to explore dye colors, create harmonious color palettes, match colors from images, find smooth color transitions, compare dyes side-by-side, browse community presets, find budget-friendly alternatives, and simulate how dye combinations appear to colorblind players for in-game gear and housing projects.
 
 > **v3.1.0 Release Notes**: XIVAuth Integration - Login with your FFXIV character via XIVAuth alongside Discord. Multi-provider authentication with account merging support. Budget Suggestions tool with full mobile drawer controls. See [CHANGELOG.md](CHANGELOG.md) for detailed release information.
 
-**Six Powerful Tools:**
+**Seven Powerful Tools:**
 - **Dye Mixer** - Find smooth color transitions between two dyes with HSV interpolation
 - **Color Accessibility Checker** - Simulate colorblindness and ensure your glamour is accessible to everyone
 - **Color Harmony Explorer** - Generate color palettes based on color theory principles
 - **Color Matcher** - Upload images and find the closest matching FFXIV dyes
 - **Dye Comparison** - Compare up to 4 dyes side-by-side with detailed color visualization
 - **Preset Browser** - Browse, vote on, edit, and share community dye palettes
+- **Budget Suggestions** - Find affordable alternatives to expensive dyes within your budget
 
 ## Features
 
@@ -234,6 +235,36 @@ Browse, vote on, and share community-created dye palettes:
 **Integration:**
 - **Discord Bot Sync** - Presets submitted via Discord bot appear in web browser
 - **Service Binding** - Direct worker-to-worker communication with presets API
+
+### 💰 Budget Suggestions (v3.0.0)
+Find affordable alternatives to expensive dyes within your budget constraints. Perfect for glamour planning when you want something like Jet Black but cheaper.
+
+**Core Features:**
+- **Target Dye Selection** - Select any dye to find cheaper alternatives
+- **Quick Picks** - One-click selection for popular expensive dyes (Pure White, Jet Black, Carmine Red, etc.)
+- **Budget Limit Slider** - Set max price from 0 to 1,000,000 gil
+- **Color Distance Threshold** - Adjustable Delta-E tolerance (25-100) to control how similar alternatives must be
+- **Real-time Price Fetching** - Live market prices from Universalis API with progress indicator
+
+**Sort Options:**
+- **Best Match** - Closest color first (lowest Delta-E)
+- **Lowest Price** - Cheapest alternatives first
+- **Best Value** - Balance of color accuracy and price (70% match, 30% price weighting)
+
+**Results Display:**
+- **Color Comparison** - Side-by-side swatches of target and alternative dyes
+- **Distance Indicator** - Visual bar showing how close each match is
+- **Price & Savings** - Current market price and savings vs target dye
+- **Ranked List** - Alternatives displayed with rank badges
+
+**Mobile Support:**
+- **Full Drawer Controls** - All settings accessible via mobile drawer
+- **Synchronized State** - Desktop and mobile panels stay in sync
+- **Touch-Friendly** - Optimized sliders and buttons for mobile devices
+
+**Deep Linking:**
+- **URL Parameters** - Share links with `?dye=Jet%20Black` to pre-select target
+- **Cross-Tool Navigation** - Links from other tools can navigate directly to Budget Suggestions
 
 ### 💰 Market Board Integration
 Fetch real-time dye prices from the Universalis API:
@@ -494,10 +525,6 @@ All tools are production-ready stable versions with full feature support. The ap
    - HSV values can be used in other games like Monster Hunter Wilds
    - Hover over "HSV:" label to see the helpful tooltip
 7. **Dark Mode** - Toggle dark mode with button in header for comfortable viewing (charts adapt automatically)
-
-## Coming Soon
-
-**Budget-Aware Dye Suggestions** - Find affordable alternatives to expensive dyes based on current market prices. Features include a budget toggle with price slider in Color Matcher, sort options (Best Match/Lowest Price/Best Value), and smart recommendations that balance color accuracy with price. See [specification](../xivdyetools-docs/BUDGET_AWARE_SUGGESTIONS.md) for details.
 
 ## Data Sources
 
