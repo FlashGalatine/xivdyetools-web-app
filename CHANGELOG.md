@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] - 2025-12-16
+
+### Added
+
+- **Universalis Proxy**: Market Board API requests now route through a CORS proxy to prevent browser errors when Universalis returns rate limit (429) responses without CORS headers
+- **Environment Configuration**: Added `VITE_UNIVERSALIS_PROXY_URL` environment variable support for local development proxy configuration
+
+### Fixed
+
+- **CORS Issues**: Resolved browser CORS errors that occurred when Universalis API returned error responses (429, 500) without proper CORS headers
+
+---
+
 ## [3.1.1] - 2025-12-16
 
 ### Fixed
