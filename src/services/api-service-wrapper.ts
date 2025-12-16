@@ -10,6 +10,7 @@ import {
   type PriceData,
   type CachedData,
   UNIVERSALIS_API_BASE,
+  NoOpLogger,
 } from '@xivdyetools/core';
 import { indexedDBService, STORES } from './indexeddb-service';
 import { logger } from '@shared/logger';
@@ -244,9 +245,11 @@ export class APIService {
       const baseUrl = getUniversalisBaseUrl();
 
       // Create APIService with cache backend and proxy URL
+      // Include logger to ensure options-based API is used (backwards compatible with older core versions)
       APIService.instance = new CoreAPIService({
         cacheBackend: APIService.cacheBackend,
         baseUrl,
+        logger: NoOpLogger,
       });
       logger.info('✅ APIService initialized from xivdyetools-core with IndexedDB cache');
 
