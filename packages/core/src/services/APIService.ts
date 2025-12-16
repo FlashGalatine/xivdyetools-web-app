@@ -490,7 +490,8 @@ export class APIService {
   }
 
   /**
-   * Fetch prices for dyes in a specific data center
+   * Fetch prices for dyes in a specific data center using batch API
+   * Makes a single API request for all items instead of N sequential requests
    */
   async getPricesForDataCenter(
     itemIDs: number[],
@@ -498,14 +499,132 @@ export class APIService {
   ): Promise<Map<number, PriceData>> {
     const results = new Map<number, PriceData>();
 
+    if (itemIDs.length === 0) {
+      return results;
+    }
+
+    // Separate cached and uncached items
+    const uncachedItemIDs: number[] = [];
+
     for (const itemID of itemIDs) {
-      const price = await this.getPriceData(itemID, undefined, dataCenterID);
-      if (price) {
-        results.set(itemID, price);
+      const cacheKey = this.buildCacheKey(itemID, undefined, dataCenterID);
+      const cached = await this.getCachedPrice(cacheKey);
+      if (cached) {
+        results.set(itemID, cached);
+        console.info(`📦 Price cache hit for item ${itemID}`);
+      } else {
+        uncachedItemIDs.push(itemID);
       }
     }
 
+    // If all items were cached, return early
+    if (uncachedItemIDs.length === 0) {
+      return results;
+    }
+
+    // Fetch uncached items in a single batch request
+    try {
+      const batchResults = await this.fetchBatchPriceData(uncachedItemIDs, dataCenterID);
+
+      // Cache and add results
+      for (const [itemID, priceData] of batchResults) {
+        const cacheKey = this.buildCacheKey(itemID, undefined, dataCenterID);
+        await this.setCachedPrice(cacheKey, priceData);
+        results.set(itemID, priceData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch batch price data:', error);
+    }
+
     return results;
+  }
+
+  /**
+   * Fetch price data for multiple items in a single batch API call
+   */
+  private async fetchBatchPriceData(
+    itemIDs: number[],
+    dataCenterID: string
+  ): Promise<Map<number, PriceData>> {
+    const results = new Map<number, PriceData>();
+
+    if (itemIDs.length === 0) {
+      return results;
+    }
+
+    // Rate limiting: ensure minimum delay between requests
+    const timeSinceLastRequest = Date.now() - this.lastRequestTime;
+    if (timeSinceLastRequest < API_RATE_LIMIT_DELAY) {
+      await sleep(API_RATE_LIMIT_DELAY - timeSinceLastRequest);
+    }
+    this.lastRequestTime = Date.now();
+
+    // Build batch API URL with comma-separated item IDs
+    const pathSegment = dataCenterID || 'universal';
+    const itemIDsStr = itemIDs.join(',');
+    const url = `${UNIVERSALIS_API_BASE}/aggregated/${pathSegment}/${itemIDsStr}`;
+
+    try {
+      const data = await retry(
+        () => this.fetchWithTimeout(url, UNIVERSALIS_API_TIMEOUT),
+        UNIVERSALIS_API_RETRY_COUNT,
+        UNIVERSALIS_API_RETRY_DELAY
+      );
+
+      if (!data || !data.results || !Array.isArray(data.results)) {
+        console.warn('Invalid batch API response');
+        return results;
+      }
+
+      // Parse each result in the batch response
+      for (const result of data.results) {
+        if (!result || typeof result !== 'object' || typeof result.itemId !== 'number') {
+          continue;
+        }
+
+        const itemID = result.itemId;
+
+        // Try to get price from nq.minListing (prefer DC, then world, then region)
+        let price: number | null = null;
+
+        if (result.nq?.minListing) {
+          if (result.nq.minListing.dc?.price) {
+            price = result.nq.minListing.dc.price;
+          } else if (result.nq.minListing.world?.price) {
+            price = result.nq.minListing.world.price;
+          } else if (result.nq.minListing.region?.price) {
+            price = result.nq.minListing.region.price;
+          }
+        }
+
+        // If no NQ price, try HQ
+        if (!price && result.hq?.minListing) {
+          if (result.hq.minListing.dc?.price) {
+            price = result.hq.minListing.dc.price;
+          } else if (result.hq.minListing.world?.price) {
+            price = result.hq.minListing.world.price;
+          } else if (result.hq.minListing.region?.price) {
+            price = result.hq.minListing.region.price;
+          }
+        }
+
+        if (price) {
+          results.set(itemID, {
+            itemID,
+            currentAverage: Math.round(price),
+            currentMinPrice: Math.round(price),
+            currentMaxPrice: Math.round(price),
+            lastUpdate: Date.now(),
+          });
+        }
+      }
+
+      console.info(`📦 Batch fetched prices for ${results.size}/${itemIDs.length} items`);
+      return results;
+    } catch (error) {
+      console.error('Failed to fetch batch price data:', error);
+      return results;
+    }
   }
 
   // ============================================================================

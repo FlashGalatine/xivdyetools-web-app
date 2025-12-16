@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Performance**: Fixed Budget Suggestions (and all tools using MarketBoard) making sequential API requests instead of batched requests. Now uses Core's `getPricesForDataCenter()` to fetch all prices in 1-2 API calls instead of N individual requests, reducing fetch time from O(N x 200ms) to ~400ms for typical use cases.
+- **Performance**: Fixed Market Board price fetching making sequential API requests instead of batched requests. The Core's `getPricesForDataCenter()` now fetches all prices in a single API call instead of N individual requests, reducing fetch time from O(N x 200ms) to ~200ms for typical use cases.
+- **Dye Mixer**: Fixed prices not displaying in Intermediate Dye Matches section when "Show Prices" is enabled. The batch API fix ensures prices load quickly and are displayed correctly.
 
 ---
 
