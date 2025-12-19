@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.1] - 2025-12-19
+
+### Fixed
+
+- **Harmony Explorer**: Fixed Facewear colors appearing in harmony results. The `findClosestDyesToHue()` method now properly excludes Facewear dyes (generic names like "Red", "Blue") from harmony calculations, matching the behavior of the core library's `HarmonyGenerator`.
+
+---
+
 ## [3.2.0] - 2025-12-16
 
 ### Added

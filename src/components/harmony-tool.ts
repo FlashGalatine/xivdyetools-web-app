@@ -1491,18 +1491,26 @@ export class HarmonyTool extends BaseComponent {
 
   /**
    * Find dyes closest to a target hue
+   * Excludes Facewear dyes (generic names like "Red", "Blue")
    */
   private findClosestDyesToHue(
     dyes: Dye[],
     targetHue: number,
     count: number
   ): Array<{ dye: Dye; deviance: number }> {
-    const scored = dyes.map((dye) => {
+    const scored: Array<{ dye: Dye; deviance: number }> = [];
+
+    for (const dye of dyes) {
+      // Skip Facewear dyes - they have generic names and shouldn't appear in harmony results
+      if (dye.category === 'Facewear') {
+        continue;
+      }
+
       const dyeHsv = ColorService.hexToHsv(dye.hex);
       const hueDiff = Math.abs(dyeHsv.h - targetHue);
       const deviance = Math.min(hueDiff, 360 - hueDiff);
-      return { dye, deviance };
-    });
+      scored.push({ dye, deviance });
+    }
 
     scored.sort((a, b) => a.deviance - b.deviance);
     return scored.slice(0, count);
