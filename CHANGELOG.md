@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.2] - 2025-12-21
+
+### Added
+
+- **Harmony Explorer Context Menu**: Added "See Budget Suggestions" option to quickly load a dye into the Budget tool
+- **Slot Selection Modal**: When Comparison (4 slots) or Mixer (2 slots) is full, a modal now lets you choose which slot to replace
+- **Duplicate Detection**: Toast notification appears if you try to add a dye that's already in Comparison or Mixer
+
+### Fixed
+
+- **Context Menu Actions**: "Add to Comparison" and "Add to Mixer" now work correctly - they save the dye to localStorage and navigate to the respective tool
+- **SVG Icons**: Replaced emoji icons (⚖️, 🌈, 📋) with filled SVG icons for better visibility and consistency
+
+### Changed
+
+- **Navigation**: Context menu actions now automatically navigate to the target tool after adding a dye
+
+---
+
 ## [3.2.1] - 2025-12-19
 
 ### Fixed

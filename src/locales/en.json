@@ -101,7 +101,9 @@
     "showLess": "Show Less",
     "selectDye": "Select a dye",
     "noDyeSelected": "No dye selected",
-    "download": "Download"
+    "download": "Download",
+    "slot": "Slot",
+    "replace": "Replace"
   },
   "harmony": {
     "suggestionMode": "Suggestion Mode",
@@ -128,6 +130,15 @@
     "copyHex": "Copy Hex Code",
     "copiedHex": "Copied",
     "copyFailed": "Failed to copy",
+    "seeBudget": "See Budget Suggestions",
+    "addedToComparison": "Added to Comparison",
+    "addedToMixer": "Added to Mixer",
+    "dyeAlreadyInComparison": "Dye already in Comparison",
+    "dyeAlreadyInMixer": "Dye already in Mixer",
+    "slotsFull": "All slots are full. Select one to replace:",
+    "selectSlotToReplace": "Select Slot to Replace",
+    "addingDye": "Adding",
+    "replacedInTool": "Replaced successfully",
     "selectColorPrompt": "Select a Base Color",
     "selectColorMessage": "Enter a hex color or pick a dye to generate harmonies.",
     "selectColorAction": "Enter color",

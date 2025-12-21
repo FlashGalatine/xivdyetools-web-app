@@ -101,7 +101,9 @@
     "showLess": "Afficher moins",
     "selectDye": "Sélectionner une teinture",
     "noDyeSelected": "Aucune teinture sélectionnée",
-    "download": "Télécharger"
+    "download": "Télécharger",
+    "slot": "Emplacement",
+    "replace": "Remplacer"
   },
   "harmony": {
     "suggestionMode": "Mode de Suggestion",
@@ -124,6 +126,15 @@
     "copyHex": "Copier le code Hex",
     "copiedHex": "Copié",
     "copyFailed": "Échec de la copie",
+    "seeBudget": "Voir les suggestions Budget",
+    "addedToComparison": "Ajouté à la comparaison",
+    "addedToMixer": "Ajouté au mélangeur",
+    "dyeAlreadyInComparison": "Teinture déjà dans la comparaison",
+    "dyeAlreadyInMixer": "Teinture déjà dans le mélangeur",
+    "slotsFull": "Tous les emplacements sont pleins. Sélectionnez-en un à remplacer :",
+    "selectSlotToReplace": "Sélectionner l'emplacement à remplacer",
+    "addingDye": "Ajout",
+    "replacedInTool": "Remplacé avec succès",
     "selectColorPrompt": "Sélectionnez une couleur de base",
     "selectColorMessage": "Entrez une couleur hex ou choisissez une teinture pour générer des harmonies.",
     "selectColorAction": "Entrer la couleur",

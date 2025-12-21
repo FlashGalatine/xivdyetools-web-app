@@ -2,20 +2,58 @@
  * XIV Dye Tools v2.2.0 - Dye Action Dropdown Component
  *
  * Quick-action dropdown menu for dye items
- * Options: Add to Comparison, Add to Mixer, Copy to Clipboard
+ * Options: Add to Comparison, Add to Mixer, See Budget Suggestions, Copy to Clipboard
  *
  * @module components/dye-action-dropdown
  */
 
 import type { Dye } from '@shared/types';
-import { LanguageService } from '@services/index';
+import { LanguageService, StorageService, RouterService } from '@services/index';
 import { ToastService } from '@services/toast-service';
+import { ModalService } from '@services/modal-service';
+import { DyeService } from '@services/dye-service-wrapper';
 
 // ============================================================================
 // Action Types
 // ============================================================================
 
-export type DyeAction = 'comparison' | 'mixer' | 'copy';
+export type DyeAction = 'comparison' | 'mixer' | 'copy' | 'budget';
+
+// ============================================================================
+// Storage Keys and Constants
+// ============================================================================
+
+const STORAGE_KEYS = {
+  comparison: 'v3_comparison_selected_dyes',
+  mixer: 'v3_mixer_selected_dyes',
+  budget: 'v3_budget_target',
+} as const;
+
+const MAX_SLOTS = {
+  comparison: 4,
+  mixer: 2,
+} as const;
+
+// ============================================================================
+// SVG Icons (filled/solid style for visibility)
+// ============================================================================
+
+const ICON_ACTION_COMPARISON = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+  <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
+</svg>`;
+
+const ICON_ACTION_MIXER = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+  <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd"/>
+</svg>`;
+
+const ICON_ACTION_BUDGET = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979a1 1 0 001.715-1.029C12.279 4.784 11.232 4 10 4s-2.279.784-2.979 1.95c-.285.475-.507 1-.67 1.55H6a1 1 0 000 2h.013a9.358 9.358 0 000 1H6a1 1 0 100 2h.351c.163.55.385 1.075.67 1.55C7.721 15.216 8.768 16 10 16s2.279-.784 2.979-1.95a1 1 0 10-1.715-1.029c-.472.786-.96.979-1.264.979-.304 0-.792-.193-1.264-.979a4.265 4.265 0 01-.264-.521H10a1 1 0 100-2H8.017a7.36 7.36 0 010-1H10a1 1 0 100-2H8.472c.08-.185.167-.36.264-.521z"/>
+</svg>`;
+
+const ICON_ACTION_COPY = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+  <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"/>
+  <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/>
+</svg>`;
 
 export interface DyeActionCallback {
   (action: DyeAction, dye: Dye): void;
@@ -87,19 +125,25 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
   }> = [
     {
       action: 'comparison',
-      icon: '⚖️',
+      icon: ICON_ACTION_COMPARISON,
       labelKey: 'harmony.addToComparison',
       defaultLabel: 'Add to Comparison',
     },
     {
       action: 'mixer',
-      icon: '🌈',
+      icon: ICON_ACTION_MIXER,
       labelKey: 'harmony.addToMixer',
       defaultLabel: 'Add to Mixer',
     },
     {
+      action: 'budget',
+      icon: ICON_ACTION_BUDGET,
+      labelKey: 'harmony.seeBudget',
+      defaultLabel: 'See Budget Suggestions',
+    },
+    {
       action: 'copy',
-      icon: '📋',
+      icon: ICON_ACTION_COPY,
       labelKey: 'harmony.copyHex',
       defaultLabel: 'Copy Hex',
     },
@@ -120,7 +164,8 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
     menuItem.setAttribute('role', 'menuitem');
 
     const iconSpan = document.createElement('span');
-    iconSpan.textContent = icon;
+    iconSpan.className = 'w-4 h-4 flex-shrink-0';
+    iconSpan.innerHTML = icon;
     menuItem.appendChild(iconSpan);
 
     const labelSpan = document.createElement('span');
@@ -131,9 +176,23 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
       e.stopPropagation();
       closeMenu();
 
-      if (action === 'copy') {
-        void copyHexToClipboard(dye.hex);
-      } else if (onAction) {
+      switch (action) {
+        case 'copy':
+          void copyHexToClipboard(dye.hex);
+          break;
+        case 'comparison':
+          addToComparison(dye);
+          break;
+        case 'mixer':
+          addToMixer(dye);
+          break;
+        case 'budget':
+          setAsBudgetTarget(dye);
+          break;
+      }
+
+      // Keep callback for backwards compatibility
+      if (onAction) {
         onAction(action, dye);
       }
     });
@@ -245,4 +304,182 @@ async function copyHexToClipboard(hex: string): Promise<void> {
       document.body.removeChild(textArea);
     }
   }
+}
+
+// ============================================================================
+// Tool Integration Functions
+// ============================================================================
+
+/**
+ * Add dye to Comparison tool
+ */
+function addToComparison(dye: Dye): void {
+  const currentDyes = StorageService.getItem<number[]>(STORAGE_KEYS.comparison) ?? [];
+
+  // Check if dye already exists
+  if (currentDyes.includes(dye.id)) {
+    ToastService.info(
+      LanguageService.t('harmony.dyeAlreadyInComparison') || 'Dye already in Comparison'
+    );
+    return;
+  }
+
+  // Has space - add directly
+  if (currentDyes.length < MAX_SLOTS.comparison) {
+    currentDyes.push(dye.id);
+    StorageService.setItem(STORAGE_KEYS.comparison, currentDyes);
+    ToastService.success(
+      LanguageService.t('harmony.addedToComparison') || 'Added to Comparison'
+    );
+    RouterService.navigateTo('comparison');
+    return;
+  }
+
+  // Full - show slot selection modal
+  showSlotSelectionModal('comparison', dye, currentDyes);
+}
+
+/**
+ * Add dye to Mixer tool
+ */
+function addToMixer(dye: Dye): void {
+  const currentDyes = StorageService.getItem<number[]>(STORAGE_KEYS.mixer) ?? [];
+
+  // Check if dye already exists
+  if (currentDyes.includes(dye.id)) {
+    ToastService.info(
+      LanguageService.t('harmony.dyeAlreadyInMixer') || 'Dye already in Mixer'
+    );
+    return;
+  }
+
+  // Has space - add directly
+  if (currentDyes.length < MAX_SLOTS.mixer) {
+    currentDyes.push(dye.id);
+    StorageService.setItem(STORAGE_KEYS.mixer, currentDyes);
+    ToastService.success(LanguageService.t('harmony.addedToMixer') || 'Added to Mixer');
+    RouterService.navigateTo('mixer');
+    return;
+  }
+
+  // Full - show slot selection modal
+  showSlotSelectionModal('mixer', dye, currentDyes);
+}
+
+/**
+ * Set dye as Budget Suggestions target
+ */
+function setAsBudgetTarget(dye: Dye): void {
+  StorageService.setItem(STORAGE_KEYS.budget, dye.id);
+  RouterService.navigateTo('budget');
+}
+
+/**
+ * Show modal for selecting which slot to overwrite
+ */
+function showSlotSelectionModal(
+  tool: 'comparison' | 'mixer',
+  newDye: Dye,
+  currentDyeIds: number[]
+): void {
+  const dyeService = DyeService.getInstance();
+  const toolName =
+    tool === 'comparison'
+      ? LanguageService.t('tools.comparison.shortName') || 'Comparison'
+      : LanguageService.t('tools.mixer.shortName') || 'Mixer';
+
+  // Generate slot labels
+  const slotLabels =
+    tool === 'mixer'
+      ? [
+          LanguageService.t('mixer.startDye') || 'Start Dye',
+          LanguageService.t('mixer.endDye') || 'End Dye',
+        ]
+      : currentDyeIds.map(
+          (_, i) => `${LanguageService.t('common.slot') || 'Slot'} ${i + 1}`
+        );
+
+  // Build slot buttons HTML
+  const slotsHtml = currentDyeIds
+    .map((dyeId, index) => {
+      const existingDye = dyeService.getDyeById(dyeId);
+      const dyeName = existingDye
+        ? LanguageService.getDyeName(existingDye.itemID) || existingDye.name
+        : 'Unknown';
+      const dyeHex = existingDye?.hex ?? '#888888';
+
+      return `
+      <button type="button" class="slot-select-btn flex items-center gap-3 w-full p-3 rounded-lg border transition-colors"
+        style="background: var(--theme-card-background); border-color: var(--theme-border);"
+        data-slot="${index}">
+        <div class="w-8 h-8 rounded" style="background: ${dyeHex}; border: 1px solid var(--theme-border);"></div>
+        <div class="flex-1 text-left">
+          <p class="font-medium text-sm" style="color: var(--theme-text);">${slotLabels[index]}</p>
+          <p class="text-xs" style="color: var(--theme-text-muted);">${dyeName}</p>
+        </div>
+        <span class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('common.replace') || 'Replace'}</span>
+      </button>
+    `;
+    })
+    .join('');
+
+  const newDyeName = LanguageService.getDyeName(newDye.itemID) || newDye.name;
+
+  const content = `
+    <p class="mb-4" style="color: var(--theme-text);">
+      ${LanguageService.t('harmony.slotsFull') || 'All slots are full. Select one to replace:'}
+    </p>
+    <div class="space-y-2">${slotsHtml}</div>
+    <div class="mt-4 p-3 rounded-lg flex items-center gap-3" style="background: var(--theme-background-secondary);">
+      <div class="w-8 h-8 rounded" style="background: ${newDye.hex}; border: 1px solid var(--theme-border);"></div>
+      <div>
+        <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('harmony.addingDye') || 'Adding'}:</p>
+        <p class="font-medium text-sm" style="color: var(--theme-text);">${newDyeName}</p>
+      </div>
+    </div>
+  `;
+
+  const modalId = ModalService.show({
+    type: 'custom',
+    title:
+      LanguageService.t('harmony.selectSlotToReplace') ||
+      `Select Slot to Replace`,
+    content: content,
+    size: 'sm',
+    closable: true,
+    closeOnBackdrop: true,
+    cancelText: LanguageService.t('common.cancel') || 'Cancel',
+  });
+
+  // Attach click handlers after modal renders
+  setTimeout(() => {
+    const buttons = document.querySelectorAll('.slot-select-btn');
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const slotIndex = parseInt(btn.getAttribute('data-slot') || '0', 10);
+        const storageKey =
+          tool === 'comparison' ? STORAGE_KEYS.comparison : STORAGE_KEYS.mixer;
+
+        // Replace the dye at the selected slot
+        currentDyeIds[slotIndex] = newDye.id;
+        StorageService.setItem(storageKey, currentDyeIds);
+
+        ModalService.dismiss(modalId);
+        ToastService.success(
+          LanguageService.t('harmony.replacedInTool') ||
+            `Replaced in ${toolName}`
+        );
+        RouterService.navigateTo(tool);
+      });
+
+      // Hover effects
+      btn.addEventListener('mouseenter', () => {
+        (btn as HTMLElement).style.backgroundColor = 'var(--theme-card-hover)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        (btn as HTMLElement).style.backgroundColor =
+          'var(--theme-card-background)';
+      });
+    });
+  }, 50);
 }

@@ -101,7 +101,9 @@
     "showLess": "收起",
     "selectDye": "选择染剂",
     "noDyeSelected": "未选择染剂",
-    "download": "下载"
+    "download": "下载",
+    "slot": "槽位",
+    "replace": "替换"
   },
   "harmony": {
     "suggestionMode": "建议模式",
@@ -124,6 +126,15 @@
     "copyHex": "复制十六进制代码",
     "copiedHex": "已复制",
     "copyFailed": "复制失败",
+    "seeBudget": "查看预算建议",
+    "addedToComparison": "已添加到比较",
+    "addedToMixer": "已添加到混合器",
+    "dyeAlreadyInComparison": "该染剂已在比较中",
+    "dyeAlreadyInMixer": "该染剂已在混合器中",
+    "slotsFull": "所有槽位已满。请选择一个要替换的槽位：",
+    "selectSlotToReplace": "选择要替换的槽位",
+    "addingDye": "正在添加",
+    "replacedInTool": "替换成功",
     "selectColorPrompt": "选择基础颜色",
     "selectColorMessage": "输入十六进制颜色或选择染剂以生成和谐配色。",
     "selectColorAction": "输入颜色",

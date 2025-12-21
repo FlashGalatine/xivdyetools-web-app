@@ -101,7 +101,9 @@
     "showLess": "접기",
     "selectDye": "염료 선택",
     "noDyeSelected": "선택된 염료 없음",
-    "download": "다운로드"
+    "download": "다운로드",
+    "slot": "슬롯",
+    "replace": "교체"
   },
   "harmony": {
     "suggestionMode": "제안 모드",
@@ -124,6 +126,15 @@
     "copyHex": "Hex 코드 복사",
     "copiedHex": "복사됨",
     "copyFailed": "복사 실패",
+    "seeBudget": "예산 제안 보기",
+    "addedToComparison": "비교에 추가됨",
+    "addedToMixer": "믹서에 추가됨",
+    "dyeAlreadyInComparison": "이 염료는 이미 비교에 있습니다",
+    "dyeAlreadyInMixer": "이 염료는 이미 믹서에 있습니다",
+    "slotsFull": "모든 슬롯이 가득 찼습니다. 교체할 슬롯을 선택하세요:",
+    "selectSlotToReplace": "교체할 슬롯 선택",
+    "addingDye": "추가 중",
+    "replacedInTool": "성공적으로 교체됨",
     "selectColorPrompt": "기본 색상 선택",
     "selectColorMessage": "Hex 색상을 입력하거나 염료를 선택하여 조화를 생성하세요.",
     "selectColorAction": "색상 입력",
