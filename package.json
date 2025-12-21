@@ -66,5 +66,8 @@
     "@xivdyetools/core": "^1.4.0",
     "@xivdyetools/logger": "^1.0.0",
     "@xivdyetools/types": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
