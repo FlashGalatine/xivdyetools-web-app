@@ -17,7 +17,7 @@ import { DyeService } from '@services/dye-service-wrapper';
 // Action Types
 // ============================================================================
 
-export type DyeAction = 'comparison' | 'mixer' | 'copy' | 'budget';
+export type DyeAction = 'comparison' | 'mixer' | 'accessibility' | 'copy' | 'budget';
 
 // ============================================================================
 // Storage Keys and Constants
@@ -26,12 +26,14 @@ export type DyeAction = 'comparison' | 'mixer' | 'copy' | 'budget';
 const STORAGE_KEYS = {
   comparison: 'v3_comparison_selected_dyes',
   mixer: 'v3_mixer_selected_dyes',
+  accessibility: 'v3_accessibility_selected_dyes',
   budget: 'v3_budget_target',
 } as const;
 
 const MAX_SLOTS = {
   comparison: 4,
   mixer: 2,
+  accessibility: 4,
 } as const;
 
 // ============================================================================
@@ -48,6 +50,11 @@ const ICON_ACTION_MIXER = `<svg viewBox="0 0 20 20" fill="currentColor" class="w
 
 const ICON_ACTION_BUDGET = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
   <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979a1 1 0 001.715-1.029C12.279 4.784 11.232 4 10 4s-2.279.784-2.979 1.95c-.285.475-.507 1-.67 1.55H6a1 1 0 000 2h.013a9.358 9.358 0 000 1H6a1 1 0 100 2h.351c.163.55.385 1.075.67 1.55C7.721 15.216 8.768 16 10 16s2.279-.784 2.979-1.95a1 1 0 10-1.715-1.029c-.472.786-.96.979-1.264.979-.304 0-.792-.193-1.264-.979a4.265 4.265 0 01-.264-.521H10a1 1 0 100-2H8.017a7.36 7.36 0 010-1H10a1 1 0 100-2H8.472c.08-.185.167-.36.264-.521z"/>
+</svg>`;
+
+const ICON_ACTION_ACCESSIBILITY = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+  <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
 </svg>`;
 
 const ICON_ACTION_COPY = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
@@ -136,6 +143,12 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
       defaultLabel: 'Add to Mixer',
     },
     {
+      action: 'accessibility',
+      icon: ICON_ACTION_ACCESSIBILITY,
+      labelKey: 'harmony.addToAccessibility',
+      defaultLabel: 'Add to Accessibility Checker',
+    },
+    {
       action: 'budget',
       icon: ICON_ACTION_BUDGET,
       labelKey: 'harmony.seeBudget',
@@ -185,6 +198,9 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
           break;
         case 'mixer':
           addToMixer(dye);
+          break;
+        case 'accessibility':
+          addToAccessibility(dye);
           break;
         case 'budget':
           setAsBudgetTarget(dye);
@@ -367,6 +383,35 @@ function addToMixer(dye: Dye): void {
 }
 
 /**
+ * Add dye to Accessibility Checker tool
+ */
+function addToAccessibility(dye: Dye): void {
+  const currentDyes = StorageService.getItem<number[]>(STORAGE_KEYS.accessibility) ?? [];
+
+  // Check if dye already exists
+  if (currentDyes.includes(dye.id)) {
+    ToastService.info(
+      LanguageService.t('harmony.dyeAlreadyInAccessibility') || 'Dye already in Accessibility Checker'
+    );
+    return;
+  }
+
+  // Has space - add directly
+  if (currentDyes.length < MAX_SLOTS.accessibility) {
+    currentDyes.push(dye.id);
+    StorageService.setItem(STORAGE_KEYS.accessibility, currentDyes);
+    ToastService.success(
+      LanguageService.t('harmony.addedToAccessibility') || 'Added to Accessibility Checker'
+    );
+    RouterService.navigateTo('accessibility');
+    return;
+  }
+
+  // Full - show slot selection modal
+  showSlotSelectionModal('accessibility', dye, currentDyes);
+}
+
+/**
  * Set dye as Budget Suggestions target
  */
 function setAsBudgetTarget(dye: Dye): void {
@@ -378,15 +423,21 @@ function setAsBudgetTarget(dye: Dye): void {
  * Show modal for selecting which slot to overwrite
  */
 function showSlotSelectionModal(
-  tool: 'comparison' | 'mixer',
+  tool: 'comparison' | 'mixer' | 'accessibility',
   newDye: Dye,
   currentDyeIds: number[]
 ): void {
   const dyeService = DyeService.getInstance();
-  const toolName =
-    tool === 'comparison'
-      ? LanguageService.t('tools.comparison.shortName') || 'Comparison'
-      : LanguageService.t('tools.mixer.shortName') || 'Mixer';
+
+  // Get localized tool name
+  let toolName: string;
+  if (tool === 'comparison') {
+    toolName = LanguageService.t('tools.comparison.shortName') || 'Comparison';
+  } else if (tool === 'mixer') {
+    toolName = LanguageService.t('tools.mixer.shortName') || 'Mixer';
+  } else {
+    toolName = LanguageService.t('tools.accessibility.shortName') || 'Accessibility';
+  }
 
   // Generate slot labels
   const slotLabels =
@@ -457,8 +508,7 @@ function showSlotSelectionModal(
     buttons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const slotIndex = parseInt(btn.getAttribute('data-slot') || '0', 10);
-        const storageKey =
-          tool === 'comparison' ? STORAGE_KEYS.comparison : STORAGE_KEYS.mixer;
+        const storageKey = STORAGE_KEYS[tool];
 
         // Replace the dye at the selected slot
         currentDyeIds[slotIndex] = newDye.id;

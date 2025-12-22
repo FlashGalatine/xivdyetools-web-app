@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.3] - 2025-12-22
+
+### Added
+
+- **Harmony Explorer Context Menu**: Added "Add to Accessibility Checker" option to quickly add a dye to the Accessibility tool for color vision analysis
+
+---
+
 ## [3.2.2] - 2025-12-21
 
 ### Added
