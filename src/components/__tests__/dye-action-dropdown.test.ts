@@ -16,12 +16,22 @@ vi.mock('@services/index', () => ({
         'harmony.actions': 'Actions',
         'harmony.addToComparison': 'Add to Comparison',
         'harmony.addToMixer': 'Add to Mixer',
-        'harmony.copyHex': 'Copy Hex',
+        'harmony.addToAccessibility': 'Add to Accessibility Checker',
+        'harmony.seeHarmonies': 'See Color Harmonies',
+        'harmony.seeBudget': 'See Budget Suggestions',
+        'harmony.copyHex': 'Copy Hex Code',
         'harmony.copiedHex': 'Copied',
         'harmony.copyFailed': 'Failed to copy',
       };
       return translations[key] || key;
     }),
+  },
+  StorageService: {
+    getItem: vi.fn(() => null),
+    setItem: vi.fn(),
+  },
+  RouterService: {
+    navigateTo: vi.fn(),
   },
 }));
 
@@ -82,22 +92,25 @@ describe('createDyeActionDropdown', () => {
       expect(menu?.getAttribute('inert')).toBe('');
     });
 
-    it('should render three menu items', () => {
+    it('should render six menu items', () => {
       const dropdown = createDyeActionDropdown(testDye);
       container.appendChild(dropdown);
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      expect(menuItems.length).toBe(3);
+      expect(menuItems.length).toBe(6);
     });
 
-    it('should have correct menu item labels', () => {
+    it('should have correct menu item labels in order', () => {
       const dropdown = createDyeActionDropdown(testDye);
       container.appendChild(dropdown);
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
       expect(menuItems[0].textContent).toContain('Add to Comparison');
       expect(menuItems[1].textContent).toContain('Add to Mixer');
-      expect(menuItems[2].textContent).toContain('Copy Hex');
+      expect(menuItems[2].textContent).toContain('Add to Accessibility Checker');
+      expect(menuItems[3].textContent).toContain('See Color Harmonies');
+      expect(menuItems[4].textContent).toContain('See Budget Suggestions');
+      expect(menuItems[5].textContent).toContain('Copy Hex Code');
     });
   });
 
@@ -202,11 +215,25 @@ describe('createDyeActionDropdown', () => {
       button.click(); // Open menu
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]') as NodeListOf<HTMLElement>;
-      menuItems[2].click(); // Click "Copy Hex"
+      menuItems[5].click(); // Click "Copy Hex Code" (index 5)
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testDye.hex);
+    });
+
+    it('should call onAction callback for harmony action', () => {
+      const onAction = vi.fn();
+      const dropdown = createDyeActionDropdown(testDye, onAction);
+      container.appendChild(dropdown);
+
+      const button = dropdown.querySelector('button') as HTMLButtonElement;
+      button.click(); // Open menu
+
+      const menuItems = dropdown.querySelectorAll('[role="menuitem"]') as NodeListOf<HTMLElement>;
+      menuItems[3].click(); // Click "See Color Harmonies" (index 3)
+
+      expect(onAction).toHaveBeenCalledWith('harmony', testDye);
     });
 
     it('should close menu after action', () => {

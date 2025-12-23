@@ -19,6 +19,7 @@ import { RecentColorsPanel } from '@components/recent-colors-panel';
 import { DyeFilters, type DyeFilterConfig } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import { DyeCardRenderer } from '@components/dye-card-renderer';
+import { createDyeActionDropdown } from '@components/dye-action-dropdown';
 import {
   ColorService,
   dyeService,
@@ -1605,20 +1606,13 @@ export class MatcherTool extends BaseComponent {
     card.appendChild(swatches);
     card.appendChild(info);
 
-    // Find Cheaper button (visible on hover)
-    const findCheaperBtn = this.createElement('button', {
-      className: 'text-xs px-2 py-1 rounded transition-all opacity-0 group-hover:opacity-100 flex-shrink-0 flex items-center justify-center',
-      innerHTML: `<span class="w-4 h-4">${ICON_COINS}</span>`,
-      attributes: {
-        title: LanguageService.t('budget.findCheaperTooltip') || 'Find cheaper alternatives',
-        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
+    // Action dropdown (visible on hover)
+    const dropdownContainer = this.createElement('div', {
+      className: 'opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0',
     });
-    this.on(findCheaperBtn, 'click', (e) => {
-      e.stopPropagation();
-      RouterService.navigateTo('budget', { dye: dye.name });
-    });
-    card.appendChild(findCheaperBtn);
+    const actionDropdown = createDyeActionDropdown(dye);
+    dropdownContainer.appendChild(actionDropdown);
+    card.appendChild(dropdownContainer);
 
     // Hover effect
     this.on(card, 'mouseenter', () => {
@@ -1965,37 +1959,9 @@ export class MatcherTool extends BaseComponent {
     `;
     entry.appendChild(info);
 
-    // Copy button
-    const copyBtn = this.createElement('button', {
-      className: 'text-xs px-2 py-1 rounded transition-colors flex-shrink-0',
-      textContent: LanguageService.t('matcher.copyHex') || 'Copy',
-      attributes: {
-        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
-    });
-    this.on(copyBtn, 'click', async () => {
-      try {
-        await navigator.clipboard.writeText(match.matchedDye.hex);
-        ToastService.success(`✓ ${LanguageService.t('matcher.copiedHex') || 'Copied'} ${match.matchedDye.hex}`);
-      } catch {
-        ToastService.error('Failed to copy hex code');
-      }
-    });
-    entry.appendChild(copyBtn);
-
-    // Find Cheaper button
-    const cheaperBtn = this.createElement('button', {
-      className: 'text-xs px-2 py-1 rounded transition-colors flex-shrink-0 flex items-center justify-center',
-      innerHTML: `<span class="w-4 h-4">${ICON_COINS}</span>`,
-      attributes: {
-        title: LanguageService.t('budget.findCheaperTooltip') || 'Find cheaper alternatives',
-        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
-    });
-    this.on(cheaperBtn, 'click', () => {
-      RouterService.navigateTo('budget', { dye: match.matchedDye.name });
-    });
-    entry.appendChild(cheaperBtn);
+    // Action dropdown (replaces individual Copy and Find Cheaper buttons)
+    const actionDropdown = createDyeActionDropdown(match.matchedDye);
+    entry.appendChild(actionDropdown);
 
     return entry;
   }
