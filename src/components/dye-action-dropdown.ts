@@ -2,7 +2,8 @@
  * XIV Dye Tools v2.2.0 - Dye Action Dropdown Component
  *
  * Quick-action dropdown menu for dye items
- * Options: Add to Comparison, Add to Mixer, See Budget Suggestions, Copy to Clipboard
+ * Options: Add to Comparison, Add to Mixer, Add to Accessibility Checker,
+ *          See Color Harmonies, See Budget Suggestions, Copy Hex Code
  *
  * @module components/dye-action-dropdown
  */
@@ -12,12 +13,13 @@ import { LanguageService, StorageService, RouterService } from '@services/index'
 import { ToastService } from '@services/toast-service';
 import { ModalService } from '@services/modal-service';
 import { DyeService } from '@services/dye-service-wrapper';
+import { logger } from '@shared/logger';
 
 // ============================================================================
 // Action Types
 // ============================================================================
 
-export type DyeAction = 'comparison' | 'mixer' | 'accessibility' | 'copy' | 'budget';
+export type DyeAction = 'comparison' | 'mixer' | 'accessibility' | 'harmony' | 'copy' | 'budget';
 
 // ============================================================================
 // Storage Keys and Constants
@@ -60,6 +62,10 @@ const ICON_ACTION_ACCESSIBILITY = `<svg viewBox="0 0 20 20" fill="currentColor" 
 const ICON_ACTION_COPY = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
   <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z"/>
   <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/>
+</svg>`;
+
+const ICON_ACTION_HARMONY = `<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+  <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd"/>
 </svg>`;
 
 export interface DyeActionCallback {
@@ -149,6 +155,12 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
       defaultLabel: 'Add to Accessibility Checker',
     },
     {
+      action: 'harmony',
+      icon: ICON_ACTION_HARMONY,
+      labelKey: 'harmony.seeHarmonies',
+      defaultLabel: 'See Color Harmonies',
+    },
+    {
       action: 'budget',
       icon: ICON_ACTION_BUDGET,
       labelKey: 'harmony.seeBudget',
@@ -201,6 +213,9 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
           break;
         case 'accessibility':
           addToAccessibility(dye);
+          break;
+        case 'harmony':
+          navigateToHarmony(dye);
           break;
         case 'budget':
           setAsBudgetTarget(dye);
@@ -417,6 +432,15 @@ function addToAccessibility(dye: Dye): void {
 function setAsBudgetTarget(dye: Dye): void {
   StorageService.setItem(STORAGE_KEYS.budget, dye.id);
   RouterService.navigateTo('budget');
+}
+
+/**
+ * Navigate to Harmony tool with dye pre-selected
+ * Uses itemID for localization-safe deep linking
+ */
+function navigateToHarmony(dye: Dye): void {
+  logger.info(`[DyeActionDropdown] navigateToHarmony called - dye: "${dye.name}", itemID: ${dye.itemID}`);
+  RouterService.navigateTo('harmony', { dyeId: String(dye.itemID) });
 }
 
 /**

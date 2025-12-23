@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.4] - 2025-12-23
+
+### Fixed
+
+- **See Color Harmonies**: Fixed the "See Color Harmonies" context menu action in Color Matcher not displaying results in the Harmony Explorer. The issue was caused by `setActiveToolId()` in `TwoPanelShell` triggering a duplicate navigation call that stripped the `dyeId` URL parameter. The fix ensures programmatic tool changes via `setActiveToolId()` update the UI without re-triggering navigation.
+
+---
+
 ## [3.2.3] - 2025-12-22
 
 ### Added

@@ -490,15 +490,37 @@ export class TwoPanelShell extends BaseComponent {
   }
 
   /**
-   * Set active tool programmatically
-   * Guards against re-entrant calls to prevent infinite loops
+   * Set active tool programmatically (e.g., from router)
+   * Unlike handleToolSelect, this does NOT trigger onToolChange callback
+   * to avoid re-triggering navigation when called from route change listeners
    */
   setActiveToolId(toolId: ToolId): void {
     // Guard: only process if tool actually changed
     if (toolId === this.activeToolId) {
       return;
     }
-    this.handleToolSelect(toolId);
+
+    // Update internal state
+    this.activeToolId = toolId;
+
+    // Update all UI elements (same as handleToolSelect, but without onToolChange)
+    this.renderToolNav();
+    this.updateMobileDrawerNav();
+    this.renderMobileBottomNav();
+
+    // Update mobile header
+    const mobileToolDisplay = this.rightPanel?.querySelector('.md\\:hidden .flex-1');
+    if (mobileToolDisplay) {
+      const tools = getLocalizedTools();
+      const activeTool = tools.find(t => t.id === toolId);
+      mobileToolDisplay.innerHTML = `
+        <span class="w-5 h-5" style="color: var(--theme-primary);">${TOOL_ICONS[toolId]}</span>
+        <span class="font-medium" style="color: var(--theme-text);">${activeTool?.name ?? toolId}</span>
+      `;
+    }
+
+    // Emit event (for internal listeners, not for navigation)
+    this.emit('tool-change', { toolId });
   }
 
   /**

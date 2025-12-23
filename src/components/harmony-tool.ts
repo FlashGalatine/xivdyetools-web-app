@@ -193,6 +193,7 @@ export class HarmonyTool extends BaseComponent {
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private routeUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: HarmonyToolOptions) {
     super(container);
@@ -321,6 +322,16 @@ export class HarmonyTool extends BaseComponent {
       this.update();
     });
 
+    // Subscribe to route changes to handle deep links when navigating to harmony
+    this.routeUnsubscribe = RouterService.subscribe((state) => {
+      if (state.toolId === 'harmony') {
+        this.handleDeepLink();
+      }
+    });
+
+    // Handle deep link (e.g., ?dyeId=5729 from context menu)
+    this.handleDeepLink();
+
     // Generate initial harmonies if a dye is selected
     if (this.selectedDye) {
       this.generateHarmonies();
@@ -336,12 +347,70 @@ export class HarmonyTool extends BaseComponent {
   destroy(): void {
     // Cleanup subscriptions
     this.languageUnsubscribe?.();
+    this.routeUnsubscribe?.();
 
     // Cleanup child components
     this.destroyChildComponents();
 
     super.destroy();
     logger.info('[HarmonyTool] Destroyed');
+  }
+
+  // ============================================================================
+  // Deep Link Handling
+  // ============================================================================
+
+  /**
+   * Handle deep links from URL parameters (e.g., ?dyeId=5729)
+   * Used when navigating from context menus like "See Color Harmonies"
+   */
+  private handleDeepLink(): void {
+    const params = new URLSearchParams(window.location.search);
+    const dyeIdParam = params.get('dyeId');
+
+    // Debug: Log what we're reading from the URL
+    logger.info(`[HarmonyTool] handleDeepLink called - URL search: "${window.location.search}", dyeIdParam: "${dyeIdParam}"`);
+
+    if (dyeIdParam) {
+      const dyeId = parseInt(dyeIdParam, 10);
+      if (!isNaN(dyeId)) {
+        // Find dye by itemID (FFXIV item ID)
+        const allDyes = dyeService.getAllDyes();
+        const dye = allDyes.find(d => d.itemID === dyeId);
+
+        if (dye) {
+          this.selectedDye = dye;
+          StorageService.setItem(STORAGE_KEYS.selectedDyeId, dye.itemID);
+          logger.info(`[HarmonyTool] Deep link loaded dye: ${dye.name} (itemID=${dye.itemID})`);
+
+          // Update the desktop dye selector if it exists
+          if (this.dyeSelector) {
+            this.dyeSelector.setSelectedDyes([dye]);
+          }
+
+          // Update the mobile drawer dye selector if it exists
+          if (this.drawerDyeSelector) {
+            this.drawerDyeSelector.setSelectedDyes([dye]);
+          }
+
+          // Clear any previously swapped dyes since we're selecting a new base
+          this.swappedDyes.clear();
+
+          // Re-render to update the current dye display elements
+          this.update();
+
+          // Generate harmonies for the newly selected dye
+          this.generateHarmonies();
+
+          // Fetch prices if enabled
+          if (this.showPrices) {
+            this.fetchPricesForDisplayedDyes();
+          }
+        } else {
+          logger.warn(`[HarmonyTool] Deep link dye not found: itemID=${dyeId}`);
+        }
+      }
+    }
   }
 
   // ============================================================================
