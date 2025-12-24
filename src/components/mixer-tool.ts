@@ -15,6 +15,7 @@ import { CollapsiblePanel } from '@components/collapsible-panel';
 import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
+import { createDyeActionDropdown } from '@components/dye-action-dropdown';
 import { ColorService, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
 import { logger } from '@shared/logger';
@@ -975,6 +976,10 @@ export class MixerTool extends BaseComponent {
         }
 
         row.appendChild(info);
+
+        // Action dropdown menu
+        const dropdown = createDyeActionDropdown(step.matchedDye);
+        row.appendChild(dropdown);
       } else {
         // No match found
         const noMatch = this.createElement('span', {
