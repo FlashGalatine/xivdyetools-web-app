@@ -25,10 +25,19 @@ import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
 import { HARMONY_ICONS } from '@shared/harmony-icons';
 import {
+  ICON_FILTER,
+  ICON_MARKET,
+  ICON_EXPORT,
+  ICON_COINS,
+  ICON_BEAKER,
+  ICON_MUSIC,
+} from '@shared/ui-icons';
+import {
   COMPANION_DYES_MIN,
   COMPANION_DYES_MAX,
   COMPANION_DYES_DEFAULT,
 } from '@shared/constants';
+import { SubscriptionManager } from '@shared/subscription-manager';
 
 // ============================================================================
 // Types and Constants
@@ -84,39 +93,6 @@ const STORAGE_KEYS = {
   suggestionsMode: 'v3_harmony_mode',
   selectedDyeId: 'v3_harmony_selected_dye',
 } as const;
-
-// SVG Icons
-const ICON_FILTER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-</svg>`;
-
-const ICON_MARKET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-</svg>`;
-
-const ICON_EXPORT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-</svg>`;
-
-const ICON_BUDGET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-  <ellipse cx="12" cy="7" rx="7" ry="3" />
-  <path d="M5 7v4c0 1.66 3.13 3 7 3s7-1.34 7-3V7" />
-  <path d="M5 11v4c0 1.66 3.13 3 7 3s7-1.34 7-3v-4" />
-  <path d="M5 15v2c0 1.66 3.13 3 7 3s7-1.34 7-3v-2" />
-</svg>`;
-
-// Beaker icon for Base Dye
-const ICON_BEAKER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M9 3h6v5l4 9a2 2 0 01-2 3H7a2 2 0 01-2-3l4-9V3z" />
-  <path d="M9 3h6" />
-  <path d="M7 17h10" />
-</svg>`;
-
-// Music note icon for Harmony Type
-const ICON_MUSIC = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="8" cy="18" r="4" />
-  <path d="M12 18V2l7 4" />
-</svg>`;
 
 // ============================================================================
 // Helper Functions
@@ -192,8 +168,7 @@ export class HarmonyTool extends BaseComponent {
   private emptyStateContainer: HTMLElement | null = null;
 
   // Subscriptions
-  private languageUnsubscribe: (() => void) | null = null;
-  private routeUnsubscribe: (() => void) | null = null;
+  private subs = new SubscriptionManager();
 
   constructor(container: HTMLElement, options: HarmonyToolOptions) {
     super(container);
@@ -318,16 +293,16 @@ export class HarmonyTool extends BaseComponent {
 
   onMount(): void {
     // Subscribe to language changes (only in onMount, NOT bindEvents - avoids infinite loop)
-    this.languageUnsubscribe = LanguageService.subscribe(() => {
+    this.subs.add(LanguageService.subscribe(() => {
       this.update();
-    });
+    }));
 
     // Subscribe to route changes to handle deep links when navigating to harmony
-    this.routeUnsubscribe = RouterService.subscribe((state) => {
+    this.subs.add(RouterService.subscribe((state) => {
       if (state.toolId === 'harmony') {
         this.handleDeepLink();
       }
-    });
+    }));
 
     // Handle deep link (e.g., ?dyeId=5729 from context menu)
     this.handleDeepLink();
@@ -346,8 +321,7 @@ export class HarmonyTool extends BaseComponent {
 
   destroy(): void {
     // Cleanup subscriptions
-    this.languageUnsubscribe?.();
-    this.routeUnsubscribe?.();
+    this.subs.unsubscribeAll();
 
     // Cleanup child components
     this.destroyChildComponents();
@@ -834,7 +808,7 @@ export class HarmonyTool extends BaseComponent {
         style: 'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
         title: LanguageService.t('budget.findCheaperTooltip') || 'Find cheaper alternatives',
       },
-      innerHTML: `<span class="w-4 h-4">${ICON_BUDGET}</span> ${LanguageService.t('budget.budgetOptions') || 'Budget Options'}`,
+      innerHTML: `<span class="w-4 h-4">${ICON_COINS}</span> ${LanguageService.t('budget.budgetOptions') || 'Budget Options'}`,
     });
 
     this.on(budgetBtn, 'click', () => {

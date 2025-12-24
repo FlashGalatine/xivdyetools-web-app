@@ -18,6 +18,15 @@ import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
 import { ColorService, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
+import {
+  ICON_FILTER,
+  ICON_MARKET,
+  ICON_EXPORT,
+  ICON_TEST_TUBE,
+  ICON_BEAKER_PIPE,
+  ICON_STAIRS,
+  ICON_PALETTE,
+} from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
@@ -61,48 +70,6 @@ const DEFAULTS = {
   stepCount: 5,
   colorSpace: 'hsv' as const,
 };
-
-const ICON_FILTER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-</svg>`;
-
-const ICON_MARKET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-</svg>`;
-
-const ICON_EXPORT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-</svg>`;
-
-// Test tube icon for Start Dye
-const ICON_TEST_TUBE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M14.5 2v17.5c0 1.4-1.1 2.5-2.5 2.5h0c-1.4 0-2.5-1.1-2.5-2.5V2"/>
-  <path d="M8.5 2h7"/>
-  <path d="M14.5 16h-5"/>
-</svg>`;
-
-// Beaker with pipe icon for End Dye
-const ICON_BEAKER_PIPE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M4.5 3h10"/>
-  <path d="M6 3v11a4 4 0 0 0 4 4h0a4 4 0 0 0 4-4V3"/>
-  <path d="M14 10h5a2 2 0 0 1 2 2v5"/>
-  <circle cx="21" cy="19" r="2"/>
-</svg>`;
-
-// Staircase icon for Interpolation Settings
-const ICON_STAIRS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M4 20h4v-4h4v-4h4v-4h4"/>
-  <path d="M4 20v-4h4v-4h4v-4h4v-4h4"/>
-</svg>`;
-
-// Palette icon for Dye Selection
-const ICON_PALETTE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
-  <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
-  <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
-  <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
-  <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/>
-</svg>`;
 
 // ============================================================================
 // MixerTool Component

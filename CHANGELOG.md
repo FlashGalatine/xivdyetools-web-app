@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.6] - 2025-12-24
+
+### Changed
+
+#### Medium Priority Audit Fixes
+
+- **SVG Icons Consolidation**: Consolidated 14 SVG icons from individual tool files into shared `ui-icons.ts`, reducing bundle size by ~10KB
+  - Icons moved: target, sparkles, distance, music, test-tube, beaker-pipe, stairs, star, search, grid, user, edit, trash, image
+  - Updated 7 tool components to import from shared location
+- **SubscriptionManager Utility**: Added `SubscriptionManager` class for centralized subscription cleanup
+  - Prevents memory leaks from orphaned reactive subscriptions
+  - Provides `add()`, `addAll()`, and `unsubscribeAll()` methods
+  - Updated `harmony-tool.ts` as reference implementation
+
+---
+
 ## [3.2.5] - 2025-12-24
 
 ### Added
