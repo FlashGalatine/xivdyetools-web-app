@@ -166,6 +166,8 @@ export class CommunityPresetService {
 
   /**
    * Initialize the service and check API availability
+   * BUG-015 FIX: Added Promise.race fallback timeout for browsers
+   * where AbortController might not work reliably
    */
   async initialize(): Promise<boolean> {
     if (this.initialized) {
@@ -173,10 +175,17 @@ export class CommunityPresetService {
     }
 
     try {
-      // Test API connectivity with a lightweight request
-      const response = await this.fetchWithTimeout(`${this.apiUrl}/health`, {
+      // BUG-015: Use Promise.race as a fallback timeout mechanism
+      // This ensures timeout works even if AbortController isn't fully supported
+      const healthCheckPromise = this.fetchWithTimeout(`${this.apiUrl}/health`, {
         method: 'GET',
       });
+
+      const timeoutPromise = new Promise<Response>((_, reject) =>
+        setTimeout(() => reject(new Error('Health check timeout (fallback)')), REQUEST_TIMEOUT + 1000)
+      );
+
+      const response = await Promise.race([healthCheckPromise, timeoutPromise]);
 
       this.available = response.ok;
       this.initialized = true;

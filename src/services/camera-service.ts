@@ -63,9 +63,10 @@ export class CameraService {
   /**
    * Initialize and detect available cameras
    * Call this on app startup or when needed
+   * BUG-010 FIX: Added forceRetry parameter for explicit retry after failure
    */
-  async initialize(): Promise<void> {
-    if (this.hasEnumerated || !this.isSupported) return;
+  async initialize(forceRetry: boolean = false): Promise<void> {
+    if ((this.hasEnumerated && !forceRetry) || !this.isSupported) return;
 
     try {
       await this.enumerateCameras();
@@ -74,7 +75,10 @@ export class CameraService {
         `📷 Camera service initialized: ${this.availableCameras.length} camera(s) detected`
       );
     } catch (error) {
+      // BUG-010: Ensure hasEnumerated stays false on failure so retry is possible
+      this.hasEnumerated = false;
       logger.warn('Camera enumeration failed:', error);
+      throw error; // Re-throw to let callers know about the failure
     }
   }
 

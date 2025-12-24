@@ -259,6 +259,9 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
   };
   cancelBtn.addEventListener('click', cancelClickHandler);
 
+  // BUG-006 FIX: Serialize camera operations to prevent race conditions
+  let cameraOperationPromise: Promise<void> = Promise.resolve();
+
   // Handle camera selector change
   const selector = content.querySelector('#camera-selector') as HTMLSelectElement | null;
   if (selector) {
@@ -274,9 +277,15 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
       captureBtn.disabled = true;
       statusText.textContent = LanguageService.t('camera.switching') || 'Switching camera...';
 
-      // Switch camera
-      cameraService.stopStream();
-      void startCamera(selector.value);
+      // BUG-006: Serialize camera operations with promise queue
+      cameraOperationPromise = cameraOperationPromise
+        .then(() => {
+          cameraService.stopStream();
+          return startCamera(selector.value);
+        })
+        .catch((error) => {
+          logger.error('Camera switch error:', error);
+        });
     };
     selector.addEventListener('change', selectorChangeHandler);
   }

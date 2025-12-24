@@ -62,6 +62,46 @@ const ARROW_SIZE = 6;
 export class TooltipService {
   private static tooltips: Map<HTMLElement, TooltipState> = new Map();
   private static container: HTMLElement | null = null;
+  private static cleanupIntervalId: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * BUG-002 FIX: Start periodic cleanup of orphaned tooltip states
+   * Removes tooltip states for elements that are no longer in the DOM
+   */
+  static startOrphanCleanup(intervalMs: number = 30000): void {
+    if (this.cleanupIntervalId) return;
+
+    this.cleanupIntervalId = setInterval(() => {
+      this.cleanupOrphanedTooltips();
+    }, intervalMs);
+  }
+
+  /**
+   * Stop the orphan cleanup interval
+   */
+  static stopOrphanCleanup(): void {
+    if (this.cleanupIntervalId) {
+      clearInterval(this.cleanupIntervalId);
+      this.cleanupIntervalId = null;
+    }
+  }
+
+  /**
+   * Clean up tooltip states for elements no longer in the DOM
+   */
+  private static cleanupOrphanedTooltips(): void {
+    const orphanedTargets: HTMLElement[] = [];
+
+    this.tooltips.forEach((_, target) => {
+      if (!target.isConnected) {
+        orphanedTargets.push(target);
+      }
+    });
+
+    orphanedTargets.forEach((target) => {
+      this.detach(target);
+    });
+  }
 
   /**
    * Initialize the tooltip container

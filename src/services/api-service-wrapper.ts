@@ -57,24 +57,32 @@ export class IndexedDBCacheBackend implements ICacheBackend {
 
   /**
    * Initialize the backend asynchronously
+   * BUG-004 FIX: Don't clear initPromise on error to prevent race conditions
+   * with concurrent callers. Use reinitialize() for explicit retry.
    */
   async initialize(): Promise<void> {
     if (this.initPromise) return this.initPromise;
 
-    this.initPromise = (async () => {
-      try {
-        const success = await indexedDBService.initialize();
-        if (success) {
-          await this.loadFromStorage();
-        }
-      } catch (error) {
-        // BUG-012: Clear failed promise so next call can retry
-        this.initPromise = null;
-        throw error;
-      }
-    })();
-
+    this.initPromise = this.doInitialize();
     return this.initPromise;
+  }
+
+  /**
+   * Perform the actual initialization
+   */
+  private async doInitialize(): Promise<void> {
+    const success = await indexedDBService.initialize();
+    if (success) {
+      await this.loadFromStorage();
+    }
+  }
+
+  /**
+   * Force re-initialization (for recovery after errors)
+   */
+  async reinitialize(): Promise<void> {
+    this.initPromise = null;
+    return this.initialize();
   }
 
   get(key: string): CachedData<PriceData> | null {

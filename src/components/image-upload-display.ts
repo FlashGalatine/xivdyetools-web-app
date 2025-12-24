@@ -401,10 +401,14 @@ export class ImageUploadDisplay extends BaseComponent {
 
   /**
    * Sample pixel color from image
+   * BUG-011 FIX: Added guard for zero-sized canvas edge case
    */
   samplePixel(x: number, y: number): string | null {
     const canvas = this.getImageCanvas();
     if (!canvas) return null;
+
+    // BUG-011: Guard against zero-sized canvas
+    if (canvas.width === 0 || canvas.height === 0) return null;
 
     // Clamp coordinates to canvas bounds
     const clampedX = Math.min(Math.max(0, Math.floor(x)), canvas.width - 1);
@@ -424,10 +428,14 @@ export class ImageUploadDisplay extends BaseComponent {
 
   /**
    * Get average color of region
+   * BUG-011 FIX: Added guard for zero-sized canvas edge case
    */
   getAverageColor(x: number, y: number, size: number = 1): string | null {
     const canvas = this.getImageCanvas();
     if (!canvas) return null;
+
+    // BUG-011: Guard against zero-sized canvas
+    if (canvas.width === 0 || canvas.height === 0) return null;
 
     // Clamp region to canvas bounds
     const startX = Math.max(0, Math.floor(x - size / 2));

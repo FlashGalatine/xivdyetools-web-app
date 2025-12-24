@@ -457,6 +457,9 @@ export class SecureStorage {
   /** In-memory cache of the size index for fast lookups */
   private static sizeIndexCache: SizeIndex | null = null;
 
+  /** BUG-007 FIX: Mutex for size index operations to prevent race conditions */
+  private static sizeIndexMutex: Promise<void> = Promise.resolve();
+
   /**
    * Load the size index from storage (with caching)
    */
@@ -481,12 +484,15 @@ export class SecureStorage {
 
   /**
    * Update the size index for a key
+   * BUG-007 FIX: Use mutex to prevent race conditions on concurrent writes
    */
   private static updateSizeIndex(key: string, size: number, timestamp: number): void {
-    const index = this.loadSizeIndex();
-    index[key] = { size, timestamp };
-    this.sizeIndexCache = index;
-    this.saveSizeIndex();
+    this.sizeIndexMutex = this.sizeIndexMutex.then(() => {
+      const index = this.loadSizeIndex();
+      index[key] = { size, timestamp };
+      this.sizeIndexCache = index;
+      this.saveSizeIndex();
+    });
   }
 
   /**
