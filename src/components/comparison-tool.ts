@@ -83,10 +83,6 @@ const ICON_SETTINGS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
   <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
 </svg>`;
 
-const ICON_COINS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
-</svg>`;
-
 // ============================================================================
 // ComparisonTool Component
 // ============================================================================
@@ -369,20 +365,6 @@ export class ComparisonTool extends BaseComponent {
         attributes: { style: 'color: var(--theme-text);' },
       });
 
-      // Find Cheaper button
-      const budgetBtn = this.createElement('button', {
-        className: 'w-6 h-6 flex items-center justify-center rounded transition-colors',
-        attributes: {
-          style: 'background: var(--theme-card-hover); color: var(--theme-text);',
-          title: LanguageService.t('budget.findCheaperTooltip') || 'Find cheaper alternatives',
-        },
-      });
-      budgetBtn.innerHTML = `<span class="w-4 h-4">${ICON_COINS}</span>`;
-
-      this.on(budgetBtn, 'click', () => {
-        RouterService.navigateTo('budget', { dye: dye.name });
-      });
-
       const removeBtn = this.createElement('button', {
         className: 'text-xs px-2 py-1 rounded transition-colors',
         textContent: '\u00D7',
@@ -404,7 +386,6 @@ export class ComparisonTool extends BaseComponent {
 
       dyeItem.appendChild(swatch);
       dyeItem.appendChild(name);
-      dyeItem.appendChild(budgetBtn);
       dyeItem.appendChild(removeBtn);
       this.selectedDyesContainer.appendChild(dyeItem);
     }
