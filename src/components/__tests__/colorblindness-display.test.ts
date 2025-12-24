@@ -157,8 +157,8 @@ describe('ColorblindnessDisplay', () => {
       component = new ColorblindnessDisplay(container, '#FF0000');
       component.init();
 
-      // Check that we have hex values displayed
-      const hexValues = container.querySelectorAll('.font-mono');
+      // Check that we have hex values displayed (component uses 'number' class)
+      const hexValues = container.querySelectorAll('.number');
       expect(hexValues.length).toBeGreaterThan(0);
     });
 
