@@ -69,13 +69,7 @@ export class DyeSelector extends BaseComponent {
       hideSelectedChips: options.hideSelectedChips ?? false,
     };
     this.allowDuplicates = this.options.allowDuplicates ?? false;
-
-    // Subscribe to favorites changes
-    if (this.options.showFavorites) {
-      this.unsubscribeFavorites = CollectionService.subscribeFavorites((favoriteIds) => {
-        this.updateFavoriteDyes(favoriteIds);
-      });
-    }
+    // Note: Subscriptions are set up in onMount() to prevent leaks if init() fails
   }
 
   /**
@@ -429,6 +423,18 @@ export class DyeSelector extends BaseComponent {
   }
 
   onMount(): void {
+    // Subscribe to favorites changes (done here to prevent leaks if init fails)
+    if (this.options.showFavorites) {
+      // Load initial favorites
+      const initialFavorites = CollectionService.getFavorites();
+      this.updateFavoriteDyes(initialFavorites);
+
+      // Subscribe to future changes
+      this.unsubscribeFavorites = CollectionService.subscribeFavorites((favoriteIds) => {
+        this.updateFavoriteDyes(favoriteIds);
+      });
+    }
+
     // Initial update to populate the grid
     this.update();
 

@@ -131,9 +131,15 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
   let captureClickHandler: (() => Promise<void>) | null = null;
   let cancelClickHandler: (() => void) | null = null;
   let selectorChangeHandler: (() => void) | null = null;
+  let startCameraTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  // Cleanup function to remove all event listeners
+  // Cleanup function to remove all event listeners and timers
   const cleanup = (): void => {
+    // Clear pending camera start timeout
+    if (startCameraTimeoutId !== null) {
+      clearTimeout(startCameraTimeoutId);
+      startCameraTimeoutId = null;
+    }
     if (videoLoadedHandler) {
       video.removeEventListener('loadedmetadata', videoLoadedHandler);
       videoLoadedHandler = null;
@@ -289,8 +295,11 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
     },
   });
 
-  // Start camera after modal is displayed
-  setTimeout(() => {
-    void startCamera();
+  // Start camera after modal is displayed (with cancellable timeout)
+  startCameraTimeoutId = setTimeout(() => {
+    if (isModalOpen) {
+      void startCamera();
+    }
+    startCameraTimeoutId = null;
   }, 100);
 }

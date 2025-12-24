@@ -124,6 +124,13 @@ export class CollectionService {
   private static loadFavorites(): void {
     const data = StorageService.getItem<FavoritesData>(FAVORITES_KEY);
     if (data && data.version && Array.isArray(data.favorites)) {
+      // Validate and truncate if exceeds limit (prevents corrupt/edited data issues)
+      if (data.favorites.length > MAX_FAVORITES) {
+        logger.warn(
+          `Favorites data exceeded limit (${data.favorites.length}/${MAX_FAVORITES}), truncating`
+        );
+        data.favorites = data.favorites.slice(0, MAX_FAVORITES);
+      }
       this.favoritesData = data;
     } else {
       this.favoritesData = {
@@ -140,6 +147,24 @@ export class CollectionService {
   private static loadCollections(): void {
     const data = StorageService.getItem<CollectionsData>(COLLECTIONS_KEY);
     if (data && data.version && Array.isArray(data.collections)) {
+      // Validate and truncate if exceeds limit (prevents corrupt/edited data issues)
+      if (data.collections.length > MAX_COLLECTIONS) {
+        logger.warn(
+          `Collections data exceeded limit (${data.collections.length}/${MAX_COLLECTIONS}), truncating`
+        );
+        data.collections = data.collections.slice(0, MAX_COLLECTIONS);
+      }
+
+      // Also validate dyes per collection
+      for (const collection of data.collections) {
+        if (collection.dyes.length > MAX_DYES_PER_COLLECTION) {
+          logger.warn(
+            `Collection "${collection.name}" exceeded dye limit (${collection.dyes.length}/${MAX_DYES_PER_COLLECTION}), truncating`
+          );
+          collection.dyes = collection.dyes.slice(0, MAX_DYES_PER_COLLECTION);
+        }
+      }
+
       this.collectionsData = data;
     } else {
       this.collectionsData = {

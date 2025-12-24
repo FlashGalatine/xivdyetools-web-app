@@ -147,6 +147,88 @@ export const ICON_BROOM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 </svg>`;
 
 /**
+ * Filter icon - Funnel shape
+ */
+export const ICON_FILTER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <path d="M3 4h18l-7 8v6l-4 2V12L3 4z"/>
+</svg>`;
+
+/**
+ * Market icon - Store/shop front
+ */
+export const ICON_MARKET = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+  <polyline points="9 22 9 12 15 12 15 22"/>
+</svg>`;
+
+/**
+ * Export icon - Arrow out of box
+ */
+export const ICON_EXPORT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+  <polyline points="17 8 12 3 7 8"/>
+  <line x1="12" y1="3" x2="12" y2="15"/>
+</svg>`;
+
+/**
+ * Beaker icon - Lab flask
+ */
+export const ICON_BEAKER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M9 3h6"/>
+  <path d="M10 3v6l-4 8a2 2 0 002 2h8a2 2 0 002-2l-4-8V3"/>
+  <path d="M8 15h8" opacity="0.5"/>
+</svg>`;
+
+/**
+ * Settings icon - Cog/gear
+ */
+export const ICON_SETTINGS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <circle cx="12" cy="12" r="3"/>
+  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+</svg>`;
+
+/**
+ * Palette icon - Artist color palette
+ */
+export const ICON_PALETTE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="13.5" cy="6.5" r="1.5"/>
+  <circle cx="17.5" cy="10.5" r="1.5"/>
+  <circle cx="8.5" cy="7.5" r="1.5"/>
+  <circle cx="6.5" cy="12.5" r="1.5"/>
+  <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/>
+</svg>`;
+
+/**
+ * Sort icon - Vertical bars
+ */
+export const ICON_SORT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <path d="M3 6h18M3 12h12M3 18h6"/>
+</svg>`;
+
+/**
+ * Eye icon - Vision/view
+ */
+export const ICON_EYE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+  <circle cx="12" cy="12" r="3"/>
+</svg>`;
+
+/**
+ * Sliders icon - Adjustment controls
+ */
+export const ICON_SLIDERS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="4" y1="21" x2="4" y2="14"/>
+  <line x1="4" y1="10" x2="4" y2="3"/>
+  <line x1="12" y1="21" x2="12" y2="12"/>
+  <line x1="12" y1="8" x2="12" y2="3"/>
+  <line x1="20" y1="21" x2="20" y2="16"/>
+  <line x1="20" y1="12" x2="20" y2="3"/>
+  <circle cx="4" cy="12" r="2"/>
+  <circle cx="12" cy="10" r="2"/>
+  <circle cx="20" cy="14" r="2"/>
+</svg>`;
+
+/**
  * Map of UI icon names to SVG strings
  */
 export const UI_ICONS: Record<string, string> = {
@@ -164,6 +246,15 @@ export const UI_ICONS: Record<string, string> = {
   dice: ICON_DICE,
   coins: ICON_COINS,
   broom: ICON_BROOM,
+  filter: ICON_FILTER,
+  market: ICON_MARKET,
+  export: ICON_EXPORT,
+  beaker: ICON_BEAKER,
+  settings: ICON_SETTINGS,
+  palette: ICON_PALETTE,
+  sort: ICON_SORT,
+  eye: ICON_EYE,
+  sliders: ICON_SLIDERS,
 };
 
 /**

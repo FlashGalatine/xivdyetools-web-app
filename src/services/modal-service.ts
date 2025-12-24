@@ -107,7 +107,11 @@ export class ModalService {
     if (this.modals.length > MAX_MODALS) {
       const removed = this.modals.shift();
       if (removed?.onClose) {
-        removed.onClose();
+        try {
+          removed.onClose();
+        } catch (error) {
+          logger.error('Modal onClose callback failed:', error);
+        }
       }
     }
 
@@ -153,7 +157,11 @@ export class ModalService {
       const modal = this.modals[index];
       this.modals.splice(index, 1);
       if (modal.onClose) {
-        modal.onClose();
+        try {
+          modal.onClose();
+        } catch (error) {
+          logger.error('Modal onClose callback failed:', error);
+        }
       }
       this.notifyListeners();
       logger.info(`Modal dismissed: ${id}`);
@@ -177,10 +185,14 @@ export class ModalService {
    * Dismiss all modals
    */
   static dismissAll(): void {
-    // Call onClose for each modal
+    // Call onClose for each modal (wrapped in try-catch to ensure all are processed)
     this.modals.forEach((modal) => {
       if (modal.onClose) {
-        modal.onClose();
+        try {
+          modal.onClose();
+        } catch (error) {
+          logger.error('Modal onClose callback failed:', error);
+        }
       }
     });
 

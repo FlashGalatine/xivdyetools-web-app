@@ -240,6 +240,7 @@ export abstract class BaseComponent implements ComponentLifecycle {
 
   /**
    * Safely execute renderContent with error catching
+   * Note: This only catches synchronous errors. For async operations, use safeAsync().
    */
   protected safeRender(): void {
     try {
@@ -250,6 +251,28 @@ export abstract class BaseComponent implements ComponentLifecycle {
       }
     } catch (error) {
       this.handleRenderError(error);
+    }
+  }
+
+  /**
+   * Wrap an async operation with error boundary handling
+   * Use this in onMount() or event handlers for async operations that should
+   * trigger error UI on failure.
+   *
+   * @example
+   * async onMount() {
+   *   await this.safeAsync(async () => {
+   *     const data = await fetchData();
+   *     this.renderData(data);
+   *   });
+   * }
+   */
+  protected async safeAsync<T>(operation: () => Promise<T>): Promise<T | null> {
+    try {
+      return await operation();
+    } catch (error) {
+      this.handleRenderError(error);
+      return null;
     }
   }
 

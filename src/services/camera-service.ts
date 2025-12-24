@@ -39,6 +39,7 @@ export class CameraService {
   private hasEnumerated: boolean = false;
   private isSupported: boolean = false;
   private listeners: Set<(available: boolean) => void> = new Set();
+  private deviceChangeHandler: (() => Promise<void>) | null = null;
 
   private constructor() {
     // Check for basic support
@@ -314,10 +315,25 @@ export class CameraService {
   startDeviceChangeListener(): void {
     if (!this.isSupported) return;
 
-    navigator.mediaDevices.addEventListener('devicechange', async () => {
+    // Prevent duplicate listeners
+    if (this.deviceChangeHandler) return;
+
+    this.deviceChangeHandler = async () => {
       logger.info('📷 Device change detected, re-enumerating cameras');
       await this.enumerateCameras();
-    });
+    };
+
+    navigator.mediaDevices.addEventListener('devicechange', this.deviceChangeHandler);
+  }
+
+  /**
+   * Stop listening for device changes
+   */
+  stopDeviceChangeListener(): void {
+    if (this.deviceChangeHandler) {
+      navigator.mediaDevices.removeEventListener('devicechange', this.deviceChangeHandler);
+      this.deviceChangeHandler = null;
+    }
   }
 
   /**
@@ -325,6 +341,7 @@ export class CameraService {
    */
   destroy(): void {
     this.stopStream();
+    this.stopDeviceChangeListener();
     this.listeners.clear();
   }
 }
