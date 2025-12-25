@@ -97,19 +97,19 @@ describe('APIService Wrapper', () => {
       const result = await APIService.getPriceData(99999999);
       // Non-existent item should return null or price data
       expect(result === null || typeof result === 'object').toBe(true);
-    });
+    }, 15000); // Extended timeout for real API call
 
     it('should accept worldID parameter', async () => {
       // Verify the method accepts the parameter without throwing
       const result = await APIService.getPriceData(99999999, 67);
       expect(result === null || typeof result === 'object').toBe(true);
-    });
+    }, 15000); // Extended timeout for real API call
 
     it('should accept dataCenterID parameter', async () => {
       // Verify the method accepts the parameter without throwing
       const result = await APIService.getPriceData(99999999, undefined, 'Crystal');
       expect(result === null || typeof result === 'object').toBe(true);
-    });
+    }, 15000); // Extended timeout for real API call
   });
 });
 
@@ -572,13 +572,13 @@ describe('IndexedDBCacheBackend', () => {
       const mockInitialize = vi.spyOn(indexedDBServiceModule.indexedDBService, 'initialize');
       mockInitialize.mockRejectedValueOnce(new Error('DB init failed'));
 
-      // Should not throw, but clear the promise so it can retry
+      // Should throw on failure
       await expect(cacheBackend.initialize()).rejects.toThrow('DB init failed');
 
-      // After rejection, initPromise should be cleared (BUG-012 fix)
-      // So next call should create new promise
+      // BUG-004 FIX: initPromise is NOT cleared on error to prevent race conditions
+      // Use reinitialize() for explicit retry after failure
       mockInitialize.mockResolvedValueOnce(true);
-      await expect(cacheBackend.initialize()).resolves.not.toThrow();
+      await expect(cacheBackend.reinitialize()).resolves.not.toThrow();
     });
 
     it('should load from storage after successful initialization', async () => {

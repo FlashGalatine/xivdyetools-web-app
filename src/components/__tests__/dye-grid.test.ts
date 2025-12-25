@@ -103,7 +103,7 @@ describe('DyeGrid', () => {
       expect(firstBtn).not.toBeNull();
 
       const name = firstBtn?.querySelector('.text-sm')?.textContent;
-      const hex = firstBtn?.querySelector('.text-xs.font-mono')?.textContent;
+      const hex = firstBtn?.querySelector('.number')?.textContent;
 
       expect(name).toBeTruthy();
       expect(hex).toBe('#FFFFFF');
@@ -530,7 +530,7 @@ describe('DyeGrid', () => {
       container.addEventListener('dye-selected', (e: any) => spy(e.detail));
 
       // Click on a nested element (e.g., the hex code div)
-      const nestedDiv = container.querySelector('.dye-select-btn .font-mono') as HTMLElement;
+      const nestedDiv = container.querySelector('.dye-select-btn .number') as HTMLElement;
       nestedDiv.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 
       expect(spy).toHaveBeenCalledWith(mockDyes[0]);

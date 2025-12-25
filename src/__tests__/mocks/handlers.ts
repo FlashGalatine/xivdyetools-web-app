@@ -4,8 +4,8 @@
  */
 import { http, HttpResponse } from 'msw';
 
-// API base URL
-const API_URL = 'https://xivdyetools-presets-api.ashejunius.workers.dev';
+// API base URL - must match the URL in community-preset-service.ts
+const API_URL = 'https://api.xivdyetools.projectgalatine.com';
 
 // ============================================
 // Mock Data

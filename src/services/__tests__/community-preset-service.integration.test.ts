@@ -21,7 +21,7 @@ vi.mock('../auth-service', () => ({
 import { CommunityPresetService } from '../community-preset-service';
 import { authService } from '../auth-service';
 
-const API_URL = 'https://xivdyetools-presets-api.ashejunius.workers.dev';
+const API_URL = 'https://api.xivdyetools.projectgalatine.com';
 
 describe('CommunityPresetService Integration Tests', () => {
   let service: CommunityPresetService;

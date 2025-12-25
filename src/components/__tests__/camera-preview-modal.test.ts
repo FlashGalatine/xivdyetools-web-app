@@ -136,6 +136,10 @@ describe('showCameraPreviewModal', () => {
     selector.value = 'cam2';
     selector.dispatchEvent(new Event('change'));
 
+    // Wait for async handler (change handler chains onto cameraOperationPromise)
+    await Promise.resolve();
+    await Promise.resolve();
+
     expect(cameraService.stopStream).toHaveBeenCalled();
     expect(cameraService.startStream).toHaveBeenCalledWith('cam2');
   });
