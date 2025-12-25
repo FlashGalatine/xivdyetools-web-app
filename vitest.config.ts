@@ -23,6 +23,8 @@ export default defineConfig({
         'src/services/preset-submission-service.ts',
         'src/components/add-to-collection-menu.ts',
         'src/components/collection-manager-modal.ts',
+        'src/components/preset-edit-form.ts',
+        'src/components/my-submissions-panel.ts',
         'src/shared/browser-api-types.ts',
       ],
       lines: 80,
