@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.7] - 2025-12-24
+
+### Fixed
+
+- **Test Suite**: Fixed multiple test failures across the application
+  - Updated MSW handlers API URL to match actual service endpoint (`api.xivdyetools.projectgalatine.com`)
+  - Fixed integration test URL for proper handler overrides
+  - Added await for async camera selector change handler in camera-preview-modal tests
+  - Updated dye-grid tests to use `.number` class instead of deprecated `.font-mono`
+  - Extended timeout for real API tests (15s) to prevent flaky failures
+  - Fixed `IndexedDBCacheBackend` test to use `reinitialize()` per BUG-004 fix
+  - Updated UI icons test to expect 37 icons (was 14)
+  - Fixed colorblindness display test selector
+
+---
+
 ## [3.2.6] - 2025-12-24
 
 ### Changed
