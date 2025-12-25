@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.2.7] - 2025-12-24
 
+### Changed
+
+#### Low Priority Audit Fixes
+
+- **Theme Service Refactor**: Added `createThemePalette()` factory pattern for theme definitions
+  - Requires core colors (`primary`, `background`, `text`) and `isDark` flag
+  - Provides sensible defaults for derived properties (`textHeader`, `border`, etc.)
+  - Allows explicit overrides for custom themes
+  - Groups 11 themes by category (Standard, FFXIV, Specialty, Grayscale, High Contrast)
+  - Improves maintainability and makes adding new themes easier
+
 ### Fixed
 
 - **Test Suite**: Fixed multiple test failures across the application
