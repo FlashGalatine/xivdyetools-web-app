@@ -153,6 +153,16 @@ describe('OfflineBanner', () => {
   });
 
   describe('Show/Hide Banner', () => {
+    it('should handle showBanner when not initialized (banner is null)', () => {
+      // Don't initialize - banner is null
+      expect(() => banner.showBanner()).not.toThrow();
+    });
+
+    it('should handle hideBanner when not initialized (banner is null)', () => {
+      // Don't initialize - banner is null
+      expect(() => banner.hideBanner()).not.toThrow();
+    });
+
     it('should show banner with showBanner()', () => {
       banner.initialize();
       banner.showBanner();
@@ -244,6 +254,38 @@ describe('OfflineBanner', () => {
 
       const message = document.getElementById('offline-banner-message');
       expect(message?.textContent).toBe('You are offline. Some features may be limited.');
+    });
+
+    it('should handle updateMessage when banner is not initialized', () => {
+      // Don't initialize - banner is null
+      expect(() => banner.updateMessage()).not.toThrow();
+    });
+
+    it('should handle updateMessage when message element is missing', () => {
+      banner.initialize();
+
+      // Remove the message element
+      const message = document.getElementById('offline-banner-message');
+      message?.remove();
+
+      // Should not throw
+      expect(() => banner.updateMessage()).not.toThrow();
+    });
+  });
+
+  describe('Banner Recreation', () => {
+    it('should remove existing banner when initialize is called twice', () => {
+      banner.initialize();
+
+      const firstBanner = document.getElementById('offline-banner');
+      expect(firstBanner).not.toBeNull();
+
+      // Call initialize again - should remove old banner and create new one
+      banner.initialize();
+
+      // Should still have exactly one banner
+      const banners = document.querySelectorAll('#offline-banner');
+      expect(banners.length).toBe(1);
     });
   });
 

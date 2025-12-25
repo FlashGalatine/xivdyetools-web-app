@@ -655,4 +655,104 @@ describe('ThemeSwitcher', () => {
       document.removeEventListener('close-other-dropdowns', eventHandler);
     });
   });
+
+  // ==========================================================================
+  // Branch Coverage Tests - Hover Effects
+  // ==========================================================================
+
+  describe('Theme Button Hover Effects', () => {
+    it('should apply hover background on mouseenter', () => {
+      [component, container] = renderComponent(ThemeSwitcher);
+
+      const themeButton = container.querySelector(
+        '[data-theme="hydaelyn-light"]'
+      ) as HTMLButtonElement;
+
+      // Trigger mouseenter
+      themeButton.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+
+      expect(themeButton.style.backgroundColor).toBe('var(--theme-card-hover)');
+    });
+
+    it('should remove hover background on mouseleave for non-current theme', () => {
+      [component, container] = renderComponent(ThemeSwitcher);
+
+      // Ensure we're not on this theme
+      ThemeService.setTheme('standard-dark');
+      component.update();
+
+      const themeButton = container.querySelector(
+        '[data-theme="hydaelyn-light"]'
+      ) as HTMLButtonElement;
+
+      // Trigger mouseenter then mouseleave
+      themeButton.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+      themeButton.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+
+      expect(themeButton.style.backgroundColor).toBe('transparent');
+    });
+
+    it('should keep background on mouseleave for current theme', () => {
+      [component, container] = renderComponent(ThemeSwitcher);
+
+      // Set this as current theme
+      ThemeService.setTheme('hydaelyn-light');
+      component.update();
+
+      const themeButton = container.querySelector(
+        '[data-theme="hydaelyn-light"]'
+      ) as HTMLButtonElement;
+
+      // Trigger mouseenter then mouseleave
+      themeButton.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+      const hoverBg = themeButton.style.backgroundColor;
+      themeButton.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+
+      // Should NOT be transparent (keeps the hover/selected background)
+      expect(themeButton.style.backgroundColor).toBe(hoverBg);
+    });
+  });
+
+  // ==========================================================================
+  // Branch Coverage Tests - Theme Sorting Edge Case
+  // ==========================================================================
+
+  describe('Theme Sorting', () => {
+    it('should sort themes correctly (families grouped, light before dark)', () => {
+      [component, container] = renderComponent(ThemeSwitcher);
+
+      const themeButtons = container.querySelectorAll('[data-theme]');
+      const themeOrder = Array.from(themeButtons).map(
+        (btn) => btn.getAttribute('data-theme')
+      );
+
+      // Verify that within each family, light comes before dark
+      // standard-light should come before standard-dark
+      const standardLightIdx = themeOrder.indexOf('standard-light');
+      const standardDarkIdx = themeOrder.indexOf('standard-dark');
+      expect(standardLightIdx).toBeLessThan(standardDarkIdx);
+
+      // grayscale-light should come before grayscale-dark
+      const grayscaleLightIdx = themeOrder.indexOf('grayscale-light');
+      const grayscaleDarkIdx = themeOrder.indexOf('grayscale-dark');
+      expect(grayscaleLightIdx).toBeLessThan(grayscaleDarkIdx);
+
+      // high-contrast-light should come before high-contrast-dark
+      const hcLightIdx = themeOrder.indexOf('high-contrast-light');
+      const hcDarkIdx = themeOrder.indexOf('high-contrast-dark');
+      expect(hcLightIdx).toBeLessThan(hcDarkIdx);
+    });
+
+    it('should handle themes without light/dark suffix (cotton-candy, sugar-riot)', () => {
+      [component, container] = renderComponent(ThemeSwitcher);
+
+      // These themes don't have -light or -dark suffix
+      // They should still be present and sorted by family name
+      const cottonCandyBtn = container.querySelector('[data-theme="cotton-candy"]');
+      const sugarRiotBtn = container.querySelector('[data-theme="sugar-riot"]');
+
+      expect(cottonCandyBtn).not.toBeNull();
+      expect(sugarRiotBtn).not.toBeNull();
+    });
+  });
 });
