@@ -298,3 +298,45 @@ describe('createDyeActionDropdown', () => {
     });
   });
 });
+
+// ==========================================================================
+// Branch Coverage - Additional Tests
+// ==========================================================================
+
+describe('Branch Coverage - Clipboard Fallback', function() {
+  let container;
+  let testDye;
+
+  beforeEach(function() {
+    container = createTestContainer();
+    testDye = mockDyeData[0];
+  });
+
+  afterEach(function() {
+    cleanupTestContainer(container);
+    vi.clearAllMocks();
+  });
+
+  it('should use fallback when navigator.clipboard fails', async function() {
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn().mockRejectedValue(new Error('Clipboard denied')),
+      },
+    });
+
+    const execMock = vi.fn().mockReturnValue(true);
+    document.execCommand = execMock;
+
+    const dropdown = createDyeActionDropdown(testDye);
+    container.appendChild(dropdown);
+
+    const button = dropdown.querySelector('button');
+    button.click();
+
+    const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
+    menuItems[5].click();
+
+    await new Promise(r => setTimeout(r, 20));
+    expect(execMock).toHaveBeenCalledWith('copy');
+  });
+});
