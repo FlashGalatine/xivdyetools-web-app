@@ -22,6 +22,7 @@ import {
   ICON_BLUESKY,
   ICON_DISCORD,
   ICON_PATREON,
+  ICON_KOFI,
 } from '@shared/social-icons';
 import { ICON_CRYSTAL } from '@shared/ui-icons';
 import { LOGO_SPARKLES } from '@shared/app-logo';
@@ -208,6 +209,7 @@ export class AppLayout extends BaseComponent {
       { label: 'BlueSky', url: 'https://bsky.app/profile/projectgalatine.com', icon: ICON_BLUESKY },
       { label: 'Discord', url: 'https://discord.gg/5VUSKTZCe5', icon: ICON_DISCORD },
       { label: 'Patreon', url: 'https://patreon.com/ProjectGalatine', icon: ICON_PATREON },
+      { label: 'Ko-Fi', url: 'https://ko-fi.com/flashgalatine', icon: ICON_KOFI },
     ];
 
     socialMedia.forEach((social) => {
