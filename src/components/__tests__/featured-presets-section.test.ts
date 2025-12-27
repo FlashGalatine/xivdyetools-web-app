@@ -18,11 +18,13 @@ const createMockPreset = (overrides: Partial<UnifiedPreset> = {}): UnifiedPreset
   id: 'preset-1',
   name: 'Featured Preset',
   description: 'A featured preset',
-  category: 'glamour',
+  category: 'aesthetics',
   dyes: [1, 2, 3],
+  tags: [],
   voteCount: 50,
   author: 'FeaturedCreator',
   isCurated: false,
+  isFromAPI: false,
   createdAt: new Date().toISOString(),
   ...overrides,
 });
@@ -48,7 +50,7 @@ describe('FeaturedPresetsSection', () => {
 
     // Mock dyeService.getDyeById
     getDyeByIdSpy = vi.spyOn(dyeService, 'getDyeById').mockImplementation((id: number) => {
-      return mockDyes[id as keyof typeof mockDyes] || null;
+      return (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null;
     });
   });
 

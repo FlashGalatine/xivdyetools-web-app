@@ -10,7 +10,7 @@ import { ModalService, LanguageService } from '@services/index';
 
 // Mock ModalService
 vi.mock('@services/index', async (importOriginal) => {
-  const original = await importOriginal();
+  const original = await importOriginal<typeof import('@services/index')>();
   return {
     ...original,
     ModalService: {

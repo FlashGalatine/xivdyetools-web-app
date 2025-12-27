@@ -55,8 +55,8 @@ describe('AuthButton', () => {
         subscriberCallback = null;
       };
     });
-    vi.spyOn(authService, 'login').mockImplementation(() => {});
-    vi.spyOn(authService, 'loginWithXIVAuth').mockImplementation(() => {});
+    vi.spyOn(authService, 'login').mockImplementation(async () => {});
+    vi.spyOn(authService, 'loginWithXIVAuth').mockImplementation(async () => {});
     vi.spyOn(authService, 'logout').mockResolvedValue(undefined);
   });
 

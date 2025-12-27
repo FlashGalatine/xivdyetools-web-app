@@ -19,11 +19,13 @@ const createMockPreset = (overrides: Partial<UnifiedPreset> = {}): UnifiedPreset
   id: 'test-preset-1',
   name: 'Test Preset',
   description: 'A test preset for unit testing',
-  category: 'glamour',
+  category: 'aesthetics',
   dyes: [1, 2, 3], // Mock dye IDs
+  tags: [],
   voteCount: 10,
   author: 'TestUser',
   isCurated: true,
+  isFromAPI: false,
   createdAt: new Date().toISOString(),
   ...overrides,
 });
@@ -49,7 +51,7 @@ describe('PresetCard', () => {
 
     // Mock dyeService.getDyeById
     getDyeByIdSpy = vi.spyOn(dyeService, 'getDyeById').mockImplementation((id: number) => {
-      return mockDyes[id as keyof typeof mockDyes] || null;
+      return (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null;
     });
   });
 
@@ -230,7 +232,7 @@ describe('PresetCard', () => {
 
   describe('Category Icon', () => {
     it('should display category icon', () => {
-      const preset = createMockPreset({ category: 'glamour' });
+      const preset = createMockPreset({ category: 'aesthetics' });
       card = new PresetCard(container, preset);
       card.init();
 

@@ -117,7 +117,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[0].click();
+      (menuItems[0] as HTMLElement).click();
 
       expect(StorageService.setItem).toHaveBeenCalledWith('v3_comparison_selected_dyes', [testDye.id]);
       expect(ToastService.success).toHaveBeenCalled();
@@ -134,7 +134,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[0].click();
+      (menuItems[0] as HTMLElement).click();
 
       expect(ToastService.info).toHaveBeenCalled();
       expect(StorageService.setItem).not.toHaveBeenCalled();
@@ -150,7 +150,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[0].click();
+      (menuItems[0] as HTMLElement).click();
 
       expect(StorageService.setItem).toHaveBeenCalledWith('v3_comparison_selected_dyes', [2, testDye.id]);
     });
@@ -167,7 +167,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[1].click();
+      (menuItems[1] as HTMLElement).click();
 
       expect(StorageService.setItem).toHaveBeenCalledWith('v3_mixer_selected_dyes', [testDye.id]);
       expect(ToastService.success).toHaveBeenCalled();
@@ -184,7 +184,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[1].click();
+      (menuItems[1] as HTMLElement).click();
 
       expect(ToastService.info).toHaveBeenCalled();
       expect(StorageService.setItem).not.toHaveBeenCalled();
@@ -202,7 +202,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[2].click();
+      (menuItems[2] as HTMLElement).click();
 
       expect(StorageService.setItem).toHaveBeenCalledWith('v3_accessibility_selected_dyes', [testDye.id]);
       expect(ToastService.success).toHaveBeenCalled();
@@ -219,7 +219,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[2].click();
+      (menuItems[2] as HTMLElement).click();
 
       expect(ToastService.info).toHaveBeenCalled();
       expect(StorageService.setItem).not.toHaveBeenCalled();
@@ -235,7 +235,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[4].click();
+      (menuItems[4] as HTMLElement).click();
 
       expect(StorageService.setItem).toHaveBeenCalledWith('v3_budget_target', testDye.id);
       expect(RouterService.navigateTo).toHaveBeenCalledWith('budget');
@@ -251,7 +251,7 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       button.click();
 
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      menuItems[3].click();
+      (menuItems[3] as HTMLElement).click();
 
       expect(RouterService.navigateTo).toHaveBeenCalledWith('harmony', { dyeId: String(testDye.itemID) });
     });
@@ -363,7 +363,7 @@ describe('Dye Action Dropdown - Edge Cases', () => {
     button.click();
 
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-    expect(() => menuItems[0].click()).not.toThrow();
+    expect(() => (menuItems[0] as HTMLElement).click()).not.toThrow();
   });
 
   it('should ignore escape key when menu is closed', () => {
@@ -463,7 +463,7 @@ describe('Dye Action Dropdown - Clipboard Fallback Error', () => {
     button.click();
 
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-    menuItems[5].click();
+    (menuItems[5] as HTMLElement).click();
 
     await new Promise(r => setTimeout(r, 50));
     expect(ToastService.error).toHaveBeenCalled();
@@ -512,7 +512,7 @@ describe('Dye Action Dropdown - Full Slots (Modal)', () => {
     button.click();
 
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-    menuItems[0].click();
+    (menuItems[0] as HTMLElement).click();
 
     expect(ModalService.show).toHaveBeenCalledWith(expect.objectContaining({
       type: 'custom',
@@ -531,7 +531,7 @@ describe('Dye Action Dropdown - Full Slots (Modal)', () => {
     button.click();
 
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-    menuItems[1].click();
+    (menuItems[1] as HTMLElement).click();
 
     expect(ModalService.show).toHaveBeenCalled();
   });
@@ -546,7 +546,7 @@ describe('Dye Action Dropdown - Full Slots (Modal)', () => {
     button.click();
 
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-    menuItems[2].click();
+    (menuItems[2] as HTMLElement).click();
 
     expect(ModalService.show).toHaveBeenCalled();
   });

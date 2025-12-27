@@ -304,12 +304,12 @@ describe('createDyeActionDropdown', () => {
 // ==========================================================================
 
 describe('Branch Coverage - Clipboard Fallback', function() {
-  let container;
-  let testDye;
+  let container: HTMLElement;
+  let testDye: Dye;
 
   beforeEach(function() {
     container = createTestContainer();
-    testDye = mockDyeData[0];
+    testDye = mockDyeData[0] as Dye;
   });
 
   afterEach(function() {
@@ -330,11 +330,11 @@ describe('Branch Coverage - Clipboard Fallback', function() {
     const dropdown = createDyeActionDropdown(testDye);
     container.appendChild(dropdown);
 
-    const button = dropdown.querySelector('button');
+    const button = dropdown.querySelector('button') as HTMLButtonElement;
     button.click();
 
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-    menuItems[5].click();
+    (menuItems[5] as HTMLElement).click();
 
     await new Promise(r => setTimeout(r, 20));
     expect(execMock).toHaveBeenCalledWith('copy');

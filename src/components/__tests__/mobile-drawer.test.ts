@@ -19,14 +19,14 @@ import {
 describe('MobileDrawer', () => {
   let container: HTMLElement;
   let drawer: MobileDrawer;
-  let mockAnnounce: ReturnType<typeof vi.fn>;
+  let mockAnnounce: ReturnType<typeof vi.fn<(message: string) => void>>;
 
   beforeEach(() => {
     container = createTestContainer();
 
     // Mock AnnouncerService
     mockAnnounce = vi.fn();
-    vi.spyOn(AnnouncerService, 'announce').mockImplementation(mockAnnounce);
+    vi.spyOn(AnnouncerService, 'announce').mockImplementation(mockAnnounce as typeof AnnouncerService.announce);
   });
 
   afterEach(() => {

@@ -18,13 +18,14 @@ const createMockSubmission = (overrides: Partial<CommunityPreset> = {}): Communi
   id: 'sub-1',
   name: 'My Test Preset',
   description: 'A test preset submission',
-  category_id: 'glamour',
+  category_id: 'aesthetics',
   dyes: [1, 2, 3],
   vote_count: 5,
-  author_id: 'user-1',
+  author_discord_id: 'user-1',
   author_name: 'TestUser',
   status: 'pending' as PresetStatus,
-  tags: ['test', 'glamour'],
+  tags: ['test', 'aesthetics'],
+  is_curated: false,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   ...overrides,
@@ -50,7 +51,7 @@ describe('MySubmissionsPanel', () => {
 
     // Mock dyeService.getDyeById
     vi.spyOn(dyeService, 'getDyeById').mockImplementation((id: number) => {
-      return mockDyes[id as keyof typeof mockDyes] || null;
+      return (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null;
     });
 
     // Mock presetSubmissionService.getStatusInfo

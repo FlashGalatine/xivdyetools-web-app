@@ -246,13 +246,11 @@ describe('HarmonyResultPanel', () => {
       const dye = createMockDye({ itemID: 1001 });
       const priceData = new Map<number, PriceData>();
       priceData.set(1001, {
-        itemId: 1001,
+        itemID: 1001,
         currentAverage: 5000,
-        averagePrice: 5000,
-        lowestPrice: 4500,
-        highestPrice: 5500,
-        salesCount: 10,
-        lastUpdated: new Date().toISOString(),
+        currentMinPrice: 4500,
+        currentMaxPrice: 5500,
+        lastUpdate: Date.now(),
       });
 
       // Mock APIService.formatPrice
@@ -272,13 +270,11 @@ describe('HarmonyResultPanel', () => {
       const dye = createMockDye({ itemID: 1001 });
       const priceData = new Map<number, PriceData>();
       priceData.set(1001, {
-        itemId: 1001,
+        itemID: 1001,
         currentAverage: 5000,
-        averagePrice: 5000,
-        lowestPrice: 4500,
-        highestPrice: 5500,
-        salesCount: 10,
-        lastUpdated: new Date().toISOString(),
+        currentMinPrice: 4500,
+        currentMaxPrice: 5500,
+        lastUpdate: Date.now(),
       });
 
       panel = new HarmonyResultPanel(container, createMockOptions({
@@ -295,13 +291,11 @@ describe('HarmonyResultPanel', () => {
       const dye = createMockDye({ itemID: 1001 });
       const priceData = new Map<number, PriceData>();
       priceData.set(1001, {
-        itemId: 1001,
+        itemID: 1001,
         currentAverage: 5000,
-        averagePrice: 5000,
-        lowestPrice: 4500,
-        highestPrice: 5500,
-        salesCount: 10,
-        lastUpdated: new Date().toISOString(),
+        currentMinPrice: 4500,
+        currentMaxPrice: 5500,
+        lastUpdate: Date.now(),
       });
 
       vi.spyOn(APIService, 'formatPrice').mockReturnValue('5,000 gil');
