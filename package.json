@@ -45,7 +45,7 @@
     "@vitejs/plugin-vue": "^6.0.2",
     "@vitest/coverage-v8": "^4.0.15",
     "@vitest/ui": "^4.0.15",
-    "@xivdyetools/test-utils": "^1.0.2",
+    "@xivdyetools/test-utils": "^1.0.3",
     "autoprefixer": "^10.4.22",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
@@ -63,7 +63,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.17",
-    "@xivdyetools/core": "^1.5.3",
+    "@xivdyetools/core": "^1.5.5",
     "@xivdyetools/logger": "^1.0.2",
     "@xivdyetools/types": "^1.1.1"
   },
