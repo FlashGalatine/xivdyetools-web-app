@@ -4,6 +4,23 @@
  * Inline SVG icons for UI elements using currentColor for theme adaptation
  * These replace external SVG files loaded via <img> tags which can't inherit color
  *
+ * SECURITY NOTE: Static SVG innerHTML Pattern
+ * ===========================================
+ * These SVG constants are used with innerHTML in components (e.g., base-component.ts).
+ * This pattern is SAFE because:
+ *
+ * 1. SVG content is defined as static constants in this file (code-controlled, not user input)
+ * 2. No user data is ever interpolated into these SVG strings
+ * 3. Icons are compile-time constants, not fetched from external sources
+ * 4. The strict CSP blocks inline script execution even if SVG were compromised
+ *
+ * When adding new icons:
+ * - Define as const strings in this file
+ * - Never interpolate user input into SVG markup
+ * - Use currentColor for theme adaptation (inherits from parent CSS)
+ *
+ * @see base-component.ts createElement() method
+ * @see https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
  * @module shared/ui-icons
  */
 

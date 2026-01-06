@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.9] - 2026-01-06
+
+### Security
+
+- **Security Documentation**: Added comprehensive security documentation in response to January 2026 security audit
+  - Added detailed security rationale for localStorage token storage in `auth-service.ts`
+  - Added innerHTML safety documentation to `ui-icons.ts`, `category-icons.ts`, and `base-component.ts`
+  - Added Security Patterns section to `CLAUDE.md` documenting XSS prevention, auth token storage, and CSP
+
+### Changed
+
+- **Dependencies**: Updated all dependencies to latest versions within semver range
+  - `@typescript-eslint/eslint-plugin`: 8.50.0 → 8.52.0
+  - `@typescript-eslint/parser`: 8.50.0 → 8.52.0
+  - `@vitest/coverage-v8`: 4.0.15 → 4.0.16
+  - `@vitest/ui`: 4.0.15 → 4.0.16
+  - `@xivdyetools/core`: 1.5.3 → 1.5.4
+  - `@xivdyetools/test-utils`: 1.0.2 → 1.0.3
+  - `jsdom`: 27.3.0 → 27.4.0
+  - `msw`: 2.12.4 → 2.12.7
+  - `typescript-eslint`: 8.50.0 → 8.52.0
+  - `vitest`: 4.0.15 → 4.0.16
+
+### Fixed
+
+- Fixed icon test to include new `kofi` social icon
+
+---
+
 ## [3.2.8] - 2025-12-24
 
 ### Changed

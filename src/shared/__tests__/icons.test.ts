@@ -119,6 +119,7 @@ describe('Social Icons', () => {
         'bluesky',
         'discord',
         'patreon',
+        'kofi',
       ]);
     });
 

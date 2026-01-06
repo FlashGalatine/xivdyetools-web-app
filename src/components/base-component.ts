@@ -447,6 +447,13 @@ export abstract class BaseComponent implements ComponentLifecycle {
 
   /**
    * Create an HTML element with optional attributes
+   *
+   * SECURITY NOTE on innerHTML option:
+   * The innerHTML option is intended ONLY for static SVG icons defined in
+   * shared/*-icons.ts files. These are compile-time constants, not user input.
+   *
+   * For user-controlled content, ALWAYS use textContent instead.
+   * See ui-icons.ts for detailed security rationale.
    */
   protected createElement<K extends keyof HTMLElementTagNameMap>(
     tagName: K,
@@ -462,6 +469,8 @@ export abstract class BaseComponent implements ComponentLifecycle {
         element.id = options.id;
       }
       if (options.innerHTML) {
+        // SECURITY: Only use innerHTML for static SVG icons from *-icons.ts files
+        // Never pass user-controlled content here
         element.innerHTML = options.innerHTML;
       }
       if (options.textContent) {

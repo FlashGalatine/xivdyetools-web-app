@@ -4,6 +4,10 @@
  * Inline SVG icons for preset palette categories using currentColor for theme adaptation
  * Follows the same pattern as tool-icons.ts for consistency
  *
+ * SECURITY NOTE: These SVG constants are used with innerHTML in preset-card.ts.
+ * This is SAFE because content is static/code-defined, not user input.
+ * See ui-icons.ts for detailed security rationale.
+ *
  * @module shared/category-icons
  */
 

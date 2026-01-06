@@ -168,6 +168,43 @@ Two custom plugins in project root:
 
 ---
 
+## Security Patterns
+
+### XSS Prevention
+
+**Static SVG innerHTML Pattern**: Components use `innerHTML` for SVG icons, but this is **safe** because:
+- SVG content comes from static constants in `src/shared/*-icons.ts`
+- No user input is ever interpolated into these strings
+- Icons are compile-time constants, not fetched externally
+
+**User Content**: Always use `textContent` for user-controlled data:
+```typescript
+// ✅ SAFE: User content via textContent
+element.textContent = userProvidedString;
+
+// ⚠️ ONLY for static icons from *-icons.ts
+element.innerHTML = ICON_SAVE;  // from ui-icons.ts
+```
+
+### Authentication Token Storage
+
+Tokens are stored in `localStorage` (not httpOnly cookies) with these mitigations:
+- Strict CSP prevents inline script execution
+- Token expiry validated on every `isAuthenticated()` call
+- Server-side token revocation on logout
+
+See `src/services/auth-service.ts` for detailed security rationale.
+
+### Content Security Policy
+
+Production CSP (see `public/_headers`):
+- `script-src 'self'` - No inline scripts, no eval
+- `style-src 'self' 'unsafe-inline'` - Required for dynamic color swatches
+- `form-action 'none'` - Prevents form hijacking
+- `frame-ancestors 'none'` - Prevents clickjacking
+
+---
+
 ## Documentation
 
 | Document | Purpose |

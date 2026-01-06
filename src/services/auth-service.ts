@@ -88,6 +88,22 @@ const PRESETS_API_URL =
 
 /**
  * Storage key for auth token
+ *
+ * SECURITY NOTE: Auth tokens are stored in localStorage for the following reasons:
+ * - Enables cross-tab session sharing (improves UX)
+ * - Simpler architecture without httpOnly cookie requirements on OAuth worker
+ * - Token expiry is validated on each auth check
+ *
+ * Mitigations in place:
+ * 1. Strict CSP prevents inline script execution (no unsafe-eval, no unsafe-inline for scripts)
+ * 2. Token expiry validation on every isAuthenticated() call
+ * 3. Server-side token revocation on logout
+ * 4. All API endpoints validate token server-side
+ *
+ * Trade-off: If CSP were bypassed via XSS, tokens could be exfiltrated.
+ * Future consideration: httpOnly cookies via OAuth worker for defense-in-depth.
+ *
+ * @see https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html#token-storage-on-client-side
  */
 const TOKEN_STORAGE_KEY = 'xivdyetools_auth_token';
 
@@ -402,7 +418,9 @@ class AuthServiceImpl {
     const expiresAt = expiresAtStr ? parseInt(expiresAtStr, 10) : payload.exp;
     const provider = payload.auth_provider || 'discord';
 
-    // Store token
+    // SECURITY: Store token in localStorage (see TOKEN_STORAGE_KEY doc for security rationale)
+    // Using localStorage instead of sessionStorage enables cross-tab session sharing
+    // Token is never logged; only expiry metadata is logged below
     localStorage.setItem(TOKEN_STORAGE_KEY, token);
     localStorage.setItem(EXPIRY_STORAGE_KEY, expiresAt.toString());
     localStorage.setItem(PROVIDER_STORAGE_KEY, provider);
