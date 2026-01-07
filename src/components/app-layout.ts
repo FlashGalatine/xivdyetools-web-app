@@ -242,7 +242,7 @@ export class AppLayout extends BaseComponent {
     const universalisCredit = this.createElement('div', {
       id: 'footer-universalis',
       className: 'text-center text-xs text-gray-500 dark:text-gray-500 mt-2',
-      innerHTML: `Market Board data provided by <a href="https://universalis.app/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">Universalis</a>`,
+      innerHTML: `${LanguageService.t('footer.universalisCredit')} <a href="https://universalis.app/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">Universalis</a>`,
     });
     footerContent.appendChild(universalisCredit);
 
