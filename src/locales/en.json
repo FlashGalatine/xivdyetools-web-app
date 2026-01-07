@@ -326,8 +326,6 @@
     "selectDyes": "Select dyes below",
     "selectTwoDyes": "Select 2 dyes to see interpolation",
     "selectStartEnd": "Select Start & End Dyes",
-    "startDye": "Start Dye",
-    "endDye": "End Dye",
     "interpolationSettings": "Interpolation Settings",
     "interpolationSteps": "Interpolation Steps",
     "stepsHint": "More steps provide a smoother transition but may result in more repeated dyes",
