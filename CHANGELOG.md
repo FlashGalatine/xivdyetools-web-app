@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.10] - 2026-01-07
+
+### Fixed
+
+- **Localization**: Complete localization review and fixes for all 6 supported languages
+  - Added missing translation keys across German, French, Japanese, Korean, and Chinese locales
+  - Fixed in-game terminology to match official FFXIV localization (per LOCALIZATION_REFERENCE.md)
+  - Removed duplicate `startDye` and `endDye` keys from English and Korean locale files
+  - All locale files now have consistent structure (798 lines, 664 keys each)
+
+---
+
 ## [3.2.9] - 2026-01-06
 
 ### Security
