@@ -217,7 +217,7 @@ export class TwoPanelShell extends BaseComponent {
   }
 
   /**
-   * Render the mobile bottom nav buttons
+   * Render the mobile bottom nav buttons with horizontal scroll
    */
   private renderMobileBottomNav(): void {
     if (!this.mobileBottomNav) return;
@@ -225,20 +225,29 @@ export class TwoPanelShell extends BaseComponent {
     const tools = getLocalizedTools();
     this.mobileBottomNav.innerHTML = '';
 
+    // Outer wrapper for scroll indicators
+    const navWrapper = this.createElement('div', {
+      className: 'relative',
+    });
+
+    // Scrollable container with snap behavior
     const navContainer = this.createElement('div', {
-      className: 'flex items-center justify-around py-2 px-1',
+      className: 'flex items-center gap-1 py-2 px-2 overflow-x-auto scrollbar-hide',
+      attributes: {
+        style: 'scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;',
+        'data-nav-scroll': '',
+      },
     });
 
     tools.forEach(tool => {
       const isActive = this.activeToolId === tool.id;
       const btn = this.createElement('button', {
-        className: 'flex flex-col items-center justify-center px-2 py-1 rounded-lg transition-colors min-w-[48px]',
+        className: 'flex flex-col items-center justify-center px-3 py-1.5 rounded-lg transition-colors flex-shrink-0',
         attributes: {
-          style: isActive
-            ? 'color: var(--theme-primary);'
-            : 'color: var(--theme-text-muted);',
+          style: `scroll-snap-align: center; min-width: 64px; ${isActive ? 'color: var(--theme-primary);' : 'color: var(--theme-text-muted);'}`,
           'aria-label': tool.name,
           ...(isActive && { 'aria-current': 'page' }),
+          'data-tool-id': tool.id,
           type: 'button',
         },
       });
@@ -248,9 +257,10 @@ export class TwoPanelShell extends BaseComponent {
         innerHTML: TOOL_ICONS[tool.id],
       });
 
+      // Show full shortName instead of truncated first word
       const label = this.createElement('span', {
-        className: 'text-[10px] font-medium truncate max-w-[56px]',
-        textContent: tool.shortName.split(' ')[0], // First word only for space
+        className: 'text-[10px] font-medium whitespace-nowrap',
+        textContent: tool.shortName,
       });
 
       btn.appendChild(icon);
@@ -260,7 +270,67 @@ export class TwoPanelShell extends BaseComponent {
       navContainer.appendChild(btn);
     });
 
-    this.mobileBottomNav.appendChild(navContainer);
+    // Left scroll indicator (gradient fade)
+    const leftIndicator = this.createElement('div', {
+      className: 'absolute left-0 top-0 bottom-0 w-4 pointer-events-none z-10 transition-opacity',
+      attributes: {
+        style: 'background: linear-gradient(to right, var(--theme-card-background), transparent); opacity: 0;',
+        'data-scroll-indicator': 'left',
+      },
+    });
+
+    // Right scroll indicator (gradient fade)
+    const rightIndicator = this.createElement('div', {
+      className: 'absolute right-0 top-0 bottom-0 w-4 pointer-events-none z-10 transition-opacity',
+      attributes: {
+        style: 'background: linear-gradient(to left, var(--theme-card-background), transparent); opacity: 0;',
+        'data-scroll-indicator': 'right',
+      },
+    });
+
+    navWrapper.appendChild(leftIndicator);
+    navWrapper.appendChild(navContainer);
+    navWrapper.appendChild(rightIndicator);
+    this.mobileBottomNav.appendChild(navWrapper);
+
+    // Center active tool and setup scroll indicators
+    this.setupBottomNavScroll(navContainer);
+  }
+
+  /**
+   * Setup scroll behavior for bottom nav - center active tool and show indicators
+   */
+  private setupBottomNavScroll(container: HTMLElement): void {
+    // Center the active tool button on initial render
+    const activeBtn = container.querySelector('[aria-current="page"]') as HTMLElement;
+    if (activeBtn) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        activeBtn.scrollIntoView({ inline: 'center', behavior: 'instant' as ScrollBehavior });
+      });
+    }
+
+    // Update scroll indicators based on scroll position
+    const updateIndicators = () => {
+      const leftIndicator = this.mobileBottomNav?.querySelector('[data-scroll-indicator="left"]') as HTMLElement;
+      const rightIndicator = this.mobileBottomNav?.querySelector('[data-scroll-indicator="right"]') as HTMLElement;
+
+      if (!leftIndicator || !rightIndicator) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const maxScroll = scrollWidth - clientWidth;
+
+      // Show left indicator if scrolled right
+      leftIndicator.style.opacity = scrollLeft > 8 ? '1' : '0';
+      // Show right indicator if more content to the right
+      rightIndicator.style.opacity = scrollLeft < maxScroll - 8 ? '1' : '0';
+    };
+
+    // Initial check
+    requestAnimationFrame(updateIndicators);
+
+    // Update on scroll
+    container.addEventListener('scroll', updateIndicators, { passive: true });
   }
 
   private renderToolNav(): void {

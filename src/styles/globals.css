@@ -840,3 +840,40 @@ textarea {
 svg {
   transition: fill 0.2s ease, stroke 0.2s ease;
 }
+
+/* ============================================================================
+   Mobile Bottom Navigation - Horizontal Scroll
+   ============================================================================ */
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+/* ============================================================================
+   Mobile Header - Auto-Resize Title
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .app-header nav {
+    padding: 0.75rem 1rem; /* Tighter padding on mobile */
+  }
+
+  .app-header h1 {
+    /* Fluid font size with reasonable bounds */
+    font-size: clamp(0.875rem, 5vw, 1.25rem) !important;
+    line-height: 1.2;
+  }
+}
+
+/* Extra small screen adjustments (iPhone SE, etc.) */
+@media (max-width: 360px) {
+  .app-header h1 {
+    font-size: clamp(0.75rem, 4.5vw, 1rem) !important;
+  }
+}

@@ -12,10 +12,10 @@
 
 import { BaseComponent } from '@components/base-component';
 import { CollapsiblePanel } from '@components/collapsible-panel';
-import { DyeCardRenderer } from '@components/dye-card-renderer';
 import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
 import {
+  ColorService,
   dyeService,
   LanguageService,
   StorageService,
@@ -24,7 +24,7 @@ import {
 import { CharacterColorService } from '@xivdyetools/core';
 import type { CharacterColor, CharacterColorMatch, SubRace, Gender } from '@xivdyetools/types';
 import { ICON_TOOL_CHARACTER } from '@shared/tool-icons';
-import { ICON_PALETTE, ICON_FILTER, ICON_MARKET } from '@shared/ui-icons';
+import { ICON_PALETTE, ICON_MARKET } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
@@ -282,11 +282,37 @@ export class CharacterTool extends BaseComponent {
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
+    // Listen to market board events
     marketContent.addEventListener('server-changed', () => {
       if (this.selectedColor) {
         this.findMatchingDyes();
       }
     });
+
+    marketContent.addEventListener('showPricesChanged', ((e: CustomEvent) => {
+      this.showPrices = e.detail?.showPrices ?? false;
+      if (this.showPrices && this.matchedDyes.length > 0) {
+        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+      } else {
+        this.updateMatchResults();
+      }
+    }) as EventListener);
+
+    marketContent.addEventListener('categories-changed', () => {
+      if (this.showPrices && this.matchedDyes.length > 0) {
+        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+      }
+    });
+
+    marketContent.addEventListener('refresh-requested', () => {
+      if (this.showPrices && this.matchedDyes.length > 0) {
+        this.priceData.clear();
+        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+      }
+    });
+
+    // Initialize showPrices from MarketBoard state
+    this.showPrices = this.marketBoard.getShowPrices();
 
     this.marketPanel.setContent(marketContent);
   }
@@ -677,7 +703,7 @@ export class CharacterTool extends BaseComponent {
     }
 
     const card = this.createElement('div', {
-      className: 'flex items-center gap-3 p-3 rounded-lg',
+      className: 'flex items-start gap-3 p-3 rounded-lg',
       attributes: {
         style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
       },
@@ -695,31 +721,130 @@ export class CharacterTool extends BaseComponent {
     // Color info (compact)
     const info = this.createElement('div', { className: 'flex-1 min-w-0' });
 
-    // Index ID
+    // Calculate grid position (8 columns per row, 1-indexed)
+    const gridRow = Math.floor(this.selectedColor.index / 8) + 1;
+    const gridCol = (this.selectedColor.index % 8) + 1;
+
+    // Calculate HSV values
+    const hsv = ColorService.rgbToHsv(
+      this.selectedColor.rgb.r,
+      this.selectedColor.rgb.g,
+      this.selectedColor.rgb.b
+    );
+
+    // Index and Grid Position
     const indexLabel = LanguageService.t('tools.character.colorIndex') || 'Index';
-    const indexId = this.createElement('p', {
+    const indexRow = this.createElement('p', {
       className: 'text-sm font-medium',
-      textContent: `${indexLabel}: ${this.selectedColor.index}`,
       attributes: { style: 'color: var(--theme-text);' },
     });
-    info.appendChild(indexId);
+    indexRow.appendChild(document.createTextNode(`${indexLabel}: `));
+    const indexValue = this.createElement('span', {
+      className: 'number',
+      textContent: String(this.selectedColor.index),
+    });
+    indexRow.appendChild(indexValue);
+    indexRow.appendChild(document.createTextNode(` (R`));
+    const rowValue = this.createElement('span', {
+      className: 'number',
+      textContent: String(gridRow),
+    });
+    indexRow.appendChild(rowValue);
+    indexRow.appendChild(document.createTextNode(`, C`));
+    const colValue = this.createElement('span', {
+      className: 'number',
+      textContent: String(gridCol),
+    });
+    indexRow.appendChild(colValue);
+    indexRow.appendChild(document.createTextNode(`)`));
+    info.appendChild(indexRow);
 
+    // Hex value
     const hex = this.createElement('p', {
-      className: 'text-sm font-mono',
+      className: 'text-sm font-mono number',
       textContent: this.selectedColor.hex.toUpperCase(),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     info.appendChild(hex);
 
+    // RGB values
     const rgb = this.createElement('p', {
       className: 'text-xs',
-      textContent: `RGB(${this.selectedColor.rgb.r}, ${this.selectedColor.rgb.g}, ${this.selectedColor.rgb.b})`,
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
+    rgb.appendChild(document.createTextNode('RGB('));
+    const rValue = this.createElement('span', { className: 'number', textContent: String(this.selectedColor.rgb.r) });
+    rgb.appendChild(rValue);
+    rgb.appendChild(document.createTextNode(', '));
+    const gValue = this.createElement('span', { className: 'number', textContent: String(this.selectedColor.rgb.g) });
+    rgb.appendChild(gValue);
+    rgb.appendChild(document.createTextNode(', '));
+    const bValue = this.createElement('span', { className: 'number', textContent: String(this.selectedColor.rgb.b) });
+    rgb.appendChild(bValue);
+    rgb.appendChild(document.createTextNode(')'));
     info.appendChild(rgb);
 
+    // HSV values
+    const hsvRow = this.createElement('p', {
+      className: 'text-xs',
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+    hsvRow.appendChild(document.createTextNode('HSV('));
+    const hValue = this.createElement('span', { className: 'number', textContent: String(Math.round(hsv.h)) });
+    hsvRow.appendChild(hValue);
+    hsvRow.appendChild(document.createTextNode('°, '));
+    const sValue = this.createElement('span', { className: 'number', textContent: String(Math.round(hsv.s)) });
+    hsvRow.appendChild(sValue);
+    hsvRow.appendChild(document.createTextNode('%, '));
+    const vValue = this.createElement('span', { className: 'number', textContent: String(Math.round(hsv.v)) });
+    hsvRow.appendChild(vValue);
+    hsvRow.appendChild(document.createTextNode('%)'));
+    info.appendChild(hsvRow);
+
     card.appendChild(info);
+
+    // Copy button
+    const copyBtn = this.createElement('button', {
+      className: 'p-1.5 rounded hover:opacity-80 transition-opacity flex-shrink-0',
+      attributes: {
+        style: 'background: var(--theme-input-background); color: var(--theme-text-muted);',
+        title: LanguageService.t('actions.copyToClipboard') || 'Copy to clipboard',
+        'aria-label': LanguageService.t('actions.copyToClipboard') || 'Copy to clipboard',
+      },
+    });
+    copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    copyBtn.addEventListener('click', () => this.copySelectedColorInfo());
+    card.appendChild(copyBtn);
+
     this.selectedColorDisplay.appendChild(card);
+  }
+
+  /**
+   * Copy selected color information to clipboard
+   */
+  private copySelectedColorInfo(): void {
+    if (!this.selectedColor) return;
+
+    const gridRow = Math.floor(this.selectedColor.index / 8) + 1;
+    const gridCol = (this.selectedColor.index % 8) + 1;
+    const hsv = ColorService.rgbToHsv(
+      this.selectedColor.rgb.r,
+      this.selectedColor.rgb.g,
+      this.selectedColor.rgb.b
+    );
+
+    const info = [
+      `Index: ${this.selectedColor.index} (R${gridRow}, C${gridCol})`,
+      `Hex: ${this.selectedColor.hex.toUpperCase()}`,
+      `RGB: ${this.selectedColor.rgb.r}, ${this.selectedColor.rgb.g}, ${this.selectedColor.rgb.b}`,
+      `HSV: ${Math.round(hsv.h)}°, ${Math.round(hsv.s)}%, ${Math.round(hsv.v)}%`,
+    ].join('\n');
+
+    navigator.clipboard.writeText(info).then(() => {
+      ToastService.success(LanguageService.t('actions.copiedToClipboard') || 'Copied to clipboard');
+    }).catch(() => {
+      ToastService.error(LanguageService.t('actions.copyFailed') || 'Failed to copy');
+    });
   }
 
   /**
@@ -769,12 +894,33 @@ export class CharacterTool extends BaseComponent {
     });
     info.appendChild(name);
 
+    // Category and distance with Habibi font for numbers
     const details = this.createElement('p', {
       className: 'text-xs truncate',
-      textContent: `${match.dye.category} • Δ${match.distance.toFixed(1)}`,
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
+    details.appendChild(document.createTextNode(`${match.dye.category} • Δ`));
+    const distanceValue = this.createElement('span', {
+      className: 'number',
+      textContent: match.distance.toFixed(1),
+    });
+    details.appendChild(distanceValue);
     info.appendChild(details);
+
+    // Price display (if available)
+    const priceData = this.priceData.get(match.dye.itemID);
+    if (this.showPrices && priceData && priceData.currentMinPrice > 0) {
+      const priceRow = this.createElement('p', {
+        className: 'text-xs',
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      const priceValue = this.createElement('span', {
+        className: 'number',
+        textContent: `${MarketBoard.formatPrice(priceData.currentMinPrice)} gil`,
+      });
+      priceRow.appendChild(priceValue);
+      info.appendChild(priceRow);
+    }
 
     card.appendChild(info);
 
@@ -837,6 +983,36 @@ export class CharacterTool extends BaseComponent {
     const mobileMarketContent = this.createElement('div');
     this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
     this.mobileMarketBoard.init();
+
+    // Listen to mobile market board events
+    mobileMarketContent.addEventListener('server-changed', () => {
+      if (this.selectedColor) {
+        this.findMatchingDyes();
+      }
+    });
+
+    mobileMarketContent.addEventListener('showPricesChanged', ((e: CustomEvent) => {
+      this.showPrices = e.detail?.showPrices ?? false;
+      if (this.showPrices && this.matchedDyes.length > 0) {
+        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+      } else {
+        this.updateMatchResults();
+      }
+    }) as EventListener);
+
+    mobileMarketContent.addEventListener('categories-changed', () => {
+      if (this.showPrices && this.matchedDyes.length > 0) {
+        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+      }
+    });
+
+    mobileMarketContent.addEventListener('refresh-requested', () => {
+      if (this.showPrices && this.matchedDyes.length > 0) {
+        this.priceData.clear();
+        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+      }
+    });
+
     this.mobileMarketPanel.setContent(mobileMarketContent);
   }
 
@@ -1105,6 +1281,29 @@ export class CharacterTool extends BaseComponent {
 
     logger.info(`[CharacterTool] Found ${this.matchedDyes.length} matching dyes`);
     this.updateMatchResults();
+
+    // Fetch prices if enabled
+    if (this.showPrices && this.matchedDyes.length > 0) {
+      this.fetchPrices(this.matchedDyes.map(m => m.dye));
+    }
+  }
+
+  /**
+   * Fetch prices for matched dyes
+   */
+  private async fetchPrices(dyes: Dye[]): Promise<void> {
+    const marketBoard = this.marketBoard || this.mobileMarketBoard;
+    if (!marketBoard) return;
+
+    try {
+      const prices = await marketBoard.fetchPricesForDyes(dyes);
+      prices.forEach((data, itemId) => {
+        this.priceData.set(itemId, data);
+      });
+      this.updateMatchResults();
+    } catch (error) {
+      logger.warn('[CharacterTool] Error fetching prices:', error);
+    }
   }
 
   /**

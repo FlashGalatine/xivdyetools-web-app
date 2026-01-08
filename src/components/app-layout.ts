@@ -31,6 +31,7 @@ export class AppLayout extends BaseComponent {
   private contentContainer: HTMLElement | null = null;
   private themeUnsubscribe: (() => void) | null = null;
   private languageUnsubscribe: (() => void) | null = null;
+  private titleResizeObserver: ResizeObserver | null = null;
 
   /**
    * Render the application layout
@@ -98,24 +99,24 @@ export class AppLayout extends BaseComponent {
     });
 
     const nav = this.createElement('nav', {
-      className: 'max-w-7xl mx-auto px-4 py-4 flex justify-between items-center',
+      className: 'max-w-7xl mx-auto px-4 py-4 flex justify-between items-center gap-2',
     });
 
-    // Logo/Title
+    // Logo/Title container - min-w-0 enables text truncation, flex-shrink allows shrinking
     const titleDiv = this.createElement('div', {
-      className: 'flex items-center gap-3',
+      className: 'flex items-center gap-2 min-w-0 flex-shrink',
     });
 
-    // Logo using inline SVG (theme-aware with currentColor for brush handle)
+    // Logo using inline SVG - smaller on mobile, fixed size (never shrinks)
     const logoContainer = this.createElement('div', {
-      className: 'w-10 h-10 flex items-center justify-center',
+      className: 'w-8 h-8 md:w-10 md:h-10 flex-shrink-0 flex items-center justify-center',
       attributes: {
         'aria-label': 'XIV Dye Tools Logo',
         title: 'XIV Dye Tools',
       },
     });
     logoContainer.innerHTML = LOGO_SPARKLES;
-    
+
     // Ensure SVG fills container and is centered
     const svg = logoContainer.querySelector('svg');
     if (svg) {
@@ -125,19 +126,20 @@ export class AppLayout extends BaseComponent {
 
     titleDiv.appendChild(logoContainer);
 
-    // Use --theme-text-header for header text
+    // Title text - auto-sizing with whitespace-nowrap to force single line
     const title = this.createElement('h1', {
       textContent: LanguageService.t('app.title'),
-      className: 'text-2xl font-bold',
+      className: 'font-bold whitespace-nowrap overflow-hidden text-ellipsis',
       attributes: {
-        style: 'color: var(--theme-text-header);',
+        style: 'color: var(--theme-text-header); font-size: clamp(0.875rem, 4vw, 1.5rem);',
+        'data-auto-size-title': '',
       },
     });
 
     const versionText = `v${APP_VERSION}`;
     const version = this.createElement('span', {
       textContent: versionText,
-      className: 'text-sm number',
+      className: 'text-xs md:text-sm number flex-shrink-0',
       attributes: {
         'data-app-version': versionText,
         style: 'color: var(--theme-text-header); opacity: 0.8;',
@@ -147,9 +149,9 @@ export class AppLayout extends BaseComponent {
     titleDiv.appendChild(title);
     titleDiv.appendChild(version);
 
-    // Right side: Tools dropdown + Language selector + Theme switcher
+    // Right side buttons - flex-shrink-0 ensures they never get pushed off screen
     const rightContainer = this.createElement('div', {
-      className: 'flex items-center gap-4',
+      className: 'flex items-center gap-2 md:gap-4 flex-shrink-0',
     });
 
     const infoButtonContainer = this.createElement('div', {
@@ -269,7 +271,12 @@ export class AppLayout extends BaseComponent {
     // Subscribe to language changes to update text (store unsubscribe for cleanup)
     this.languageUnsubscribe = LanguageService.subscribe(() => {
       this.updateLocalizedText();
+      // Re-fit title when language changes
+      this.setupAutoSizeTitle();
     });
+
+    // Setup auto-sizing title for mobile
+    this.setupAutoSizeTitle();
   }
 
   /**
@@ -394,6 +401,70 @@ export class AppLayout extends BaseComponent {
   }
 
   /**
+   * Setup auto-sizing for the header title on mobile devices
+   * Uses ResizeObserver to dynamically fit text within available space
+   */
+  private setupAutoSizeTitle(): void {
+    const title = this.querySelector<HTMLElement>('[data-auto-size-title]');
+    if (!title) return;
+
+    // Clean up existing observer if any
+    if (this.titleResizeObserver) {
+      this.titleResizeObserver.disconnect();
+      this.titleResizeObserver = null;
+    }
+
+    // Only apply dynamic sizing on mobile (CSS clamp handles most cases)
+    if (window.innerWidth >= 768) {
+      title.style.fontSize = '';
+      return;
+    }
+
+    const fitText = () => {
+      const parent = title.parentElement;
+      if (!parent) return;
+
+      // Get available width (parent width minus logo, version, and gaps)
+      const logoWidth = 40; // 32px logo + 8px gap
+      const versionEl = parent.querySelector('[data-app-version]') as HTMLElement;
+      const versionWidth = versionEl ? versionEl.offsetWidth + 8 : 0; // + gap
+      const availableWidth = parent.clientWidth - logoWidth - versionWidth - 8;
+
+      // Reset font size to measure natural width
+      title.style.fontSize = '';
+
+      // Wait for reflow then measure
+      requestAnimationFrame(() => {
+        const naturalWidth = title.scrollWidth;
+
+        if (naturalWidth > availableWidth && availableWidth > 0) {
+          // Calculate scale factor
+          const scale = availableWidth / naturalWidth;
+          const baseFontSize = parseFloat(getComputedStyle(title).fontSize);
+          const newFontSize = Math.max(12, baseFontSize * scale); // Min 12px
+          title.style.fontSize = `${newFontSize}px`;
+        }
+      });
+    };
+
+    // Fit on initial load
+    fitText();
+
+    // Refit on resize using ResizeObserver
+    const parent = title.parentElement;
+    if (parent) {
+      this.titleResizeObserver = new ResizeObserver(() => {
+        if (window.innerWidth < 768) {
+          fitText();
+        } else {
+          title.style.fontSize = '';
+        }
+      });
+      this.titleResizeObserver.observe(parent);
+    }
+  }
+
+  /**
    * Get the main content container
    */
   getContentContainer(): HTMLElement | null {
@@ -433,6 +504,12 @@ export class AppLayout extends BaseComponent {
     this.themeUnsubscribe = null;
     this.languageUnsubscribe?.();
     this.languageUnsubscribe = null;
+
+    // Clean up ResizeObserver
+    if (this.titleResizeObserver) {
+      this.titleResizeObserver.disconnect();
+      this.titleResizeObserver = null;
+    }
 
     if (this.languageSelector) {
       this.languageSelector.destroy();
