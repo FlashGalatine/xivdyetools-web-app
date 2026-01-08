@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.3.0] - 2026-01-08
+
+### Added
+
+- **Character Color Matcher Tool**: New tool to match your FFXIV character's colors to the closest dyes
+  - SubRace/Gender selectors organized by parent race
+  - 9 color categories: eye, hair, skin, highlights, lips, tattoo, and face paint (light/dark variants)
+  - Color grid display with match-to-dye functionality
+  - DyeCardRenderer integration for match results
+  - Mobile drawer support for responsive design
+  - Storage persistence for selections
+  - Full localization support for all 6 languages (EN, DE, FR, JA, KO, ZH)
+
+### Changed
+
+- **Mobile Navigation**: Enhanced navigation with horizontal scroll and auto-resizing title for better usability on small screens
+- **Dependencies**: Updated `@xivdyetools/core` to ^1.7.0 and `@xivdyetools/types` to ^1.3.0 for character color data
+
+### Fixed
+
+- **Character Matcher Results Panel**: Fixed sticky positioning for the results panel on desktop, enabling viewport-height layout with internal scrolling while maintaining normal page scrolling on mobile
+
+---
+
 ## [3.2.10] - 2026-01-07
 
 ### Fixed

@@ -1,16 +1,17 @@
-# XIV Dye Tools v3.2.10
+# XIV Dye Tools v3.3.0
 
-**Status**: ✅ Stable | **Version**: 3.2.10 | **Release**: January 2026 | **Phase**: Localization & Security
+**Status**: ✅ Stable | **Version**: 3.3.0 | **Release**: January 2026 | **Phase**: Character Color Matcher
 
 A comprehensive web-based toolset for Final Fantasy XIV players to explore dye colors, create harmonious color palettes, match colors from images, find smooth color transitions, compare dyes side-by-side, browse community presets, find budget-friendly alternatives, and simulate how dye combinations appear to colorblind players for in-game gear and housing projects.
 
-> **v3.2.10 Release Notes**: Complete localization review and fixes for all 6 supported languages (EN, DE, FR, JA, KO, ZH). Fixed in-game terminology to match official FFXIV localization. Comprehensive security documentation added. See [CHANGELOG.md](CHANGELOG.md) for detailed release information.
+> **v3.3.0 Release Notes**: New Character Color Matcher tool! Match your character's eye, hair, skin, highlight, lip, tattoo, and face paint colors to the closest FFXIV dyes. Enhanced mobile navigation with horizontal scroll and auto-resizing title. See [CHANGELOG.md](CHANGELOG.md) for detailed release information.
 
-**Seven Powerful Tools:**
+**Eight Powerful Tools:**
 - **Dye Mixer** - Find smooth color transitions between two dyes with HSV interpolation
 - **Color Accessibility Checker** - Simulate colorblindness and ensure your glamour is accessible to everyone
 - **Color Harmony Explorer** - Generate color palettes based on color theory principles
 - **Color Matcher** - Upload images and find the closest matching FFXIV dyes
+- **Character Color Matcher** - Match your character's colors (eyes, hair, skin, etc.) to FFXIV dyes
 - **Dye Comparison** - Compare up to 4 dyes side-by-side with detailed color visualization
 - **Preset Browser** - Browse, vote on, edit, and share community dye palettes
 - **Budget Suggestions** - Find affordable alternatives to expensive dyes within your budget

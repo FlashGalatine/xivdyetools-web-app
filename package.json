@@ -1,6 +1,6 @@
 {
   "name": "xivdyetools",
-  "version": "3.2.10",
+  "version": "3.3.0",
   "description": "A comprehensive web-based toolset for Final Fantasy XIV players to explore dye colors, create harmonious color palettes, match colors from images, find smooth color transitions, compare dyes side-by-side, and simulate how dye combinations appear to colorblind players for in-game gear and housing projects.",
   "main": "index.html",
   "type": "module",
