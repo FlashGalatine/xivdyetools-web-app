@@ -728,7 +728,7 @@ export class PresetTool extends BaseComponent {
     const featuredSection = this.createElement('div', { className: 'mb-6 hidden' });
     featuredSection.setAttribute('data-section', 'featured');
     featuredSection.appendChild(this.createHeader(LanguageService.t('preset.featured') || 'Featured Presets'));
-    this.featuredContainer = this.createElement('div', { className: 'grid gap-4 md:grid-cols-2' });
+    this.featuredContainer = this.createElement('div', { className: 'grid gap-4 grid-cols-2' });
     featuredSection.appendChild(this.featuredContainer);
     right.appendChild(featuredSection);
 
@@ -808,7 +808,7 @@ export class PresetTool extends BaseComponent {
 
     if (this.currentTab === 'my-submissions') return;
 
-    this.featuredPresets.slice(0, 2).forEach(preset => {
+    this.featuredPresets.slice(0, 4).forEach(preset => {
       const card = this.createFeaturedCard(preset);
       this.featuredContainer!.appendChild(card);
     });

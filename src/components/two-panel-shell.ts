@@ -58,8 +58,10 @@ export class TwoPanelShell extends BaseComponent {
   }
 
   renderContent(): void {
+    // h-full ensures the shell takes full height of its parent
+    // min-h-[600px] provides a minimum for short viewports
     const shell = this.createElement('div', {
-      className: 'two-panel-shell flex flex-col md:flex-row min-h-[600px]',
+      className: 'two-panel-shell flex flex-col md:flex-row h-full min-h-[600px]',
       attributes: {
         style: 'background: var(--theme-background);',
       },
@@ -166,13 +168,25 @@ export class TwoPanelShell extends BaseComponent {
 
     // Right panel content area (results/visualizations)
     // Added pb-20 on mobile for bottom nav clearance
+    // h-0 is crucial: it gives a base height constraint so flex-1 can grow to fill space
+    // while enabling overflow-y-auto to actually scroll (needed for sticky children)
     this.rightPanelContent = this.createElement('div', {
-      className: 'flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6',
+      className: 'flex-1 h-0 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6',
       attributes: {
         'data-panel': 'right-results',
       },
     });
     this.rightPanel.appendChild(this.rightPanelContent);
+
+    // Footer placeholder inside scrollable area (for desktop)
+    // The actual footer content is cloned from #app-footer by v3-layout
+    const footerPlaceholder = this.createElement('div', {
+      className: 'hidden md:block mt-8',
+      attributes: {
+        'data-panel': 'right-footer',
+      },
+    });
+    this.rightPanelContent.appendChild(footerPlaceholder);
 
     shell.appendChild(this.rightPanel);
 

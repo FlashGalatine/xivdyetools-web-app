@@ -13,7 +13,15 @@
   "header": {
     "tools": "ツール",
     "theme": "テーマ",
-    "language": "言語"
+    "language": "言語",
+    "about": "XIV 染色ツールについて"
+  },
+  "about": {
+    "title": "XIV 染色ツールについて",
+    "connect": "つながる"
+  },
+  "common": {
+    "close": "閉じる"
   },
   "footer": {
     "version": "バージョン",
@@ -93,6 +101,8 @@
       "matchingDyes": "マッチする染料",
       "noColorSelected": "グリッドから色を選択して、マッチする染料を見つけてください",
       "selectedColor": "選択した色",
+      "colorIndex": "インデックス",
+      "clickToSelect": "下の色をクリック",
       "male": "男性",
       "female": "女性"
     }

@@ -13,7 +13,15 @@
   "header": {
     "tools": "Outils",
     "theme": "Thème",
-    "language": "Langue"
+    "language": "Langue",
+    "about": "À propos de Outils de Teinture XIV"
+  },
+  "about": {
+    "title": "À propos de Outils de Teinture XIV",
+    "connect": "Connecter"
+  },
+  "common": {
+    "close": "Fermer"
   },
   "footer": {
     "version": "Version",
@@ -93,6 +101,8 @@
       "matchingDyes": "Teintures correspondantes",
       "noColorSelected": "Sélectionnez une couleur dans la grille pour trouver les teintures correspondantes",
       "selectedColor": "Couleur sélectionnée",
+      "colorIndex": "Index",
+      "clickToSelect": "Cliquez sur une couleur ci-dessous",
       "male": "Masculin",
       "female": "Féminin"
     }

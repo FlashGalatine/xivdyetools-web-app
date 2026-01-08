@@ -111,7 +111,7 @@ const DEFAULTS = {
   subrace: 'Midlander' as SubRace,
   gender: 'Male' as Gender,
   colorCategory: 'eyeColors' as ColorCategory,
-  matchCount: 5,
+  matchCount: 3,
 };
 
 // ============================================================================
@@ -165,6 +165,7 @@ export class CharacterTool extends BaseComponent {
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private resultsPanelMediaQueryCleanup: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: CharacterToolOptions) {
     super(container);
@@ -209,6 +210,7 @@ export class CharacterTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.resultsPanelMediaQueryCleanup?.();
 
     this.marketBoard?.destroy();
     this.marketPanel?.destroy();
@@ -483,20 +485,103 @@ export class CharacterTool extends BaseComponent {
     const right = this.options.rightPanel;
     clearContainer(right);
 
-    // Main container with padding
-    const mainContent = this.createElement('div', {
-      className: 'p-4 space-y-6',
+    // Sticky results panel at TOP (two-column layout: Selected Color | Matching Dyes)
+    // The parent has p-4 (1rem) on mobile and p-6 (1.5rem) on desktop.
+    // We use negative margins to extend edge-to-edge and negative top to stick to the visual top.
+    const resultsPanel = this.createElement('div', {
+      className: 'border-b',
+      attributes: {
+        style: 'background: var(--theme-card-background); border-color: var(--theme-border);',
+      },
     });
 
-    // Selected color display
-    this.selectedColorDisplay = this.createElement('div', {
-      className: 'mb-4',
-    });
-    mainContent.appendChild(this.selectedColorDisplay);
-    this.updateSelectedColorDisplay();
+    // On larger screens (md+), adjust margins/padding for p-6
+    // For sticky to work inside an overflow-y-auto container:
+    // - Use negative margins to extend edge-to-edge (cancel parent padding)
+    // - Use margin-top: -padding to pull element to the container's edge
+    // - Use top: 0 so the element sticks at the container's scroll viewport top
+    // On mobile: page-level scrolling is used, so we don't use sticky (it would need
+    // to account for the header height which varies). Instead, let it scroll naturally.
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const updateResultsPanelSpacing = () => {
+      if (mediaQuery.matches) {
+        // Desktop: parent has p-6 (1.5rem), internal scrolling in rightPanelContent
+        resultsPanel.style.cssText = `
+          position: -webkit-sticky;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          background: var(--theme-card-background);
+          border-color: var(--theme-border);
+          margin: -1.5rem -1.5rem 0 -1.5rem;
+          padding: 1.5rem;
+          padding-bottom: 1rem;
+        `;
+      } else {
+        // Mobile: page-level scrolling, no sticky (would conflict with sticky header)
+        // Just style it as a regular panel with negative margins for edge-to-edge look
+        resultsPanel.style.cssText = `
+          position: relative;
+          z-index: 10;
+          background: var(--theme-card-background);
+          border-color: var(--theme-border);
+          margin: -1rem -1rem 0 -1rem;
+          padding: 1rem;
+          padding-bottom: 0.75rem;
+        `;
+      }
+    };
+    updateResultsPanelSpacing();
+    mediaQuery.addEventListener('change', updateResultsPanelSpacing);
 
-    // Color grid section
-    const gridSection = this.createElement('div', { className: 'space-y-3' });
+    // Store the cleanup function
+    this.resultsPanelMediaQueryCleanup = () => {
+      mediaQuery.removeEventListener('change', updateResultsPanelSpacing);
+    };
+
+    // Two-column grid layout
+    const resultsGrid = this.createElement('div', {
+      className: 'grid gap-4',
+      attributes: {
+        style: 'grid-template-columns: 1fr 1fr;',
+      },
+    });
+
+    // Left column: Selected color display
+    this.selectedColorDisplay = this.createElement('div');
+    resultsGrid.appendChild(this.selectedColorDisplay);
+
+    // Right column: Matched dyes section
+    const matchSection = this.createElement('div', { className: 'space-y-2' });
+    const matchLabel = this.createElement('h3', {
+      className: 'text-sm font-semibold uppercase tracking-wider mb-2',
+      textContent: LanguageService.t('tools.character.matchingDyes') || 'Matching Dyes',
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+    matchSection.appendChild(matchLabel);
+
+    this.matchResultsContainer = this.createElement('div', {
+      className: 'space-y-2',
+    });
+    matchSection.appendChild(this.matchResultsContainer);
+    resultsGrid.appendChild(matchSection);
+
+    // Empty state (shown in match results when no color selected)
+    this.emptyStateContainer = this.createElement('div', {
+      className: 'text-center py-4',
+      attributes: { style: 'color: var(--theme-text-muted); font-size: 0.875rem;' },
+    });
+    this.emptyStateContainer.textContent =
+      LanguageService.t('tools.character.noColorSelected') ||
+      'Select a color from the grid to find matching dyes';
+    this.matchResultsContainer.appendChild(this.emptyStateContainer);
+
+    resultsPanel.appendChild(resultsGrid);
+    right.appendChild(resultsPanel);
+
+    // Color grid section (scrolls naturally with the page)
+    // Parent already provides padding, so we just need top spacing after the sticky panel
+    const gridSection = this.createElement('div', { className: 'space-y-3 pt-4' });
     const gridLabel = this.createElement('h3', {
       className: 'text-sm font-semibold uppercase tracking-wider',
       textContent: this.getCategoryDisplayName(this.colorCategory),
@@ -511,36 +596,10 @@ export class CharacterTool extends BaseComponent {
       },
     });
     gridSection.appendChild(this.colorGridContainer);
-    mainContent.appendChild(gridSection);
+    right.appendChild(gridSection);
 
-    // Matched dyes section
-    const matchSection = this.createElement('div', { className: 'space-y-3' });
-    const matchLabel = this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider',
-      textContent: LanguageService.t('tools.character.matchingDyes') || 'Matching Dyes',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    matchSection.appendChild(matchLabel);
-
-    this.matchResultsContainer = this.createElement('div', {
-      className: 'space-y-2',
-    });
-    matchSection.appendChild(this.matchResultsContainer);
-    mainContent.appendChild(matchSection);
-
-    // Empty state
-    this.emptyStateContainer = this.createElement('div', {
-      className: 'text-center py-8',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    this.emptyStateContainer.textContent =
-      LanguageService.t('tools.character.noColorSelected') ||
-      'Select a color from the grid to find matching dyes';
-    this.matchResultsContainer.appendChild(this.emptyStateContainer);
-
-    right.appendChild(mainContent);
-
-    // Render color grid
+    // Update the selected color display and render color grid
+    this.updateSelectedColorDisplay();
     this.updateColorGrid();
   }
 
@@ -584,37 +643,66 @@ export class CharacterTool extends BaseComponent {
     if (!this.selectedColorDisplay) return;
     clearContainer(this.selectedColorDisplay);
 
+    // Header for selected color section
+    const header = this.createElement('h3', {
+      className: 'text-sm font-semibold uppercase tracking-wider mb-2',
+      textContent: LanguageService.t('tools.character.selectedColor') || 'Selected Color',
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+    this.selectedColorDisplay.appendChild(header);
+
     if (!this.selectedColor) {
-      this.selectedColorDisplay.style.display = 'none';
+      // Empty state for left column
+      const emptyState = this.createElement('div', {
+        className: 'flex items-center gap-3 p-3 rounded-lg',
+        attributes: {
+          style: 'background: var(--theme-input-background); border: 1px dashed var(--theme-border);',
+        },
+      });
+      const placeholder = this.createElement('div', {
+        className: 'w-12 h-12 rounded-lg flex-shrink-0',
+        attributes: {
+          style: 'background: var(--theme-border); border: 1px dashed var(--theme-text-muted);',
+        },
+      });
+      emptyState.appendChild(placeholder);
+      const text = this.createElement('p', {
+        className: 'text-sm',
+        textContent: LanguageService.t('tools.character.clickToSelect') || 'Click a color below',
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      emptyState.appendChild(text);
+      this.selectedColorDisplay.appendChild(emptyState);
       return;
     }
 
-    this.selectedColorDisplay.style.display = 'block';
-
     const card = this.createElement('div', {
-      className: 'flex items-center gap-4 p-4 rounded-lg',
+      className: 'flex items-center gap-3 p-3 rounded-lg',
       attributes: {
         style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
       },
     });
 
-    // Large color swatch
+    // Color swatch
     const swatch = this.createElement('div', {
-      className: 'w-16 h-16 rounded-lg flex-shrink-0',
+      className: 'w-12 h-12 rounded-lg flex-shrink-0',
       attributes: {
         style: `background-color: ${this.selectedColor.hex}; border: 2px solid var(--theme-border);`,
       },
     });
     card.appendChild(swatch);
 
-    // Color info
-    const info = this.createElement('div', { className: 'flex-1' });
-    const title = this.createElement('p', {
-      className: 'font-semibold text-lg',
-      textContent: LanguageService.t('tools.character.selectedColor') || 'Selected Color',
+    // Color info (compact)
+    const info = this.createElement('div', { className: 'flex-1 min-w-0' });
+
+    // Index ID
+    const indexLabel = LanguageService.t('tools.character.colorIndex') || 'Index';
+    const indexId = this.createElement('p', {
+      className: 'text-sm font-medium',
+      textContent: `${indexLabel}: ${this.selectedColor.index}`,
       attributes: { style: 'color: var(--theme-text);' },
     });
-    info.appendChild(title);
+    info.appendChild(indexId);
 
     const hex = this.createElement('p', {
       className: 'text-sm font-mono',
@@ -653,48 +741,40 @@ export class CharacterTool extends BaseComponent {
   }
 
   /**
-   * Render a dye match card
+   * Render a dye match card (compact version for two-column layout)
    */
   private renderDyeMatchCard(match: CharacterColorMatch): HTMLElement {
     const card = this.createElement('div', {
-      className: 'flex items-center gap-3 p-3 rounded-lg hover:opacity-90 transition-opacity',
+      className: 'flex items-center gap-2 p-2 rounded-lg hover:opacity-90 transition-opacity',
       attributes: {
         style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
       },
     });
 
-    // Dye color swatch
+    // Dye color swatch (smaller)
     const swatch = this.createElement('div', {
-      className: 'w-12 h-12 rounded-lg flex-shrink-0',
+      className: 'w-8 h-8 rounded flex-shrink-0',
       attributes: {
         style: `background-color: ${match.dye.hex}; border: 1px solid var(--theme-border);`,
       },
     });
     card.appendChild(swatch);
 
-    // Dye info
+    // Dye info (compact)
     const info = this.createElement('div', { className: 'flex-1 min-w-0' });
     const name = this.createElement('p', {
-      className: 'font-medium truncate',
+      className: 'text-sm font-medium truncate',
       textContent: LanguageService.getDyeName(match.dye.itemID) || match.dye.name,
       attributes: { style: 'color: var(--theme-text);' },
     });
     info.appendChild(name);
 
-    const category = this.createElement('p', {
+    const details = this.createElement('p', {
       className: 'text-xs truncate',
-      textContent: match.dye.category,
+      textContent: `${match.dye.category} • Δ${match.distance.toFixed(1)}`,
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
-    info.appendChild(category);
-
-    // Distance indicator
-    const distance = this.createElement('p', {
-      className: 'text-xs',
-      textContent: `Distance: ${match.distance.toFixed(1)}`,
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    info.appendChild(distance);
+    info.appendChild(details);
 
     card.appendChild(info);
 

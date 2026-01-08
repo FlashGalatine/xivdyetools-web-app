@@ -13,7 +13,15 @@
   "header": {
     "tools": "도구",
     "theme": "테마",
-    "language": "언어"
+    "language": "언어",
+    "about": "XIV 염색 도구 정보"
+  },
+  "about": {
+    "title": "XIV 염색 도구 정보",
+    "connect": "연결"
+  },
+  "common": {
+    "close": "닫기"
   },
   "footer": {
     "version": "버전",
@@ -93,6 +101,8 @@
       "matchingDyes": "일치하는 염료",
       "noColorSelected": "그리드에서 색상을 선택하여 일치하는 염료를 찾으세요",
       "selectedColor": "선택한 색상",
+      "colorIndex": "인덱스",
+      "clickToSelect": "아래 색상을 클릭하세요",
       "male": "남성",
       "female": "여성"
     }

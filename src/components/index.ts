@@ -33,6 +33,7 @@ export { PaletteExporter, type PaletteData, type PaletteExporterOptions } from '
 export { ModalContainer } from './modal-container';
 export { WelcomeModal, showWelcomeIfFirstVisit } from './welcome-modal';
 export { ChangelogModal, showChangelogIfUpdated } from './changelog-modal';
+export { AboutModal, showAboutModal } from './about-modal';
 export {
   createInfoIcon,
   createLabelWithInfo,

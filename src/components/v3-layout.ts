@@ -215,6 +215,9 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
         renderPlaceholder(rightPanel, toolId);
         break;
     }
+
+    // After loading tool content, populate the desktop footer placeholder
+    populateDesktopFooter(rightPanel);
   } catch (error) {
     logger.error(`[V3 Layout] Failed to load ${toolId}:`, error);
     rightPanel.innerHTML = `
@@ -246,6 +249,27 @@ function renderPlaceholder(container: HTMLElement, toolId: string): void {
       </div>
     </div>
   `;
+}
+
+/**
+ * Populate the desktop footer placeholder with a clone of the app footer
+ * This ensures the footer is visible at the bottom of the scrollable content on desktop
+ */
+function populateDesktopFooter(rightPanel: HTMLElement): void {
+  const footerPlaceholder = rightPanel.querySelector('[data-panel="right-footer"]');
+  const appFooter = document.getElementById('app-footer');
+  
+  if (footerPlaceholder && appFooter) {
+    // Clone the footer content (deep clone to get all children)
+    const footerClone = appFooter.cloneNode(true) as HTMLElement;
+    // Remove the id to avoid duplicate IDs
+    footerClone.removeAttribute('id');
+    // Remove the mobile-only class since this is for desktop
+    footerClone.classList.remove('md:hidden');
+    // Clear any existing content and append the clone
+    footerPlaceholder.innerHTML = '';
+    footerPlaceholder.appendChild(footerClone);
+  }
 }
 
 /**

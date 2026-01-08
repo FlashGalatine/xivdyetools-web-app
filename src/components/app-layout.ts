@@ -12,19 +12,11 @@ import { ThemeSwitcher } from './theme-switcher';
 import { LanguageSelector } from './language-selector';
 import { ToastContainer } from './toast-container';
 import { ModalContainer } from './modal-container';
-import { ThemeService, LanguageService, AnnouncerService, KeyboardService } from '@services/index';
+import { ThemeService, LanguageService, AnnouncerService, KeyboardService, ColorService } from '@services/index';
 import { APP_VERSION } from '@shared/constants';
 import { clearContainer } from '@shared/utils';
-import {
-  ICON_GITHUB,
-  ICON_TWITTER,
-  ICON_TWITCH,
-  ICON_BLUESKY,
-  ICON_DISCORD,
-  ICON_PATREON,
-  ICON_KOFI,
-} from '@shared/social-icons';
-import { ICON_CRYSTAL } from '@shared/ui-icons';
+import { ICON_INFO } from '@shared/ui-icons';
+import { showAboutModal } from './about-modal';
 import { LOGO_SPARKLES } from '@shared/app-logo';
 
 /**
@@ -45,24 +37,33 @@ export class AppLayout extends BaseComponent {
    */
   renderContent(): void {
     const app = this.createElement('div', {
-      className: 'app-shell flex flex-col min-h-screen transition-colors',
+      // Mobile: min-h-screen allows normal page scrolling
+      // Desktop (md+): h-screen + overflow-hidden forces internal scrolling for sticky to work
+      className: 'app-shell flex flex-col min-h-screen md:h-screen md:overflow-hidden transition-colors',
     });
 
     // Header - sticky positioning for top navigation
+    // flex-shrink-0 prevents header from shrinking when content is tall
     const header = this.renderHeader();
-    header.classList.add('sticky', 'top-0', 'z-30'); // Sticky positioning, stays at top, above content
+    header.classList.add('sticky', 'top-0', 'z-30', 'flex-shrink-0'); // Sticky positioning, stays at top, above content
     app.appendChild(header);
 
     // Main content area
+    // Mobile: flex-1 allows natural growth, no overflow constraints
+    // Desktop: flex-1 + min-h-0 + overflow-hidden enables internal scrolling
     const main = this.createElement('main', {
-      className: 'flex-1 max-w-7xl mx-auto w-full px-4 py-8',
+      className: 'flex-1 min-h-0 md:overflow-hidden max-w-7xl mx-auto w-full px-4 py-8',
     });
 
     this.contentContainer = main;
     app.appendChild(main);
 
-    // Footer
+    // Footer - visible, contains copyright and credit information
+    // On mobile it appears below content normally
+    // On desktop, a copy is placed inside the scrollable right panel by two-panel-shell
     const footer = this.renderFooter();
+    footer.classList.add('flex-shrink-0', 'md:hidden'); // Show on mobile only at app level
+    footer.id = 'app-footer';
     app.appendChild(footer);
 
     // Toast container (for notifications)
@@ -151,6 +152,10 @@ export class AppLayout extends BaseComponent {
       className: 'flex items-center gap-4',
     });
 
+    const infoButtonContainer = this.createElement('div', {
+      id: 'info-button-container',
+    });
+
     const toolsDropdownContainer = this.createElement('div', {
       id: 'tools-dropdown-container',
     });
@@ -163,6 +168,7 @@ export class AppLayout extends BaseComponent {
       id: 'theme-switcher-container',
     });
 
+    rightContainer.appendChild(infoButtonContainer);
     rightContainer.appendChild(toolsDropdownContainer);
     rightContainer.appendChild(languageSelectorContainer);
     rightContainer.appendChild(themeSwitcherContainer);
@@ -174,84 +180,22 @@ export class AppLayout extends BaseComponent {
   }
 
   /**
-   * Render the footer section
+   * Render the footer section (minimal - only SE disclaimer)
+   * Full credits moved to About modal
    */
   private renderFooter(): HTMLElement {
     const footer = this.createElement('footer', {
-      className: 'app-footer mt-12',
-      attributes: {
-        style: 'min-height: 300px;', // Reserve space to prevent layout shift when fonts load (actual height ~298px)
-      },
+      className: 'app-footer mt-8',
     });
 
     const footerContent = this.createElement('div', {
-      className: 'max-w-7xl mx-auto px-4 py-8',
+      className: 'max-w-7xl mx-auto px-4 py-4',
     });
 
-    // Copyright info
-    // WEB-BUG-007: Use IDs instead of fragile CSS class selectors
-    const copyright = this.createElement('div', {
-      id: 'footer-copyright',
-      className: 'text-center text-sm text-gray-600 dark:text-gray-400 mb-6',
-      innerHTML: `${LanguageService.t('app.title')} v${APP_VERSION}<br>Built with TypeScript, Vite, and Tailwind CSS`,
-    });
-    footerContent.appendChild(copyright);
-
-    // Social links
-    const socialLinks = this.createElement('div', {
-      className: 'flex justify-center gap-4 flex-wrap mb-4',
-    });
-
-    const socialMedia = [
-      { label: 'GitHub', url: 'https://github.com/FlashGalatine', icon: ICON_GITHUB },
-      { label: 'X/Twitter', url: 'https://x.com/AsheJunius', icon: ICON_TWITTER },
-      { label: 'Twitch', url: 'https://www.twitch.tv/flashgalatine', icon: ICON_TWITCH },
-      { label: 'BlueSky', url: 'https://bsky.app/profile/projectgalatine.com', icon: ICON_BLUESKY },
-      { label: 'Discord', url: 'https://discord.gg/5VUSKTZCe5', icon: ICON_DISCORD },
-      { label: 'Patreon', url: 'https://patreon.com/ProjectGalatine', icon: ICON_PATREON },
-      { label: 'Ko-Fi', url: 'https://ko-fi.com/flashgalatine', icon: ICON_KOFI },
-    ];
-
-    socialMedia.forEach((social) => {
-      const link = this.createElement('a', {
-        className:
-          'text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm flex items-center gap-1',
-        attributes: {
-          href: social.url,
-          target: '_blank',
-          rel: 'noopener noreferrer',
-          title: social.label,
-        },
-        innerHTML: `<span class="inline-block w-4 h-4" aria-hidden="true">${social.icon}</span> ${social.label}`,
-      });
-      socialLinks.appendChild(link);
-    });
-
-    footerContent.appendChild(socialLinks);
-
-    // Creator info
-    // WEB-BUG-007: Use IDs instead of fragile CSS class selectors
-    const creator = this.createElement('div', {
-      id: 'footer-creator',
-      className: 'text-center text-xs text-gray-500 dark:text-gray-500',
-      innerHTML: `${LanguageService.t('footer.createdBy')} <span class="inline-block w-3 h-3 ml-0.5" aria-hidden="true" style="vertical-align: middle;">${ICON_CRYSTAL}</span>`,
-    });
-    footerContent.appendChild(creator);
-
-    // Universalis credit
-    const universalisCredit = this.createElement('div', {
-      id: 'footer-universalis',
-      className: 'text-center text-xs text-gray-500 dark:text-gray-500 mt-2',
-      innerHTML: `${LanguageService.t('footer.universalisCredit')} <a href="https://universalis.app/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">Universalis</a>`,
-    });
-    footerContent.appendChild(universalisCredit);
-
-    // FFXIV Copyright disclaimer
-    // WEB-BUG-007: Use IDs instead of fragile CSS class selectors
+    // FFXIV Copyright disclaimer only
     const disclaimer = this.createElement('div', {
       id: 'footer-disclaimer',
-      className:
-        'text-center text-xs text-gray-500 dark:text-gray-500 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700',
+      className: 'text-center text-xs text-gray-500 dark:text-gray-500',
       innerHTML: `${LanguageService.t('footer.disclaimer')}<br>${LanguageService.t('footer.notAffiliated')}`,
     });
     footerContent.appendChild(disclaimer);
@@ -272,6 +216,12 @@ export class AppLayout extends BaseComponent {
    * Initialize the layout and all child components
    */
   onMount(): void {
+    // Initialize info button (About modal trigger)
+    const infoButtonContainer = this.querySelector<HTMLElement>('#info-button-container');
+    if (infoButtonContainer) {
+      this.createInfoButton(infoButtonContainer);
+    }
+
     // Initialize language selector
     const languageSelectorContainer = this.querySelector<HTMLElement>(
       '#language-selector-container'
@@ -332,18 +282,15 @@ export class AppLayout extends BaseComponent {
       title.textContent = LanguageService.t('app.title');
     }
 
-    // WEB-BUG-007: Use IDs instead of fragile CSS class selectors
-    // Update footer text
-    const footerCopyright = this.querySelector<HTMLElement>('#footer-copyright');
-    if (footerCopyright) {
-      footerCopyright.innerHTML = `${LanguageService.t('app.title')} v${APP_VERSION}<br>Built with TypeScript, Vite, and Tailwind CSS`;
+    // Update info button aria-label
+    const infoButton = this.querySelector<HTMLButtonElement>('#info-button');
+    if (infoButton) {
+      const ariaLabel = LanguageService.t('header.about') || 'About XIV Dye Tools';
+      infoButton.setAttribute('aria-label', ariaLabel);
+      infoButton.title = ariaLabel;
     }
 
-    const footerCreator = this.querySelector<HTMLElement>('#footer-creator');
-    if (footerCreator) {
-      footerCreator.innerHTML = `${LanguageService.t('footer.createdBy')} <span class="inline-block w-4 h-4 align-text-bottom">${ICON_CRYSTAL}</span>`;
-    }
-
+    // Update footer disclaimer text
     const footerDisclaimer = this.querySelector<HTMLElement>('#footer-disclaimer');
     if (footerDisclaimer) {
       footerDisclaimer.innerHTML = `${LanguageService.t('footer.disclaimer')}<br>${LanguageService.t('footer.notAffiliated')}`;
@@ -371,6 +318,79 @@ export class AppLayout extends BaseComponent {
       version.style.color = 'var(--theme-text-header)';
       version.style.opacity = '0.8';
     }
+
+    // Update info button colors
+    this.updateInfoButtonColors();
+  }
+
+  /**
+   * Create the info button that opens the About modal
+   */
+  private createInfoButton(container: HTMLElement): void {
+    const isLightText = this.isCurrentThemeLightText();
+    const ariaLabel = LanguageService.t('header.about') || 'About XIV Dye Tools';
+
+    const button = this.createElement('button', {
+      id: 'info-button',
+      className:
+        'p-2 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
+      attributes: {
+        'aria-label': ariaLabel,
+        title: ariaLabel,
+        style: `color: var(--theme-text-header); border-color: ${isLightText ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)'};`,
+      },
+    });
+
+    // Add info icon
+    button.innerHTML = `<span class="inline-block w-5 h-5" aria-hidden="true">${ICON_INFO}</span>`;
+
+    // Add hover effect using theme colors
+    button.addEventListener('mouseenter', () => {
+      button.style.backgroundColor = isLightText
+        ? 'rgba(255, 255, 255, 0.15)'
+        : 'rgba(0, 0, 0, 0.15)';
+    });
+    button.addEventListener('mouseleave', () => {
+      button.style.backgroundColor = 'transparent';
+    });
+
+    // Open about modal on click
+    button.addEventListener('click', () => {
+      showAboutModal();
+    });
+
+    container.appendChild(button);
+  }
+
+  /**
+   * Check if current theme uses light text on header (based on primary color)
+   */
+  private isCurrentThemeLightText(): boolean {
+    const currentTheme = ThemeService.getCurrentTheme();
+    const themeObject = ThemeService.getTheme(currentTheme);
+    return ColorService.getOptimalTextColor(themeObject.palette.primary) === '#FFFFFF';
+  }
+
+  /**
+   * Update info button colors based on current theme
+   */
+  private updateInfoButtonColors(): void {
+    const button = this.querySelector<HTMLButtonElement>('#info-button');
+    if (!button) return;
+
+    const isLightText = this.isCurrentThemeLightText();
+    button.style.color = 'var(--theme-text-header)';
+    button.style.borderColor = isLightText ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)';
+
+    // Re-bind hover handlers with updated colors
+    button.onmouseenter = () => {
+      button.style.backgroundColor = isLightText
+        ? 'rgba(255, 255, 255, 0.15)'
+        : 'rgba(0, 0, 0, 0.15)';
+    };
+    button.onmouseleave = () => {
+      button.style.backgroundColor = 'transparent';
+    };
   }
 
   /**

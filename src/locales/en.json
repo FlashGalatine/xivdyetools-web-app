@@ -13,7 +13,15 @@
   "header": {
     "tools": "Tools",
     "theme": "Theme",
-    "language": "Language"
+    "language": "Language",
+    "about": "About XIV Dye Tools"
+  },
+  "about": {
+    "title": "About XIV Dye Tools",
+    "connect": "Connect"
+  },
+  "common": {
+    "close": "Close"
   },
   "footer": {
     "version": "Version",
@@ -93,6 +101,8 @@
       "matchingDyes": "Matching Dyes",
       "noColorSelected": "Select a color from the grid to find matching dyes",
       "selectedColor": "Selected Color",
+      "colorIndex": "Index",
+      "clickToSelect": "Click a color below",
       "male": "Male",
       "female": "Female"
     }

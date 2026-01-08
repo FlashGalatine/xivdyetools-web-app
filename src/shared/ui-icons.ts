@@ -351,6 +351,15 @@ export const ICON_IMAGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 </svg>`;
 
 /**
+ * Info icon - Circle with "i" (for about/information)
+ */
+export const ICON_INFO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10"/>
+  <line x1="12" y1="16" x2="12" y2="12"/>
+  <circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/>
+</svg>`;
+
+/**
  * Map of UI icon names to SVG strings
  */
 export const UI_ICONS: Record<string, string> = {
@@ -391,6 +400,7 @@ export const UI_ICONS: Record<string, string> = {
   edit: ICON_EDIT,
   trash: ICON_TRASH,
   image: ICON_IMAGE,
+  info: ICON_INFO,
 };
 
 /**

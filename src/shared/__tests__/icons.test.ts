@@ -421,6 +421,7 @@ describe('UI Icons', () => {
         'edit',
         'trash',
         'image',
+        'info',
       ]);
     });
 
