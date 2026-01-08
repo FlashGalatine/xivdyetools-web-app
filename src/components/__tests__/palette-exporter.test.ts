@@ -25,6 +25,7 @@ URL.revokeObjectURL = vi.fn();
 const createMockDye = (id: number, name: string, hex: string): Dye => ({
   id,
   itemID: 30000 + id,
+  stainID: null,
   name,
   hex,
   rgb: { r: 128, g: 128, b: 128 },

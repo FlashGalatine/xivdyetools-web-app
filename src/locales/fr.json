@@ -72,6 +72,29 @@
       "subtitle": "Découvrez des alternatives moins chères aux teintures coûteuses. Définissez votre budget et trouvez des couleurs similaires qui ne videront pas votre bourse.",
       "findCheaperTooltip": "Trouver des alternatives moins chères",
       "budgetOptions": "Options Budget"
+    },
+    "character": {
+      "title": "Correspondance Personnage",
+      "shortName": "Personnage",
+      "description": "Associer les teintures aux couleurs du personnage",
+      "subtitle": "Trouvez les teintures FFXIV qui correspondent aux cheveux, yeux, peau et autres couleurs de personnalisation de votre personnage.",
+      "selectSubrace": "Sélectionner l'ethnie",
+      "selectGender": "Sélectionner le genre",
+      "colorCategory": "Catégorie de couleur",
+      "eyeColors": "Couleurs des yeux",
+      "hairColors": "Couleurs de cheveux",
+      "skinColors": "Couleurs de peau",
+      "highlightColors": "Couleurs de mèches",
+      "lipColorsDark": "Couleurs de lèvres (Foncé)",
+      "lipColorsLight": "Couleurs de lèvres (Clair)",
+      "tattooColors": "Couleurs de tatouage/limbal",
+      "facePaintDark": "Peinture faciale (Foncé)",
+      "facePaintLight": "Peinture faciale (Clair)",
+      "matchingDyes": "Teintures correspondantes",
+      "noColorSelected": "Sélectionnez une couleur dans la grille pour trouver les teintures correspondantes",
+      "selectedColor": "Couleur sélectionnée",
+      "male": "Masculin",
+      "female": "Féminin"
     }
   },
   "common": {

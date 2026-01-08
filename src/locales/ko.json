@@ -72,6 +72,29 @@
       "subtitle": "비싼 염료의 저렴한 대안을 발견하세요. 예산을 설정하고 지갑에 부담 없는 유사한 색상을 찾아보세요.",
       "findCheaperTooltip": "더 저렴한 대안 찾기",
       "budgetOptions": "예산 옵션"
+    },
+    "character": {
+      "title": "캐릭터 매처",
+      "shortName": "캐릭터",
+      "description": "캐릭터 색상에 맞는 염료 찾기",
+      "subtitle": "캐릭터의 머리카락, 눈, 피부 및 기타 커스터마이징 색상과 일치하는 FFXIV 염료를 찾습니다.",
+      "selectSubrace": "부족 선택",
+      "selectGender": "성별 선택",
+      "colorCategory": "색상 카테고리",
+      "eyeColors": "눈 색상",
+      "hairColors": "머리 색상",
+      "skinColors": "피부 색상",
+      "highlightColors": "하이라이트 색상",
+      "lipColorsDark": "입술 색상 (다크)",
+      "lipColorsLight": "입술 색상 (라이트)",
+      "tattooColors": "문신/림발 색상",
+      "facePaintDark": "페이스 페인트 (다크)",
+      "facePaintLight": "페이스 페인트 (라이트)",
+      "matchingDyes": "일치하는 염료",
+      "noColorSelected": "그리드에서 색상을 선택하여 일치하는 염료를 찾으세요",
+      "selectedColor": "선택한 색상",
+      "male": "남성",
+      "female": "여성"
     }
   },
   "common": {

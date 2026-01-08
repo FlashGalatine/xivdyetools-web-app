@@ -18,6 +18,7 @@ import {
 const createMockDye = (overrides: Partial<Dye> = {}): Dye => ({
   id: 1,
   itemID: 1001,
+  stainID: null,
   name: 'Test Dye',
   hex: '#FF5500',
   rgb: { r: 255, g: 85, b: 0 },

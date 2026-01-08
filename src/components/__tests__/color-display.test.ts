@@ -15,6 +15,7 @@ import type { Dye } from '@shared/types';
 const mockDye: Dye = {
   id: 9999,
   itemID: 99999,
+  stainID: null,
   name: 'Jet Black',
   hex: '#2B2B2B',
   rgb: { r: 43, g: 43, b: 43 },
@@ -31,6 +32,7 @@ const mockDye: Dye = {
 const mockComparisonDye: Dye = {
   id: 9998,
   itemID: 99998,
+  stainID: null,
   name: 'Pure White',
   hex: '#FFFFFF',
   rgb: { r: 255, g: 255, b: 255 },

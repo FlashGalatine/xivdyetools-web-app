@@ -8,6 +8,7 @@ describe('DyeSelectionContext', () => {
   const mockDye: Dye = {
     id: 1,
     itemID: 123,
+    stainID: null,
     name: 'Snow White',
     hex: '#FFFFFF',
     rgb: { r: 255, g: 255, b: 255 },

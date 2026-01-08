@@ -16,6 +16,7 @@ import {
   ICON_TOOL_MIXER,
   ICON_TOOL_PRESETS,
   ICON_TOOL_BUDGET,
+  ICON_TOOL_CHARACTER,
 } from '@shared/tool-icons';
 import type { ToolId } from '@services/router-service';
 
@@ -81,6 +82,13 @@ export function getLocalizedTools(): NavTool[] {
       icon: ICON_TOOL_BUDGET,
       description: LanguageService.t('tools.budget.description') || 'Find affordable dye alternatives',
     },
+    {
+      id: 'character',
+      name: LanguageService.t('tools.character.title') || 'Character Matcher',
+      shortName: LanguageService.t('tools.character.shortName') || 'Character',
+      icon: ICON_TOOL_CHARACTER,
+      description: LanguageService.t('tools.character.description') || 'Match dyes to character colors',
+    },
   ];
 }
 
@@ -95,4 +103,5 @@ export const TOOL_ICONS: Record<ToolId, string> = {
   mixer: ICON_TOOL_MIXER,
   presets: ICON_TOOL_PRESETS,
   budget: ICON_TOOL_BUDGET,
+  character: ICON_TOOL_CHARACTER,
 };

@@ -72,6 +72,29 @@
       "subtitle": "发现昂贵染料的便宜替代品。设置预算，找到不会让钱包大出血的相似颜色。",
       "findCheaperTooltip": "寻找更便宜的替代品",
       "budgetOptions": "预算选项"
+    },
+    "character": {
+      "title": "角色配色器",
+      "shortName": "角色",
+      "description": "为角色颜色匹配染料",
+      "subtitle": "寻找与您角色的头发、眼睛、皮肤等自定义颜色相匹配的FFXIV染料。",
+      "selectSubrace": "选择部族",
+      "selectGender": "选择性别",
+      "colorCategory": "颜色类别",
+      "eyeColors": "眼睛颜色",
+      "hairColors": "头发颜色",
+      "skinColors": "皮肤颜色",
+      "highlightColors": "挑染颜色",
+      "lipColorsDark": "唇色（深色）",
+      "lipColorsLight": "唇色（浅色）",
+      "tattooColors": "纹身/轮环颜色",
+      "facePaintDark": "面部彩绘（深色）",
+      "facePaintLight": "面部彩绘（浅色）",
+      "matchingDyes": "匹配的染料",
+      "noColorSelected": "从网格中选择一种颜色以查找匹配的染料",
+      "selectedColor": "已选颜色",
+      "male": "男性",
+      "female": "女性"
     }
   },
   "common": {

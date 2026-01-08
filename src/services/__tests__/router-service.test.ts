@@ -552,7 +552,7 @@ describe('RouterService', () => {
 
       expect(routes).toBeDefined();
       expect(Array.isArray(routes)).toBe(true);
-      expect(routes.length).toBe(7);
+      expect(routes.length).toBe(8);
     });
 
     it('should return readonly array', () => {

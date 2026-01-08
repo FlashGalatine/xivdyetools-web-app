@@ -198,6 +198,19 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
         logger.info('[V3 Layout] Budget tool loaded (v3 production)');
         break;
       }
+      case 'character': {
+        // Phase 9: Production CharacterTool
+        const { CharacterTool } = await import('@components/character-tool');
+        const toolContainer = document.createElement('div');
+        activeTool = new CharacterTool(toolContainer, {
+          leftPanel,
+          rightPanel,
+          drawerContent,
+        });
+        activeTool.init();
+        logger.info('[V3 Layout] Character tool loaded (v3 production)');
+        break;
+      }
       default:
         renderPlaceholder(rightPanel, toolId);
         break;

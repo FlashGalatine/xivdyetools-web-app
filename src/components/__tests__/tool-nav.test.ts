@@ -74,9 +74,9 @@ describe('tool-nav', () => {
       expect(harmonyTool?.name).toBe(LanguageService.t('tools.harmony.title'));
     });
 
-    it('should return 7 tools total', () => {
+    it('should return 8 tools total', () => {
       const tools = getLocalizedTools();
-      expect(tools.length).toBe(7);
+      expect(tools.length).toBe(8);
     });
 
     it('should have harmony as the first tool', () => {
@@ -84,9 +84,9 @@ describe('tool-nav', () => {
       expect(tools[0].id).toBe('harmony');
     });
 
-    it('should have budget as the last tool', () => {
+    it('should have character as the last tool', () => {
       const tools = getLocalizedTools();
-      expect(tools[tools.length - 1].id).toBe('budget');
+      expect(tools[tools.length - 1].id).toBe('character');
     });
 
     it('should have non-empty names and descriptions', () => {
@@ -166,7 +166,7 @@ describe('tool-nav', () => {
         isActive: false,
       }));
 
-      expect(navItems.length).toBe(7);
+      expect(navItems.length).toBe(8);
       expect(navItems[0].href).toBe('/harmony');
     });
 

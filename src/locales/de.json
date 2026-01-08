@@ -72,6 +72,29 @@
       "subtitle": "Entdecke günstigere Alternativen zu teuren Farbstoffen. Lege dein Budget fest und finde ähnliche Farben, die den Geldbeutel schonen.",
       "findCheaperTooltip": "Günstigere Alternativen finden",
       "budgetOptions": "Budget-Optionen"
+    },
+    "character": {
+      "title": "Charakter-Matcher",
+      "shortName": "Charakter",
+      "description": "Farbstoffe zu Charakterfarben zuordnen",
+      "subtitle": "Finde FFXIV-Farbstoffe, die zu den Haar-, Augen-, Haut- und anderen Anpassungsfarben deines Charakters passen.",
+      "selectSubrace": "Volksgruppe wählen",
+      "selectGender": "Geschlecht wählen",
+      "colorCategory": "Farbkategorie",
+      "eyeColors": "Augenfarben",
+      "hairColors": "Haarfarben",
+      "skinColors": "Hautfarben",
+      "highlightColors": "Strähnchen-Farben",
+      "lipColorsDark": "Lippenfarben (Dunkel)",
+      "lipColorsLight": "Lippenfarben (Hell)",
+      "tattooColors": "Tattoo/Limbal-Farben",
+      "facePaintDark": "Gesichtsbemalung (Dunkel)",
+      "facePaintLight": "Gesichtsbemalung (Hell)",
+      "matchingDyes": "Passende Farbstoffe",
+      "noColorSelected": "Wähle eine Farbe aus dem Raster, um passende Farbstoffe zu finden",
+      "selectedColor": "Ausgewählte Farbe",
+      "male": "Männlich",
+      "female": "Weiblich"
     }
   },
   "common": {

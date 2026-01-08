@@ -20,7 +20,8 @@ export type ToolId =
   | 'comparison'
   | 'mixer'
   | 'presets'
-  | 'budget';
+  | 'budget'
+  | 'character';
 
 export interface RouteDefinition {
   id: ToolId;
@@ -52,6 +53,7 @@ export const ROUTES: RouteDefinition[] = [
   { id: 'mixer', path: '/mixer', title: 'Mixer' },
   { id: 'presets', path: '/presets', title: 'Presets' },
   { id: 'budget', path: '/budget', title: 'Budget' },
+  { id: 'character', path: '/character', title: 'Character' },
 ];
 
 /**

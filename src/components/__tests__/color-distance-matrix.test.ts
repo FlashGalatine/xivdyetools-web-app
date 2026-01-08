@@ -15,6 +15,7 @@ import type { Dye } from '@shared/types';
 const createMockDye = (id: number, name: string, hex: string): Dye => ({
   id,
   itemID: 90000 + id,
+  stainID: null,
   name,
   hex,
   rgb: { r: 128, g: 128, b: 128 },

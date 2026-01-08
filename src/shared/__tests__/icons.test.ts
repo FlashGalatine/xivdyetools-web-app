@@ -233,6 +233,7 @@ describe('Tool Icons', () => {
         'mixer',
         'presets',
         'budget',
+        'character',
         'tools',
       ]);
     });

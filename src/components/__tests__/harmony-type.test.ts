@@ -21,6 +21,7 @@ const mockHarmonyInfo: HarmonyTypeInfo = {
 const mockDye1: Dye = {
   itemID: 1,
   id: 1,
+  stainID: null,
   name: 'Jet Black',
   hex: '#000000',
   rgb: { r: 0, g: 0, b: 0 },
@@ -37,6 +38,7 @@ const mockDye1: Dye = {
 const mockDye2: Dye = {
   itemID: 2,
   id: 2,
+  stainID: null,
   name: 'Snow White',
   hex: '#FFFFFF',
   rgb: { r: 255, g: 255, b: 255 },

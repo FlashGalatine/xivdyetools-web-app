@@ -72,6 +72,29 @@
       "subtitle": "Discover cheaper alternatives to expensive dyes. Set your budget and find similar colors that won't break the bank.",
       "findCheaperTooltip": "Find cheaper alternatives",
       "budgetOptions": "Budget Options"
+    },
+    "character": {
+      "title": "Character Matcher",
+      "shortName": "Character",
+      "description": "Match dyes to character colors",
+      "subtitle": "Find FFXIV dyes that match your character's hair, eyes, skin, and other customization colors.",
+      "selectSubrace": "Select Subrace",
+      "selectGender": "Select Gender",
+      "colorCategory": "Color Category",
+      "eyeColors": "Eye Colors",
+      "hairColors": "Hair Colors",
+      "skinColors": "Skin Colors",
+      "highlightColors": "Highlight Colors",
+      "lipColorsDark": "Lip Colors (Dark)",
+      "lipColorsLight": "Lip Colors (Light)",
+      "tattooColors": "Tattoo/Limbal Colors",
+      "facePaintDark": "Face Paint (Dark)",
+      "facePaintLight": "Face Paint (Light)",
+      "matchingDyes": "Matching Dyes",
+      "noColorSelected": "Select a color from the grid to find matching dyes",
+      "selectedColor": "Selected Color",
+      "male": "Male",
+      "female": "Female"
     }
   },
   "common": {

@@ -23,6 +23,7 @@ vi.mock('@services/storage-service', () => ({
 const createMockDye = (overrides: Partial<Dye> = {}): Dye => ({
   id: 1,
   itemID: 30001,
+  stainID: null,
   name: 'Test Dye',
   hex: '#FF0000',
   rgb: { r: 255, g: 0, b: 0 },

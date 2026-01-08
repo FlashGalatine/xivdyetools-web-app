@@ -150,6 +150,7 @@ export const mockDyeData = [
   {
     itemID: 1,
     id: 1,
+    stainID: null,
     name: 'Jet Black',
     hex: '#000000',
     rgb: { r: 0, g: 0, b: 0 },
@@ -165,6 +166,7 @@ export const mockDyeData = [
   {
     itemID: 2,
     id: 2,
+    stainID: null,
     name: 'Snow White',
     hex: '#FFFFFF',
     rgb: { r: 255, g: 255, b: 255 },
@@ -180,6 +182,7 @@ export const mockDyeData = [
   {
     itemID: 3,
     id: 3,
+    stainID: null,
     name: 'Rose Pink',
     hex: '#FF69B4',
     rgb: { r: 255, g: 105, b: 180 },
@@ -195,6 +198,7 @@ export const mockDyeData = [
   {
     itemID: 4,
     id: 4,
+    stainID: null,
     name: 'Sky Blue',
     hex: '#87CEEB',
     rgb: { r: 135, g: 206, b: 235 },

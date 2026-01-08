@@ -85,6 +85,17 @@ export const ICON_TOOL_BUDGET = `<svg viewBox="0 0 24 24" fill="none" stroke="cu
 </svg>`;
 
 /**
+ * Character Color Matcher icon - User silhouette with color swatches
+ */
+export const ICON_TOOL_CHARACTER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="7" r="4" opacity="0.7" />
+  <path d="M5.5 21c0-4.5 3-7 6.5-7s6.5 2.5 6.5 7" opacity="0.4" />
+  <rect x="16" y="11" width="3" height="3" rx="0.5" fill="currentColor" stroke="none" />
+  <rect x="16" y="15" width="3" height="3" rx="0.5" fill="currentColor" stroke="none" opacity="0.6" />
+  <rect x="16" y="19" width="3" height="3" rx="0.5" fill="currentColor" stroke="none" opacity="0.3" />
+</svg>`;
+
+/**
  * Tools Menu icon - Toolbox
  */
 export const ICON_TOOL_MENU = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -107,6 +118,7 @@ export const TOOL_ICONS: Record<string, string> = {
   mixer: ICON_TOOL_MIXER,
   presets: ICON_TOOL_PRESETS,
   budget: ICON_TOOL_BUDGET,
+  character: ICON_TOOL_CHARACTER,
   tools: ICON_TOOL_MENU,
 };
 

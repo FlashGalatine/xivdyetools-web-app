@@ -72,6 +72,29 @@
       "subtitle": "高価な染料の安価な代替品を発見。予算を設定して、お財布に優しい類似色を見つけましょう。",
       "findCheaperTooltip": "安価な代替品を探す",
       "budgetOptions": "予算オプション"
+    },
+    "character": {
+      "title": "キャラクターマッチャー",
+      "shortName": "キャラクター",
+      "description": "キャラクターの色に合う染料を探す",
+      "subtitle": "キャラクターの髪、目、肌などのカスタマイズカラーに合うFFXIVの染料を見つけます。",
+      "selectSubrace": "部族を選択",
+      "selectGender": "性別を選択",
+      "colorCategory": "カラーカテゴリ",
+      "eyeColors": "瞳の色",
+      "hairColors": "髪の色",
+      "skinColors": "肌の色",
+      "highlightColors": "メッシュの色",
+      "lipColorsDark": "リップカラー（ダーク）",
+      "lipColorsLight": "リップカラー（ライト）",
+      "tattooColors": "タトゥー/リムバルの色",
+      "facePaintDark": "フェイスペイント（ダーク）",
+      "facePaintLight": "フェイスペイント（ライト）",
+      "matchingDyes": "マッチする染料",
+      "noColorSelected": "グリッドから色を選択して、マッチする染料を見つけてください",
+      "selectedColor": "選択した色",
+      "male": "男性",
+      "female": "女性"
     }
   },
   "common": {

@@ -34,9 +34,9 @@ describe('DyeGrid', () => {
   let component: DyeGrid;
 
   const mockDyes: Dye[] = [
-    { id: 1, name: 'Snow White', hex: '#FFFFFF', category: 'Neutrals', itemID: 123, rgb: { r: 255, g: 255, b: 255 }, hsv: { h: 0, s: 0, v: 100 }, acquisition: 'Vendor', cost: 0, isMetallic: false, isPastel: false, isDark: false, isCosmic: false },
-    { id: 2, name: 'Soot Black', hex: '#000000', category: 'Neutrals', itemID: 124, rgb: { r: 0, g: 0, b: 0 }, hsv: { h: 0, s: 0, v: 0 }, acquisition: 'Vendor', cost: 0, isMetallic: false, isPastel: false, isDark: true, isCosmic: false },
-    { id: 3, name: 'Rose Pink', hex: '#FF0000', category: 'Reds', itemID: 125, rgb: { r: 255, g: 0, b: 0 }, hsv: { h: 0, s: 100, v: 100 }, acquisition: 'Vendor', cost: 0, isMetallic: false, isPastel: false, isDark: false, isCosmic: false },
+    { id: 1, name: 'Snow White', hex: '#FFFFFF', category: 'Neutrals', itemID: 123, stainID: null, rgb: { r: 255, g: 255, b: 255 }, hsv: { h: 0, s: 0, v: 100 }, acquisition: 'Vendor', cost: 0, isMetallic: false, isPastel: false, isDark: false, isCosmic: false },
+    { id: 2, name: 'Soot Black', hex: '#000000', category: 'Neutrals', itemID: 124, stainID: null, rgb: { r: 0, g: 0, b: 0 }, hsv: { h: 0, s: 0, v: 0 }, acquisition: 'Vendor', cost: 0, isMetallic: false, isPastel: false, isDark: true, isCosmic: false },
+    { id: 3, name: 'Rose Pink', hex: '#FF0000', category: 'Reds', itemID: 125, stainID: null, rgb: { r: 255, g: 0, b: 0 }, hsv: { h: 0, s: 100, v: 100 }, acquisition: 'Vendor', cost: 0, isMetallic: false, isPastel: false, isDark: false, isCosmic: false },
   ];
 
   beforeEach(() => {

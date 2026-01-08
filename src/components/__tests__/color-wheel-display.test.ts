@@ -12,6 +12,7 @@ describe('ColorWheelDisplay', () => {
     {
       id: 2,
       itemID: 2,
+      stainID: null,
       name: 'Second',
       hex: '#00ff00',
       rgb: { r: 0, g: 255, b: 0 },
@@ -27,6 +28,7 @@ describe('ColorWheelDisplay', () => {
     {
       id: 3,
       itemID: 3,
+      stainID: null,
       name: 'Third',
       hex: '#0000ff',
       rgb: { r: 0, g: 0, b: 255 },
