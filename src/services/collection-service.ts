@@ -81,7 +81,7 @@ const COLLECTIONS_KEY = 'xivdyetools_collections';
 const DATA_VERSION = '1.0.0';
 
 // Limits per spec
-const MAX_FAVORITES = 20;
+const MAX_FAVORITES = 40;
 const MAX_COLLECTIONS = 50;
 const MAX_DYES_PER_COLLECTION = 20;
 const MAX_COLLECTION_NAME_LENGTH = 50;
