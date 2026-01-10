@@ -18,6 +18,7 @@ import { showPresetSubmissionForm } from '@components/preset-submission-form';
 import { showPresetEditForm } from '@components/preset-edit-form';
 import {
   authService,
+  ConfigController,
   hybridPresetService,
   presetSubmissionService,
   LanguageService,
@@ -40,6 +41,7 @@ import type { UnifiedPreset, PresetSortOption } from '@services/hybrid-preset-se
 import type { PresetCategory } from '@xivdyetools/core';
 import type { AuthState } from '@services/auth-service';
 import type { CommunityPreset } from '@services/community-preset-service';
+import type { PresetsConfig } from '@shared/tool-config-types';
 
 // ============================================================================
 // Types and Constants
@@ -58,6 +60,7 @@ const STORAGE_KEYS = {
   category: 'v3_preset_category',
   sortBy: 'v3_preset_sort',
   tab: 'v3_preset_tab',
+  showFavorites: 'v3_preset_show_favorites',
 } as const;
 
 /**
@@ -107,6 +110,7 @@ export class PresetTool extends BaseComponent {
   private selectedCategory: string;
   private sortBy: PresetSortOption;
   private currentTab: 'browse' | 'my-submissions';
+  private showFavoritesOnly: boolean = false;
   private searchQuery: string = '';
   private authState: AuthState = {
     isAuthenticated: false,
@@ -149,6 +153,7 @@ export class PresetTool extends BaseComponent {
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
   private authUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
   private searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(container: HTMLElement, options: PresetToolOptions) {
@@ -159,6 +164,7 @@ export class PresetTool extends BaseComponent {
     this.selectedCategory = StorageService.getItem<string>(STORAGE_KEYS.category) ?? DEFAULTS.category;
     this.sortBy = StorageService.getItem<PresetSortOption>(STORAGE_KEYS.sortBy) ?? DEFAULTS.sortBy;
     this.currentTab = StorageService.getItem<'browse' | 'my-submissions'>(STORAGE_KEYS.tab) ?? DEFAULTS.tab;
+    this.showFavoritesOnly = StorageService.getItem<boolean>(STORAGE_KEYS.showFavorites) ?? false;
   }
 
   // ============================================================================
@@ -197,6 +203,11 @@ export class PresetTool extends BaseComponent {
       if (state.isAuthenticated && this.currentTab === 'my-submissions') {
         void this.loadUserSubmissions();
       }
+    });
+
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('presets', (config) => {
+      this.setConfig(config);
     });
 
     // Get initial auth state
@@ -254,6 +265,7 @@ export class PresetTool extends BaseComponent {
   destroy(): void {
     this.languageUnsubscribe?.();
     this.authUnsubscribe?.();
+    this.configUnsubscribe?.();
     this.authButton?.destroy();
     this.mobileAuthButton?.destroy();
     this.detailView?.destroy();
@@ -277,6 +289,62 @@ export class PresetTool extends BaseComponent {
 
     super.destroy();
     logger.info('[PresetTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   */
+  public setConfig(config: Partial<PresetsConfig>): void {
+    let needsReload = false;
+
+    // Handle showMyPresetsOnly (maps to currentTab)
+    if (config.showMyPresetsOnly !== undefined) {
+      const newTab = config.showMyPresetsOnly ? 'my-submissions' : 'browse';
+      if (newTab !== this.currentTab) {
+        this.currentTab = newTab;
+        StorageService.setItem(STORAGE_KEYS.tab, newTab);
+        needsReload = true;
+        logger.info(`[PresetTool] setConfig: showMyPresetsOnly -> ${config.showMyPresetsOnly} (tab: ${newTab})`);
+
+        // Update tab visibility UI
+        this.updateTabVisibility();
+      }
+    }
+
+    // Handle showFavorites
+    if (config.showFavorites !== undefined && config.showFavorites !== this.showFavoritesOnly) {
+      this.showFavoritesOnly = config.showFavorites;
+      StorageService.setItem(STORAGE_KEYS.showFavorites, config.showFavorites);
+      needsReload = true;
+      logger.info(`[PresetTool] setConfig: showFavorites -> ${config.showFavorites}`);
+    }
+
+    // Handle sortBy
+    if (config.sortBy !== undefined && config.sortBy !== this.sortBy) {
+      this.sortBy = config.sortBy as PresetSortOption;
+      StorageService.setItem(STORAGE_KEYS.sortBy, config.sortBy);
+      needsReload = true;
+      logger.info(`[PresetTool] setConfig: sortBy -> ${config.sortBy}`);
+
+      // Update sort radio buttons in UI
+      if (this.sortContainer) {
+        const radio = this.sortContainer.querySelector<HTMLInputElement>(
+          `input[name="sort"][value="${config.sortBy}"]`
+        );
+        if (radio) radio.checked = true;
+      }
+    }
+
+    // Reload presets if config changed
+    if (needsReload) {
+      this.currentPage = 1;
+      void this.loadPresets();
+      this.updateDrawerContent();
+    }
   }
 
   // ============================================================================
