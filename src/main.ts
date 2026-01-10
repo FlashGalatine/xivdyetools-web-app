@@ -8,6 +8,7 @@
 
 // Import global styles
 import '@/styles/themes.css';
+import '@/styles/v4-utilities.css'; // V4 glassmorphism and layout utilities
 import '@/styles/tailwind.css';
 
 // Import services
