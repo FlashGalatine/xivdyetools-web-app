@@ -219,7 +219,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     interpolation: 'linear',
   },
   mixer: {
-    maxResults: 3,
+    maxResults: 5, // Design spec: default 5, range 3-8
   },
   presets: {
     showMyPresetsOnly: false,
