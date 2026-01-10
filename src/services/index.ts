@@ -85,6 +85,10 @@ export type {
   EditResult,
 } from './preset-submission-service';
 
+// V4 Config Controller
+export { ConfigController, getConfigController } from './config-controller';
+export type { ConfigChangeEvent } from './config-controller';
+
 // Re-export commonly used types
 export type { Dye, VisionType, ThemeName, PriceData } from '@shared/types';
 
