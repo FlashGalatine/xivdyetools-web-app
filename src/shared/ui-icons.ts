@@ -360,6 +360,16 @@ export const ICON_INFO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentCo
 </svg>`;
 
 /**
+ * Context menu icon - Vertical three dots (kebab menu)
+ * Used for ResultCard action menus and dropdown triggers
+ */
+export const ICON_CONTEXT_MENU = `<svg viewBox="0 0 24 24" fill="currentColor">
+  <circle cx="12" cy="5" r="2"/>
+  <circle cx="12" cy="12" r="2"/>
+  <circle cx="12" cy="19" r="2"/>
+</svg>`;
+
+/**
  * Globe icon - Language/internationalization selector
  */
 export const ICON_GLOBE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -426,6 +436,7 @@ export const UI_ICONS: Record<string, string> = {
   info: ICON_INFO,
   globe: ICON_GLOBE,
   logo: ICON_LOGO,
+  'context-menu': ICON_CONTEXT_MENU,
 };
 
 /**
