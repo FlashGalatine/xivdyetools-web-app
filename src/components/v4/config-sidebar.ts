@@ -5,8 +5,8 @@
  * Uses all-in-one approach: contains all configs internally,
  * shows/hides sections based on activeTool property.
  *
- * Note: Config controls are visual placeholders in Phase 4.
- * Actual data binding will be wired up in Phase 6 tool migration.
+ * Phase 6: Wired to ConfigController for reactive state management.
+ * Uses ToggleSwitchV4 and RangeSliderV4 for interactive controls.
  *
  * @module components/v4/config-sidebar
  */
@@ -14,13 +14,34 @@
 import { html, css, CSSResultGroup, TemplateResult, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
+import { ConfigController } from '@services/config-controller';
 import type { ToolId } from '@services/router-service';
+import type {
+  HarmonyConfig,
+  ExtractorConfig,
+  AccessibilityConfig,
+  ComparisonConfig,
+  GradientConfig,
+  MixerConfig,
+  PresetsConfig,
+  BudgetConfig,
+  SwatchConfig,
+  GlobalConfig,
+  ConfigKey,
+} from '@shared/tool-config-types';
+
+// Import child components to ensure registration
+import './toggle-switch-v4';
+import './range-slider-v4';
 
 /**
  * V4 Config Sidebar - Tool configuration panel
  *
  * @fires sidebar-collapse - When collapse button is clicked (mobile)
- * @fires config-change - When any config value changes, with detail: { tool, key, value }
+ * @fires config-change - When any config value changes
+ *   - detail.tool: The tool ID or 'global'
+ *   - detail.key: The config property key
+ *   - detail.value: The new value
  *
  * @example
  * ```html
@@ -28,6 +49,7 @@ import type { ToolId } from '@services/router-service';
  *   .activeTool=${'harmony'}
  *   .collapsed=${false}
  *   @sidebar-collapse=${this.handleCollapse}
+ *   @config-change=${this.handleConfigChange}
  * ></v4-config-sidebar>
  * ```
  */
@@ -45,11 +67,64 @@ export class ConfigSidebar extends BaseLitComponent {
   @property({ type: Boolean, reflect: true })
   collapsed = false;
 
-  /**
-   * Internal state for theme selection (placeholder)
-   */
-  @state()
-  private selectedTheme = '';
+  // =========================================================================
+  // Tool Configuration State
+  // =========================================================================
+
+  @state() private globalConfig: GlobalConfig = { theme: '' };
+  @state() private harmonyConfig: HarmonyConfig = {
+    harmonyType: 'tetradic',
+    showNames: true,
+    showHex: true,
+    showRgb: false,
+    showHsv: true,
+    strictMatching: false,
+  };
+  @state() private extractorConfig: ExtractorConfig = {
+    vibrancyBoost: true,
+    maxColors: 8,
+  };
+  @state() private accessibilityConfig: AccessibilityConfig = {
+    normalVision: true,
+    deuteranopia: true,
+    protanopia: true,
+    tritanopia: true,
+    achromatopsia: true,
+    showLabels: true,
+    showHexValues: false,
+    highContrastMode: false,
+  };
+  @state() private comparisonConfig: ComparisonConfig = {
+    showDeltaE: true,
+    showRgb: true,
+    showHsv: false,
+    showMarketPrices: true,
+  };
+  @state() private gradientConfig: GradientConfig = {
+    stepCount: 8,
+    interpolation: 'linear',
+  };
+  @state() private mixerConfig: MixerConfig = {
+    maxResults: 3,
+  };
+  @state() private presetsConfig: PresetsConfig = {
+    showMyPresetsOnly: false,
+    showFavorites: false,
+    sortBy: 'newest',
+  };
+  @state() private budgetConfig: BudgetConfig = {
+    maxPrice: 200000,
+    maxResults: 8,
+    maxDeltaE: 75,
+  };
+  @state() private swatchConfig: SwatchConfig = {
+    colorSheet: 'EyeColors.csv',
+    race: 'Hyur (Midlander)',
+    gender: 'Male',
+    maxResults: 3,
+  };
+
+  private configController: ConfigController | null = null;
 
   static override styles: CSSResultGroup = [
     BaseLitComponent.baseStyles,
@@ -145,42 +220,22 @@ export class ConfigSidebar extends BaseLitComponent {
         margin-bottom: 12px;
       }
 
-      /* Config Control */
-      .config-control {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--v4-glass-border, rgba(255, 255, 255, 0.1));
-        border-radius: 6px;
-        padding: 12px;
-        color: var(--theme-text, #e0e0e0);
-        width: 100%;
-        margin-bottom: 8px;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: background var(--v4-transition-fast, 150ms);
-      }
-
-      .config-control:hover {
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .config-control-column {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
+      /* Config Row (for toggle switches) */
+      .config-row {
+        margin-bottom: 12px;
       }
 
       /* Select Dropdown */
       .config-select {
         width: 100%;
-        padding: 8px 12px;
+        padding: 10px 12px;
         background: rgba(0, 0, 0, 0.3);
         border: 1px solid var(--v4-glass-border, rgba(255, 255, 255, 0.1));
         color: var(--theme-text, #e0e0e0);
-        border-radius: 4px;
+        border-radius: 6px;
         cursor: pointer;
         font-size: 13px;
+        margin-bottom: 8px;
       }
 
       .config-select:focus {
@@ -188,77 +243,14 @@ export class ConfigSidebar extends BaseLitComponent {
         outline-offset: 1px;
       }
 
-      /* Toggle Switch */
-      .toggle-switch {
-        width: 36px;
-        height: 20px;
-        background: #333;
-        border-radius: 10px;
-        position: relative;
-        cursor: pointer;
-        flex-shrink: 0;
-        transition: background var(--v4-transition-fast, 150ms);
-      }
-
-      .toggle-switch::after {
-        content: '';
-        position: absolute;
-        top: 2px;
-        left: 2px;
-        width: 16px;
-        height: 16px;
-        background: #fff;
-        border-radius: 50%;
-        transition: transform var(--v4-transition-fast, 150ms);
-      }
-
-      .toggle-switch.active {
-        background: var(--theme-primary, #d4af37);
-      }
-
-      .toggle-switch.active::after {
-        transform: translateX(16px);
-      }
-
-      /* Range Slider */
-      .config-slider {
-        width: 100%;
-        height: 6px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-        outline: none;
-        -webkit-appearance: none;
-        appearance: none;
-      }
-
-      .config-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 16px;
-        height: 16px;
-        background: var(--theme-primary, #d4af37);
-        border-radius: 50%;
-        cursor: pointer;
-      }
-
-      .config-slider::-moz-range-thumb {
-        width: 16px;
-        height: 16px;
-        background: var(--theme-primary, #d4af37);
-        border-radius: 50%;
-        cursor: pointer;
-        border: none;
-      }
-
-      .slider-header {
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: var(--theme-text-muted, #a0a0a0);
-      }
-
-      .slider-value {
-        font-weight: 600;
+      .config-select option {
+        background: var(--theme-card-background, #2a2a2a);
         color: var(--theme-text, #e0e0e0);
+      }
+
+      /* Slider wrapper */
+      .slider-wrapper {
+        margin-bottom: 16px;
       }
 
       /* Config Section (tool-specific) */
@@ -303,14 +295,85 @@ export class ConfigSidebar extends BaseLitComponent {
         :host {
           transition: none;
         }
-        .toggle-switch,
-        .toggle-switch::after,
-        .config-control {
-          transition: none;
-        }
       }
     `,
   ];
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.loadConfigsFromController();
+  }
+
+  /**
+   * Load all configs from ConfigController
+   */
+  private loadConfigsFromController(): void {
+    this.configController = ConfigController.getInstance();
+
+    this.globalConfig = this.configController.getConfig('global');
+    this.harmonyConfig = this.configController.getConfig('harmony');
+    this.extractorConfig = this.configController.getConfig('extractor');
+    this.accessibilityConfig = this.configController.getConfig('accessibility');
+    this.comparisonConfig = this.configController.getConfig('comparison');
+    this.gradientConfig = this.configController.getConfig('gradient');
+    this.mixerConfig = this.configController.getConfig('mixer');
+    this.presetsConfig = this.configController.getConfig('presets');
+    this.budgetConfig = this.configController.getConfig('budget');
+    this.swatchConfig = this.configController.getConfig('swatch');
+  }
+
+  /**
+   * Handle config change from any control
+   */
+  private handleConfigChange<K extends ConfigKey>(
+    tool: K,
+    key: string,
+    value: unknown,
+  ): void {
+    // Update local state based on tool
+    switch (tool) {
+      case 'global':
+        this.globalConfig = { ...this.globalConfig, [key]: value };
+        break;
+      case 'harmony':
+        this.harmonyConfig = { ...this.harmonyConfig, [key]: value };
+        break;
+      case 'extractor':
+        this.extractorConfig = { ...this.extractorConfig, [key]: value };
+        break;
+      case 'accessibility':
+        this.accessibilityConfig = { ...this.accessibilityConfig, [key]: value };
+        break;
+      case 'comparison':
+        this.comparisonConfig = { ...this.comparisonConfig, [key]: value };
+        break;
+      case 'gradient':
+        this.gradientConfig = { ...this.gradientConfig, [key]: value };
+        break;
+      case 'mixer':
+        this.mixerConfig = { ...this.mixerConfig, [key]: value };
+        break;
+      case 'presets':
+        this.presetsConfig = { ...this.presetsConfig, [key]: value };
+        break;
+      case 'budget':
+        this.budgetConfig = { ...this.budgetConfig, [key]: value };
+        break;
+      case 'swatch':
+        this.swatchConfig = { ...this.swatchConfig, [key]: value };
+        break;
+    }
+
+    // Update ConfigController
+    if (this.configController) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // Type assertion needed because computed property keys lose type safety
+      (this.configController as any).setConfig(tool, { [key]: value });
+    }
+
+    // Emit event for parent components
+    this.emit('config-change', { tool, key, value });
+  }
 
   /**
    * Handle collapse button click
@@ -327,32 +390,26 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section config-global">
         <div class="config-group">
           <div class="config-label">Theme</div>
-          <div class="config-control config-control-column">
-            <select
-              class="config-select"
-              .value=${this.selectedTheme}
-              @change=${(e: Event) => {
-                this.selectedTheme = (e.target as HTMLSelectElement).value;
-                this.emit('config-change', {
-                  tool: 'global',
-                  key: 'theme',
-                  value: this.selectedTheme,
-                });
-              }}
-            >
-              <option value="">Default (Premium Dark)</option>
-              <option value="standard-light">Standard Light</option>
-              <option value="standard-dark">Standard Dark</option>
-              <option value="hydaelyn-light">Hydaelyn</option>
-              <option value="og-classic-dark">OG Classic</option>
-              <option value="parchment-light">Parchment</option>
-              <option value="cotton-candy">Cotton Candy</option>
-              <option value="sugar-riot">Sugar Riot</option>
-              <option value="grayscale-dark">Grayscale</option>
-              <option value="high-contrast-light">High Contrast Light</option>
-              <option value="high-contrast-dark">High Contrast Dark</option>
-            </select>
-          </div>
+          <select
+            class="config-select"
+            .value=${this.globalConfig.theme}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.handleConfigChange('global', 'theme', value);
+            }}
+          >
+            <option value="">Default (Premium Dark)</option>
+            <option value="standard-light">Standard Light</option>
+            <option value="standard-dark">Standard Dark</option>
+            <option value="hydaelyn-light">Hydaelyn</option>
+            <option value="og-classic-dark">OG Classic</option>
+            <option value="parchment-light">Parchment</option>
+            <option value="cotton-candy">Cotton Candy</option>
+            <option value="sugar-riot">Sugar Riot</option>
+            <option value="grayscale-dark">Grayscale</option>
+            <option value="high-contrast-light">High Contrast Light</option>
+            <option value="high-contrast-dark">High Contrast Dark</option>
+          </select>
         </div>
       </div>
     `;
@@ -366,39 +423,71 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'harmony'}>
         <div class="config-group">
           <div class="config-label">Harmony Type</div>
-          <div class="config-control">
-            <span>Tetradic</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 10l5 5 5-5z" />
-            </svg>
-          </div>
+          <select
+            class="config-select"
+            .value=${this.harmonyConfig.harmonyType}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.handleConfigChange('harmony', 'harmonyType', value);
+            }}
+          >
+            <option value="complementary">Complementary</option>
+            <option value="analogous">Analogous</option>
+            <option value="triadic">Triadic</option>
+            <option value="split-complementary">Split-Complementary</option>
+            <option value="tetradic">Tetradic</option>
+            <option value="square">Square</option>
+            <option value="monochromatic">Monochromatic</option>
+            <option value="compound">Compound</option>
+            <option value="shades">Shades</option>
+          </select>
         </div>
 
         <div class="config-group">
           <div class="config-label">Display Options</div>
-          <div class="config-control">
-            <span>Color Names</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Color Names"
+              .checked=${this.harmonyConfig.showNames}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('harmony', 'showNames', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Hex Codes</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Hex Codes"
+              .checked=${this.harmonyConfig.showHex}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('harmony', 'showHex', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>RGB Values</span>
-            <div class="toggle-switch"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="RGB Values"
+              .checked=${this.harmonyConfig.showRgb}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('harmony', 'showRgb', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>HSV Values</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="HSV Values"
+              .checked=${this.harmonyConfig.showHsv}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('harmony', 'showHsv', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
         </div>
 
         <div class="config-group">
           <div class="config-label">Filters</div>
-          <div class="config-control">
-            <span>Strict Matching</span>
-            <div class="toggle-switch"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Strict Matching"
+              .checked=${this.harmonyConfig.strictMatching}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('harmony', 'strictMatching', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
         </div>
       </div>
@@ -413,16 +502,23 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'extractor'}>
         <div class="config-group">
           <div class="config-label">Extraction Settings</div>
-          <div class="config-control">
-            <span>Vibrancy Boost</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Vibrancy Boost"
+              .checked=${this.extractorConfig.vibrancyBoost}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('extractor', 'vibrancyBoost', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control config-control-column">
-            <div class="slider-header">
-              <span>Max Colors</span>
-              <span class="slider-value">8</span>
-            </div>
-            <input type="range" class="config-slider" min="3" max="10" value="8" />
+          <div class="slider-wrapper">
+            <v4-range-slider
+              label="Max Colors"
+              .value=${this.extractorConfig.maxColors}
+              .min=${3}
+              .max=${10}
+              @slider-change=${(e: CustomEvent<{ value: number }>) =>
+                this.handleConfigChange('extractor', 'maxColors', e.detail.value)}
+            ></v4-range-slider>
           </div>
         </div>
       </div>
@@ -437,41 +533,73 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'accessibility'}>
         <div class="config-group">
           <div class="config-label">Vision Types</div>
-          <div class="config-control">
-            <span>Normal Vision</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Normal Vision"
+              .checked=${this.accessibilityConfig.normalVision}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('accessibility', 'normalVision', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Deuteranopia</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Deuteranopia"
+              .checked=${this.accessibilityConfig.deuteranopia}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('accessibility', 'deuteranopia', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Protanopia</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Protanopia"
+              .checked=${this.accessibilityConfig.protanopia}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('accessibility', 'protanopia', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Tritanopia</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Tritanopia"
+              .checked=${this.accessibilityConfig.tritanopia}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('accessibility', 'tritanopia', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Achromatopsia</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Achromatopsia"
+              .checked=${this.accessibilityConfig.achromatopsia}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('accessibility', 'achromatopsia', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
         </div>
 
         <div class="config-group">
           <div class="config-label">Display Options</div>
-          <div class="config-control">
-            <span>Show Labels</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show Labels"
+              .checked=${this.accessibilityConfig.showLabels}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('accessibility', 'showLabels', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Show Hex Values</span>
-            <div class="toggle-switch"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show Hex Values"
+              .checked=${this.accessibilityConfig.showHexValues}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('accessibility', 'showHexValues', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>High Contrast Mode</span>
-            <div class="toggle-switch"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="High Contrast Mode"
+              .checked=${this.accessibilityConfig.highContrastMode}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('accessibility', 'highContrastMode', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
         </div>
       </div>
@@ -486,21 +614,37 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'comparison'}>
         <div class="config-group">
           <div class="config-label">Display Options</div>
-          <div class="config-control">
-            <span>Show Delta-E</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show Delta-E"
+              .checked=${this.comparisonConfig.showDeltaE}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('comparison', 'showDeltaE', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Show RGB</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show RGB"
+              .checked=${this.comparisonConfig.showRgb}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('comparison', 'showRgb', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Show HSV</span>
-            <div class="toggle-switch"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show HSV"
+              .checked=${this.comparisonConfig.showHsv}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('comparison', 'showHsv', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Show Market Prices</span>
-            <div class="toggle-switch active"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show Market Prices"
+              .checked=${this.comparisonConfig.showMarketPrices}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('comparison', 'showMarketPrices', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
         </div>
       </div>
@@ -515,23 +659,33 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'gradient'}>
         <div class="config-group">
           <div class="config-label">Gradient Steps</div>
-          <div class="config-control config-control-column">
-            <div class="slider-header">
-              <span>Count</span>
-              <span class="slider-value">8</span>
-            </div>
-            <input type="range" class="config-slider" min="3" max="12" value="8" />
+          <div class="slider-wrapper">
+            <v4-range-slider
+              label="Count"
+              .value=${this.gradientConfig.stepCount}
+              .min=${3}
+              .max=${12}
+              @slider-change=${(e: CustomEvent<{ value: number }>) =>
+                this.handleConfigChange('gradient', 'stepCount', e.detail.value)}
+            ></v4-range-slider>
           </div>
         </div>
 
         <div class="config-group">
           <div class="config-label">Interpolation</div>
-          <div class="config-control">
-            <span>Linear</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 10l5 5 5-5z" />
-            </svg>
-          </div>
+          <select
+            class="config-select"
+            .value=${this.gradientConfig.interpolation}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.handleConfigChange('gradient', 'interpolation', value);
+            }}
+          >
+            <option value="linear">Linear</option>
+            <option value="ease">Ease</option>
+            <option value="ease-in">Ease In</option>
+            <option value="ease-out">Ease Out</option>
+          </select>
         </div>
       </div>
     `;
@@ -545,12 +699,15 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'mixer'}>
         <div class="config-group">
           <div class="config-label">Result Settings</div>
-          <div class="config-control config-control-column">
-            <div class="slider-header">
-              <span>Max Results</span>
-              <span class="slider-value">3</span>
-            </div>
-            <input type="range" class="config-slider" min="3" max="8" value="3" />
+          <div class="slider-wrapper">
+            <v4-range-slider
+              label="Max Results"
+              .value=${this.mixerConfig.maxResults}
+              .min=${3}
+              .max=${8}
+              @slider-change=${(e: CustomEvent<{ value: number }>) =>
+                this.handleConfigChange('mixer', 'maxResults', e.detail.value)}
+            ></v4-range-slider>
           </div>
         </div>
       </div>
@@ -565,24 +722,39 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'presets'}>
         <div class="config-group">
           <div class="config-label">Display Options</div>
-          <div class="config-control">
-            <span>Show My Presets Only</span>
-            <div class="toggle-switch"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show My Presets Only"
+              .checked=${this.presetsConfig.showMyPresetsOnly}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('presets', 'showMyPresetsOnly', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
-          <div class="config-control">
-            <span>Show Favorites</span>
-            <div class="toggle-switch"></div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show Favorites"
+              .checked=${this.presetsConfig.showFavorites}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('presets', 'showFavorites', e.detail.checked)}
+            ></v4-toggle-switch>
           </div>
         </div>
 
         <div class="config-group">
           <div class="config-label">Sort By</div>
-          <div class="config-control">
-            <span>Newest First</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 10l5 5 5-5z" />
-            </svg>
-          </div>
+          <select
+            class="config-select"
+            .value=${this.presetsConfig.sortBy}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.handleConfigChange('presets', 'sortBy', value);
+            }}
+          >
+            <option value="newest">Newest First</option>
+            <option value="popular">Most Popular</option>
+            <option value="votes">Most Votes</option>
+            <option value="alphabetical">Alphabetical</option>
+          </select>
         </div>
       </div>
     `;
@@ -596,37 +768,41 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'budget'}>
         <div class="config-group">
           <div class="config-label">Budget Limit</div>
-          <div class="config-control config-control-column">
-            <div class="slider-header">
-              <span>Max Price</span>
-              <span class="slider-value">200,000 gil</span>
-            </div>
-            <input
-              type="range"
-              class="config-slider"
-              min="0"
-              max="200000"
-              step="5000"
-              value="200000"
-            />
+          <div class="slider-wrapper">
+            <v4-range-slider
+              label="Max Price"
+              .value=${this.budgetConfig.maxPrice}
+              .min=${0}
+              .max=${200000}
+              .step=${5000}
+              .valueFormatter=${(v: number) => `${v.toLocaleString()} gil`}
+              @slider-change=${(e: CustomEvent<{ value: number }>) =>
+                this.handleConfigChange('budget', 'maxPrice', e.detail.value)}
+            ></v4-range-slider>
           </div>
-          <div class="config-control config-control-column">
-            <div class="slider-header">
-              <span>Max Results</span>
-              <span class="slider-value">8</span>
-            </div>
-            <input type="range" class="config-slider" min="1" max="20" value="8" />
+          <div class="slider-wrapper">
+            <v4-range-slider
+              label="Max Results"
+              .value=${this.budgetConfig.maxResults}
+              .min=${1}
+              .max=${20}
+              @slider-change=${(e: CustomEvent<{ value: number }>) =>
+                this.handleConfigChange('budget', 'maxResults', e.detail.value)}
+            ></v4-range-slider>
           </div>
         </div>
 
         <div class="config-group">
           <div class="config-label">Color Distance</div>
-          <div class="config-control config-control-column">
-            <div class="slider-header">
-              <span>Max Delta-E</span>
-              <span class="slider-value">75</span>
-            </div>
-            <input type="range" class="config-slider" min="0" max="100" value="75" />
+          <div class="slider-wrapper">
+            <v4-range-slider
+              label="Max Delta-E"
+              .value=${this.budgetConfig.maxDeltaE}
+              .min=${0}
+              .max=${100}
+              @slider-change=${(e: CustomEvent<{ value: number }>) =>
+                this.handleConfigChange('budget', 'maxDeltaE', e.detail.value)}
+            ></v4-range-slider>
           </div>
         </div>
       </div>
@@ -641,48 +817,64 @@ export class ConfigSidebar extends BaseLitComponent {
       <div class="config-section" ?hidden=${this.activeTool !== 'swatch'}>
         <div class="config-group">
           <div class="config-label">Color Sheet</div>
-          <div class="config-control config-control-column">
-            <select class="config-select">
-              <option selected>EyeColors.csv</option>
-              <option disabled>HairColors.csv (N/A)</option>
-              <option disabled>SkinColors.csv (N/A)</option>
-            </select>
-          </div>
+          <select
+            class="config-select"
+            .value=${this.swatchConfig.colorSheet}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.handleConfigChange('swatch', 'colorSheet', value);
+            }}
+          >
+            <option value="EyeColors.csv">Eye Colors</option>
+            <option value="HairColors.csv" disabled>Hair Colors (N/A)</option>
+            <option value="SkinColors.csv" disabled>Skin Colors (N/A)</option>
+          </select>
         </div>
 
         <div class="config-group">
           <div class="config-label">Character</div>
-          <div class="config-control config-control-column">
-            <span style="font-size: 11px; color: var(--theme-text-muted);">Race</span>
-            <select class="config-select">
-              <option selected>Hyur (Midlander)</option>
-              <option>Hyur (Highlander)</option>
-              <option>Elezen</option>
-              <option>Lalafell</option>
-              <option>Miqo'te</option>
-              <option>Roegadyn</option>
-              <option>Au Ra</option>
-              <option>Hrothgar</option>
-              <option>Viera</option>
-            </select>
-          </div>
-          <div class="config-control config-control-column">
-            <span style="font-size: 11px; color: var(--theme-text-muted);">Gender</span>
-            <select class="config-select">
-              <option selected>Male</option>
-              <option>Female</option>
-            </select>
-          </div>
+          <select
+            class="config-select"
+            .value=${this.swatchConfig.race}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.handleConfigChange('swatch', 'race', value);
+            }}
+          >
+            <option value="Hyur (Midlander)">Hyur (Midlander)</option>
+            <option value="Hyur (Highlander)">Hyur (Highlander)</option>
+            <option value="Elezen">Elezen</option>
+            <option value="Lalafell">Lalafell</option>
+            <option value="Miqo'te">Miqo'te</option>
+            <option value="Roegadyn">Roegadyn</option>
+            <option value="Au Ra">Au Ra</option>
+            <option value="Hrothgar">Hrothgar</option>
+            <option value="Viera">Viera</option>
+          </select>
+          <select
+            class="config-select"
+            .value=${this.swatchConfig.gender}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.handleConfigChange('swatch', 'gender', value);
+            }}
+          >
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
         </div>
 
         <div class="config-group">
           <div class="config-label">Search Settings</div>
-          <div class="config-control config-control-column">
-            <div class="slider-header">
-              <span>Max Results</span>
-              <span class="slider-value">3</span>
-            </div>
-            <input type="range" class="config-slider" min="1" max="8" value="3" />
+          <div class="slider-wrapper">
+            <v4-range-slider
+              label="Max Results"
+              .value=${this.swatchConfig.maxResults}
+              .min=${1}
+              .max=${8}
+              @slider-change=${(e: CustomEvent<{ value: number }>) =>
+                this.handleConfigChange('swatch', 'maxResults', e.detail.value)}
+            ></v4-range-slider>
           </div>
         </div>
       </div>
