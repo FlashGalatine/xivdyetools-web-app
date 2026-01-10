@@ -511,7 +511,7 @@ export class ResultCard extends BaseLitComponent {
             <div class="column-header">Acquisition</div>
             <div class="detail-row">
               <span class="detail-label">Source</span>
-              <span class="detail-value">${dye.source ?? 'Unknown'}</span>
+              <span class="detail-value">${dye.acquisition ?? 'Unknown'}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Market</span>

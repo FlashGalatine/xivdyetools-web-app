@@ -155,9 +155,6 @@ export class ToggleSwitchV4 extends BaseLitComponent {
         .toggle-thumb {
           transition: none;
         }
-        .toggle-wrapper:not(.disabled):active .toggle-thumb {
-          transform: ${this.checked ? 'translateX(18px)' : 'none'};
-        }
       }
     `,
   ];

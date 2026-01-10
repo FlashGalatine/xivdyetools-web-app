@@ -17,5 +17,9 @@ export { ToolBanner } from './tool-banner';
 export { ConfigSidebar } from './config-sidebar';
 
 // Shared components (Phase 5)
-// export { ResultCard } from './result-card';
-// export { GlassPanel } from './glass-panel';
+export { GlassPanel } from './glass-panel';
+export type { GlassPanelVariant, GlassPanelPadding } from './glass-panel';
+export { ToggleSwitchV4 } from './toggle-switch-v4';
+export { RangeSliderV4 } from './range-slider-v4';
+export { ResultCard } from './result-card';
+export type { ResultCardData, ContextAction } from './result-card';
