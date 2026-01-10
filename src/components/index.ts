@@ -83,3 +83,4 @@ export { GradientTool, type GradientToolOptions } from './gradient-tool'; // Was
 export { PresetTool, type PresetToolOptions } from './preset-tool';
 export { BudgetTool, type BudgetToolOptions } from './budget-tool';
 export { SwatchTool, type SwatchToolOptions } from './swatch-tool'; // Was CharacterTool
+export { MixerTool, type MixerToolOptions } from './mixer-tool'; // V4 NEW - Dye Mixer

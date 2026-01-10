@@ -173,10 +173,16 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
         break;
       }
       case 'mixer': {
-        // V4: NEW Dye Mixer tool (placeholder)
-        // Full implementation coming in Phase 6
-        renderPlaceholder(rightPanel, 'Dye Mixer (Coming Soon)');
-        logger.info('[V3 Layout] Dye Mixer placeholder loaded (v4)');
+        // V4: NEW Dye Mixer tool
+        const { MixerTool } = await import('@components/mixer-tool');
+        const toolContainer = document.createElement('div');
+        activeTool = new MixerTool(toolContainer, {
+          leftPanel,
+          rightPanel,
+          drawerContent,
+        });
+        activeTool.init();
+        logger.info('[V3 Layout] Dye Mixer loaded (v4 placeholder)');
         break;
       }
       case 'presets': {
