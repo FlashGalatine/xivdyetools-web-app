@@ -74,10 +74,24 @@ async function initializeApp(): Promise<void> {
       return;
     }
 
-    // Initialize v3 two-panel layout inside the content container
-    logger.info('🎨 Initializing v3 two-panel layout...');
-    const { initializeV3Layout } = await import('@components/v3-layout');
-    await initializeV3Layout(contentContainer);
+    // Check for v4 layout flag (for testing new glassmorphism UI)
+    // Enable via URL: ?v4=true or environment: VITE_V4_LAYOUT=true
+    const useV4Layout =
+      window.location.search.includes('v4=true') ||
+      import.meta.env.VITE_V4_LAYOUT === 'true';
+
+    if (useV4Layout) {
+      // Initialize v4 glassmorphism layout
+      logger.info('🎨 Initializing v4 layout shell...');
+      const { initializeV4Layout } = await import('@components/v4-layout');
+      await initializeV4Layout(contentContainer);
+      logger.info('✅ V4 layout loaded. Access at: http://localhost:5173/?v4=true');
+    } else {
+      // Initialize v3 two-panel layout inside the content container
+      logger.info('🎨 Initializing v3 two-panel layout...');
+      const { initializeV3Layout } = await import('@components/v3-layout');
+      await initializeV3Layout(contentContainer);
+    }
 
     logger.info('✅ Application initialized successfully');
 
