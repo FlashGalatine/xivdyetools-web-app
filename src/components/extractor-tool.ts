@@ -22,6 +22,7 @@ import { DyeCardRenderer } from '@components/dye-card-renderer';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
 import {
   ColorService,
+  ConfigController,
   dyeService,
   LanguageService,
   RouterService,
@@ -39,6 +40,7 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, DyeWithDistance, PriceData } from '@shared/types';
+import type { ExtractorConfig } from '@shared/tool-config-types';
 import { PaletteService, type PaletteMatch } from '@xivdyetools/core';
 
 // ============================================================================
@@ -58,6 +60,7 @@ const STORAGE_KEYS = {
   sampleSize: 'v3_matcher_sample_size',
   paletteMode: 'v3_matcher_palette_mode',
   paletteColorCount: 'v3_matcher_palette_count',
+  vibrancyBoost: 'v3_matcher_vibrancy_boost',
   imageDataUrl: 'v3_matcher_image',
   selectedColor: 'v3_matcher_color',
 } as const;
@@ -86,6 +89,7 @@ export class ExtractorTool extends BaseComponent {
   private sampleSize: number;
   private paletteMode: boolean;
   private paletteColorCount: number = 4;
+  private vibrancyBoost: boolean = true;
   private matchedDyes: DyeWithDistance[] = [];
   private showPrices: boolean = false;
   private priceData: Map<number, PriceData> = new Map();
@@ -144,6 +148,7 @@ export class ExtractorTool extends BaseComponent {
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: ExtractorToolOptions) {
     super(container);
@@ -153,6 +158,7 @@ export class ExtractorTool extends BaseComponent {
     this.sampleSize = StorageService.getItem<number>(STORAGE_KEYS.sampleSize) ?? 5;
     this.paletteMode = StorageService.getItem<boolean>(STORAGE_KEYS.paletteMode) ?? false;
     this.paletteColorCount = StorageService.getItem<number>(STORAGE_KEYS.paletteColorCount) ?? 4;
+    this.vibrancyBoost = StorageService.getItem<boolean>(STORAGE_KEYS.vibrancyBoost) ?? true;
 
     // Initialize palette service
     this.paletteService = new PaletteService();
@@ -288,6 +294,11 @@ export class ExtractorTool extends BaseComponent {
       this.update();
     });
 
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('extractor', (config) => {
+      this.setConfig(config);
+    });
+
     // Restore saved image from storage
     const savedImageDataUrl = StorageService.getItem<string>(STORAGE_KEYS.imageDataUrl);
     if (savedImageDataUrl) {
@@ -345,6 +356,7 @@ export class ExtractorTool extends BaseComponent {
   destroy(): void {
     // Cleanup subscriptions
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
 
     // Cleanup child components
     this.imageUpload?.destroy();
@@ -369,6 +381,53 @@ export class ExtractorTool extends BaseComponent {
 
     super.destroy();
     logger.info('[MatcherTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   */
+  public setConfig(config: Partial<ExtractorConfig>): void {
+    let needsReextract = false;
+
+    // Handle vibrancyBoost
+    if (config.vibrancyBoost !== undefined && config.vibrancyBoost !== this.vibrancyBoost) {
+      this.vibrancyBoost = config.vibrancyBoost;
+      StorageService.setItem(STORAGE_KEYS.vibrancyBoost, config.vibrancyBoost);
+      needsReextract = true;
+      logger.info(`[ExtractorTool] setConfig: vibrancyBoost -> ${config.vibrancyBoost}`);
+    }
+
+    // Handle maxColors (maps to paletteColorCount)
+    if (config.maxColors !== undefined && config.maxColors !== this.paletteColorCount) {
+      this.paletteColorCount = config.maxColors;
+      StorageService.setItem(STORAGE_KEYS.paletteColorCount, config.maxColors);
+      needsReextract = true;
+      logger.info(`[ExtractorTool] setConfig: maxColors -> ${config.maxColors}`);
+
+      // Update desktop display
+      if (this.colorCountSlider) {
+        this.colorCountSlider.value = String(config.maxColors);
+      }
+      if (this.colorCountDisplay) {
+        this.colorCountDisplay.textContent = String(config.maxColors);
+      }
+      // Update mobile display
+      if (this.mobileColorCountSlider) {
+        this.mobileColorCountSlider.value = String(config.maxColors);
+      }
+      if (this.mobileColorCountDisplay) {
+        this.mobileColorCountDisplay.textContent = String(config.maxColors);
+      }
+    }
+
+    // Re-extract palette if config changed and we're in palette mode with an image
+    if (needsReextract && this.paletteMode && this.currentImage) {
+      void this.extractPalette();
+    }
   }
 
   // ============================================================================
