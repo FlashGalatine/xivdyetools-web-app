@@ -84,13 +84,16 @@ describe('RouterService', () => {
 
     it('should include all expected tools', () => {
       const toolIds = ROUTES.map((r) => r.id);
+      // V4 tool IDs
       expect(toolIds).toContain('harmony');
-      expect(toolIds).toContain('matcher');
+      expect(toolIds).toContain('extractor'); // Was 'matcher'
       expect(toolIds).toContain('accessibility');
       expect(toolIds).toContain('comparison');
-      expect(toolIds).toContain('mixer');
+      expect(toolIds).toContain('gradient'); // Was 'mixer' (Gradient Builder)
       expect(toolIds).toContain('presets');
       expect(toolIds).toContain('budget');
+      expect(toolIds).toContain('swatch'); // Was 'character'
+      expect(toolIds).toContain('mixer'); // NEW - Dye Mixer
     });
   });
 
@@ -180,10 +183,10 @@ describe('RouterService', () => {
     });
 
     it('should navigate to a valid tool', () => {
-      RouterService.navigateTo('matcher');
+      RouterService.navigateTo('extractor'); // V4: 'matcher' → 'extractor'
 
       expect(history.pushState).toHaveBeenCalled();
-      expect(RouterService.getCurrentToolId()).toBe('matcher');
+      expect(RouterService.getCurrentToolId()).toBe('extractor');
     });
 
     it('should update document title on navigation', () => {
@@ -219,7 +222,7 @@ describe('RouterService', () => {
         writable: true,
       });
 
-      RouterService.navigateTo('matcher');
+      RouterService.navigateTo('extractor'); // V4: 'matcher' → 'extractor'
 
       const calls = vi.mocked(history.pushState).mock.calls;
       const lastCall = calls[calls.length - 1];
@@ -285,7 +288,7 @@ describe('RouterService', () => {
         writable: true,
       });
 
-      RouterService.replaceRoute('matcher');
+      RouterService.replaceRoute('extractor'); // V4: 'matcher' → 'extractor'
 
       const calls = vi.mocked(history.replaceState).mock.calls;
       const lastCall = calls[calls.length - 1];
@@ -371,7 +374,7 @@ describe('RouterService', () => {
       const listener = vi.fn();
       RouterService.subscribe(listener);
 
-      RouterService.navigateTo('matcher');
+      RouterService.navigateTo('extractor'); // V4: 'matcher' → 'extractor'
 
       expect(listener).toHaveBeenCalled();
     });
@@ -469,8 +472,8 @@ describe('RouterService', () => {
     });
 
     it('should return tool ID for path without leading slash', () => {
-      const toolId = RouterService.getToolFromPath('matcher');
-      expect(toolId).toBe('matcher');
+      const toolId = RouterService.getToolFromPath('extractor'); // V4: 'matcher' → 'extractor'
+      expect(toolId).toBe('extractor');
     });
 
     it('should return tool ID for nested routes', () => {
@@ -530,13 +533,16 @@ describe('RouterService', () => {
 
   describe('isValidToolId', () => {
     it('should return true for valid tool IDs', () => {
+      // V4 tool IDs
       expect(RouterService.isValidToolId('harmony')).toBe(true);
-      expect(RouterService.isValidToolId('matcher')).toBe(true);
+      expect(RouterService.isValidToolId('extractor')).toBe(true); // Was 'matcher'
       expect(RouterService.isValidToolId('accessibility')).toBe(true);
       expect(RouterService.isValidToolId('comparison')).toBe(true);
-      expect(RouterService.isValidToolId('mixer')).toBe(true);
+      expect(RouterService.isValidToolId('gradient')).toBe(true); // Was 'mixer' (Gradient Builder)
       expect(RouterService.isValidToolId('presets')).toBe(true);
       expect(RouterService.isValidToolId('budget')).toBe(true);
+      expect(RouterService.isValidToolId('swatch')).toBe(true); // Was 'character'
+      expect(RouterService.isValidToolId('mixer')).toBe(true); // NEW - Dye Mixer
     });
 
     it('should return false for invalid tool IDs', () => {
@@ -552,7 +558,7 @@ describe('RouterService', () => {
 
       expect(routes).toBeDefined();
       expect(Array.isArray(routes)).toBe(true);
-      expect(routes.length).toBe(8);
+      expect(routes.length).toBe(9); // V4: 9 tools (8 renamed/retained + 1 new)
     });
 
     it('should return readonly array', () => {
@@ -768,7 +774,7 @@ describe('RouterService', () => {
       });
 
       RouterService.initialize();
-      RouterService.navigateTo('matcher');
+      RouterService.navigateTo('extractor'); // V4: 'matcher' → 'extractor'
 
       const calls = vi.mocked(history.pushState).mock.calls;
       const lastCall = calls[calls.length - 1];
@@ -804,7 +810,7 @@ describe('RouterService', () => {
       });
 
       RouterService.initialize();
-      RouterService.navigateTo('matcher');
+      RouterService.navigateTo('extractor'); // V4: 'matcher' → 'extractor'
 
       const calls = vi.mocked(history.pushState).mock.calls;
       const lastCall = calls[calls.length - 1];

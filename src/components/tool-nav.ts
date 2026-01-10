@@ -29,7 +29,12 @@ export interface NavTool {
 }
 
 /**
- * Get localized tool definitions for v3 navigation
+ * Get localized tool definitions for v4 navigation
+ * V4 changes:
+ * - 'matcher' → 'extractor' (Palette Extractor)
+ * - 'mixer' → 'gradient' (Gradient Builder)
+ * - 'character' → 'swatch' (Swatch Matcher)
+ * - NEW: 'mixer' (Dye Mixer)
  */
 export function getLocalizedTools(): NavTool[] {
   return [
@@ -41,11 +46,11 @@ export function getLocalizedTools(): NavTool[] {
       description: LanguageService.t('tools.harmony.description'),
     },
     {
-      id: 'matcher',
-      name: LanguageService.t('tools.matcher.title'),
-      shortName: LanguageService.t('tools.matcher.shortName'),
-      icon: ICON_TOOL_MATCHER,
-      description: LanguageService.t('tools.matcher.description'),
+      id: 'extractor', // Was 'matcher'
+      name: LanguageService.t('tools.matcher.title') || 'Palette Extractor',
+      shortName: LanguageService.t('tools.matcher.shortName') || 'Extractor',
+      icon: ICON_TOOL_MATCHER, // Reuse existing icon
+      description: LanguageService.t('tools.matcher.description') || 'Extract palettes from images',
     },
     {
       id: 'accessibility',
@@ -62,11 +67,11 @@ export function getLocalizedTools(): NavTool[] {
       description: LanguageService.t('tools.comparison.description'),
     },
     {
-      id: 'mixer',
-      name: LanguageService.t('tools.mixer.title'),
-      shortName: LanguageService.t('tools.mixer.shortName'),
-      icon: ICON_TOOL_MIXER,
-      description: LanguageService.t('tools.mixer.description'),
+      id: 'gradient', // Was 'mixer' - now Gradient Builder
+      name: LanguageService.t('tools.mixer.title') || 'Gradient Builder',
+      shortName: LanguageService.t('tools.mixer.shortName') || 'Gradient',
+      icon: ICON_TOOL_MIXER, // Reuse existing icon
+      description: LanguageService.t('tools.mixer.description') || 'Create color gradients between dyes',
     },
     {
       id: 'presets',
@@ -83,25 +88,34 @@ export function getLocalizedTools(): NavTool[] {
       description: LanguageService.t('tools.budget.description') || 'Find affordable dye alternatives',
     },
     {
-      id: 'character',
-      name: LanguageService.t('tools.character.title') || 'Character Matcher',
-      shortName: LanguageService.t('tools.character.shortName') || 'Character',
-      icon: ICON_TOOL_CHARACTER,
+      id: 'swatch', // Was 'character'
+      name: LanguageService.t('tools.character.title') || 'Swatch Matcher',
+      shortName: LanguageService.t('tools.character.shortName') || 'Swatch',
+      icon: ICON_TOOL_CHARACTER, // Reuse existing icon
       description: LanguageService.t('tools.character.description') || 'Match dyes to character colors',
+    },
+    {
+      id: 'mixer', // NEW - Dye Mixer
+      name: 'Dye Mixer',
+      shortName: 'Mixer',
+      icon: ICON_TOOL_MIXER, // Temporary: reuse mixer icon
+      description: 'Blend dyes together to create new colors',
     },
   ];
 }
 
 /**
  * Map tool IDs to their SVG icons
+ * V4: Updated tool IDs with icon mappings
  */
 export const TOOL_ICONS: Record<ToolId, string> = {
   harmony: ICON_TOOL_HARMONY,
-  matcher: ICON_TOOL_MATCHER,
+  extractor: ICON_TOOL_MATCHER, // Was 'matcher'
   accessibility: ICON_TOOL_ACCESSIBILITY,
   comparison: ICON_TOOL_COMPARISON,
-  mixer: ICON_TOOL_MIXER,
+  gradient: ICON_TOOL_MIXER, // Was 'mixer' - Gradient Builder
   presets: ICON_TOOL_PRESETS,
   budget: ICON_TOOL_BUDGET,
-  character: ICON_TOOL_CHARACTER,
+  swatch: ICON_TOOL_CHARACTER, // Was 'character'
+  mixer: ICON_TOOL_MIXER, // NEW - Dye Mixer (temp icon)
 };

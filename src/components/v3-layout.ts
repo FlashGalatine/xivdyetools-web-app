@@ -120,8 +120,9 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
         logger.info('[V3 Layout] Harmony tool loaded (v3 production)');
         break;
       }
-      case 'matcher': {
-        // Phase 3: Production MatcherTool
+      case 'extractor': {
+        // V4: Palette Extractor (was 'matcher')
+        // Note: File will be renamed to extractor-tool.ts in next commit
         const { MatcherTool } = await import('@components/matcher-tool');
         const toolContainer = document.createElement('div');
         activeTool = new MatcherTool(toolContainer, {
@@ -130,7 +131,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
           drawerContent,
         });
         activeTool.init();
-        logger.info('[V3 Layout] Matcher tool loaded (v3 production)');
+        logger.info('[V3 Layout] Extractor tool loaded (v4)');
         break;
       }
       case 'accessibility': {
@@ -159,8 +160,9 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
         logger.info('[V3 Layout] Comparison tool loaded (v3 production)');
         break;
       }
-      case 'mixer': {
-        // Phase 6: Production MixerTool
+      case 'gradient': {
+        // V4: Gradient Builder (was 'mixer')
+        // Note: File will be renamed to gradient-tool.ts in next commit
         const { MixerTool } = await import('@components/mixer-tool');
         const toolContainer = document.createElement('div');
         activeTool = new MixerTool(toolContainer, {
@@ -169,7 +171,14 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
           drawerContent,
         });
         activeTool.init();
-        logger.info('[V3 Layout] Mixer tool loaded (v3 production)');
+        logger.info('[V3 Layout] Gradient Builder loaded (v4)');
+        break;
+      }
+      case 'mixer': {
+        // V4: NEW Dye Mixer tool (placeholder)
+        // Full implementation coming in Phase 6
+        renderPlaceholder(rightPanel, 'Dye Mixer (Coming Soon)');
+        logger.info('[V3 Layout] Dye Mixer placeholder loaded (v4)');
         break;
       }
       case 'presets': {
@@ -198,8 +207,9 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
         logger.info('[V3 Layout] Budget tool loaded (v3 production)');
         break;
       }
-      case 'character': {
-        // Phase 9: Production CharacterTool
+      case 'swatch': {
+        // V4: Swatch Matcher (was 'character')
+        // Note: File will be renamed to swatch-tool.ts in next commit
         const { CharacterTool } = await import('@components/character-tool');
         const toolContainer = document.createElement('div');
         activeTool = new CharacterTool(toolContainer, {
@@ -208,7 +218,7 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
           drawerContent,
         });
         activeTool.init();
-        logger.info('[V3 Layout] Character tool loaded (v3 production)');
+        logger.info('[V3 Layout] Swatch Matcher loaded (v4)');
         break;
       }
       default:

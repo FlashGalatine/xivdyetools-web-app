@@ -75,10 +75,10 @@ describe('TwoPanelShell', () => {
     });
 
     it('should use initialTool option when provided', () => {
-      shell = new TwoPanelShell(container, { initialTool: 'matcher' });
+      shell = new TwoPanelShell(container, { initialTool: 'extractor' }); // V4: 'matcher' → 'extractor'
       shell.init();
 
-      expect(shell.getActiveToolId()).toBe('matcher');
+      expect(shell.getActiveToolId()).toBe('extractor');
     });
 
     it('should render tool navigation buttons', () => {
