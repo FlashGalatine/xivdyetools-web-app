@@ -1,0 +1,330 @@
+/**
+ * XIV Dye Tools v4.0 - V4 Layout Entry Point
+ *
+ * Initializes the V4LayoutShell with RouterService integration.
+ * Handles tool lazy-loading and navigation with the new glassmorphism UI.
+ *
+ * This module mirrors v3-layout.ts but uses the V4 component architecture:
+ * - V4LayoutShell (header + tool banner + sidebar + content)
+ * - ConfigController for centralized config state
+ * - Tools rendered inside the shell's content slot
+ *
+ * @module components/v4-layout
+ */
+
+import { RouterService, type ToolId } from '@services/router-service';
+import { ConfigController } from '@services/config-controller';
+import { LanguageService } from '@services/index';
+import { logger } from '@shared/logger';
+import { clearContainer } from '@shared/utils';
+import type { BaseComponent } from './base-component';
+import type { V4LayoutShell } from './v4/v4-layout-shell';
+
+// Import V4 layout shell (registers custom element)
+import '@components/v4/v4-layout-shell';
+
+// Track active tool instance for cleanup
+let activeTool: BaseComponent | null = null;
+let layoutElement: V4LayoutShell | null = null;
+let configController: ConfigController | null = null;
+let languageUnsubscribe: (() => void) | null = null;
+let configUnsubscribe: (() => void) | null = null;
+
+/**
+ * Initialize the v4 layout
+ */
+export async function initializeV4Layout(container: HTMLElement): Promise<void> {
+  // Initialize router
+  RouterService.initialize();
+
+  // Get config controller instance
+  configController = ConfigController.getInstance();
+
+  const initialTool = RouterService.getCurrentToolId();
+  logger.info(`[V4 Layout] Initializing with tool: ${initialTool}`);
+
+  // Create V4LayoutShell element
+  layoutElement = document.createElement('v4-layout-shell') as V4LayoutShell;
+  layoutElement.setAttribute('active-tool', initialTool);
+  container.appendChild(layoutElement);
+
+  // Listen for tool changes from ToolBanner
+  layoutElement.addEventListener('tool-change', ((e: CustomEvent<{ toolId: ToolId }>) => {
+    const { toolId } = e.detail;
+    RouterService.navigateTo(toolId);
+  }) as EventListener);
+
+  // Listen for config changes from ConfigSidebar
+  layoutElement.addEventListener('config-change', ((
+    e: CustomEvent<{ tool: string; key: string; value: unknown }>,
+  ) => {
+    const { tool, key, value } = e.detail;
+    logger.debug(`[V4 Layout] Config change: ${tool}.${key} = ${value}`);
+
+    // Notify active tool if it has setConfig method
+    if (activeTool && 'setConfig' in activeTool) {
+      (activeTool as BaseComponent & { setConfig: (config: Record<string, unknown>) => void })
+        .setConfig({ [key]: value });
+    }
+  }) as EventListener);
+
+  // Subscribe to route changes (browser back/forward)
+  RouterService.subscribe((state) => {
+    logger.info(`[V4 Layout] Route changed to: ${state.toolId}`);
+    if (layoutElement) {
+      layoutElement.setAttribute('active-tool', state.toolId);
+    }
+    void loadToolContent(state.toolId);
+  });
+
+  // Subscribe to language changes for re-rendering
+  languageUnsubscribe = LanguageService.subscribe(() => {
+    logger.info('[V4 Layout] Language changed, tool may need refresh');
+  });
+
+  // Load initial tool
+  await loadToolContent(initialTool);
+
+  logger.info('[V4 Layout] Initialized successfully');
+}
+
+/**
+ * Get the content container inside V4LayoutShell's shadow DOM
+ */
+function getContentContainer(): HTMLElement | null {
+  if (!layoutElement) return null;
+
+  // V4LayoutShell uses shadow DOM, so we need to query inside it
+  const shadowRoot = layoutElement.shadowRoot;
+  if (!shadowRoot) {
+    logger.warn('[V4 Layout] No shadow root found on layout element');
+    return null;
+  }
+
+  // The content scroll container
+  const contentScroll = shadowRoot.querySelector('.v4-layout-content-scroll');
+  return contentScroll as HTMLElement | null;
+}
+
+/**
+ * Load tool content into the V4 layout content area
+ */
+async function loadToolContent(toolId: ToolId): Promise<void> {
+  const contentContainer = getContentContainer();
+
+  if (!contentContainer) {
+    logger.error('[V4 Layout] Content container not found');
+    return;
+  }
+
+  // Cleanup previous tool
+  if (activeTool) {
+    activeTool.destroy();
+    activeTool = null;
+  }
+
+  // Clear existing content
+  clearContainer(contentContainer);
+
+  // Show loading state
+  contentContainer.innerHTML = `
+    <div class="flex items-center justify-center h-64">
+      <div class="text-center">
+        <div class="inline-block w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mb-3" style="border-color: var(--theme-primary); border-top-color: transparent;"></div>
+        <p style="color: var(--theme-text-muted);">Loading ${toolId}...</p>
+      </div>
+    </div>
+  `;
+
+  // Create panel containers for tool
+  // V4 tools need left/right panel containers, even though ConfigSidebar is separate
+  const toolContainer = document.createElement('div');
+  toolContainer.className = 'v4-tool-container';
+  toolContainer.style.cssText = 'display: flex; flex-direction: column; height: 100%;';
+
+  // For V4, the left panel content goes into ConfigSidebar (handled separately)
+  // Tools render their main content directly
+  const mainPanel = document.createElement('div');
+  mainPanel.className = 'v4-tool-main';
+  mainPanel.style.cssText = 'flex: 1; overflow-y: auto;';
+  toolContainer.appendChild(mainPanel);
+
+  // Load tool-specific content
+  try {
+    switch (toolId) {
+      case 'harmony': {
+        const { HarmonyTool } = await import('@components/harmony-tool');
+        // In V4, tools render into the main content area
+        // The ConfigSidebar handles configuration controls separately
+        activeTool = new HarmonyTool(toolContainer, {
+          leftPanel: mainPanel, // Tool will use this for non-config content
+          rightPanel: mainPanel,
+          drawerContent: null, // V4 doesn't use drawer
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Harmony tool loaded');
+        break;
+      }
+      case 'extractor': {
+        const { ExtractorTool } = await import('@components/extractor-tool');
+        activeTool = new ExtractorTool(toolContainer, {
+          leftPanel: mainPanel,
+          rightPanel: mainPanel,
+          drawerContent: null,
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Extractor tool loaded');
+        break;
+      }
+      case 'accessibility': {
+        const { AccessibilityTool } = await import('@components/accessibility-tool');
+        activeTool = new AccessibilityTool(toolContainer, {
+          leftPanel: mainPanel,
+          rightPanel: mainPanel,
+          drawerContent: null,
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Accessibility tool loaded');
+        break;
+      }
+      case 'comparison': {
+        const { ComparisonTool } = await import('@components/comparison-tool');
+        activeTool = new ComparisonTool(toolContainer, {
+          leftPanel: mainPanel,
+          rightPanel: mainPanel,
+          drawerContent: null,
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Comparison tool loaded');
+        break;
+      }
+      case 'gradient': {
+        const { GradientTool } = await import('@components/gradient-tool');
+        activeTool = new GradientTool(toolContainer, {
+          leftPanel: mainPanel,
+          rightPanel: mainPanel,
+          drawerContent: null,
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Gradient Builder loaded');
+        break;
+      }
+      case 'mixer': {
+        const { MixerTool } = await import('@components/mixer-tool');
+        activeTool = new MixerTool(toolContainer, {
+          leftPanel: mainPanel,
+          rightPanel: mainPanel,
+          drawerContent: null,
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Dye Mixer loaded');
+        break;
+      }
+      case 'presets': {
+        const { PresetTool } = await import('@components/preset-tool');
+        activeTool = new PresetTool(toolContainer, {
+          leftPanel: mainPanel,
+          rightPanel: mainPanel,
+          drawerContent: null,
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Presets tool loaded');
+        break;
+      }
+      case 'budget': {
+        const { BudgetTool } = await import('@components/budget-tool');
+        activeTool = new BudgetTool(toolContainer, {
+          leftPanel: mainPanel,
+          rightPanel: mainPanel,
+          drawerContent: null,
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Budget tool loaded');
+        break;
+      }
+      case 'swatch': {
+        const { SwatchTool } = await import('@components/swatch-tool');
+        activeTool = new SwatchTool(toolContainer, {
+          leftPanel: mainPanel,
+          rightPanel: mainPanel,
+          drawerContent: null,
+        });
+        activeTool.init();
+        logger.info('[V4 Layout] Swatch Matcher loaded');
+        break;
+      }
+      default:
+        renderPlaceholder(contentContainer, toolId);
+        return;
+    }
+
+    // Clear loading and append tool container
+    clearContainer(contentContainer);
+    contentContainer.appendChild(toolContainer);
+  } catch (error) {
+    logger.error(`[V4 Layout] Failed to load ${toolId}:`, error);
+    contentContainer.innerHTML = `
+      <div class="flex items-center justify-center h-64">
+        <div class="text-center" style="color: var(--theme-text);">
+          <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p class="font-medium mb-2">Failed to load tool</p>
+          <p class="text-sm opacity-70">Please try again or refresh the page</p>
+        </div>
+      </div>
+    `;
+  }
+}
+
+/**
+ * Render placeholder for unknown tools
+ */
+function renderPlaceholder(container: HTMLElement, toolId: string): void {
+  container.innerHTML = `
+    <div class="flex items-center justify-center h-64">
+      <div class="text-center" style="color: var(--theme-text);">
+        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+        <p class="font-medium mb-2">${toolId} Tool</p>
+        <p class="text-sm opacity-70">Coming soon</p>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Cleanup the v4 layout
+ */
+export function destroyV4Layout(): void {
+  // Clean up subscriptions
+  if (languageUnsubscribe) {
+    languageUnsubscribe();
+    languageUnsubscribe = null;
+  }
+
+  if (configUnsubscribe) {
+    configUnsubscribe();
+    configUnsubscribe = null;
+  }
+
+  // Clean up tool
+  if (activeTool) {
+    activeTool.destroy();
+    activeTool = null;
+  }
+
+  // Clean up layout element
+  if (layoutElement) {
+    layoutElement.remove();
+    layoutElement = null;
+  }
+
+  // Clean up router
+  RouterService.destroy();
+
+  configController = null;
+
+  logger.info('[V4 Layout] Destroyed');
+}
