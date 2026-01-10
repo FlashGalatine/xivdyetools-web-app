@@ -13,12 +13,13 @@
 import { BaseComponent } from '@components/base-component';
 import { CollapsiblePanel } from '@components/collapsible-panel';
 import { DyeSelector } from '@components/dye-selector';
-import { ColorService, DyeService, LanguageService, RouterService, StorageService } from '@services/index';
+import { ColorService, ConfigController, DyeService, LanguageService, RouterService, StorageService } from '@services/index';
 import { ICON_TOOL_COMPARISON } from '@shared/tool-icons';
 import { ICON_BEAKER, ICON_SETTINGS } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye } from '@shared/types';
+import type { ComparisonConfig } from '@shared/tool-config-types';
 
 // ============================================================================
 // Types and Constants
@@ -36,6 +37,9 @@ export interface ComparisonToolOptions {
 interface ComparisonOptions {
   showDistanceValues: boolean;
   highlightClosestPair: boolean;
+  showRgb: boolean;
+  showHsv: boolean;
+  showMarketPrices: boolean;
 }
 
 /**
@@ -65,6 +69,9 @@ const STORAGE_KEYS = {
   showDistanceValues: 'v3_comparison_show_distance',
   highlightClosestPair: 'v3_comparison_highlight_closest',
   selectedDyes: 'v3_comparison_selected_dyes',
+  showRgb: 'v3_comparison_show_rgb',
+  showHsv: 'v3_comparison_show_hsv',
+  showMarketPrices: 'v3_comparison_show_prices',
 } as const;
 
 /**
@@ -73,6 +80,9 @@ const STORAGE_KEYS = {
 const DEFAULT_OPTIONS: ComparisonOptions = {
   showDistanceValues: true,
   highlightClosestPair: false,
+  showRgb: true,
+  showHsv: false,
+  showMarketPrices: true,
 };
 
 // ============================================================================
@@ -115,6 +125,7 @@ export class ComparisonTool extends BaseComponent {
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: ComparisonToolOptions) {
     super(container);
@@ -126,6 +137,9 @@ export class ComparisonTool extends BaseComponent {
         StorageService.getItem<boolean>(STORAGE_KEYS.showDistanceValues) ?? DEFAULT_OPTIONS.showDistanceValues,
       highlightClosestPair:
         StorageService.getItem<boolean>(STORAGE_KEYS.highlightClosestPair) ?? DEFAULT_OPTIONS.highlightClosestPair,
+      showRgb: StorageService.getItem<boolean>(STORAGE_KEYS.showRgb) ?? DEFAULT_OPTIONS.showRgb,
+      showHsv: StorageService.getItem<boolean>(STORAGE_KEYS.showHsv) ?? DEFAULT_OPTIONS.showHsv,
+      showMarketPrices: StorageService.getItem<boolean>(STORAGE_KEYS.showMarketPrices) ?? DEFAULT_OPTIONS.showMarketPrices,
     };
   }
 
@@ -152,6 +166,11 @@ export class ComparisonTool extends BaseComponent {
     // Subscribe to language changes (only in onMount, NOT bindEvents - avoids infinite loop)
     this.languageUnsubscribe = LanguageService.subscribe(() => {
       this.update();
+    });
+
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('comparison', (config) => {
+      this.setConfig(config);
     });
 
     // Load persisted dyes after DyeSelector is initialized
@@ -193,6 +212,7 @@ export class ComparisonTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
     this.dyeSelector?.destroy();
     this.dyeSelectorPanel?.destroy();
     this.optionsPanel?.destroy();
@@ -207,6 +227,54 @@ export class ComparisonTool extends BaseComponent {
 
     super.destroy();
     logger.info('[ComparisonTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   */
+  public setConfig(config: Partial<ComparisonConfig>): void {
+    let needsRerender = false;
+
+    // Handle showDeltaE (maps to showDistanceValues)
+    if (config.showDeltaE !== undefined && config.showDeltaE !== this.comparisonOptions.showDistanceValues) {
+      this.comparisonOptions.showDistanceValues = config.showDeltaE;
+      StorageService.setItem(STORAGE_KEYS.showDistanceValues, config.showDeltaE);
+      needsRerender = true;
+      logger.info(`[ComparisonTool] setConfig: showDeltaE -> ${config.showDeltaE}`);
+    }
+
+    // Handle showRgb
+    if (config.showRgb !== undefined && config.showRgb !== this.comparisonOptions.showRgb) {
+      this.comparisonOptions.showRgb = config.showRgb;
+      StorageService.setItem(STORAGE_KEYS.showRgb, config.showRgb);
+      needsRerender = true;
+      logger.info(`[ComparisonTool] setConfig: showRgb -> ${config.showRgb}`);
+    }
+
+    // Handle showHsv
+    if (config.showHsv !== undefined && config.showHsv !== this.comparisonOptions.showHsv) {
+      this.comparisonOptions.showHsv = config.showHsv;
+      StorageService.setItem(STORAGE_KEYS.showHsv, config.showHsv);
+      needsRerender = true;
+      logger.info(`[ComparisonTool] setConfig: showHsv -> ${config.showHsv}`);
+    }
+
+    // Handle showMarketPrices
+    if (config.showMarketPrices !== undefined && config.showMarketPrices !== this.comparisonOptions.showMarketPrices) {
+      this.comparisonOptions.showMarketPrices = config.showMarketPrices;
+      StorageService.setItem(STORAGE_KEYS.showMarketPrices, config.showMarketPrices);
+      needsRerender = true;
+      logger.info(`[ComparisonTool] setConfig: showMarketPrices -> ${config.showMarketPrices}`);
+    }
+
+    // Re-render if config changed and we have dyes selected
+    if (needsRerender && this.selectedDyes.length > 0) {
+      this.updateResults();
+    }
   }
 
   // ============================================================================
