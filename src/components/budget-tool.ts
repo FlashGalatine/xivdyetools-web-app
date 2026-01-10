@@ -15,7 +15,7 @@ import { CollapsiblePanel } from '@components/collapsible-panel';
 import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
-import { ColorService, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
+import { ColorService, ConfigController, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
 import { RouterService } from '@services/router-service';
 import { ICON_TOOL_BUDGET } from '@shared/tool-icons';
 import {
@@ -30,6 +30,7 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
+import type { BudgetConfig } from '@shared/tool-config-types';
 
 // ============================================================================
 // Types and Constants
@@ -152,6 +153,7 @@ export class BudgetTool extends BaseComponent {
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: BudgetToolOptions) {
     super(container);
@@ -195,6 +197,11 @@ export class BudgetTool extends BaseComponent {
       this.update();
     });
 
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('budget', (config) => {
+      this.setConfig(config);
+    });
+
     logger.info('[BudgetTool] Mounted');
 
     // Handle deep linking
@@ -208,6 +215,7 @@ export class BudgetTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
 
     // Desktop components
     this.dyeSelector?.destroy();
@@ -241,6 +249,80 @@ export class BudgetTool extends BaseComponent {
 
     super.destroy();
     logger.info('[BudgetTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   */
+  public setConfig(config: Partial<BudgetConfig>): void {
+    let needsRefilter = false;
+
+    // Handle maxPrice (maps to budgetLimit)
+    if (config.maxPrice !== undefined && config.maxPrice !== this.budgetLimit) {
+      this.budgetLimit = config.maxPrice;
+      StorageService.setItem(STORAGE_KEYS.budgetLimit, config.maxPrice);
+      needsRefilter = true;
+      logger.info(`[BudgetTool] setConfig: maxPrice -> ${config.maxPrice}`);
+
+      // Update desktop display
+      if (this.budgetValueDisplay) {
+        this.budgetValueDisplay.textContent = `${config.maxPrice.toLocaleString()} gil`;
+      }
+      // Update mobile display
+      if (this.mobileBudgetValueDisplay) {
+        this.mobileBudgetValueDisplay.textContent = `${config.maxPrice.toLocaleString()} gil`;
+      }
+    }
+
+    // Handle maxResults (maps to resultLimit)
+    if (config.maxResults !== undefined && config.maxResults !== this.resultLimit) {
+      this.resultLimit = config.maxResults;
+      StorageService.setItem(STORAGE_KEYS.resultLimit, config.maxResults);
+      needsRefilter = true;
+      logger.info(`[BudgetTool] setConfig: maxResults -> ${config.maxResults}`);
+
+      // Update desktop display
+      if (this.resultLimitValueDisplay) {
+        this.resultLimitValueDisplay.textContent = String(config.maxResults);
+      }
+      // Update mobile display
+      if (this.mobileResultLimitValueDisplay) {
+        this.mobileResultLimitValueDisplay.textContent = String(config.maxResults);
+      }
+    }
+
+    // Handle maxDeltaE (maps to colorDistance)
+    if (config.maxDeltaE !== undefined && config.maxDeltaE !== this.colorDistance) {
+      this.colorDistance = config.maxDeltaE;
+      StorageService.setItem(STORAGE_KEYS.colorDistance, config.maxDeltaE);
+      needsRefilter = true;
+      logger.info(`[BudgetTool] setConfig: maxDeltaE -> ${config.maxDeltaE}`);
+
+      // Update desktop display
+      if (this.distanceValueDisplay) {
+        this.distanceValueDisplay.textContent = String(config.maxDeltaE);
+      }
+      // Update mobile display
+      if (this.mobileDistanceValueDisplay) {
+        this.mobileDistanceValueDisplay.textContent = String(config.maxDeltaE);
+      }
+    }
+
+    // Re-filter and re-render if any config changed and we have data
+    if (needsRefilter && this.targetDye) {
+      // For maxDeltaE changes, we need to re-fetch alternatives since the distance threshold changed
+      if (config.maxDeltaE !== undefined) {
+        void this.findAlternatives();
+      } else {
+        // For budget/result limit changes, just re-filter existing data
+        this.filterAndSortAlternatives();
+      }
+      this.updateDrawerContent();
+    }
   }
 
   // ============================================================================
