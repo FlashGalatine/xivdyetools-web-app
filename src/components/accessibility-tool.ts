@@ -13,10 +13,11 @@
 import { BaseComponent } from '@components/base-component';
 import { DyeSelector } from '@components/dye-selector';
 import { CollapsiblePanel } from '@mockups/CollapsiblePanel';
-import { ColorService, LanguageService, StorageService, dyeService } from '@services/index';
+import { ColorService, ConfigController, LanguageService, StorageService, dyeService } from '@services/index';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye } from '@shared/types';
+import type { AccessibilityConfig } from '@shared/tool-config-types';
 import { ICON_TOOL_ACCESSIBILITY } from '@shared/tool-icons';
 import { ICON_WARNING, ICON_BEAKER, ICON_EYE, ICON_SLIDERS } from '@shared/ui-icons';
 
@@ -166,6 +167,7 @@ export class AccessibilityTool extends BaseComponent {
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: AccessibilityToolOptions) {
     super(container);
@@ -204,6 +206,11 @@ export class AccessibilityTool extends BaseComponent {
       this.update();
     });
 
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('accessibility', (config) => {
+      this.setConfig(config);
+    });
+
     // If dyes were restored from localStorage, update results now that containers exist
     if (this.selectedDyes.length > 0) {
       this.updateResults();
@@ -216,6 +223,7 @@ export class AccessibilityTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
 
     // Destroy desktop components
     this.dyeSelector?.destroy();
@@ -235,6 +243,78 @@ export class AccessibilityTool extends BaseComponent {
 
     super.destroy();
     logger.info('[AccessibilityTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   */
+  public setConfig(config: Partial<AccessibilityConfig>): void {
+    let needsRerender = false;
+
+    // Map config properties to vision type IDs
+    const visionTypeMap: Record<string, VisionTypeId> = {
+      normalVision: 'normal',
+      deuteranopia: 'deuteranopia',
+      protanopia: 'protanopia',
+      tritanopia: 'tritanopia',
+      achromatopsia: 'achromatopsia',
+    };
+
+    // Handle vision type toggles
+    for (const [configKey, visionId] of Object.entries(visionTypeMap)) {
+      const configValue = config[configKey as keyof AccessibilityConfig] as boolean | undefined;
+      if (configValue !== undefined) {
+        const isEnabled = this.enabledVisionTypes.has(visionId);
+        if (configValue !== isEnabled) {
+          if (configValue) {
+            this.enabledVisionTypes.add(visionId);
+          } else {
+            this.enabledVisionTypes.delete(visionId);
+          }
+          needsRerender = true;
+          logger.info(`[AccessibilityTool] setConfig: ${configKey} -> ${configValue}`);
+        }
+      }
+    }
+
+    // Handle display options
+    if (config.showLabels !== undefined && config.showLabels !== this.displayOptions.showLabels) {
+      this.displayOptions.showLabels = config.showLabels;
+      needsRerender = true;
+      logger.info(`[AccessibilityTool] setConfig: showLabels -> ${config.showLabels}`);
+    }
+
+    if (config.showHexValues !== undefined && config.showHexValues !== this.displayOptions.showHexValues) {
+      this.displayOptions.showHexValues = config.showHexValues;
+      needsRerender = true;
+      logger.info(`[AccessibilityTool] setConfig: showHexValues -> ${config.showHexValues}`);
+    }
+
+    if (config.highContrastMode !== undefined && config.highContrastMode !== this.displayOptions.highContrastMode) {
+      this.displayOptions.highContrastMode = config.highContrastMode;
+      needsRerender = true;
+      logger.info(`[AccessibilityTool] setConfig: highContrastMode -> ${config.highContrastMode}`);
+    }
+
+    if (needsRerender) {
+      // Save to storage
+      StorageService.setItem(STORAGE_KEYS.enabledVisionTypes, Array.from(this.enabledVisionTypes));
+      StorageService.setItem(STORAGE_KEYS.displayOptions, this.displayOptions);
+
+      // Sync desktop and drawer checkboxes
+      this.syncDesktopVisionCheckboxes();
+      this.syncDesktopDisplayCheckboxes();
+
+      // Re-render results if we have data
+      if (this.selectedDyes.length > 0) {
+        this.updateResults();
+        this.updateDrawerContent();
+      }
+    }
   }
 
   // ============================================================================
