@@ -1672,4 +1672,78 @@ export class HarmonyTool extends BaseComponent {
     // TODO: Integrate PaletteExporter component
     // this.paletteExporter?.exportPalette(paletteData);
   }
+
+  // ============================================================================
+  // V4 Config Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   * This method allows the V4 layout to control tool settings.
+   *
+   * @param config Partial HarmonyConfig with updated values
+   */
+  public setConfig(config: Partial<{
+    harmonyType: string;
+    showNames: boolean;
+    showHex: boolean;
+    showRgb: boolean;
+    showHsv: boolean;
+    strictMatching: boolean;
+  }>): void {
+    let needsRerender = false;
+
+    // Handle harmony type change
+    if (config.harmonyType !== undefined && config.harmonyType !== this.selectedHarmonyType) {
+      this.selectedHarmonyType = config.harmonyType;
+      StorageService.setItem(STORAGE_KEYS.harmonyType, config.harmonyType);
+      this.swappedDyes.clear();
+      needsRerender = true;
+      logger.info(`[HarmonyTool] setConfig: harmonyType -> ${config.harmonyType}`);
+    }
+
+    // Handle strict matching filter change
+    if (config.strictMatching !== undefined) {
+      // Strict matching would affect how harmonies are generated
+      // This requires DyeFilters integration
+      logger.info(`[HarmonyTool] setConfig: strictMatching -> ${config.strictMatching}`);
+      // TODO: Update filter config and re-filter
+    }
+
+    // Handle display option changes (showNames, showHex, showRgb, showHsv)
+    // These would require updating result panel rendering
+    // For now, log them - full integration in Phase 8
+    if (config.showNames !== undefined) {
+      logger.debug(`[HarmonyTool] setConfig: showNames -> ${config.showNames}`);
+    }
+    if (config.showHex !== undefined) {
+      logger.debug(`[HarmonyTool] setConfig: showHex -> ${config.showHex}`);
+    }
+    if (config.showRgb !== undefined) {
+      logger.debug(`[HarmonyTool] setConfig: showRgb -> ${config.showRgb}`);
+    }
+    if (config.showHsv !== undefined) {
+      logger.debug(`[HarmonyTool] setConfig: showHsv -> ${config.showHsv}`);
+    }
+
+    // Re-render if needed
+    if (needsRerender && this.selectedDye) {
+      this.generateHarmonies();
+      this.updateDrawerContent();
+
+      // Update harmony type buttons if they exist
+      if (this.harmonyTypesContainer) {
+        const buttons = this.harmonyTypesContainer.querySelectorAll('button');
+        buttons.forEach((btn) => {
+          const isSelected = btn.getAttribute('data-harmony-type') === this.selectedHarmonyType;
+          btn.setAttribute(
+            'style',
+            isSelected
+              ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+              : 'background: transparent; color: var(--theme-text);'
+          );
+        });
+      }
+    }
+  }
 }
