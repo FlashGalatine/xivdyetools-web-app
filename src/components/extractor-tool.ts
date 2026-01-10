@@ -1,13 +1,13 @@
 /**
- * XIV Dye Tools v3.0.0 - Matcher Tool Component
+ * XIV Dye Tools v4.0.0 - Extractor Tool Component (Palette Extractor)
  *
- * Phase 3: Color Matcher migration to v3 two-panel layout.
- * Orchestrates existing v2 components within the new shell structure.
+ * V4 Renamed: matcher-tool.ts → extractor-tool.ts
+ * Extracts color palettes from uploaded images and finds matching FFXIV dyes.
  *
  * Left Panel: Image upload, color picker, sample settings, filters, market board
  * Right Panel: Image canvas with zoom, matched dye results, recent colors
  *
- * @module components/tools/matcher-tool
+ * @module components/tools/extractor-tool
  */
 
 import { BaseComponent } from '@components/base-component';
@@ -45,7 +45,7 @@ import { PaletteService, type PaletteMatch } from '@xivdyetools/core';
 // Types and Constants
 // ============================================================================
 
-export interface MatcherToolOptions {
+export interface ExtractorToolOptions {
   leftPanel: HTMLElement;
   rightPanel: HTMLElement;
   drawerContent?: HTMLElement | null;
@@ -78,8 +78,8 @@ const ICON_UPLOAD = ICON_IMAGE;
  * Match colors from images to FFXIV dyes.
  * Integrates existing v2 components into the new panel structure.
  */
-export class MatcherTool extends BaseComponent {
-  private options: MatcherToolOptions;
+export class ExtractorTool extends BaseComponent {
+  private options: ExtractorToolOptions;
 
   // State
   private selectedColor: string | null = null;
@@ -145,7 +145,7 @@ export class MatcherTool extends BaseComponent {
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
 
-  constructor(container: HTMLElement, options: MatcherToolOptions) {
+  constructor(container: HTMLElement, options: ExtractorToolOptions) {
     super(container);
     this.options = options;
 

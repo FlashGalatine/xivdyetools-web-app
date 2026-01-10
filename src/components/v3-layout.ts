@@ -122,10 +122,9 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'extractor': {
         // V4: Palette Extractor (was 'matcher')
-        // Note: File will be renamed to extractor-tool.ts in next commit
-        const { MatcherTool } = await import('@components/matcher-tool');
+        const { ExtractorTool } = await import('@components/extractor-tool');
         const toolContainer = document.createElement('div');
-        activeTool = new MatcherTool(toolContainer, {
+        activeTool = new ExtractorTool(toolContainer, {
           leftPanel,
           rightPanel,
           drawerContent,
@@ -162,10 +161,9 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'gradient': {
         // V4: Gradient Builder (was 'mixer')
-        // Note: File will be renamed to gradient-tool.ts in next commit
-        const { MixerTool } = await import('@components/mixer-tool');
+        const { GradientTool } = await import('@components/gradient-tool');
         const toolContainer = document.createElement('div');
-        activeTool = new MixerTool(toolContainer, {
+        activeTool = new GradientTool(toolContainer, {
           leftPanel,
           rightPanel,
           drawerContent,
@@ -209,10 +207,9 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
       }
       case 'swatch': {
         // V4: Swatch Matcher (was 'character')
-        // Note: File will be renamed to swatch-tool.ts in next commit
-        const { CharacterTool } = await import('@components/character-tool');
+        const { SwatchTool } = await import('@components/swatch-tool');
         const toolContainer = document.createElement('div');
-        activeTool = new CharacterTool(toolContainer, {
+        activeTool = new SwatchTool(toolContainer, {
           leftPanel,
           rightPanel,
           drawerContent,

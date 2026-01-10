@@ -1,13 +1,14 @@
 /**
- * XIV Dye Tools v3.0.0 - Character Tool Component
+ * XIV Dye Tools v4.0.0 - Swatch Tool Component (Swatch Matcher)
  *
- * Phase 9: Character Color Matcher - Match character customization colors to dyes.
+ * V4 Renamed: character-tool.ts → swatch-tool.ts
+ * Match character customization colors to FFXIV dyes.
  * Allows players to find dyes that match their character's hair, eyes, skin, etc.
  *
  * Left Panel: Race/gender selection, color category selector
  * Right Panel: Color grid, matched dye results
  *
- * @module components/tools/character-tool
+ * @module components/tools/swatch-tool
  */
 
 import { BaseComponent } from '@components/base-component';
@@ -33,7 +34,7 @@ import type { Dye, PriceData } from '@shared/types';
 // Types and Constants
 // ============================================================================
 
-export interface CharacterToolOptions {
+export interface SwatchToolOptions {
   leftPanel: HTMLElement;
   rightPanel: HTMLElement;
   drawerContent?: HTMLElement | null;
@@ -123,8 +124,8 @@ const DEFAULTS = {
  *
  * Match character customization colors to FFXIV dyes.
  */
-export class CharacterTool extends BaseComponent {
-  private options: CharacterToolOptions;
+export class SwatchTool extends BaseComponent {
+  private options: SwatchToolOptions;
   private characterColorService: CharacterColorService;
 
   // State
@@ -167,7 +168,7 @@ export class CharacterTool extends BaseComponent {
   private languageUnsubscribe: (() => void) | null = null;
   private resultsPanelMediaQueryCleanup: (() => void) | null = null;
 
-  constructor(container: HTMLElement, options: CharacterToolOptions) {
+  constructor(container: HTMLElement, options: SwatchToolOptions) {
     super(container);
     this.options = options;
     this.characterColorService = new CharacterColorService();

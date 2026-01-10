@@ -1,13 +1,13 @@
 /**
- * XIV Dye Tools v3.0.0 - Mixer Tool Component
+ * XIV Dye Tools v4.0.0 - Gradient Tool Component (Gradient Builder)
  *
- * Phase 6: Dye Mixer migration to v3 two-panel layout.
- * Orchestrates color interpolation between two dyes with intermediate matches.
+ * V4 Renamed: mixer-tool.ts → gradient-tool.ts
+ * Creates color gradients between two dyes with intermediate matches.
  *
  * Left Panel: Start/End dye selectors, steps slider, color space toggle, filters, market board
  * Right Panel: Gradient preview, intermediate dye matches, export options
  *
- * @module components/tools/mixer-tool
+ * @module components/tools/gradient-tool
  */
 
 import { BaseComponent } from '@components/base-component';
@@ -35,7 +35,7 @@ import type { Dye, PriceData } from '@shared/types';
 // Types and Constants
 // ============================================================================
 
-export interface MixerToolOptions {
+export interface GradientToolOptions {
   leftPanel: HTMLElement;
   rightPanel: HTMLElement;
   drawerContent?: HTMLElement | null;
@@ -80,8 +80,8 @@ const DEFAULTS = {
  *
  * Creates smooth color transitions between two dyes with intermediate matches.
  */
-export class MixerTool extends BaseComponent {
-  private options: MixerToolOptions;
+export class GradientTool extends BaseComponent {
+  private options: GradientToolOptions;
 
   // State - selectedDyes[0] = start, selectedDyes[1] = end
   private selectedDyes: Dye[] = [];
@@ -131,7 +131,7 @@ export class MixerTool extends BaseComponent {
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
 
-  constructor(container: HTMLElement, options: MixerToolOptions) {
+  constructor(container: HTMLElement, options: GradientToolOptions) {
     super(container);
     this.options = options;
 

@@ -74,11 +74,12 @@ export { CollapsiblePanel, type CollapsiblePanelOptions } from './collapsible-pa
 export { getLocalizedTools, TOOL_ICONS, type NavTool } from './tool-nav';
 export { initializeV3Layout, destroyV3Layout } from './v3-layout';
 
-// V3 Tool Components
+// V4 Tool Components (renamed from V3)
 export { HarmonyTool, type HarmonyToolOptions } from './harmony-tool';
-export { MatcherTool, type MatcherToolOptions } from './matcher-tool';
+export { ExtractorTool, type ExtractorToolOptions } from './extractor-tool'; // Was MatcherTool
 export { AccessibilityTool, type AccessibilityToolOptions } from './accessibility-tool';
 export { ComparisonTool, type ComparisonToolOptions } from './comparison-tool';
-export { MixerTool, type MixerToolOptions } from './mixer-tool';
+export { GradientTool, type GradientToolOptions } from './gradient-tool'; // Was MixerTool
 export { PresetTool, type PresetToolOptions } from './preset-tool';
 export { BudgetTool, type BudgetToolOptions } from './budget-tool';
+export { SwatchTool, type SwatchToolOptions } from './swatch-tool'; // Was CharacterTool
