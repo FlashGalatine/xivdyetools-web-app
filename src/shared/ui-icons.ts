@@ -360,6 +360,29 @@ export const ICON_INFO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentCo
 </svg>`;
 
 /**
+ * Globe icon - Language/internationalization selector
+ */
+export const ICON_GLOBE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10"/>
+  <line x1="2" y1="12" x2="22" y2="12"/>
+  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+</svg>`;
+
+/**
+ * Logo icon - XIV Dye Tools paint bucket with brush (branding)
+ */
+export const ICON_LOGO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" opacity="0.3"/>
+  <path d="M7 14v4c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-4"/>
+  <path d="M7 14c0-2 1-3 2.5-3.5"/>
+  <path d="M17 14c0-2-1-3-2.5-3.5"/>
+  <ellipse cx="12" cy="10" rx="3" ry="1.5" fill="currentColor" stroke="none" opacity="0.5"/>
+  <path d="M12 3v4" stroke-width="2"/>
+  <path d="M10 3h4" stroke-width="2"/>
+  <circle cx="12" cy="14" r="2" fill="currentColor" stroke="none" opacity="0.7"/>
+</svg>`;
+
+/**
  * Map of UI icon names to SVG strings
  */
 export const UI_ICONS: Record<string, string> = {
@@ -401,6 +424,8 @@ export const UI_ICONS: Record<string, string> = {
   trash: ICON_TRASH,
   image: ICON_IMAGE,
   info: ICON_INFO,
+  globe: ICON_GLOBE,
+  logo: ICON_LOGO,
 };
 
 /**

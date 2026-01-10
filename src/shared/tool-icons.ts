@@ -108,16 +108,36 @@ export const ICON_TOOL_MENU = `<svg viewBox="0 0 24 24" fill="none" stroke="curr
 </svg>`;
 
 /**
+ * Dye Mixer icon - Crafting-style two-beaker mixing (NEW v4 tool)
+ * Distinct from Gradient Builder (which was the old "mixer")
+ */
+export const ICON_TOOL_DYE_MIXER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 5l-8 14h16l-8-14z" opacity="0.3"/>
+  <circle cx="8" cy="8" r="3" opacity="0.6"/>
+  <circle cx="16" cy="8" r="3" opacity="0.6"/>
+  <path d="M8 11v2"/>
+  <path d="M16 11v2"/>
+  <circle cx="12" cy="16" r="3" fill="currentColor" stroke="none" opacity="0.8"/>
+  <path d="M10.5 14l3 0" stroke-width="2"/>
+</svg>`;
+
+/**
  * Map of tool icon names to SVG strings
+ * V4: Updated with new tool IDs (extractor, gradient, swatch, mixer)
  */
 export const TOOL_ICONS: Record<string, string> = {
+  // V4 tool IDs
   harmony: ICON_TOOL_HARMONY,
-  matcher: ICON_TOOL_MATCHER,
+  extractor: ICON_TOOL_MATCHER, // v4 name (was 'matcher')
   accessibility: ICON_TOOL_ACCESSIBILITY,
   comparison: ICON_TOOL_COMPARISON,
-  mixer: ICON_TOOL_MIXER,
+  gradient: ICON_TOOL_MIXER, // v4 name (was 'mixer' - now Gradient Builder)
+  mixer: ICON_TOOL_DYE_MIXER, // NEW v4 Dye Mixer tool
   presets: ICON_TOOL_PRESETS,
   budget: ICON_TOOL_BUDGET,
+  swatch: ICON_TOOL_CHARACTER, // v4 name (was 'character')
+  // Legacy aliases for backwards compatibility
+  matcher: ICON_TOOL_MATCHER,
   character: ICON_TOOL_CHARACTER,
   tools: ICON_TOOL_MENU,
 };
