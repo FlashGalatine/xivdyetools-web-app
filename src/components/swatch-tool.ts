@@ -17,6 +17,7 @@ import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
 import {
   ColorService,
+  ConfigController,
   dyeService,
   LanguageService,
   StorageService,
@@ -29,6 +30,7 @@ import { ICON_PALETTE, ICON_MARKET } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
+import type { SwatchConfig } from '@shared/tool-config-types';
 
 // ============================================================================
 // Types and Constants
@@ -62,6 +64,7 @@ const STORAGE_KEYS = {
   gender: 'v3_character_gender',
   colorCategory: 'v3_character_category',
   selectedColorIndex: 'v3_character_color_index',
+  maxResults: 'v3_character_max_results',
 } as const;
 
 /**
@@ -132,6 +135,7 @@ export class SwatchTool extends BaseComponent {
   private subrace: SubRace;
   private gender: Gender;
   private colorCategory: ColorCategory;
+  private maxResults: number;
   private selectedColor: CharacterColor | null = null;
   private matchedDyes: CharacterColorMatch[] = [];
   private colors: CharacterColor[] = [];
@@ -166,6 +170,7 @@ export class SwatchTool extends BaseComponent {
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
   private resultsPanelMediaQueryCleanup: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: SwatchToolOptions) {
@@ -177,6 +182,7 @@ export class SwatchTool extends BaseComponent {
     this.subrace = StorageService.getItem<SubRace>(STORAGE_KEYS.subrace) ?? DEFAULTS.subrace;
     this.gender = StorageService.getItem<Gender>(STORAGE_KEYS.gender) ?? DEFAULTS.gender;
     this.colorCategory = StorageService.getItem<ColorCategory>(STORAGE_KEYS.colorCategory) ?? DEFAULTS.colorCategory;
+    this.maxResults = StorageService.getItem<number>(STORAGE_KEYS.maxResults) ?? DEFAULTS.matchCount;
 
     // Load initial colors
     this.loadColors();
@@ -206,11 +212,17 @@ export class SwatchTool extends BaseComponent {
       this.update();
     });
 
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('swatch', (config) => {
+      this.setConfig(config);
+    });
+
     logger.info('[CharacterTool] Mounted');
   }
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
     this.resultsPanelMediaQueryCleanup?.();
 
     this.marketBoard?.destroy();
@@ -230,6 +242,84 @@ export class SwatchTool extends BaseComponent {
 
     super.destroy();
     logger.info('[CharacterTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   */
+  public setConfig(config: Partial<SwatchConfig>): void {
+    let needsReload = false;
+    let needsRematch = false;
+
+    // Handle race (maps to subrace)
+    if (config.race !== undefined && config.race !== this.subrace) {
+      this.subrace = config.race as SubRace;
+      StorageService.setItem(STORAGE_KEYS.subrace, config.race);
+      needsReload = true;
+      logger.info(`[SwatchTool] setConfig: race -> ${config.race}`);
+    }
+
+    // Handle gender
+    if (config.gender !== undefined && config.gender !== this.gender) {
+      this.gender = config.gender as Gender;
+      StorageService.setItem(STORAGE_KEYS.gender, config.gender);
+      needsReload = true;
+      logger.info(`[SwatchTool] setConfig: gender -> ${config.gender}`);
+    }
+
+    // Handle colorSheet (maps to colorCategory)
+    if (config.colorSheet !== undefined) {
+      // Map colorSheet names to colorCategory values
+      const categoryMap: Record<string, ColorCategory> = {
+        'EyeColors.csv': 'eyeColors',
+        'HairColors.csv': 'hairColors',
+        'SkinColors.csv': 'skinColors',
+        // Also support direct category names
+        'eyeColors': 'eyeColors',
+        'hairColors': 'hairColors',
+        'skinColors': 'skinColors',
+      };
+      const newCategory = categoryMap[config.colorSheet] || 'eyeColors';
+      if (newCategory !== this.colorCategory) {
+        this.colorCategory = newCategory;
+        StorageService.setItem(STORAGE_KEYS.colorCategory, newCategory);
+        needsReload = true;
+        logger.info(`[SwatchTool] setConfig: colorSheet -> ${config.colorSheet} (category: ${newCategory})`);
+      }
+    }
+
+    // Handle maxResults
+    if (config.maxResults !== undefined && config.maxResults !== this.maxResults) {
+      this.maxResults = config.maxResults;
+      StorageService.setItem(STORAGE_KEYS.maxResults, config.maxResults);
+      needsRematch = true;
+      logger.info(`[SwatchTool] setConfig: maxResults -> ${config.maxResults}`);
+    }
+
+    // Sync UI selectors (both desktop and mobile)
+    if (needsReload || needsRematch) {
+      // Update desktop selectors
+      if (this.subraceSelect) this.subraceSelect.value = this.subrace;
+      if (this.genderSelect) this.genderSelect.value = this.gender;
+      if (this.categorySelect) this.categorySelect.value = this.colorCategory;
+      // Update mobile selectors
+      if (this.mobileSubraceSelect) this.mobileSubraceSelect.value = this.subrace;
+      if (this.mobileGenderSelect) this.mobileGenderSelect.value = this.gender;
+      if (this.mobileCategorySelect) this.mobileCategorySelect.value = this.colorCategory;
+    }
+
+    // Reload colors if race/gender/category changed
+    if (needsReload) {
+      this.selectedColor = null;
+      this.loadColors();
+    } else if (needsRematch && this.selectedColor) {
+      // Just re-match if only maxResults changed
+      this.findMatchingDyes();
+    }
   }
 
   // ============================================================================
@@ -1277,7 +1367,7 @@ export class SwatchTool extends BaseComponent {
     this.matchedDyes = this.characterColorService.findClosestDyes(
       this.selectedColor,
       dyeService,
-      DEFAULTS.matchCount
+      this.maxResults
     );
 
     logger.info(`[CharacterTool] Found ${this.matchedDyes.length} matching dyes`);
