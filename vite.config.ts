@@ -71,6 +71,7 @@ export default defineConfig({
       '@data': resolve(__dirname, './src/data'),
       '@assets': resolve(__dirname, './assets'),
       '@mockups': resolve(__dirname, './src/mockups'),
+      '@v4': resolve(__dirname, './src/components/v4'),
     },
   },
 

@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "useDefineForClassFields": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
@@ -21,7 +22,8 @@
       "@shared/*": ["./src/shared/*"],
       "@apps/*": ["./src/apps/*"],
       "@data/*": ["./src/data/*"],
-      "@mockups/*": ["./src/mockups/*"]
+      "@mockups/*": ["./src/mockups/*"],
+      "@v4/*": ["./src/components/v4/*"]
     },
     "types": ["vitest/globals", "node"]
   },
