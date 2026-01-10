@@ -1,0 +1,258 @@
+/**
+ * XIV Dye Tools v4.0 - Tool Configuration Types
+ *
+ * TypeScript interfaces for all tool configurations.
+ * Used by ConfigController and ConfigSidebar for type-safe config management.
+ *
+ * @module shared/tool-config-types
+ */
+
+import type { ToolId } from '@services/router-service';
+
+// ============================================================================
+// Global Configuration
+// ============================================================================
+
+/**
+ * Global application configuration (not tool-specific)
+ */
+export interface GlobalConfig {
+  /** Selected theme name */
+  theme: string;
+}
+
+// ============================================================================
+// Tool-Specific Configurations
+// ============================================================================
+
+/**
+ * Harmony Explorer configuration
+ */
+export interface HarmonyConfig {
+  /** Selected harmony type (complementary, analogous, triadic, etc.) */
+  harmonyType: string;
+  /** Show dye names in results */
+  showNames: boolean;
+  /** Show hex codes in results */
+  showHex: boolean;
+  /** Show RGB values in results */
+  showRgb: boolean;
+  /** Show HSV values in results */
+  showHsv: boolean;
+  /** Use strict color matching */
+  strictMatching: boolean;
+}
+
+/**
+ * Palette Extractor (Color Matcher) configuration
+ */
+export interface ExtractorConfig {
+  /** Enable vibrancy boost for extracted colors */
+  vibrancyBoost: boolean;
+  /** Maximum number of colors to extract (3-10) */
+  maxColors: number;
+}
+
+/**
+ * Accessibility Checker configuration
+ */
+export interface AccessibilityConfig {
+  /** Show normal vision preview */
+  normalVision: boolean;
+  /** Show deuteranopia (red-green) simulation */
+  deuteranopia: boolean;
+  /** Show protanopia (red-blind) simulation */
+  protanopia: boolean;
+  /** Show tritanopia (blue-yellow) simulation */
+  tritanopia: boolean;
+  /** Show achromatopsia (complete colorblindness) simulation */
+  achromatopsia: boolean;
+  /** Show labels on vision cards */
+  showLabels: boolean;
+  /** Show hex values on vision cards */
+  showHexValues: boolean;
+  /** Enable high contrast mode */
+  highContrastMode: boolean;
+}
+
+/**
+ * Dye Comparison configuration
+ */
+export interface ComparisonConfig {
+  /** Show Delta-E values */
+  showDeltaE: boolean;
+  /** Show RGB values */
+  showRgb: boolean;
+  /** Show HSV values */
+  showHsv: boolean;
+  /** Show market prices */
+  showMarketPrices: boolean;
+}
+
+/**
+ * Gradient Builder (Dye Mixer) configuration
+ */
+export interface GradientConfig {
+  /** Number of gradient steps (3-12) */
+  stepCount: number;
+  /** Interpolation method (linear, ease, etc.) */
+  interpolation: string;
+}
+
+/**
+ * Dye Mixer (NEW in v4) configuration
+ */
+export interface MixerConfig {
+  /** Maximum results to show (3-8) */
+  maxResults: number;
+}
+
+/**
+ * Community Presets configuration
+ */
+export interface PresetsConfig {
+  /** Show only user's own presets */
+  showMyPresetsOnly: boolean;
+  /** Show only favorited presets */
+  showFavorites: boolean;
+  /** Sort order (newest, popular, etc.) */
+  sortBy: string;
+}
+
+/**
+ * Budget Suggestions configuration
+ */
+export interface BudgetConfig {
+  /** Maximum price limit in gil (0-200000) */
+  maxPrice: number;
+  /** Maximum results to show (1-20) */
+  maxResults: number;
+  /** Maximum Delta-E color distance (0-100) */
+  maxDeltaE: number;
+}
+
+/**
+ * Swatch Matcher (Character Matcher) configuration
+ */
+export interface SwatchConfig {
+  /** Selected color sheet (EyeColors, HairColors, SkinColors) */
+  colorSheet: string;
+  /** Selected race */
+  race: string;
+  /** Selected gender */
+  gender: string;
+  /** Maximum results to show (1-8) */
+  maxResults: number;
+}
+
+// ============================================================================
+// Type Mapping
+// ============================================================================
+
+/**
+ * Map of tool IDs to their configuration interfaces
+ */
+export interface ToolConfigMap {
+  global: GlobalConfig;
+  harmony: HarmonyConfig;
+  extractor: ExtractorConfig;
+  accessibility: AccessibilityConfig;
+  comparison: ComparisonConfig;
+  gradient: GradientConfig;
+  mixer: MixerConfig;
+  presets: PresetsConfig;
+  budget: BudgetConfig;
+  swatch: SwatchConfig;
+}
+
+/**
+ * Union type of all possible tool config types
+ */
+export type ToolConfig = ToolConfigMap[keyof ToolConfigMap];
+
+/**
+ * Config key type (tool ID or 'global')
+ */
+export type ConfigKey = ToolId | 'global';
+
+// ============================================================================
+// Default Values
+// ============================================================================
+
+/**
+ * Default configuration values for all tools
+ */
+export const DEFAULT_CONFIGS: ToolConfigMap = {
+  global: {
+    theme: '',
+  },
+  harmony: {
+    harmonyType: 'tetradic',
+    showNames: true,
+    showHex: true,
+    showRgb: false,
+    showHsv: true,
+    strictMatching: false,
+  },
+  extractor: {
+    vibrancyBoost: true,
+    maxColors: 8,
+  },
+  accessibility: {
+    normalVision: true,
+    deuteranopia: true,
+    protanopia: true,
+    tritanopia: true,
+    achromatopsia: true,
+    showLabels: true,
+    showHexValues: false,
+    highContrastMode: false,
+  },
+  comparison: {
+    showDeltaE: true,
+    showRgb: true,
+    showHsv: false,
+    showMarketPrices: true,
+  },
+  gradient: {
+    stepCount: 8,
+    interpolation: 'linear',
+  },
+  mixer: {
+    maxResults: 3,
+  },
+  presets: {
+    showMyPresetsOnly: false,
+    showFavorites: false,
+    sortBy: 'newest',
+  },
+  budget: {
+    maxPrice: 200000,
+    maxResults: 8,
+    maxDeltaE: 75,
+  },
+  swatch: {
+    colorSheet: 'EyeColors.csv',
+    race: 'Hyur (Midlander)',
+    gender: 'Male',
+    maxResults: 3,
+  },
+};
+
+// ============================================================================
+// Type Guards
+// ============================================================================
+
+/**
+ * Check if a config key is a valid tool ID
+ */
+export function isToolId(key: ConfigKey): key is ToolId {
+  return key !== 'global';
+}
+
+/**
+ * Get the default config for a tool
+ */
+export function getDefaultConfig<K extends ConfigKey>(key: K): ToolConfigMap[K] {
+  return DEFAULT_CONFIGS[key];
+}
