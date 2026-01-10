@@ -258,6 +258,14 @@ export class V4LayoutShell extends BaseLitComponent {
     this.sidebarCollapsed = true;
   }
 
+  /**
+   * Handle config changes from ConfigSidebar
+   * Re-emits the event for parent (v4-layout.ts) to handle
+   */
+  private handleConfigChange(e: CustomEvent): void {
+    this.emit('config-change', e.detail);
+  }
+
   protected override render(): TemplateResult {
     return html`
       <!-- App Header -->
@@ -276,6 +284,7 @@ export class V4LayoutShell extends BaseLitComponent {
           .activeTool=${this.activeTool}
           ?collapsed=${this.sidebarCollapsed}
           @sidebar-collapse=${this.handleSidebarCollapse}
+          @config-change=${this.handleConfigChange}
         ></v4-config-sidebar>
 
         <!-- Mobile Overlay -->
