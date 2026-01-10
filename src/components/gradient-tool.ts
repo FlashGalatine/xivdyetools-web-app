@@ -16,7 +16,7 @@ import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
-import { ColorService, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
+import { ColorService, ConfigController, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
 import {
   ICON_FILTER,
@@ -30,6 +30,7 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
+import type { GradientConfig } from '@shared/tool-config-types';
 
 // ============================================================================
 // Types and Constants
@@ -130,6 +131,7 @@ export class GradientTool extends BaseComponent {
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: GradientToolOptions) {
     super(container);
@@ -215,6 +217,11 @@ export class GradientTool extends BaseComponent {
       this.update();
     });
 
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('gradient', (config) => {
+      this.setConfig(config);
+    });
+
     // If dyes were loaded from storage, calculate interpolation
     if (this.startDye && this.endDye) {
       this.updateInterpolation();
@@ -226,6 +233,7 @@ export class GradientTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
 
     // Destroy desktop components
     this.dyeSelector?.destroy();
@@ -250,6 +258,51 @@ export class GradientTool extends BaseComponent {
 
     super.destroy();
     logger.info('[MixerTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   */
+  public setConfig(config: Partial<GradientConfig>): void {
+    let needsUpdate = false;
+
+    // Handle stepCount
+    if (config.stepCount !== undefined && config.stepCount !== this.stepCount) {
+      this.stepCount = config.stepCount;
+      StorageService.setItem(STORAGE_KEYS.stepCount, config.stepCount);
+      needsUpdate = true;
+      logger.info(`[GradientTool] setConfig: stepCount -> ${config.stepCount}`);
+
+      // Update desktop display
+      if (this.stepValueDisplay) {
+        this.stepValueDisplay.textContent = String(config.stepCount);
+      }
+      // Update mobile display
+      if (this.mobileStepValueDisplay) {
+        this.mobileStepValueDisplay.textContent = String(config.stepCount);
+      }
+    }
+
+    // Handle interpolation (maps to colorSpace)
+    if (config.interpolation !== undefined) {
+      const newColorSpace = config.interpolation === 'rgb' ? 'rgb' : 'hsv';
+      if (newColorSpace !== this.colorSpace) {
+        this.colorSpace = newColorSpace;
+        StorageService.setItem(STORAGE_KEYS.colorSpace, newColorSpace);
+        needsUpdate = true;
+        logger.info(`[GradientTool] setConfig: interpolation -> ${config.interpolation} (colorSpace: ${newColorSpace})`);
+      }
+    }
+
+    // Re-interpolate if any config changed and we have data
+    if (needsUpdate && this.startDye && this.endDye) {
+      this.updateInterpolation();
+      this.updateDrawerContent();
+    }
   }
 
   // ============================================================================

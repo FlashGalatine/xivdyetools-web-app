@@ -216,7 +216,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   },
   gradient: {
     stepCount: 8,
-    interpolation: 'linear',
+    interpolation: 'hsv',
   },
   mixer: {
     maxResults: 5, // Design spec: default 5, range 3-8

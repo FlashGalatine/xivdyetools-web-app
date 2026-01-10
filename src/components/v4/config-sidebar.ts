@@ -672,7 +672,7 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">Interpolation</div>
+          <div class="config-label">Color Space</div>
           <select
             class="config-select"
             .value=${this.gradientConfig.interpolation}
@@ -681,10 +681,8 @@ export class ConfigSidebar extends BaseLitComponent {
               this.handleConfigChange('gradient', 'interpolation', value);
             }}
           >
-            <option value="linear">Linear</option>
-            <option value="ease">Ease</option>
-            <option value="ease-in">Ease In</option>
-            <option value="ease-out">Ease Out</option>
+            <option value="hsv">HSV (Hue-based)</option>
+            <option value="rgb">RGB (Direct)</option>
           </select>
         </div>
       </div>
