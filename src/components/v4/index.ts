@@ -23,3 +23,5 @@ export { ToggleSwitchV4 } from './toggle-switch-v4';
 export { RangeSliderV4 } from './range-slider-v4';
 export { ResultCard } from './result-card';
 export type { ResultCardData, ContextAction } from './result-card';
+export { V4ColorWheel } from './v4-color-wheel';
+export type { HarmonyType } from './v4-color-wheel';
