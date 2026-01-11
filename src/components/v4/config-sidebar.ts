@@ -28,13 +28,17 @@ import type {
   SwatchConfig,
   MarketConfig,
   ConfigKey,
+  DisplayOptionsConfig,
 } from '@shared/tool-config-types';
+import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import type { DataCenter, World } from '@shared/types';
 import { logger } from '@shared/logger';
 
 // Import child components to ensure registration
 import './toggle-switch-v4';
 import './range-slider-v4';
+import './display-options-v4';
+import type { DisplayOptionsChangeDetail } from './display-options-v4';
 
 /**
  * V4 Config Sidebar - Tool configuration panel
@@ -75,11 +79,8 @@ export class ConfigSidebar extends BaseLitComponent {
 
   @state() private harmonyConfig: HarmonyConfig = {
     harmonyType: 'tetradic',
-    showHex: true,
-    showRgb: false,
-    showHsv: true,
-    showLab: false,
     strictMatching: false,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private extractorConfig: ExtractorConfig = {
     vibrancyBoost: true,
@@ -104,9 +105,11 @@ export class ConfigSidebar extends BaseLitComponent {
   @state() private gradientConfig: GradientConfig = {
     stepCount: 8,
     interpolation: 'linear',
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private mixerConfig: MixerConfig = {
     maxResults: 3,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private presetsConfig: PresetsConfig = {
     showMyPresetsOnly: false,
@@ -133,6 +136,9 @@ export class ConfigSidebar extends BaseLitComponent {
   // Server data for market config dropdown
   @state() private dataCenters: DataCenter[] = [];
   @state() private worlds: World[] = [];
+
+  // Collapsible section state
+  @state() private marketBoardCollapsed: boolean = false;
 
   private configController: ConfigController | null = null;
 
@@ -241,6 +247,57 @@ export class ConfigSidebar extends BaseLitComponent {
         color: var(--theme-text-muted, #888888);
         margin-top: 4px;
         line-height: 1.4;
+      }
+
+      /* Collapsible header styles */
+      .config-label-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
+        padding: 4px 0;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        transition: background-color 150ms ease;
+      }
+
+      .config-label-header:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .config-label-header .config-label {
+        margin-bottom: 0;
+      }
+
+      .collapse-icon {
+        font-size: 10px;
+        color: var(--theme-text-muted, #888888);
+        transition: transform 150ms ease;
+        margin-right: 4px;
+      }
+
+      .collapse-icon.collapsed {
+        transform: rotate(180deg);
+      }
+
+      /* Collapsible content */
+      .config-group-content {
+        overflow: hidden;
+        max-height: 500px;
+        transition: max-height 200ms ease-out, opacity 150ms ease;
+        opacity: 1;
+      }
+
+      .config-group-content.collapsed {
+        max-height: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* Market config section - match display-options group gap */
+      .market-config {
+        margin-top: var(--v4-display-options-group-gap, 20px);
       }
 
       /* Select Dropdown */
@@ -426,6 +483,53 @@ export class ConfigSidebar extends BaseLitComponent {
   }
 
   /**
+   * Toggle Market Board section collapsed state
+   */
+  private toggleMarketBoard(): void {
+    this.marketBoardCollapsed = !this.marketBoardCollapsed;
+  }
+
+  /**
+   * Handle display options change from v4-display-options component
+   */
+  private handleDisplayOptionsChange(
+    tool: 'harmony' | 'mixer' | 'gradient',
+    e: CustomEvent<DisplayOptionsChangeDetail>
+  ): void {
+    const { option, value, allOptions } = e.detail;
+
+    // Update local state with the full displayOptions object
+    switch (tool) {
+      case 'harmony':
+        this.harmonyConfig = {
+          ...this.harmonyConfig,
+          displayOptions: allOptions,
+        };
+        break;
+      case 'mixer':
+        this.mixerConfig = {
+          ...this.mixerConfig,
+          displayOptions: allOptions,
+        };
+        break;
+      case 'gradient':
+        this.gradientConfig = {
+          ...this.gradientConfig,
+          displayOptions: allOptions,
+        };
+        break;
+    }
+
+    // Update ConfigController with nested displayOptions
+    if (this.configController) {
+      (this.configController as any).setConfig(tool, { displayOptions: allOptions });
+    }
+
+    // Emit event for parent components
+    this.emit('config-change', { tool, key: `displayOptions.${option}`, value });
+  }
+
+  /**
    * Render Harmony Explorer config
    */
   private renderHarmonyConfig(): TemplateResult {
@@ -454,42 +558,6 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">Display Options</div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="Hex Codes"
-              .checked=${this.harmonyConfig.showHex}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-        this.handleConfigChange('harmony', 'showHex', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="RGB Values"
-              .checked=${this.harmonyConfig.showRgb}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-        this.handleConfigChange('harmony', 'showRgb', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="HSV Values"
-              .checked=${this.harmonyConfig.showHsv}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-        this.handleConfigChange('harmony', 'showHsv', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="LAB Values"
-              .checked=${this.harmonyConfig.showLab}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-        this.handleConfigChange('harmony', 'showLab', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-        </div>
-
-        <div class="config-group">
           <div class="config-label">Matching Algorithm</div>
           <div class="config-row">
             <v4-toggle-switch
@@ -505,6 +573,19 @@ export class ConfigSidebar extends BaseLitComponent {
         : 'Uses hue angles for artistic color harmony'}
           </div>
         </div>
+
+        <v4-display-options
+          .showHex=${this.harmonyConfig.displayOptions.showHex}
+          .showRgb=${this.harmonyConfig.displayOptions.showRgb}
+          .showHsv=${this.harmonyConfig.displayOptions.showHsv}
+          .showLab=${this.harmonyConfig.displayOptions.showLab}
+          .showPrice=${this.harmonyConfig.displayOptions.showPrice}
+          .showDeltaE=${this.harmonyConfig.displayOptions.showDeltaE}
+          .showAcquisition=${this.harmonyConfig.displayOptions.showAcquisition}
+          .visibleGroups=${['colorFormats', 'resultMetadata']}
+          @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
+        this.handleDisplayOptionsChange('harmony', e)}
+        ></v4-display-options>
       </div>
     `;
   }
@@ -700,6 +781,19 @@ export class ConfigSidebar extends BaseLitComponent {
             <option value="rgb">RGB (Direct)</option>
           </select>
         </div>
+
+        <v4-display-options
+          .showHex=${this.gradientConfig.displayOptions.showHex}
+          .showRgb=${this.gradientConfig.displayOptions.showRgb}
+          .showHsv=${this.gradientConfig.displayOptions.showHsv}
+          .showLab=${this.gradientConfig.displayOptions.showLab}
+          .showPrice=${this.gradientConfig.displayOptions.showPrice}
+          .showDeltaE=${this.gradientConfig.displayOptions.showDeltaE}
+          .showAcquisition=${this.gradientConfig.displayOptions.showAcquisition}
+          .visibleGroups=${['colorFormats', 'resultMetadata']}
+          @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
+        this.handleDisplayOptionsChange('gradient', e)}
+        ></v4-display-options>
       </div>
     `;
   }
@@ -723,6 +817,19 @@ export class ConfigSidebar extends BaseLitComponent {
             ></v4-range-slider>
           </div>
         </div>
+
+        <v4-display-options
+          .showHex=${this.mixerConfig.displayOptions.showHex}
+          .showRgb=${this.mixerConfig.displayOptions.showRgb}
+          .showHsv=${this.mixerConfig.displayOptions.showHsv}
+          .showLab=${this.mixerConfig.displayOptions.showLab}
+          .showPrice=${this.mixerConfig.displayOptions.showPrice}
+          .showDeltaE=${this.mixerConfig.displayOptions.showDeltaE}
+          .showAcquisition=${this.mixerConfig.displayOptions.showAcquisition}
+          .visibleGroups=${['colorFormats', 'resultMetadata']}
+          @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
+        this.handleDisplayOptionsChange('mixer', e)}
+        ></v4-display-options>
       </div>
     `;
   }
@@ -914,52 +1021,71 @@ export class ConfigSidebar extends BaseLitComponent {
     const sortedDataCenters = [...this.dataCenters].sort((a, b) => a.name.localeCompare(b.name));
 
     return html`
-      <div class="config-section">
+      <div class="config-section market-config">
         <div class="config-group">
-          <div class="config-label">Market Board</div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="Show Prices"
-              .checked=${this.marketConfig.showPrices}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('market', 'showPrices', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-          <select
-            class="config-select"
-            .value=${this.marketConfig.selectedServer}
-            ?disabled=${this.dataCenters.length === 0}
-            @change=${(e: Event) => {
-              const value = (e.target as HTMLSelectElement).value;
-              this.handleConfigChange('market', 'selectedServer', value);
+          <div
+            class="config-label-header"
+            @click=${this.toggleMarketBoard}
+            role="button"
+            aria-expanded=${!this.marketBoardCollapsed}
+            tabindex="0"
+            @keydown=${(e: KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleMarketBoard();
+              }
             }}
           >
-            ${this.dataCenters.length === 0
-              ? html`<option value="Crystal">Loading servers...</option>`
-              : sortedDataCenters.map(dc => html`
-                  <optgroup label="${dc.name} (${dc.region})">
-                    <option
-                      value="${dc.name}"
-                      ?selected=${this.marketConfig.selectedServer === dc.name}
-                    >
-                      ${dc.name} - All Worlds
-                    </option>
-                    ${this.worlds
-                      .filter(w => dc.worlds.includes(w.id))
-                      .sort((a, b) => a.name.localeCompare(b.name))
-                      .map(world => html`
-                        <option
-                          value="${world.name}"
-                          ?selected=${this.marketConfig.selectedServer === world.name}
-                        >
-                          &nbsp;&nbsp;${world.name}
-                        </option>
-                      `)}
-                  </optgroup>
-                `)}
-          </select>
-          <div class="config-description">
-            Prices fetched from Universalis for ${this.marketConfig.selectedServer}
+            <div class="config-label">Market Board</div>
+            <span class="collapse-icon ${this.marketBoardCollapsed ? 'collapsed' : ''}"
+              >${this.marketBoardCollapsed ? '▼' : '▲'}</span
+            >
+          </div>
+          <div class="config-group-content ${this.marketBoardCollapsed ? 'collapsed' : ''}">
+            <div class="config-row">
+              <v4-toggle-switch
+                label="Show Prices"
+                .checked=${this.marketConfig.showPrices}
+                @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                  this.handleConfigChange('market', 'showPrices', e.detail.checked)}
+              ></v4-toggle-switch>
+            </div>
+            <select
+              class="config-select"
+              .value=${this.marketConfig.selectedServer}
+              ?disabled=${this.dataCenters.length === 0}
+              @change=${(e: Event) => {
+                const value = (e.target as HTMLSelectElement).value;
+                this.handleConfigChange('market', 'selectedServer', value);
+              }}
+            >
+              ${this.dataCenters.length === 0
+                ? html`<option value="Crystal">Loading servers...</option>`
+                : sortedDataCenters.map(dc => html`
+                    <optgroup label="${dc.name} (${dc.region})">
+                      <option
+                        value="${dc.name}"
+                        ?selected=${this.marketConfig.selectedServer === dc.name}
+                      >
+                        ${dc.name} - All Worlds
+                      </option>
+                      ${this.worlds
+                        .filter(w => dc.worlds.includes(w.id))
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(world => html`
+                          <option
+                            value="${world.name}"
+                            ?selected=${this.marketConfig.selectedServer === world.name}
+                          >
+                            &nbsp;&nbsp;${world.name}
+                          </option>
+                        `)}
+                    </optgroup>
+                  `)}
+            </select>
+            <div class="config-description">
+              Prices fetched from Universalis for ${this.marketConfig.selectedServer}
+            </div>
           </div>
         </div>
       </div>

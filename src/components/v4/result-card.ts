@@ -141,6 +141,24 @@ export class ResultCard extends BaseLitComponent {
   showLab: boolean = false;
 
   /**
+   * Show Delta-E color distance in technical details
+   */
+  @property({ type: Boolean, attribute: 'show-delta-e' })
+  showDeltaE: boolean = true;
+
+  /**
+   * Show market prices in acquisition column
+   */
+  @property({ type: Boolean, attribute: 'show-price' })
+  showPrice: boolean = true;
+
+  /**
+   * Show acquisition source information
+   */
+  @property({ type: Boolean, attribute: 'show-acquisition' })
+  showAcquisition: boolean = true;
+
+  /**
    * Context menu open state
    */
   @state()
@@ -577,13 +595,17 @@ export class ResultCard extends BaseLitComponent {
           <!-- Technical Column -->
           <div class="detail-column">
             <div class="column-header">Technical</div>
+            ${this.showDeltaE
+        ? html`
             <div class="detail-row">
               <span class="detail-label">ΔE</span>
               <span class="detail-value ${this.getDeltaEClass(deltaE)}">
                 ${deltaE !== undefined ? deltaE.toFixed(2) : '—'}
               </span>
             </div>
-            ${hueDeviance !== undefined
+                `
+        : nothing}
+            ${this.showDeltaE && hueDeviance !== undefined
         ? html`
                   <div class="detail-row">
                     <span class="detail-label">Hue°</span>
@@ -632,6 +654,8 @@ export class ResultCard extends BaseLitComponent {
           <!-- Acquisition Column -->
           <div class="detail-column">
             <div class="column-header">Acquisition</div>
+            ${this.showAcquisition
+        ? html`
             <div class="detail-row">
               <span class="detail-label">Source</span>
               <span class="detail-value">${dye.acquisition ?? 'Unknown'}</span>
@@ -640,6 +664,10 @@ export class ResultCard extends BaseLitComponent {
               <span class="detail-label">Cost</span>
               <span class="detail-value">${this.formatVendorCost(vendorCost)}</span>
             </div>
+                `
+        : nothing}
+            ${this.showPrice
+        ? html`
             <div class="detail-row">
               <span class="detail-label">Market</span>
               <span class="detail-value">${marketServer ?? 'N/A'}</span>
@@ -647,6 +675,8 @@ export class ResultCard extends BaseLitComponent {
             <div class="detail-row">
               <span class="detail-value large">${this.formatPrice(price)}</span>
             </div>
+                `
+        : nothing}
           </div>
         </div>
 

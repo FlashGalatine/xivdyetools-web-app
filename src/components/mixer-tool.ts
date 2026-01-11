@@ -29,7 +29,8 @@ import { ICON_FILTER, ICON_MARKET, ICON_PALETTE, ICON_BEAKER, ICON_SLIDERS } fro
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { MixerConfig } from '@shared/tool-config-types';
+import type { MixerConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
+import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import '@components/v4/result-card';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
 
@@ -121,13 +122,17 @@ export class MixerTool extends BaseComponent {
   private languageUnsubscribe: (() => void) | null = null;
   private configUnsubscribe: (() => void) | null = null;
 
+  // Display options (from ConfigController)
+  private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
+
   constructor(container: HTMLElement, options: MixerToolOptions) {
     super(container);
     this.options = options;
 
-    // Load maxResults from ConfigController (v4 unified config)
+    // Load config from ConfigController (v4 unified config)
     const config = ConfigController.getInstance().getConfig('mixer');
     this.maxResults = config.maxResults;
+    this.displayOptions = config.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
 
     // Load persisted dye selections
     this.loadSelectedDyes();
@@ -360,6 +365,7 @@ export class MixerTool extends BaseComponent {
    */
   public setConfig(config: Partial<MixerConfig>): void {
     let needsUpdate = false;
+    let needsRerender = false;
 
     if (config.maxResults !== undefined && config.maxResults !== this.maxResults) {
       this.maxResults = config.maxResults;
@@ -375,12 +381,34 @@ export class MixerTool extends BaseComponent {
       }
     }
 
+    // Handle display options changes
+    if (config.displayOptions) {
+      const newOpts = config.displayOptions;
+      const oldOpts = this.displayOptions;
+      if (
+        newOpts.showHex !== oldOpts.showHex ||
+        newOpts.showRgb !== oldOpts.showRgb ||
+        newOpts.showHsv !== oldOpts.showHsv ||
+        newOpts.showLab !== oldOpts.showLab ||
+        newOpts.showPrice !== oldOpts.showPrice ||
+        newOpts.showDeltaE !== oldOpts.showDeltaE ||
+        newOpts.showAcquisition !== oldOpts.showAcquisition
+      ) {
+        this.displayOptions = newOpts;
+        needsRerender = true;
+        logger.info('[MixerTool] setConfig: displayOptions updated');
+      }
+    }
+
     if (needsUpdate && this.blendedColor) {
       this.findMatchingDyes();
       this.renderResultsGrid();
       if (this.showPrices) {
         void this.fetchPricesForDisplayedDyes();
       }
+    } else if (needsRerender && this.blendedColor) {
+      // Only re-render cards (no need to recalculate matches)
+      this.renderResultsGrid();
     }
   }
 
@@ -1147,6 +1175,15 @@ export class MixerTool extends BaseComponent {
         price: this.priceData.get(result.matchedDye.itemID)?.currentMinPrice,
       };
       (card as unknown as { data: ResultCardData }).data = cardData;
+
+      // Set display options from tool state
+      (card as unknown as { showHex: boolean }).showHex = this.displayOptions.showHex;
+      (card as unknown as { showRgb: boolean }).showRgb = this.displayOptions.showRgb;
+      (card as unknown as { showHsv: boolean }).showHsv = this.displayOptions.showHsv;
+      (card as unknown as { showLab: boolean }).showLab = this.displayOptions.showLab;
+      (card as unknown as { showDeltaE: boolean }).showDeltaE = this.displayOptions.showDeltaE;
+      (card as unknown as { showPrice: boolean }).showPrice = this.displayOptions.showPrice;
+      (card as unknown as { showAcquisition: boolean }).showAcquisition = this.displayOptions.showAcquisition;
 
       // Listen for context actions
       card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {

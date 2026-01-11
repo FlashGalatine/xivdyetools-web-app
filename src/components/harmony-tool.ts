@@ -24,6 +24,7 @@ import { ConfigController } from '@services/config-controller';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
+import { DisplayOptionsConfig, DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import { HARMONY_ICONS } from '@shared/harmony-icons';
 import {
   ICON_FILTER,
@@ -150,10 +151,7 @@ export class HarmonyTool extends BaseComponent {
   private priceRequestVersion: number = 0;
 
   // Display options (from ConfigController)
-  private displayShowHex: boolean = true;
-  private displayShowRgb: boolean = false;
-  private displayShowHsv: boolean = true;
-  private displayShowLab: boolean = false;
+  private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
   private usePerceptualMatching: boolean = false;
 
   // Child components (desktop left panel)
@@ -328,10 +326,7 @@ export class HarmonyTool extends BaseComponent {
     // Load display options from ConfigController
     const configController = ConfigController.getInstance();
     const harmonyConfig = configController.getConfig('harmony');
-    this.displayShowHex = harmonyConfig.showHex;
-    this.displayShowRgb = harmonyConfig.showRgb;
-    this.displayShowHsv = harmonyConfig.showHsv;
-    this.displayShowLab = harmonyConfig.showLab;
+    this.displayOptions = harmonyConfig.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
     this.usePerceptualMatching = harmonyConfig.strictMatching;
 
     // Load market config (showPrices, server selection)
@@ -352,19 +347,20 @@ export class HarmonyTool extends BaseComponent {
 
     // Subscribe to harmony config changes
     this.subs.add(configController.subscribe('harmony', (config) => {
+      const newDisplayOptions = config.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
       const needsRerender =
-        this.displayShowHex !== config.showHex ||
-        this.displayShowRgb !== config.showRgb ||
-        this.displayShowHsv !== config.showHsv ||
-        this.displayShowLab !== config.showLab;
+        this.displayOptions.showHex !== newDisplayOptions.showHex ||
+        this.displayOptions.showRgb !== newDisplayOptions.showRgb ||
+        this.displayOptions.showHsv !== newDisplayOptions.showHsv ||
+        this.displayOptions.showLab !== newDisplayOptions.showLab ||
+        this.displayOptions.showPrice !== newDisplayOptions.showPrice ||
+        this.displayOptions.showDeltaE !== newDisplayOptions.showDeltaE ||
+        this.displayOptions.showAcquisition !== newDisplayOptions.showAcquisition;
 
       // Perceptual matching changes require regenerating harmonies
       const algorithmChanged = this.usePerceptualMatching !== config.strictMatching;
 
-      this.displayShowHex = config.showHex;
-      this.displayShowRgb = config.showRgb;
-      this.displayShowHsv = config.showHsv;
-      this.displayShowLab = config.showLab;
+      this.displayOptions = newDisplayOptions;
       this.usePerceptualMatching = config.strictMatching;
 
       if ((needsRerender || algorithmChanged) && this.selectedDye) {
@@ -1549,10 +1545,13 @@ export class HarmonyTool extends BaseComponent {
     card.setAttribute('data-harmony-panel', options.label);
 
     // Set display options from tool state
-    card.showHex = this.displayShowHex;
-    card.showRgb = this.displayShowRgb;
-    card.showHsv = this.displayShowHsv;
-    card.showLab = this.displayShowLab;
+    card.showHex = this.displayOptions.showHex;
+    card.showRgb = this.displayOptions.showRgb;
+    card.showHsv = this.displayOptions.showHsv;
+    card.showLab = this.displayOptions.showLab;
+    card.showDeltaE = this.displayOptions.showDeltaE;
+    card.showPrice = this.displayOptions.showPrice;
+    card.showAcquisition = this.displayOptions.showAcquisition;
 
     // Handle card selection - set as new base dye and regenerate harmonies
     card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {

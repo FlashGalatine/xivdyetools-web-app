@@ -25,3 +25,5 @@ export { ResultCard } from './result-card';
 export type { ResultCardData, ContextAction } from './result-card';
 export { V4ColorWheel } from './v4-color-wheel';
 export type { HarmonyType } from './v4-color-wheel';
+export { DisplayOptionsV4 } from './display-options-v4';
+export type { OptionGroup, DisplayOptionsChangeDetail } from './display-options-v4';

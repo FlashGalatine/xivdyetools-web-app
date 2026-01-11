@@ -31,16 +31,19 @@ export interface GlobalConfig {
 export interface HarmonyConfig {
   /** Selected harmony type (complementary, analogous, triadic, etc.) */
   harmonyType: string;
-  /** Show hex codes in results */
-  showHex: boolean;
-  /** Show RGB values in results */
-  showRgb: boolean;
-  /** Show HSV values in results */
-  showHsv: boolean;
-  /** Show LAB values in results */
-  showLab: boolean;
   /** Use perceptual (DeltaE) color matching instead of hue-based */
   strictMatching: boolean;
+  /** Display options for result cards */
+  displayOptions: DisplayOptionsConfig;
+  // Legacy fields (deprecated, for migration)
+  /** @deprecated Use displayOptions.showHex */
+  showHex?: boolean;
+  /** @deprecated Use displayOptions.showRgb */
+  showRgb?: boolean;
+  /** @deprecated Use displayOptions.showHsv */
+  showHsv?: boolean;
+  /** @deprecated Use displayOptions.showLab */
+  showLab?: boolean;
 }
 
 /**
@@ -97,6 +100,8 @@ export interface GradientConfig {
   stepCount: number;
   /** Interpolation method (linear, ease, etc.) */
   interpolation: string;
+  /** Display options for result cards */
+  displayOptions: DisplayOptionsConfig;
 }
 
 /**
@@ -105,6 +110,8 @@ export interface GradientConfig {
 export interface MixerConfig {
   /** Maximum results to show (3-8) */
   maxResults: number;
+  /** Display options for result cards */
+  displayOptions: DisplayOptionsConfig;
 }
 
 /**
@@ -156,6 +163,47 @@ export interface MarketConfig {
 }
 
 // ============================================================================
+// Shared Display Options
+// ============================================================================
+
+/**
+ * Shared display options for result cards across tools.
+ * Controls visibility of color formats and result metadata.
+ */
+export interface DisplayOptionsConfig {
+  // Color format visibility
+  /** Show HEX color codes */
+  showHex: boolean;
+  /** Show RGB values */
+  showRgb: boolean;
+  /** Show HSV values */
+  showHsv: boolean;
+  /** Show LAB values */
+  showLab: boolean;
+
+  // Result metadata visibility
+  /** Show market prices */
+  showPrice: boolean;
+  /** Show Delta-E color distance */
+  showDeltaE: boolean;
+  /** Show acquisition source information */
+  showAcquisition: boolean;
+}
+
+/**
+ * Default display options for result cards
+ */
+export const DEFAULT_DISPLAY_OPTIONS: DisplayOptionsConfig = {
+  showHex: true,
+  showRgb: false,
+  showHsv: true,
+  showLab: false,
+  showPrice: false,
+  showDeltaE: true,
+  showAcquisition: true,
+};
+
+// ============================================================================
 // Type Mapping
 // ============================================================================
 
@@ -203,11 +251,8 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   },
   harmony: {
     harmonyType: 'tetradic',
-    showHex: true,
-    showRgb: false,
-    showHsv: true,
-    showLab: false,
     strictMatching: false,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   extractor: {
     vibrancyBoost: true,
@@ -232,9 +277,11 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   gradient: {
     stepCount: 8,
     interpolation: 'hsv',
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   mixer: {
     maxResults: 5, // Design spec: default 5, range 3-8
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   presets: {
     showMyPresetsOnly: false,

@@ -30,7 +30,8 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { GradientConfig } from '@shared/tool-config-types';
+import type { GradientConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
+import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 
 // ============================================================================
 // Types and Constants
@@ -133,6 +134,9 @@ export class GradientTool extends BaseComponent {
   private languageUnsubscribe: (() => void) | null = null;
   private configUnsubscribe: (() => void) | null = null;
 
+  // Display options (from ConfigController) - for future v4-result-card migration
+  private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
+
   constructor(container: HTMLElement, options: GradientToolOptions) {
     super(container);
     this.options = options;
@@ -140,6 +144,10 @@ export class GradientTool extends BaseComponent {
     // Load persisted settings
     this.stepCount = StorageService.getItem<number>(STORAGE_KEYS.stepCount) ?? DEFAULTS.stepCount;
     this.colorSpace = StorageService.getItem<'rgb' | 'hsv'>(STORAGE_KEYS.colorSpace) ?? DEFAULTS.colorSpace;
+
+    // Load display options from ConfigController
+    const gradientConfig = ConfigController.getInstance().getConfig('gradient');
+    this.displayOptions = gradientConfig.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
 
     // Load persisted dye selections (with migration from old format)
     this.loadSelectedDyes();
@@ -296,6 +304,14 @@ export class GradientTool extends BaseComponent {
         needsUpdate = true;
         logger.info(`[GradientTool] setConfig: interpolation -> ${config.interpolation} (colorSpace: ${newColorSpace})`);
       }
+    }
+
+    // Handle display options changes (for future v4-result-card migration)
+    if (config.displayOptions) {
+      this.displayOptions = config.displayOptions;
+      logger.info('[GradientTool] setConfig: displayOptions updated');
+      // Note: Currently using custom rendering, so no re-render needed yet.
+      // When migrating to v4-result-card, add needsUpdate = true here.
     }
 
     // Re-interpolate if any config changed and we have data
@@ -859,10 +875,10 @@ export class GradientTool extends BaseComponent {
           .filter((dye) => !excludeIds.includes(dye.id) && dye.category !== 'Facewear');
         matchedDye = filteredDyes.length > 0
           ? filteredDyes.reduce((best, dye) => {
-              const bestDist = ColorService.getColorDistance(theoreticalColor, best.hex);
-              const dyeDist = ColorService.getColorDistance(theoreticalColor, dye.hex);
-              return dyeDist < bestDist ? dye : best;
-            })
+            const bestDist = ColorService.getColorDistance(theoreticalColor, best.hex);
+            const dyeDist = ColorService.getColorDistance(theoreticalColor, dye.hex);
+            return dyeDist < bestDist ? dye : best;
+          })
           : null;
       }
 
@@ -1658,6 +1674,7 @@ export class GradientTool extends BaseComponent {
     this.saveSelectedDyes();
     this.updateSelectedDyesDisplay();
     this.updateMobileSelectedDyesDisplay();
-    this.renderIntermediateMatches();
+    this.updateInterpolation();
+    this.updateDrawerContent();
   }
 }
