@@ -1,7 +1,7 @@
 /**
- * XIV Dye Tools v3.0.0 - Main Application Entry Point
+ * XIV Dye Tools v4.0.0 - Main Application Entry Point
  *
- * Initializes services and loads the v3 two-panel layout.
+ * Initializes services and loads the v4 glassmorphism layout.
  *
  * @module main
  */
@@ -74,23 +74,22 @@ async function initializeApp(): Promise<void> {
       return;
     }
 
-    // Check for v4 layout flag (for testing new glassmorphism UI)
-    // Enable via URL: ?v4=true or environment: VITE_V4_LAYOUT=true
-    const useV4Layout =
-      window.location.search.includes('v4=true') ||
-      import.meta.env.VITE_V4_LAYOUT === 'true';
+    // V4 glassmorphism layout is now the default
+    // Use ?v3=true to temporarily access legacy layout (deprecated, will be removed)
+    const useV3Layout =
+      window.location.search.includes('v3=true') ||
+      import.meta.env.VITE_V3_LAYOUT === 'true';
 
-    if (useV4Layout) {
-      // Initialize v4 glassmorphism layout
+    if (useV3Layout) {
+      // Initialize legacy v3 two-panel layout (deprecated)
+      logger.warn('⚠️ Loading deprecated v3 layout. This will be removed in a future update.');
+      const { initializeV3Layout } = await import('@components/v3-layout');
+      await initializeV3Layout(contentContainer);
+    } else {
+      // Initialize v4 glassmorphism layout (default)
       logger.info('🎨 Initializing v4 layout shell...');
       const { initializeV4Layout } = await import('@components/v4-layout');
       await initializeV4Layout(contentContainer);
-      logger.info('✅ V4 layout loaded. Access at: http://localhost:5173/?v4=true');
-    } else {
-      // Initialize v3 two-panel layout inside the content container
-      logger.info('🎨 Initializing v3 two-panel layout...');
-      const { initializeV3Layout } = await import('@components/v3-layout');
-      await initializeV3Layout(contentContainer);
     }
 
     logger.info('✅ Application initialized successfully');
