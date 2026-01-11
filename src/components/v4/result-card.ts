@@ -272,6 +272,7 @@ export class ResultCard extends BaseLitComponent {
       .detail-value {
         font-family: 'Consolas', 'Monaco', monospace;
         color: var(--theme-text, #e0e0e0);
+        text-align: right;
       }
 
       .detail-value.large {

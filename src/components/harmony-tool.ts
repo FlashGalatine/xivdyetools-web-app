@@ -795,8 +795,12 @@ export class HarmonyTool extends BaseComponent {
       }
     }) as EventListener);
 
-    // Listen for server changes - refetch prices when server selection changes
+    // Listen for server changes - regenerate to show new server name and refetch prices
     marketContent.addEventListener('server-changed', (() => {
+      // Regenerate harmonies to update cards with new server name
+      if (this.selectedDye) {
+        this.generateHarmonies();
+      }
       if (this.showPrices) {
         this.fetchPricesForDisplayedDyes();
       }
@@ -1314,6 +1318,10 @@ export class HarmonyTool extends BaseComponent {
     }) as EventListener);
 
     marketContent.addEventListener('server-changed', (() => {
+      // Regenerate harmonies to update cards with new server name
+      if (this.selectedDye) {
+        this.generateHarmonies();
+      }
       if (this.showPrices) {
         this.fetchPricesForDisplayedDyes();
       }
@@ -1474,10 +1482,10 @@ export class HarmonyTool extends BaseComponent {
     card.showHsv = this.displayShowHsv;
     card.showLab = this.displayShowLab;
 
-    // Handle card selection
+    // Handle card selection - set as new base dye and regenerate harmonies
     card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {
       logger.info(`[HarmonyTool] Card selected: ${e.detail.dye.name}`);
-      // Could trigger dye selection or navigation
+      this.selectDye(e.detail.dye);
     }) as EventListener);
 
     // Handle context menu actions
