@@ -13,6 +13,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import { DyeService, type Dye } from '@services/dye-service-wrapper';
 import { CollectionService } from '@services/collection-service';
+import { ToastService } from '@services/toast-service';
 import { logger } from '@shared/logger';
 
 /**
@@ -68,6 +69,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
   @state() private searchQuery = '';
   @state() private activeFilter: DyeFilter = 'all';
   @state() private favoriteDyes: Dye[] = [];
+  @state() private favoriteIds: Set<number> = new Set();
   @state() private allDyes: Dye[] = [];
   @state() private filteredDyes: Dye[] = [];
   @state() private favoritesExpanded = true;
@@ -337,6 +339,65 @@ export class DyePaletteDrawer extends BaseLitComponent {
         opacity: 1;
       }
 
+      /* Favorite Star Button */
+      .swatch-favorite-btn {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 18px;
+        height: 18px;
+        padding: 2px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5);
+        color: var(--v4-text-secondary, #a0a0a0);
+        cursor: pointer;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: opacity 0.15s, transform 0.15s, color 0.15s, background 0.15s;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .swatch:hover .swatch-favorite-btn {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .swatch-favorite-btn:hover {
+        background: rgba(0, 0, 0, 0.7);
+        color: var(--theme-primary, #d4af37);
+      }
+
+      .swatch-favorite-btn.is-favorite {
+        opacity: 1;
+        color: var(--theme-primary, #d4af37);
+      }
+
+      .swatch-favorite-btn.is-favorite:hover {
+        color: #ff6b6b;
+      }
+
+      .swatch-favorite-btn svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      /* Always show star in favorites section for easy removal */
+      .favorites-content .swatch-favorite-btn {
+        opacity: 1;
+        transform: scale(1);
+        background: rgba(0, 0, 0, 0.6);
+        color: var(--theme-primary, #d4af37);
+      }
+
+      .favorites-content .swatch-favorite-btn:hover {
+        background: rgba(220, 53, 69, 0.8);
+        color: white;
+      }
+
       /* Category Sections */
       .category-section {
         margin-bottom: 16px;
@@ -405,10 +466,12 @@ export class DyePaletteDrawer extends BaseLitComponent {
   private subscribeToFavorites(): void {
     // Load initial favorites
     const favoriteIds = CollectionService.getFavorites();
+    this.favoriteIds = new Set(favoriteIds);
     this.updateFavoriteDyes(favoriteIds);
 
     // Subscribe to changes
     this.unsubscribeFavorites = CollectionService.subscribeFavorites((ids) => {
+      this.favoriteIds = new Set(ids);
       this.updateFavoriteDyes(ids);
     });
   }
@@ -506,6 +569,33 @@ export class DyePaletteDrawer extends BaseLitComponent {
     this.emit('drawer-toggle');
   }
 
+  /**
+   * Toggle favorite status for a dye.
+   * Prevents event bubbling to avoid triggering dye selection.
+   */
+  private handleFavoriteToggle(e: Event, dye: Dye): void {
+    e.stopPropagation();
+    e.preventDefault();
+
+    const wasFavorite = this.favoriteIds.has(dye.id);
+    const result = CollectionService.toggleFavorite(dye.id);
+
+    if (!result && !wasFavorite) {
+      // Failed to add - likely at limit
+      const maxFavorites = CollectionService.getMaxFavorites();
+      ToastService.warning(`Maximum ${maxFavorites} favorites reached. Remove a favorite to add new ones.`);
+    } else {
+      logger.debug(`[DyePaletteDrawer] ${wasFavorite ? 'Removed' : 'Added'} ${dye.name} ${wasFavorite ? 'from' : 'to'} favorites`);
+    }
+  }
+
+  /**
+   * Check if a dye is currently favorited
+   */
+  private isFavorite(dyeId: number): boolean {
+    return this.favoriteIds.has(dyeId);
+  }
+
   // =========================================================================
   // Render
   // =========================================================================
@@ -575,6 +665,39 @@ export class DyePaletteDrawer extends BaseLitComponent {
     `;
   }
 
+  /**
+   * Render a single dye swatch with favorite star button
+   */
+  private renderSwatch(dye: Dye): TemplateResult {
+    const isFav = this.isFavorite(dye.id);
+
+    return html`
+      <div
+        class="swatch"
+        style="background-color: ${dye.hex}"
+        title="${dye.name}"
+        @click=${() => this.handleDyeClick(dye)}
+      >
+        <button
+          class="swatch-favorite-btn ${isFav ? 'is-favorite' : ''}"
+          type="button"
+          title="${isFav ? 'Remove from favorites' : 'Add to favorites'}"
+          aria-label="${isFav ? `Remove ${dye.name} from favorites` : `Add ${dye.name} to favorites`}"
+          @click=${(e: Event) => this.handleFavoriteToggle(e, dye)}
+        >
+          ${isFav
+            ? html`<svg viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>`
+            : html`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>`
+          }
+        </button>
+      </div>
+    `;
+  }
+
   private renderFavorites(): TemplateResult {
     return html`
       <div class="favorites-section">
@@ -595,16 +718,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
           ${this.favoriteDyes.length > 0
             ? html`
                 <div class="swatch-grid">
-                  ${this.favoriteDyes.map(
-                    (dye) => html`
-                      <div
-                        class="swatch"
-                        style="background-color: ${dye.hex}"
-                        title="${dye.name}"
-                        @click=${() => this.handleDyeClick(dye)}
-                      ></div>
-                    `
-                  )}
+                  ${this.favoriteDyes.map((dye) => this.renderSwatch(dye))}
                 </div>
               `
             : html`
@@ -637,16 +751,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
           <div class="category-section">
             <div class="category-label">${category}</div>
             <div class="swatch-grid">
-              ${dyes.map(
-                (dye) => html`
-                  <div
-                    class="swatch"
-                    style="background-color: ${dye.hex}"
-                    title="${dye.name}"
-                    @click=${() => this.handleDyeClick(dye)}
-                  ></div>
-                `
-              )}
+              ${dyes.map((dye) => this.renderSwatch(dye))}
             </div>
           </div>
         `
