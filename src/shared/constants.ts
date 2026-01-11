@@ -89,7 +89,7 @@ export const THEME_NAMES: readonly ThemeName[] = [
 
 export const THEME_COUNT = THEME_NAMES.length;
 
-export const DEFAULT_THEME: ThemeName = 'standard-light';
+export const DEFAULT_THEME: ThemeName = 'premium-dark';
 
 /**
  * Theme display names for UI
