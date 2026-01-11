@@ -19,6 +19,9 @@ import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { BaseComponent } from './base-component';
 import type { V4LayoutShell } from './v4/v4-layout-shell';
+import { ModalContainer } from './modal-container';
+import { showThemeModal } from './v4/theme-modal';
+import { showAboutModal } from './about-modal';
 
 // Import V4 layout shell (registers custom element)
 import '@components/v4/v4-layout-shell';
@@ -29,6 +32,7 @@ let layoutElement: V4LayoutShell | null = null;
 let configController: ConfigController | null = null;
 let languageUnsubscribe: (() => void) | null = null;
 let configUnsubscribe: (() => void) | null = null;
+let modalContainer: ModalContainer | null = null;
 
 /**
  * Initialize the v4 layout
@@ -67,6 +71,47 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
         .setConfig({ [key]: value });
     }
   }) as EventListener);
+
+  // Listen for dye selections from the Color Palette drawer
+  layoutElement.addEventListener('dye-selected', ((
+    e: CustomEvent<{ dye: { id: number; name: string; hex: string } }>,
+  ) => {
+    const { dye } = e.detail;
+    logger.debug(`[V4 Layout] Dye selected from palette: ${dye.name}`);
+
+    // Route dye selection to active tool if it has selectDye method
+    if (activeTool && 'selectDye' in activeTool) {
+      (activeTool as BaseComponent & { selectDye: (dye: unknown) => void }).selectDye(dye);
+    } else if (activeTool && 'addDye' in activeTool) {
+      // Fallback for tools that use addDye instead of selectDye
+      (activeTool as BaseComponent & { addDye: (dye: unknown) => void }).addDye(dye);
+    } else {
+      logger.debug(`[V4 Layout] Tool ${RouterService.getCurrentToolId()} does not support dye selection`);
+    }
+  }) as EventListener);
+
+  // Listen for theme button click from header
+  layoutElement.addEventListener('theme-click', (() => {
+    logger.debug('[V4 Layout] Theme button clicked');
+    showThemeModal();
+  }) as EventListener);
+
+  // Listen for about button click from header
+  layoutElement.addEventListener('about-click', (() => {
+    logger.debug('[V4 Layout] About button clicked');
+    showAboutModal();
+  }) as EventListener);
+
+  // Initialize modal container for v4 layout
+  // Create modal root if it doesn't exist
+  let modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) {
+    modalRoot = document.createElement('div');
+    modalRoot.id = 'modal-root';
+    document.body.appendChild(modalRoot);
+  }
+  modalContainer = new ModalContainer(modalRoot);
+  modalContainer.init();
 
   // Subscribe to route changes (browser back/forward)
   RouterService.subscribe((state) => {
@@ -264,14 +309,12 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
   } catch (error) {
     logger.error(`[V4 Layout] Failed to load ${toolId}:`, error);
     contentContainer.innerHTML = `
-      <div class="flex items-center justify-center h-64">
-        <div class="text-center" style="color: var(--theme-text);">
-          <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <p class="font-medium mb-2">Failed to load tool</p>
-          <p class="text-sm opacity-70">Please try again or refresh the page</p>
-        </div>
+      <div class="flex flex-col items-center justify-center text-center" style="min-height: 400px; padding: 3rem 2rem;">
+        <svg style="width: 180px; height: 180px; opacity: 0.25; margin-bottom: 1.5rem; color: var(--theme-text);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--theme-text);">Failed to load tool</p>
+        <p style="font-size: 1rem; opacity: 0.7; color: var(--theme-text);">Please try again or refresh the page</p>
       </div>
     `;
   }
@@ -282,14 +325,12 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
  */
 function renderPlaceholder(container: HTMLElement, toolId: string): void {
   container.innerHTML = `
-    <div class="flex items-center justify-center h-64">
-      <div class="text-center" style="color: var(--theme-text);">
-        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-        <p class="font-medium mb-2">${toolId} Tool</p>
-        <p class="text-sm opacity-70">Coming soon</p>
-      </div>
+    <div class="flex flex-col items-center justify-center text-center" style="min-height: 400px; padding: 3rem 2rem;">
+      <svg style="width: 180px; height: 180px; opacity: 0.25; margin-bottom: 1.5rem; color: var(--theme-text);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+      </svg>
+      <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--theme-text);">${toolId} Tool</p>
+      <p style="font-size: 1rem; opacity: 0.7; color: var(--theme-text);">Coming soon</p>
     </div>
   `;
 }
@@ -313,6 +354,12 @@ export function destroyV4Layout(): void {
   if (activeTool) {
     activeTool.destroy();
     activeTool = null;
+  }
+
+  // Clean up modal container
+  if (modalContainer) {
+    modalContainer.destroy();
+    modalContainer = null;
   }
 
   // Clean up layout element

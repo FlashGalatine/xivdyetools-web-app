@@ -303,6 +303,59 @@ export class MixerTool extends BaseComponent {
   // ============================================================================
 
   /**
+   * Select a dye from the Color Palette drawer
+   * Adds to first empty slot, or shifts dyes if both slots are full
+   */
+  public selectDye(dye: Dye): void {
+    if (!dye) return;
+
+    // Don't add duplicates
+    if (this.selectedDyes.some((d) => d?.id === dye.id)) {
+      return;
+    }
+
+    // Add to first empty slot, or shift if both full
+    if (!this.selectedDyes[0]) {
+      this.selectedDyes[0] = dye;
+    } else if (!this.selectedDyes[1]) {
+      this.selectedDyes[1] = dye;
+    } else {
+      // Both slots full - shift dye 2 to dye 1, add new as dye 2
+      this.selectedDyes[0] = this.selectedDyes[1];
+      this.selectedDyes[1] = dye;
+    }
+
+    // Update selectors
+    const selectedDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
+    this.dyeSelector?.setSelectedDyes(selectedDyes);
+    this.mobileDyeSelector?.setSelectedDyes(selectedDyes);
+
+    // Save and update
+    this.saveSelectedDyes();
+    this.updateSelectedDyesDisplay();
+
+    // Calculate blend if both dyes selected
+    if (this.selectedDyes[0] && this.selectedDyes[1]) {
+      this.blendedColor = this.blendColors(
+        this.selectedDyes[0].hex,
+        this.selectedDyes[1].hex
+      );
+      this.findMatchingDyes();
+      this.showEmptyState(false);
+      this.updateCraftingUI();
+      this.renderResultsGrid();
+      if (this.showPrices) {
+        void this.fetchPricesForDisplayedDyes();
+      }
+    } else {
+      this.updateCraftingUI();
+    }
+
+    this.updateDrawerContent();
+    logger.info(`[MixerTool] Selected dye from palette: ${dye.name}`);
+  }
+
+  /**
    * Update tool configuration from external source (V4 ConfigSidebar)
    */
   public setConfig(config: Partial<MixerConfig>): void {
@@ -781,15 +834,15 @@ export class MixerTool extends BaseComponent {
     clearContainer(this.emptyStateContainer);
 
     const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+      className: 'flex flex-col items-center justify-center text-center',
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: 'min-height: 400px; padding: 3rem 2rem;',
       },
     });
 
     empty.innerHTML = `
-      <span class="inline-block w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
-      <p style="color: var(--theme-text);">${LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors'}</p>
+      <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
+      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors'}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);

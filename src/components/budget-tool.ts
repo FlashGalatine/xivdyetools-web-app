@@ -983,15 +983,15 @@ export class BudgetTool extends BaseComponent {
     clearContainer(this.emptyStateContainer);
 
     const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+      className: 'flex flex-col items-center justify-center text-center',
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: 'min-height: 400px; padding: 3rem 2rem;',
       },
     });
 
     empty.innerHTML = `
-      <span class="inline-block w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);">${ICON_TOOL_BUDGET}</span>
-      <p style="color: var(--theme-text);">${LanguageService.t('budget.selectTargetToStart') || 'Select a target dye to find affordable alternatives'}</p>
+      <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_BUDGET}</span>
+      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('budget.selectTargetToStart') || 'Select a target dye to find affordable alternatives'}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);
@@ -1993,5 +1993,31 @@ export class BudgetTool extends BaseComponent {
     const b = parseInt(hex.slice(5, 7), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5;
+  }
+
+  /**
+   * Select a dye from external source (Color Palette drawer)
+   * Sets the dye as the target color and updates the UI.
+   *
+   * @param dye The dye to select as the target
+   */
+  public selectDye(dye: Dye): void {
+    if (!dye) return;
+
+    this.targetDye = dye;
+
+    // Persist to storage
+    StorageService.setItem(STORAGE_KEYS.targetDyeId, dye.id);
+    logger.info(`[BudgetTool] External dye selected: ${dye.name}`);
+
+    // Update DyeSelector if it exists
+    if (this.dyeSelector) {
+      this.dyeSelector.setSelectedDyes([dye]);
+    }
+
+    // Update UI
+    this.filterAndSortAlternatives();
+    this.updateTargetDyeDisplay();
+    this.update();
   }
 }

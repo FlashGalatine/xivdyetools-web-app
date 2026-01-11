@@ -250,6 +250,49 @@ export class AccessibilityTool extends BaseComponent {
   // ============================================================================
 
   /**
+   * Select a dye from the Color Palette drawer
+   * Adds to the selection if there's room (max 4 dyes)
+   */
+  public selectDye(dye: Dye): void {
+    if (!dye) return;
+
+    // Don't add duplicates
+    if (this.selectedDyes.some((d) => d.id === dye.id)) {
+      return;
+    }
+
+    // Check max selection limit
+    if (this.selectedDyes.length >= 4) {
+      // Remove oldest dye and add new one
+      this.selectedDyes.shift();
+    }
+
+    // Add the dye
+    this.selectedDyes.push(dye);
+
+    // Save to storage
+    const dyeIds = this.selectedDyes.map((d) => d.id);
+    StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+
+    // Update selectors
+    this.dyeSelector?.setSelectedDyes(this.selectedDyes);
+    this.drawerDyeSelector?.setSelectedDyes(this.selectedDyes);
+
+    // Update displays
+    this.updateResults();
+    this.updateDrawerContent();
+
+    logger.info(`[AccessibilityTool] Selected dye from palette: ${dye.name}`);
+  }
+
+  /**
+   * Alias for selectDye - some tools use addDye naming
+   */
+  public addDye(dye: Dye): void {
+    this.selectDye(dye);
+  }
+
+  /**
    * Update tool configuration from external source (V4 ConfigSidebar)
    */
   public setConfig(config: Partial<AccessibilityConfig>): void {
@@ -666,15 +709,15 @@ export class AccessibilityTool extends BaseComponent {
     clearContainer(this.emptyStateContainer);
 
     const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+      className: 'flex flex-col items-center justify-center text-center',
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: 'min-height: 400px; padding: 3rem 2rem;',
       },
     });
 
     empty.innerHTML = `
-      <span class="inline-block w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);">${ICON_TOOL_ACCESSIBILITY}</span>
-      <p style="color: var(--theme-text);">${LanguageService.t('accessibility.selectDyesToSeeAnalysis')}</p>
+      <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_ACCESSIBILITY}</span>
+      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('accessibility.selectDyesToSeeAnalysis')}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);

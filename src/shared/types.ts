@@ -68,6 +68,7 @@ export type { Result, AsyncResult, Nullable, Optional } from '@xivdyetools/types
 export type ThemeName =
   | 'standard-light'
   | 'standard-dark'
+  | 'premium-dark'
   | 'hydaelyn-light'
   | 'og-classic-dark'
   | 'parchment-light'

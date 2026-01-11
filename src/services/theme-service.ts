@@ -118,6 +118,32 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
     },
   }),
 
+  // Premium Dark - Metallic gold accent on deep black (V4 default theme)
+  'premium-dark': createThemePalette({
+    primary: '#D4AF37', // Metallic gold
+    background: '#121212', // Deep black
+    text: '#E0E0E0',
+    isDark: true,
+    overrides: {
+      textHeader: '#E0E0E0',
+      border: 'rgba(255, 255, 255, 0.15)',
+      backgroundSecondary: '#1A1A1A',
+      cardBackground: '#1E1E1E',
+      cardHover: '#2A2A2A',
+      textMuted: '#A0A0A0',
+      // V4 properties
+      bgGlass: 'rgba(30, 30, 30, 0.85)',
+      textHeaderMuted: 'rgba(224, 224, 224, 0.7)',
+      accentHover: '#F0C040',
+      accentRgb: '212, 175, 55',
+      shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.4)',
+      shadowGlow: '0 0 10px rgba(212, 175, 55, 0.25)',
+      gradientStart: '#252525',
+      gradientEnd: '#121212',
+      cardGradientEnd: '#151515',
+    },
+  }),
+
   // FFXIV-themed palettes
   'hydaelyn-light': createThemePalette({
     primary: '#4056A4',

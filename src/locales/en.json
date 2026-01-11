@@ -556,6 +556,7 @@
   "themes": {
     "standardLight": "Standard (Light)",
     "standardDark": "Standard (Dark)",
+    "premiumDark": "Premium Dark",
     "hydaelynLight": "Hydaelyn",
     "ogClassicDark": "OG Classic",
     "parchmentLight": "Parchment",

@@ -896,17 +896,17 @@ export class HarmonyTool extends BaseComponent {
     clearContainer(this.emptyStateContainer);
 
     const empty = this.createElement('div', {
-      className: 'col-span-full p-8 rounded-lg border-2 border-dashed text-center',
+      className: 'col-span-full flex flex-col items-center justify-center text-center',
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: 'min-height: 400px; padding: 3rem 2rem;',
       },
     });
 
     empty.innerHTML = `
-      <svg class="w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+      <svg style="width: 180px; height: 180px; color: var(--theme-text); opacity: 0.25; margin-bottom: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
       </svg>
-      <p style="color: var(--theme-text);">${LanguageService.t('harmony.selectDyePrompt')}</p>
+      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('harmony.selectDyePrompt')}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);
@@ -1745,5 +1745,31 @@ export class HarmonyTool extends BaseComponent {
         });
       }
     }
+  }
+
+  /**
+   * Select a dye from external source (Color Palette drawer)
+   * Sets the dye as the base color and updates the UI.
+   *
+   * @param dye The dye to select as the base color
+   */
+  public selectDye(dye: Dye): void {
+    if (!dye) return;
+
+    this.selectedDye = dye;
+
+    // Persist to storage
+    StorageService.setItem(STORAGE_KEYS.selectedDyeId, dye.itemID);
+    logger.info(`[HarmonyTool] External dye selected: ${dye.name} (itemID=${dye.itemID})`);
+
+    // Update the DyeSelector if it exists
+    if (this.dyeSelector) {
+      this.dyeSelector.setSelectedDyes([dye]);
+    }
+
+    // Generate harmonies and update UI
+    this.generateHarmonies();
+    this.updateDrawerContent();
+    this.update();
   }
 }

@@ -823,21 +823,21 @@ export class PresetTool extends BaseComponent {
     clearContainer(this.emptyStateContainer);
 
     const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+      className: 'flex flex-col items-center justify-center text-center',
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: 'min-height: 400px; padding: 3rem 2rem;',
       },
     });
 
     if (this.isLoading) {
       empty.innerHTML = `
-        <div class="inline-block w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mb-3" style="border-color: var(--theme-primary); border-top-color: transparent;"></div>
-        <p style="color: var(--theme-text);">${LanguageService.t('preset.loading') || 'Loading presets...'}</p>
+        <div class="inline-block w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mb-4" style="border-color: var(--theme-primary); border-top-color: transparent;"></div>
+        <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('preset.loading') || 'Loading presets...'}</p>
       `;
     } else {
       empty.innerHTML = `
-        <span class="inline-block w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);">${ICON_TOOL_PRESETS}</span>
-        <p style="color: var(--theme-text);">${LanguageService.t('preset.noPresets') || 'No presets found'}</p>
+        <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_PRESETS}</span>
+        <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('preset.noPresets') || 'No presets found'}</p>
         <p class="text-sm mt-2" style="color: var(--theme-text-muted);">${LanguageService.t('preset.tryDifferentFilters') || 'Try adjusting your filters'}</p>
       `;
     }

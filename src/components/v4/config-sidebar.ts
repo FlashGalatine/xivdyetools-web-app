@@ -26,7 +26,6 @@ import type {
   PresetsConfig,
   BudgetConfig,
   SwatchConfig,
-  GlobalConfig,
   ConfigKey,
 } from '@shared/tool-config-types';
 
@@ -71,7 +70,6 @@ export class ConfigSidebar extends BaseLitComponent {
   // Tool Configuration State
   // =========================================================================
 
-  @state() private globalConfig: GlobalConfig = { theme: '' };
   @state() private harmonyConfig: HarmonyConfig = {
     harmonyType: 'tetradic',
     showNames: true,
@@ -310,7 +308,6 @@ export class ConfigSidebar extends BaseLitComponent {
   private loadConfigsFromController(): void {
     this.configController = ConfigController.getInstance();
 
-    this.globalConfig = this.configController.getConfig('global');
     this.harmonyConfig = this.configController.getConfig('harmony');
     this.extractorConfig = this.configController.getConfig('extractor');
     this.accessibilityConfig = this.configController.getConfig('accessibility');
@@ -332,9 +329,6 @@ export class ConfigSidebar extends BaseLitComponent {
   ): void {
     // Update local state based on tool
     switch (tool) {
-      case 'global':
-        this.globalConfig = { ...this.globalConfig, [key]: value };
-        break;
       case 'harmony':
         this.harmonyConfig = { ...this.harmonyConfig, [key]: value };
         break;
@@ -380,39 +374,6 @@ export class ConfigSidebar extends BaseLitComponent {
    */
   private handleCollapseClick(): void {
     this.emit('sidebar-collapse');
-  }
-
-  /**
-   * Render the global config section (always visible)
-   */
-  private renderGlobalConfig(): TemplateResult {
-    return html`
-      <div class="config-section config-global">
-        <div class="config-group">
-          <div class="config-label">Theme</div>
-          <select
-            class="config-select"
-            .value=${this.globalConfig.theme}
-            @change=${(e: Event) => {
-              const value = (e.target as HTMLSelectElement).value;
-              this.handleConfigChange('global', 'theme', value);
-            }}
-          >
-            <option value="">Default (Premium Dark)</option>
-            <option value="standard-light">Standard Light</option>
-            <option value="standard-dark">Standard Dark</option>
-            <option value="hydaelyn-light">Hydaelyn</option>
-            <option value="og-classic-dark">OG Classic</option>
-            <option value="parchment-light">Parchment</option>
-            <option value="cotton-candy">Cotton Candy</option>
-            <option value="sugar-riot">Sugar Riot</option>
-            <option value="grayscale-dark">Grayscale</option>
-            <option value="high-contrast-light">High Contrast Light</option>
-            <option value="high-contrast-dark">High Contrast Dark</option>
-          </select>
-        </div>
-      </div>
-    `;
   }
 
   /**
@@ -898,7 +859,6 @@ export class ConfigSidebar extends BaseLitComponent {
 
         <!-- Sidebar Content -->
         <div class="v4-sidebar-content">
-          ${this.renderGlobalConfig()}
           ${this.renderHarmonyConfig()}
           ${this.renderExtractorConfig()}
           ${this.renderAccessibilityConfig()}

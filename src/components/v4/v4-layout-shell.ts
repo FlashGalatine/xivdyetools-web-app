@@ -6,8 +6,10 @@
  * - ToolBanner (64px tool navigation)
  * - ConfigSidebar (320px left sidebar)
  * - Content Area (main slot for tool content)
+ * - DyePaletteDrawer (320px right drawer)
  *
  * Handles routing subscription and coordinates all child components.
+ * Provides 3-column layout: [ConfigSidebar] | [Content] | [DyePaletteDrawer]
  *
  * @module components/v4/v4-layout-shell
  */
@@ -21,11 +23,16 @@ import type { ToolId } from '@services/router-service';
 import './v4-app-header';
 import './tool-banner';
 import './config-sidebar';
+import './dye-palette-drawer';
+
+// Import Dye type for event handling
+import type { Dye } from '@services/dye-service-wrapper';
 
 /**
  * V4 Layout Shell - Main application layout container
  *
  * @fires tool-change - When active tool changes, with detail: { toolId: ToolId }
+ * @fires dye-selected - When a dye is selected from the palette drawer, with detail: { dye: Dye }
  * @fires theme-click - Bubbled from V4AppHeader
  * @fires language-click - Bubbled from V4AppHeader
  * @fires about-click - Bubbled from V4AppHeader
@@ -58,6 +65,24 @@ export class V4LayoutShell extends BaseLitComponent {
    */
   @state()
   private isMobile = false;
+
+  /**
+   * Whether the right palette drawer is open (visible by default)
+   */
+  @state()
+  private paletteDrawerOpen = true;
+
+  /**
+   * Tools that should NOT show the Color Palette drawer
+   */
+  private static readonly TOOLS_WITHOUT_PALETTE: ToolId[] = ['extractor', 'swatch', 'presets'];
+
+  /**
+   * Check if the palette should be visible for the current tool
+   */
+  private get shouldShowPalette(): boolean {
+    return !V4LayoutShell.TOOLS_WITHOUT_PALETTE.includes(this.activeTool);
+  }
 
   /**
    * Media query for mobile detection
@@ -163,6 +188,51 @@ export class V4LayoutShell extends BaseLitComponent {
         transform: scale(0.95);
       }
 
+      /* Right Drawer Toggle FAB */
+      .v4-palette-toggle {
+        position: fixed;
+        bottom: 24px;
+        right: 88px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 1px solid var(--v4-glass-border, rgba(255, 255, 255, 0.1));
+        background: var(--v4-glass-bg, rgba(30, 30, 30, 0.9));
+        backdrop-filter: var(--v4-glass-blur, blur(12px));
+        -webkit-backdrop-filter: var(--v4-glass-blur, blur(12px));
+        color: var(--theme-primary, #d4af37);
+        cursor: pointer;
+        box-shadow: var(--v4-shadow-soft, 0 4px 6px rgba(0, 0, 0, 0.3));
+        z-index: 100;
+        transition: transform var(--v4-transition-fast, 150ms), opacity 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .v4-palette-toggle:hover {
+        transform: scale(1.05);
+      }
+
+      .v4-palette-toggle:active {
+        transform: scale(0.95);
+      }
+
+      .v4-palette-toggle svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      /* Hide toggle when drawer is open on desktop */
+      .v4-palette-toggle.drawer-open {
+        display: none;
+      }
+
+      /* Hide toggle completely when palette is not available for tool */
+      .v4-palette-toggle.no-palette {
+        display: none !important;
+      }
+
       /* Mobile Styles */
       @media (max-width: 768px) {
         .v4-mobile-sidebar-toggle {
@@ -177,6 +247,20 @@ export class V4LayoutShell extends BaseLitComponent {
           left: 0;
           bottom: 0;
           z-index: 100;
+        }
+
+        dye-palette-drawer {
+          position: fixed;
+          top: calc(var(--v4-header-height, 48px) + var(--v4-tool-bar-height, 64px));
+          right: 0;
+          bottom: 0;
+          z-index: 100;
+        }
+
+        .v4-palette-toggle {
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
       }
 
@@ -266,10 +350,60 @@ export class V4LayoutShell extends BaseLitComponent {
     this.emit('config-change', e.detail);
   }
 
+  /**
+   * Toggle palette drawer visibility
+   */
+  private togglePaletteDrawer(): void {
+    this.paletteDrawerOpen = !this.paletteDrawerOpen;
+  }
+
+  /**
+   * Handle drawer toggle from DyePaletteDrawer close button
+   */
+  private handlePaletteDrawerToggle(): void {
+    this.paletteDrawerOpen = false;
+  }
+
+  /**
+   * Handle dye selection from DyePaletteDrawer
+   * Re-emits for parent to route to active tool
+   */
+  private handleDyeSelected(e: CustomEvent<{ dye: Dye }>): void {
+    this.emit('dye-selected', e.detail);
+  }
+
+  /**
+   * Handle theme button click from header
+   * Bubbles up to v4-layout.ts
+   */
+  private handleThemeClick(): void {
+    this.emit('theme-click');
+  }
+
+  /**
+   * Handle about button click from header
+   * Bubbles up to v4-layout.ts
+   */
+  private handleAboutClick(): void {
+    this.emit('about-click');
+  }
+
+  /**
+   * Handle language button click from header
+   * Bubbles up to v4-layout.ts
+   */
+  private handleLanguageClick(): void {
+    this.emit('language-click');
+  }
+
   protected override render(): TemplateResult {
     return html`
       <!-- App Header -->
-      <v4-app-header></v4-app-header>
+      <v4-app-header
+        @theme-click=${this.handleThemeClick}
+        @about-click=${this.handleAboutClick}
+        @language-click=${this.handleLanguageClick}
+      ></v4-app-header>
 
       <!-- Tool Banner -->
       <v4-tool-banner
@@ -302,6 +436,17 @@ export class V4LayoutShell extends BaseLitComponent {
             <slot></slot>
           </div>
         </main>
+
+        <!-- Right Palette Drawer (hidden for extractor, swatch, presets) -->
+        ${this.shouldShowPalette
+          ? html`
+              <dye-palette-drawer
+                ?is-open=${this.paletteDrawerOpen}
+                @drawer-toggle=${this.handlePaletteDrawerToggle}
+                @dye-selected=${this.handleDyeSelected}
+              ></dye-palette-drawer>
+            `
+          : ''}
       </div>
 
       <!-- Mobile Sidebar Toggle FAB -->
@@ -314,6 +459,20 @@ export class V4LayoutShell extends BaseLitComponent {
         @click=${this.toggleSidebar}
       >
         ☰
+      </button>
+
+      <!-- Palette Drawer Toggle FAB (hidden when drawer is open or tool doesn't use palette) -->
+      <button
+        class="v4-palette-toggle ${this.paletteDrawerOpen ? 'drawer-open' : ''} ${!this.shouldShowPalette ? 'no-palette' : ''}"
+        type="button"
+        title="Show color palette"
+        aria-label="Show color palette"
+        aria-expanded=${this.paletteDrawerOpen}
+        @click=${this.togglePaletteDrawer}
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+        </svg>
       </button>
     `;
   }

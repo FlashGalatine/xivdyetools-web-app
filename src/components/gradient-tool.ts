@@ -755,15 +755,15 @@ export class GradientTool extends BaseComponent {
     clearContainer(this.emptyStateContainer);
 
     const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+      className: 'flex flex-col items-center justify-center text-center',
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: 'min-height: 400px; padding: 3rem 2rem;',
       },
     });
 
     empty.innerHTML = `
-      <span class="inline-block w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
-      <p style="color: var(--theme-text);">${LanguageService.t('mixer.selectStartEndDyes') || 'Select start and end dyes to create a color transition'}</p>
+      <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
+      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('mixer.selectStartEndDyes') || 'Select start and end dyes to create a color transition'}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);
@@ -1621,5 +1621,43 @@ export class GradientTool extends BaseComponent {
     if (!price) return null;
 
     return MarketBoard.formatPrice(price.currentMinPrice);
+  }
+
+  /**
+   * Add a dye from external source (Color Palette drawer)
+   * Sets the dye as start (if empty) or end color for gradient.
+   *
+   * @param dye The dye to add to the gradient
+   */
+  public selectDye(dye: Dye): void {
+    if (!dye) return;
+
+    // If no start dye, set as start
+    if (!this.startDye) {
+      this.selectedDyes[0] = dye;
+      logger.info(`[GradientTool] External dye set as start: ${dye.name}`);
+    }
+    // If no end dye, set as end
+    else if (!this.endDye) {
+      this.selectedDyes[1] = dye;
+      logger.info(`[GradientTool] External dye set as end: ${dye.name}`);
+    }
+    // If both are set, replace start and shift
+    else {
+      this.selectedDyes[0] = this.selectedDyes[1];
+      this.selectedDyes[1] = dye;
+      logger.info(`[GradientTool] External dye replaced end: ${dye.name}`);
+    }
+
+    // Update DyeSelector if it exists
+    if (this.dyeSelector) {
+      this.dyeSelector.setSelectedDyes(this.selectedDyes);
+    }
+
+    // Persist and update UI
+    this.saveSelectedDyes();
+    this.updateSelectedDyesDisplay();
+    this.updateMobileSelectedDyesDisplay();
+    this.renderIntermediateMatches();
   }
 }

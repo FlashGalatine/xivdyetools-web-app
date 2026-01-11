@@ -18,7 +18,7 @@ import { APP_VERSION } from '@shared/constants';
 import { logger } from '@shared/logger';
 
 // Import components
-import { AppLayout, offlineBanner } from '@components/index';
+import { offlineBanner } from '@components/index';
 
 // Import TutorialService for dev mode console access
 import { TutorialService } from '@services/index';
@@ -54,30 +54,20 @@ async function initializeApp(): Promise<void> {
       'API Service': status.api.available ? `Available (${status.api.latency}ms)` : 'Unavailable',
     });
 
-    // Initialize application layout (provides header with theme/language switchers and footer)
-    logger.info('🎨 Initializing app layout...');
-    const appLayout = new AppLayout(appContainer);
-    appLayout.init();
-
-    // Get content container from layout
-    const contentContainer = appLayout.getContentContainer();
-    if (!contentContainer) {
-      throw new Error('Content container not found');
-    }
-
     // DEV ONLY: Load mockup system if ?mockup=true is in URL (for testing mockups directly)
     if (import.meta.env.DEV && window.location.search.includes('mockup=true')) {
       logger.info('🎨 Loading mockup system (dev mode)...');
       const { loadMockupSystem } = await import('@mockups/index');
-      loadMockupSystem(contentContainer);
+      loadMockupSystem(appContainer);
       logger.info('✅ Mockup system loaded. Access at: http://localhost:5173/?mockup=true');
       return;
     }
 
-    // Initialize v4 glassmorphism layout
+    // Initialize v4 glassmorphism layout directly on app container
+    // (Removed v3 AppLayout wrapper to eliminate double-header issue)
     logger.info('🎨 Initializing v4 layout shell...');
     const { initializeV4Layout } = await import('@components/v4-layout');
-    await initializeV4Layout(contentContainer);
+    await initializeV4Layout(appContainer);
 
     logger.info('✅ Application initialized successfully');
 
