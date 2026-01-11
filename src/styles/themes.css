@@ -24,12 +24,6 @@
   --theme-card-hover: #f3f4f6;
   --theme-text-muted: #6b7280;
 
-  /* Layout variables for v3.0.0 two-panel mockups */
-  --panel-left-width: 320px;
-  --panel-left-width-lg: 384px;
-  --panel-collapsed-width: 64px;
-  --drawer-transition: 300ms ease-out;
-
   /* ===== V4 LAYOUT DIMENSIONS ===== */
   --v4-header-height: 48px;
   --v4-tool-bar-height: 64px;
@@ -58,12 +52,6 @@
   --v4-transition-fast: 150ms ease;
   --v4-transition-normal: 250ms ease;
   --v4-transition-slow: 350ms ease;
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --panel-left-width: var(--panel-left-width-lg);
-  }
 }
 
 /* =====================================================

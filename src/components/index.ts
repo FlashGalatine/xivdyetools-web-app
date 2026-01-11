@@ -67,14 +67,10 @@ export { PresetCard, type PresetCardCallback } from './preset-card';
 export { PresetDetailView, type PresetDetailViewCallbacks } from './preset-detail-view';
 export { FeaturedPresetsSection, type FeaturedPresetCallback } from './featured-presets-section';
 
-// V3 Two-Panel Layout Components
-export { TwoPanelShell, type TwoPanelShellOptions } from './two-panel-shell';
-export { MobileDrawer } from './mobile-drawer';
+// Shared utility components (used by tools in both v3 and v4 layouts)
 export { CollapsiblePanel, type CollapsiblePanelOptions } from './collapsible-panel';
-export { getLocalizedTools, TOOL_ICONS, type NavTool } from './tool-nav';
-export { initializeV3Layout, destroyV3Layout } from './v3-layout';
 
-// V4 Tool Components (renamed from V3)
+// V4 Tool Components
 export { HarmonyTool, type HarmonyToolOptions } from './harmony-tool';
 export { ExtractorTool, type ExtractorToolOptions } from './extractor-tool'; // Was MatcherTool
 export { AccessibilityTool, type AccessibilityToolOptions } from './accessibility-tool';

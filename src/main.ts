@@ -74,23 +74,10 @@ async function initializeApp(): Promise<void> {
       return;
     }
 
-    // V4 glassmorphism layout is now the default
-    // Use ?v3=true to temporarily access legacy layout (deprecated, will be removed)
-    const useV3Layout =
-      window.location.search.includes('v3=true') ||
-      import.meta.env.VITE_V3_LAYOUT === 'true';
-
-    if (useV3Layout) {
-      // Initialize legacy v3 two-panel layout (deprecated)
-      logger.warn('⚠️ Loading deprecated v3 layout. This will be removed in a future update.');
-      const { initializeV3Layout } = await import('@components/v3-layout');
-      await initializeV3Layout(contentContainer);
-    } else {
-      // Initialize v4 glassmorphism layout (default)
-      logger.info('🎨 Initializing v4 layout shell...');
-      const { initializeV4Layout } = await import('@components/v4-layout');
-      await initializeV4Layout(contentContainer);
-    }
+    // Initialize v4 glassmorphism layout
+    logger.info('🎨 Initializing v4 layout shell...');
+    const { initializeV4Layout } = await import('@components/v4-layout');
+    await initializeV4Layout(contentContainer);
 
     logger.info('✅ Application initialized successfully');
 
