@@ -127,6 +127,10 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
     logger.info('[V4 Layout] Language changed, tool may need refresh');
   });
 
+  // Wait for V4LayoutShell to complete its initial Lit render
+  // This ensures the shadow DOM is available before we query for content container
+  await layoutElement.updateComplete;
+
   // Load initial tool
   await loadToolContent(initialTool);
 

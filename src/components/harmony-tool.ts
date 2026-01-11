@@ -20,6 +20,7 @@ import { HarmonyResultPanel } from '@components/harmony-result-panel';
 import { ColorWheelDisplay } from '@components/color-wheel-display';
 import { PaletteExporter, type PaletteData } from '@components/palette-exporter';
 import { ColorService, dyeService, LanguageService, RouterService, StorageService } from '@services/index';
+import { ConfigController } from '@services/config-controller';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
@@ -38,6 +39,12 @@ import {
   COMPANION_DYES_DEFAULT,
 } from '@shared/constants';
 import { SubscriptionManager } from '@shared/subscription-manager';
+
+// V4 Components - Import to register custom elements
+import '@components/v4/v4-color-wheel';
+import '@components/v4/result-card';
+import type { V4ColorWheel } from '@components/v4/v4-color-wheel';
+import type { ResultCard, ResultCardData, ContextAction } from '@components/v4/result-card';
 
 // ============================================================================
 // Types and Constants
@@ -137,6 +144,11 @@ export class HarmonyTool extends BaseComponent {
   private filterConfig: DyeFilterConfig | null = null;
   /** Tracks user-swapped dyes per harmony slot (harmonyIndex -> swapped dye) */
   private swappedDyes: Map<number, Dye> = new Map();
+
+  // Display options (from ConfigController)
+  private displayShowHex: boolean = true;
+  private displayShowRgb: boolean = false;
+  private displayShowHsv: boolean = true;
 
   // Child components (desktop left panel)
   private dyeSelector: DyeSelector | null = null;
@@ -307,13 +319,39 @@ export class HarmonyTool extends BaseComponent {
     // Handle deep link (e.g., ?dyeId=5729 from context menu)
     this.handleDeepLink();
 
-    // Generate initial harmonies if a dye is selected
+    // Load display options from ConfigController
+    const configController = ConfigController.getInstance();
+    const harmonyConfig = configController.getConfig('harmony');
+    this.displayShowHex = harmonyConfig.showHex;
+    this.displayShowRgb = harmonyConfig.showRgb;
+    this.displayShowHsv = harmonyConfig.showHsv;
+
+    // Subscribe to config changes
+    this.subs.add(configController.subscribe('harmony', (config) => {
+      const needsRerender =
+        this.displayShowHex !== config.showHex ||
+        this.displayShowRgb !== config.showRgb ||
+        this.displayShowHsv !== config.showHsv;
+
+      this.displayShowHex = config.showHex;
+      this.displayShowRgb = config.showRgb;
+      this.displayShowHsv = config.showHsv;
+
+      if (needsRerender && this.selectedDye) {
+        this.generateHarmonies();
+      }
+    }));
+
+    // Generate initial harmonies if a dye is selected, otherwise show empty state
     if (this.selectedDye) {
       this.generateHarmonies();
       // Fetch prices on initial load if enabled
       if (this.showPrices) {
         this.fetchPricesForDisplayedDyes();
       }
+    } else {
+      // No dye selected - show empty state message
+      this.showEmptyState(true);
     }
 
     logger.info('[HarmonyTool] Mounted');
@@ -779,9 +817,12 @@ export class HarmonyTool extends BaseComponent {
     const right = this.options.rightPanel;
     clearContainer(right);
 
-    // Color Wheel Section
+    // Color Wheel Section - centered with inline styles for reliability
     this.colorWheelContainer = this.createElement('div', {
-      className: 'flex justify-center mb-6',
+      className: 'color-wheel-container',
+      attributes: {
+        style: 'display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 1.5rem;',
+      },
     });
     right.appendChild(this.colorWheelContainer);
 
@@ -796,47 +837,15 @@ export class HarmonyTool extends BaseComponent {
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
 
-    // Button container for multiple actions
-    const btnGroup = this.createElement('div', {
-      className: 'flex items-center gap-2',
-    });
-
-    // Budget Options button
-    const budgetBtn = this.createElement('button', {
-      className: 'flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors',
-      attributes: {
-        style: 'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
-        title: LanguageService.t('budget.findCheaperTooltip') || 'Find cheaper alternatives',
-      },
-      innerHTML: `<span class="w-4 h-4">${ICON_COINS}</span> ${LanguageService.t('budget.budgetOptions') || 'Budget Options'}`,
-    });
-
-    this.on(budgetBtn, 'click', () => {
-      if (this.selectedDye) {
-        RouterService.navigateTo('budget', { dye: this.selectedDye.name });
-      }
-    });
-
-    const exportBtn = this.createElement('button', {
-      className: 'flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors',
-      attributes: {
-        style: 'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
-      },
-      innerHTML: `<span class="w-4 h-4">${ICON_EXPORT}</span> ${LanguageService.t('export.button')}`,
-    });
-
-    this.on(exportBtn, 'click', () => this.handleExport());
-
-    btnGroup.appendChild(budgetBtn);
-    btnGroup.appendChild(exportBtn);
-
     resultsHeader.appendChild(resultsTitle);
-    resultsHeader.appendChild(btnGroup);
     right.appendChild(resultsHeader);
 
-    // Harmony Results Grid (2-column for larger result panels)
+    // Harmony Results - horizontal row layout with inline styles for reliability
     this.harmonyGridContainer = this.createElement('div', {
-      className: 'grid gap-4 md:grid-cols-2',
+      className: 'harmony-results-container',
+      attributes: {
+        style: 'display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;',
+      },
     });
     right.appendChild(this.harmonyGridContainer);
 
@@ -852,61 +861,70 @@ export class HarmonyTool extends BaseComponent {
   }
 
   /**
-   * Render color wheel visualization
+   * Render color wheel visualization using v4-color-wheel component
    */
   private renderColorWheel(): void {
     if (!this.colorWheelContainer) return;
     clearContainer(this.colorWheelContainer);
 
+    // Create v4-color-wheel custom element
+    const wheel = document.createElement('v4-color-wheel') as V4ColorWheel;
+    wheel.setAttribute('harmony-type', this.selectedHarmonyType);
+    wheel.setAttribute('size', '300');
+
     if (this.selectedDye) {
       // Get matched dyes for the selected harmony type
       const matchedDyes = this.getMatchedDyesForCurrentHarmony();
 
-      this.colorWheel = new ColorWheelDisplay(
-        this.colorWheelContainer,
-        this.selectedDye.hex,
-        matchedDyes,
-        this.selectedHarmonyType,
-        200
-      );
-      this.colorWheel.init();
+      wheel.setAttribute('base-color', this.selectedDye.hex);
+      wheel.harmonyColors = matchedDyes.map(dye => dye.hex);
+      wheel.harmonyDyes = matchedDyes;
     } else {
-      // Placeholder wheel
-      const placeholder = this.createElement('div', {
-        className: 'w-48 h-48 rounded-full border-2 border-dashed flex items-center justify-center',
-        attributes: {
-          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
-        },
-      });
-      placeholder.innerHTML = `
-        <svg class="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke-width="1.5" />
-          <path stroke-width="1.5" d="M12 2v20M2 12h20" />
-        </svg>
-      `;
-      this.colorWheelContainer.appendChild(placeholder);
+      // Empty state - show placeholder wheel
+      wheel.setAttribute('empty', '');
     }
+
+    this.colorWheelContainer.appendChild(wheel);
   }
 
   /**
-   * Render empty state when no dye selected
+   * Render empty state when no dye selected (v4 design)
    */
   private renderEmptyState(): void {
     if (!this.emptyStateContainer) return;
     clearContainer(this.emptyStateContainer);
 
     const empty = this.createElement('div', {
-      className: 'col-span-full flex flex-col items-center justify-center text-center',
+      className: 'harmony-results-empty',
       attributes: {
-        style: 'min-height: 400px; padding: 3rem 2rem;',
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          flex: 1;
+          padding: 40px;
+          text-align: center;
+          color: var(--theme-text-muted, #a0a0a0);
+        `,
       },
     });
 
+    // Harmony tool icon (triangles/wheel)
     empty.innerHTML = `
-      <svg style="width: 180px; height: 180px; color: var(--theme-text); opacity: 0.25; margin-bottom: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+      <svg style="width: 80px; height: 80px; margin-bottom: 24px; opacity: 0.4;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" opacity="0.3" />
+        <circle cx="12" cy="3" r="2" fill="currentColor" stroke="none" opacity="0.5" />
+        <circle cx="20.66" cy="16.5" r="2" fill="currentColor" stroke="none" opacity="0.5" />
+        <circle cx="3.34" cy="16.5" r="2" fill="currentColor" stroke="none" opacity="0.5" />
+        <polygon points="12,3 20.66,16.5 3.34,16.5" fill="none" opacity="0.3" />
       </svg>
-      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('harmony.selectDyePrompt')}</p>
+      <div style="font-size: 18px; font-weight: 500; color: var(--theme-text, #e0e0e0); margin-bottom: 12px;">
+        ${LanguageService.t('harmony.noColorSelected') || 'No Color Selected'}
+      </div>
+      <div style="font-size: 14px; color: var(--theme-text-muted, #a0a0a0); max-width: 300px; line-height: 1.5;">
+        ${LanguageService.t('harmony.selectDyePrompt') || 'Select a base color from the Color Palette to explore harmonies and discover complementary dyes for your glamour.'}
+      </div>
     `;
 
     this.emptyStateContainer.appendChild(empty);
@@ -1399,7 +1417,7 @@ export class HarmonyTool extends BaseComponent {
   }
 
   /**
-   * Render an individual result panel (Base or Harmony N)
+   * Render an individual result panel (Base or Harmony N) using v4-result-card
    */
   private renderResultPanel(options: {
     label: string;
@@ -1413,19 +1431,81 @@ export class HarmonyTool extends BaseComponent {
   }): void {
     if (!this.harmonyGridContainer) return;
 
-    const panelContainer = this.createElement('div', {
-      attributes: { 'data-harmony-panel': options.label },
-    });
+    // Create v4-result-card custom element
+    const card = document.createElement('v4-result-card') as ResultCard;
 
-    const panel = new HarmonyResultPanel(panelContainer, {
-      ...options,
-      showPrices: this.showPrices,
-      priceData: this.priceData,
-    });
-    panel.init();
+    // Get price data for this dye
+    const priceInfo = this.priceData.get(options.matchedDye.itemID);
 
-    this.resultPanels.push(panel);
-    this.harmonyGridContainer.appendChild(panelContainer);
+    // Calculate Delta-E between target color and matched dye
+    const deltaE = ColorService.getDeltaE?.(options.targetColor, options.matchedDye.hex) ?? undefined;
+
+    // Get market server name from MarketBoard if available
+    const marketServer = this.marketBoard?.getSelectedServer?.() ?? undefined;
+
+    // Build ResultCardData
+    const cardData: ResultCardData = {
+      dye: options.matchedDye,
+      originalColor: options.targetColor,
+      matchedColor: options.matchedDye.hex,
+      deltaE: deltaE,
+      hueDeviance: options.deviance,
+      marketServer: marketServer,
+      price: this.showPrices && priceInfo ? priceInfo.currentAverage : undefined,
+      vendorCost: options.matchedDye.vendorCost,
+    };
+
+    card.data = cardData;
+    card.setAttribute('data-harmony-panel', options.label);
+
+    // Set display options from tool state
+    card.showHex = this.displayShowHex;
+    card.showRgb = this.displayShowRgb;
+    card.showHsv = this.displayShowHsv;
+
+    // Handle card selection
+    card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {
+      logger.info(`[HarmonyTool] Card selected: ${e.detail.dye.name}`);
+      // Could trigger dye selection or navigation
+    }) as EventListener);
+
+    // Handle context menu actions
+    card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+      this.handleContextAction(e.detail.action, e.detail.dye);
+    }) as EventListener);
+
+    this.harmonyGridContainer.appendChild(card);
+  }
+
+  /**
+   * Handle context menu action from v4-result-card
+   */
+  private handleContextAction(action: ContextAction, dye: Dye): void {
+    logger.info(`[HarmonyTool] Context action: ${action} for dye: ${dye.name}`);
+
+    switch (action) {
+      case 'add-comparison':
+        RouterService.navigateTo(`/compare?add=${dye.itemID}`);
+        break;
+      case 'add-mixer':
+        RouterService.navigateTo(`/mixer?add=${dye.itemID}`);
+        break;
+      case 'add-accessibility':
+        RouterService.navigateTo(`/accessibility?add=${dye.itemID}`);
+        break;
+      case 'see-harmonies':
+        // Navigate to harmony with this dye as base
+        this.handleDyeSelect(dye);
+        break;
+      case 'budget':
+        RouterService.navigateTo(`/budget?base=${dye.hex.replace('#', '')}`);
+        break;
+      case 'copy-hex':
+        navigator.clipboard.writeText(dye.hex).then(() => {
+          logger.info(`[HarmonyTool] Copied hex: ${dye.hex}`);
+        });
+        break;
+    }
   }
 
   /**
@@ -1572,10 +1652,10 @@ export class HarmonyTool extends BaseComponent {
    */
   private showEmptyState(show: boolean): void {
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.classList.toggle('hidden', !show);
+      this.emptyStateContainer.style.display = show ? 'flex' : 'none';
     }
     if (this.harmonyGridContainer) {
-      this.harmonyGridContainer.classList.toggle('hidden', show);
+      this.harmonyGridContainer.style.display = show ? 'none' : 'flex';
     }
   }
 
@@ -1770,6 +1850,5 @@ export class HarmonyTool extends BaseComponent {
     // Generate harmonies and update UI
     this.generateHarmonies();
     this.updateDrawerContent();
-    this.update();
   }
 }

@@ -31,8 +31,6 @@ export interface GlobalConfig {
 export interface HarmonyConfig {
   /** Selected harmony type (complementary, analogous, triadic, etc.) */
   harmonyType: string;
-  /** Show dye names in results */
-  showNames: boolean;
   /** Show hex codes in results */
   showHex: boolean;
   /** Show RGB values in results */
@@ -188,7 +186,6 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   },
   harmony: {
     harmonyType: 'tetradic',
-    showNames: true,
     showHex: true,
     showRgb: false,
     showHsv: true,

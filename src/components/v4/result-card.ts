@@ -4,6 +4,15 @@
  * Unified 320px result card for displaying dye match results.
  * Used across Harmony, Gradient, Budget, Swatch, Extractor, and other tools.
  *
+ * V4 Design Updates:
+ * - Dark header background (rgba(0, 0, 0, 0.4)) with centered dye name
+ * - Preview labels: "Original" / "Match"
+ * - Taller preview area (100px)
+ * - HSV values in Technical column
+ * - Hue Deviance (°) displayed alongside Delta-E
+ * - Action bar at bottom with "Select Dye" button + context menu
+ * - Context menu pops UP from action bar
+ *
  * @module components/v4/result-card
  */
 
@@ -26,10 +35,14 @@ export interface ResultCardData {
   matchedColor: string;
   /** Delta-E color difference (optional) */
   deltaE?: number;
+  /** Hue deviance in degrees from ideal (optional) */
+  hueDeviance?: number;
   /** Market server name (optional) */
   marketServer?: string;
   /** Price in Gil (optional) */
   price?: number;
+  /** Vendor cost in Gil (optional) */
+  vendorCost?: number;
 }
 
 /**
@@ -48,12 +61,14 @@ export type ContextAction =
  *
  * Features:
  * - Fixed 320px width for consistent grid layouts
- * - Split color preview (original vs match)
+ * - Split color preview (Original vs Match) - 100px tall
  * - Two-column details grid (Technical + Acquisition)
- * - Delta-E color coding for match quality
- * - Context menu with 6 standard actions
+ * - Delta-E and Hue Deviance color coding for match quality
+ * - HSV values in Technical column
+ * - Action bar at bottom with Select Dye button + context menu
+ * - Context menu pops UP from action bar
  *
- * @fires card-select - Emits when card is clicked
+ * @fires card-select - Emits when "Select Dye" button is clicked
  *   - `detail.dye`: The selected dye
  * @fires context-action - Emits when context menu action is selected
  *   - `detail.action`: The action identifier
@@ -66,7 +81,8 @@ export type ContextAction =
  *     dye: someDye,
  *     originalColor: '#ff0000',
  *     matchedColor: '#e01010',
- *     deltaE: 2.5
+ *     deltaE: 2.5,
+ *     hueDeviance: 1.2
  *   }}
  *   @card-select=${(e) => this.handleSelect(e.detail.dye)}
  *   @context-action=${(e) => this.handleAction(e.detail)}
@@ -82,13 +98,13 @@ export class ResultCard extends BaseLitComponent {
   data?: ResultCardData;
 
   /**
-   * Show the context menu button
+   * Show the action bar and context menu
    */
   @property({ type: Boolean, attribute: 'show-actions' })
   showActions: boolean = true;
 
   /**
-   * Label for primary action (future use)
+   * Label for primary action button
    */
   @property({ type: String, attribute: 'primary-action-label' })
   primaryActionLabel: string = 'Select Dye';
@@ -98,6 +114,24 @@ export class ResultCard extends BaseLitComponent {
    */
   @property({ type: Boolean, reflect: true })
   selected: boolean = false;
+
+  /**
+   * Show HEX code in technical details
+   */
+  @property({ type: Boolean, attribute: 'show-hex' })
+  showHex: boolean = true;
+
+  /**
+   * Show RGB values in technical details
+   */
+  @property({ type: Boolean, attribute: 'show-rgb' })
+  showRgb: boolean = true;
+
+  /**
+   * Show HSV values in technical details
+   */
+  @property({ type: Boolean, attribute: 'show-hsv' })
+  showHsv: boolean = true;
 
   /**
    * Context menu open state
@@ -117,20 +151,21 @@ export class ResultCard extends BaseLitComponent {
         background: linear-gradient(
           to bottom,
           var(--theme-card-background, #2a2a2a),
-          var(--v4-card-gradient-end, #1a1a1a)
+          var(--v4-card-gradient-end, #151515)
         );
-        border: 1px solid var(--theme-border, #3a3a3a);
-        border-radius: 8px;
+        border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+        border-radius: 12px;
         overflow: hidden;
-        cursor: pointer;
         transition: transform var(--v4-transition-fast, 150ms),
-          box-shadow var(--v4-transition-fast, 150ms);
+          box-shadow var(--v4-transition-fast, 150ms),
+          border-color var(--v4-transition-fast, 150ms);
         position: relative;
       }
 
       .result-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--v4-shadow-soft, 0 4px 24px rgba(0, 0, 0, 0.2));
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        border-color: var(--theme-text-muted, #888888);
       }
 
       :host([selected]) .result-card {
@@ -138,116 +173,89 @@ export class ResultCard extends BaseLitComponent {
         box-shadow: 0 0 0 2px var(--theme-primary, #d4af37);
       }
 
-      /* Header */
+      /* Header - Dark background, centered name */
       .card-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 12px 16px;
-        background: var(--theme-primary, #8b1a1a);
-        color: var(--theme-text-header, #ffffff);
+        justify-content: center;
+        padding: 10px 16px;
+        background: rgba(0, 0, 0, 0.4);
+        border-bottom: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
       }
 
       .dye-name {
         margin: 0;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--theme-text, #e0e0e0);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        flex: 1;
-        margin-right: 8px;
+        text-align: center;
       }
 
-      .menu-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        border: none;
-        border-radius: 4px;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-        opacity: 0.7;
-        transition: opacity var(--v4-transition-fast, 150ms),
-          background-color var(--v4-transition-fast, 150ms);
-        flex-shrink: 0;
-      }
-
-      .menu-btn:hover {
-        opacity: 1;
-        background: rgba(255, 255, 255, 0.15);
-      }
-
-      .menu-btn:focus-visible {
-        opacity: 1;
-        outline: 2px solid currentColor;
-        outline-offset: 2px;
-      }
-
-      .menu-btn svg {
-        width: 16px;
-        height: 16px;
-        fill: currentColor;
-      }
-
-      /* Color Preview */
+      /* Color Preview - 100px tall */
       .color-preview {
         display: flex;
-        height: 60px;
+        height: 100px;
+        width: 100%;
+        position: relative;
+        flex-shrink: 0;
       }
 
       .preview-half {
         flex: 1;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        padding-bottom: 8px;
+        height: 100%;
         position: relative;
       }
 
       .preview-label {
-        font-size: 10px;
-        font-weight: 500;
-        background: rgba(0, 0, 0, 0.6);
-        color: #ffffff;
-        padding: 2px 8px;
-        border-radius: 4px;
+        position: absolute;
+        bottom: 4px;
+        width: 100%;
+        text-align: center;
+        font-size: 9px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        color: rgba(255, 255, 255, 0.8);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        pointer-events: none;
       }
 
       /* Details Grid */
       .details-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        padding: 16px;
+        gap: 12px;
+        padding: 12px;
+        background: linear-gradient(
+          to bottom,
+          var(--theme-card-background, #2a2a2a),
+          var(--v4-card-gradient-end, #151515)
+        );
       }
 
       .detail-column {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 4px;
       }
 
       .column-header {
         font-size: 10px;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
         color: var(--theme-text-muted, #888888);
         margin-bottom: 4px;
+        border-bottom: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+        padding-bottom: 2px;
       }
 
       .detail-row {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        font-size: 12px;
+        font-size: 11px;
       }
 
       .detail-label {
@@ -260,8 +268,9 @@ export class ResultCard extends BaseLitComponent {
       }
 
       .detail-value.large {
-        font-size: 16px;
+        font-size: 13px;
         font-weight: 600;
+        color: var(--theme-primary, #d4af37);
       }
 
       /* Delta-E color coding */
@@ -281,20 +290,100 @@ export class ResultCard extends BaseLitComponent {
         color: #f44336;
       }
 
-      /* Context Menu */
+      /* Action Bar at Bottom */
+      .card-actions {
+        padding: 8px;
+        display: flex;
+        justify-content: center;
+        border-top: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .action-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        align-items: center;
+      }
+
+      .primary-action-btn {
+        flex: 1;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--theme-card-background, #121212);
+        background: var(--theme-primary, #d4af37);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color var(--v4-transition-fast, 150ms);
+      }
+
+      .primary-action-btn:hover {
+        background: var(--theme-accent-hover, #f0c040);
+      }
+
+      .primary-action-btn:focus-visible {
+        outline: 2px solid var(--theme-text, #e0e0e0);
+        outline-offset: 2px;
+      }
+
+      /* Context Menu Container */
+      .context-menu-container {
+        position: relative;
+        display: inline-block;
+      }
+
+      .menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 6px;
+        border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+        border-radius: 4px;
+        background: transparent;
+        color: var(--theme-text-muted, #888888);
+        cursor: pointer;
+        transition: all var(--v4-transition-fast, 150ms);
+      }
+
+      .menu-btn:hover,
+      .menu-btn.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--theme-text, #e0e0e0);
+        border-color: var(--theme-text-muted, #888888);
+      }
+
+      .menu-btn:focus-visible {
+        outline: 2px solid var(--theme-primary, #d4af37);
+        outline-offset: 2px;
+      }
+
+      .menu-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+      }
+
+      /* Context Menu - Pops UP from action bar */
       .context-menu {
         position: absolute;
-        top: 48px;
-        right: 8px;
-        min-width: 200px;
+        bottom: 100%;
+        right: 0;
+        width: 200px;
         background: var(--theme-card-background, #2a2a2a);
         border: 1px solid var(--theme-border, #3a3a3a);
         border-radius: 8px;
-        box-shadow: var(--v4-shadow-soft, 0 4px 24px rgba(0, 0, 0, 0.3));
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        padding: 6px 0;
         z-index: 100;
+        margin-bottom: 8px;
         opacity: 0;
         visibility: hidden;
-        transform: translateY(-8px);
+        transform: translateY(8px);
         transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
       }
 
@@ -305,32 +394,23 @@ export class ResultCard extends BaseLitComponent {
       }
 
       .menu-item {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 12px;
         width: 100%;
         padding: 10px 16px;
         border: none;
         background: transparent;
-        color: var(--theme-text, #e0e0e0);
+        color: var(--theme-text-muted, #888888);
         text-align: left;
         font-size: 13px;
         cursor: pointer;
-        transition: background-color 0.15s;
-      }
-
-      .menu-item:first-child {
-        border-radius: 8px 8px 0 0;
-      }
-
-      .menu-item:last-child {
-        border-radius: 0 0 8px 8px;
-      }
-
-      .menu-item:only-child {
-        border-radius: 8px;
+        transition: background-color 0.1s;
       }
 
       .menu-item:hover {
-        background: var(--theme-card-hover, #3a3a3a);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--theme-text, #e0e0e0);
       }
 
       .menu-item:focus-visible {
@@ -342,7 +422,8 @@ export class ResultCard extends BaseLitComponent {
       @media (prefers-reduced-motion: reduce) {
         .result-card,
         .menu-btn,
-        .context-menu {
+        .context-menu,
+        .primary-action-btn {
           transition: none;
         }
         .result-card:hover {
@@ -365,23 +446,26 @@ export class ResultCard extends BaseLitComponent {
   }
 
   /**
-   * Format price with commas
+   * Format price with commas and "G" suffix
    */
   private formatPrice(price?: number): string {
     if (price === undefined || price === null) return '—';
-    return `${price.toLocaleString()} Gil`;
+    return `${price.toLocaleString()} G`;
   }
 
   /**
-   * Handle card click (not on menu)
+   * Format vendor cost with "G" suffix
    */
-  private handleCardClick(e: Event): void {
-    // Don't trigger if clicking menu button or menu
-    const target = e.target as HTMLElement;
-    if (target.closest('.menu-btn') || target.closest('.context-menu')) {
-      return;
-    }
+  private formatVendorCost(cost?: number): string {
+    if (cost === undefined || cost === null) return '—';
+    return `${cost.toLocaleString()} G`;
+  }
 
+  /**
+   * Handle primary action (Select Dye) click
+   */
+  private handleSelectClick(e: Event): void {
+    e.stopPropagation();
     if (this.data) {
       this.emit<{ dye: Dye }>('card-select', { dye: this.data.dye });
     }
@@ -443,37 +527,24 @@ export class ResultCard extends BaseLitComponent {
       return html`<div class="result-card">No data</div>`;
     }
 
-    const { dye, originalColor, matchedColor, deltaE, marketServer, price } =
+    const { dye, originalColor, matchedColor, deltaE, hueDeviance, marketServer, price, vendorCost } =
       this.data;
-    const dyeWithDistance = dye as DyeWithDistance;
+
+    // Get HSV values from dye (may be undefined for some dye types)
+    const hsv = dye.hsv;
 
     return html`
       <article
         class="result-card"
         role="article"
         aria-label="Dye result: ${dye.name}"
-        @click=${this.handleCardClick}
       >
-        <!-- Header -->
+        <!-- Header - Dark bg, centered name -->
         <header class="card-header">
           <h3 class="dye-name">${dye.name}</h3>
-          ${this.showActions
-            ? html`
-                <button
-                  class="menu-btn"
-                  type="button"
-                  aria-label="More actions"
-                  aria-haspopup="true"
-                  aria-expanded=${this.menuOpen}
-                  @click=${this.handleMenuClick}
-                >
-                  ${unsafeHTML(ICON_CONTEXT_MENU)}
-                </button>
-              `
-            : nothing}
         </header>
 
-        <!-- Color Preview -->
+        <!-- Color Preview - 100px tall -->
         <div class="color-preview">
           <div class="preview-half" style="background-color: ${originalColor}">
             <span class="preview-label">Original</span>
@@ -494,16 +565,42 @@ export class ResultCard extends BaseLitComponent {
                 ${deltaE !== undefined ? deltaE.toFixed(2) : '—'}
               </span>
             </div>
+            ${hueDeviance !== undefined
+        ? html`
+                  <div class="detail-row">
+                    <span class="detail-label">Hue°</span>
+                    <span class="detail-value">${hueDeviance.toFixed(1)}°</span>
+                  </div>
+                `
+        : nothing}
+            ${this.showHex
+        ? html`
             <div class="detail-row">
               <span class="detail-label">HEX</span>
               <span class="detail-value">${matchedColor.toUpperCase()}</span>
             </div>
+                `
+        : nothing}
+            ${this.showRgb
+        ? html`
             <div class="detail-row">
               <span class="detail-label">RGB</span>
               <span class="detail-value">
-                ${dye.rgb.r}, ${dye.rgb.g}, ${dye.rgb.b}
+                ${dye.rgb.r},${dye.rgb.g},${dye.rgb.b}
               </span>
             </div>
+                `
+        : nothing}
+            ${this.showHsv && hsv
+        ? html`
+                  <div class="detail-row">
+                    <span class="detail-label">HSV</span>
+                    <span class="detail-value">
+                      ${Math.round(hsv.h)},${Math.round(hsv.s)},${Math.round(hsv.v)}
+                    </span>
+                  </div>
+                `
+        : nothing}
           </div>
 
           <!-- Acquisition Column -->
@@ -514,69 +611,96 @@ export class ResultCard extends BaseLitComponent {
               <span class="detail-value">${dye.acquisition ?? 'Unknown'}</span>
             </div>
             <div class="detail-row">
+              <span class="detail-label">Cost</span>
+              <span class="detail-value">${this.formatVendorCost(vendorCost)}</span>
+            </div>
+            <div class="detail-row">
               <span class="detail-label">Market</span>
               <span class="detail-value">${marketServer ?? 'N/A'}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">Price</span>
               <span class="detail-value large">${this.formatPrice(price)}</span>
             </div>
           </div>
         </div>
 
-        <!-- Context Menu -->
+        <!-- Action Bar at Bottom -->
         ${this.showActions
-          ? html`
-              <div
-                class="context-menu ${this.menuOpen ? 'open' : ''}"
-                role="menu"
-                aria-hidden=${!this.menuOpen}
-              >
-                <button
-                  class="menu-item"
-                  role="menuitem"
-                  @click=${() => this.handleMenuAction('add-comparison')}
-                >
-                  Add to Comparison
-                </button>
-                <button
-                  class="menu-item"
-                  role="menuitem"
-                  @click=${() => this.handleMenuAction('add-mixer')}
-                >
-                  Add to Mixer
-                </button>
-                <button
-                  class="menu-item"
-                  role="menuitem"
-                  @click=${() => this.handleMenuAction('add-accessibility')}
-                >
-                  Add to Accessibility Check
-                </button>
-                <button
-                  class="menu-item"
-                  role="menuitem"
-                  @click=${() => this.handleMenuAction('see-harmonies')}
-                >
-                  See Color Harmonies
-                </button>
-                <button
-                  class="menu-item"
-                  role="menuitem"
-                  @click=${() => this.handleMenuAction('budget')}
-                >
-                  Budget Suggestions
-                </button>
-                <button
-                  class="menu-item"
-                  role="menuitem"
-                  @click=${() => this.handleMenuAction('copy-hex')}
-                >
-                  Copy Hex Code
-                </button>
+        ? html`
+              <div class="card-actions">
+                <div class="action-row">
+                  <button
+                    class="primary-action-btn"
+                    type="button"
+                    @click=${this.handleSelectClick}
+                  >
+                    ${this.primaryActionLabel}
+                  </button>
+                  <div class="context-menu-container">
+                    <button
+                      class="menu-btn ${this.menuOpen ? 'active' : ''}"
+                      type="button"
+                      aria-label="More actions"
+                      aria-haspopup="true"
+                      aria-expanded=${this.menuOpen}
+                      @click=${this.handleMenuClick}
+                    >
+                      ${unsafeHTML(ICON_CONTEXT_MENU)}
+                    </button>
+                    <!-- Context Menu - Pops UP -->
+                    <div
+                      class="context-menu ${this.menuOpen ? 'open' : ''}"
+                      role="menu"
+                      aria-hidden=${!this.menuOpen}
+                    >
+                      <button
+                        class="menu-item"
+                        role="menuitem"
+                        @click=${() => this.handleMenuAction('add-comparison')}
+                      >
+                        Add to Comparison
+                      </button>
+                      <button
+                        class="menu-item"
+                        role="menuitem"
+                        @click=${() => this.handleMenuAction('add-mixer')}
+                      >
+                        Add to Mixer
+                      </button>
+                      <button
+                        class="menu-item"
+                        role="menuitem"
+                        @click=${() => this.handleMenuAction('add-accessibility')}
+                      >
+                        Add to Access. Check
+                      </button>
+                      <button
+                        class="menu-item"
+                        role="menuitem"
+                        @click=${() => this.handleMenuAction('see-harmonies')}
+                      >
+                        See Color Harmonies
+                      </button>
+                      <button
+                        class="menu-item"
+                        role="menuitem"
+                        @click=${() => this.handleMenuAction('budget')}
+                      >
+                        Budget Suggestions
+                      </button>
+                      <button
+                        class="menu-item"
+                        role="menuitem"
+                        @click=${() => this.handleMenuAction('copy-hex')}
+                      >
+                        Copy Hex Code
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             `
-          : nothing}
+        : nothing}
       </article>
     `;
   }

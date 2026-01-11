@@ -72,7 +72,6 @@ export class ConfigSidebar extends BaseLitComponent {
 
   @state() private harmonyConfig: HarmonyConfig = {
     harmonyType: 'tetradic',
-    showNames: true,
     showHex: true,
     showRgb: false,
     showHsv: true,
@@ -388,9 +387,9 @@ export class ConfigSidebar extends BaseLitComponent {
             class="config-select"
             .value=${this.harmonyConfig.harmonyType}
             @change=${(e: Event) => {
-              const value = (e.target as HTMLSelectElement).value;
-              this.handleConfigChange('harmony', 'harmonyType', value);
-            }}
+        const value = (e.target as HTMLSelectElement).value;
+        this.handleConfigChange('harmony', 'harmonyType', value);
+      }}
           >
             <option value="complementary">Complementary</option>
             <option value="analogous">Analogous</option>
@@ -408,18 +407,10 @@ export class ConfigSidebar extends BaseLitComponent {
           <div class="config-label">Display Options</div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Color Names"
-              .checked=${this.harmonyConfig.showNames}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('harmony', 'showNames', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-          <div class="config-row">
-            <v4-toggle-switch
               label="Hex Codes"
               .checked=${this.harmonyConfig.showHex}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('harmony', 'showHex', e.detail.checked)}
+        this.handleConfigChange('harmony', 'showHex', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -427,7 +418,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="RGB Values"
               .checked=${this.harmonyConfig.showRgb}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('harmony', 'showRgb', e.detail.checked)}
+        this.handleConfigChange('harmony', 'showRgb', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -435,7 +426,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="HSV Values"
               .checked=${this.harmonyConfig.showHsv}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('harmony', 'showHsv', e.detail.checked)}
+        this.handleConfigChange('harmony', 'showHsv', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
         </div>
@@ -447,7 +438,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Strict Matching"
               .checked=${this.harmonyConfig.strictMatching}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('harmony', 'strictMatching', e.detail.checked)}
+        this.handleConfigChange('harmony', 'strictMatching', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
         </div>
@@ -468,7 +459,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Vibrancy Boost"
               .checked=${this.extractorConfig.vibrancyBoost}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('extractor', 'vibrancyBoost', e.detail.checked)}
+        this.handleConfigChange('extractor', 'vibrancyBoost', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="slider-wrapper">
@@ -478,7 +469,7 @@ export class ConfigSidebar extends BaseLitComponent {
               .min=${3}
               .max=${10}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
-                this.handleConfigChange('extractor', 'maxColors', e.detail.value)}
+        this.handleConfigChange('extractor', 'maxColors', e.detail.value)}
             ></v4-range-slider>
           </div>
         </div>
@@ -499,7 +490,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Normal Vision"
               .checked=${this.accessibilityConfig.normalVision}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('accessibility', 'normalVision', e.detail.checked)}
+        this.handleConfigChange('accessibility', 'normalVision', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -507,7 +498,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Deuteranopia"
               .checked=${this.accessibilityConfig.deuteranopia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('accessibility', 'deuteranopia', e.detail.checked)}
+        this.handleConfigChange('accessibility', 'deuteranopia', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -515,7 +506,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Protanopia"
               .checked=${this.accessibilityConfig.protanopia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('accessibility', 'protanopia', e.detail.checked)}
+        this.handleConfigChange('accessibility', 'protanopia', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -523,7 +514,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Tritanopia"
               .checked=${this.accessibilityConfig.tritanopia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('accessibility', 'tritanopia', e.detail.checked)}
+        this.handleConfigChange('accessibility', 'tritanopia', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -531,7 +522,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Achromatopsia"
               .checked=${this.accessibilityConfig.achromatopsia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('accessibility', 'achromatopsia', e.detail.checked)}
+        this.handleConfigChange('accessibility', 'achromatopsia', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
         </div>
@@ -543,7 +534,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Show Labels"
               .checked=${this.accessibilityConfig.showLabels}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('accessibility', 'showLabels', e.detail.checked)}
+        this.handleConfigChange('accessibility', 'showLabels', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -551,7 +542,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Show Hex Values"
               .checked=${this.accessibilityConfig.showHexValues}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('accessibility', 'showHexValues', e.detail.checked)}
+        this.handleConfigChange('accessibility', 'showHexValues', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -559,7 +550,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="High Contrast Mode"
               .checked=${this.accessibilityConfig.highContrastMode}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('accessibility', 'highContrastMode', e.detail.checked)}
+        this.handleConfigChange('accessibility', 'highContrastMode', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
         </div>
@@ -580,7 +571,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Show Delta-E"
               .checked=${this.comparisonConfig.showDeltaE}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('comparison', 'showDeltaE', e.detail.checked)}
+        this.handleConfigChange('comparison', 'showDeltaE', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -588,7 +579,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Show RGB"
               .checked=${this.comparisonConfig.showRgb}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('comparison', 'showRgb', e.detail.checked)}
+        this.handleConfigChange('comparison', 'showRgb', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -596,7 +587,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Show HSV"
               .checked=${this.comparisonConfig.showHsv}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('comparison', 'showHsv', e.detail.checked)}
+        this.handleConfigChange('comparison', 'showHsv', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -604,7 +595,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Show Market Prices"
               .checked=${this.comparisonConfig.showMarketPrices}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('comparison', 'showMarketPrices', e.detail.checked)}
+        this.handleConfigChange('comparison', 'showMarketPrices', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
         </div>
@@ -627,7 +618,7 @@ export class ConfigSidebar extends BaseLitComponent {
               .min=${3}
               .max=${12}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
-                this.handleConfigChange('gradient', 'stepCount', e.detail.value)}
+        this.handleConfigChange('gradient', 'stepCount', e.detail.value)}
             ></v4-range-slider>
           </div>
         </div>
@@ -638,9 +629,9 @@ export class ConfigSidebar extends BaseLitComponent {
             class="config-select"
             .value=${this.gradientConfig.interpolation}
             @change=${(e: Event) => {
-              const value = (e.target as HTMLSelectElement).value;
-              this.handleConfigChange('gradient', 'interpolation', value);
-            }}
+        const value = (e.target as HTMLSelectElement).value;
+        this.handleConfigChange('gradient', 'interpolation', value);
+      }}
           >
             <option value="hsv">HSV (Hue-based)</option>
             <option value="rgb">RGB (Direct)</option>
@@ -665,7 +656,7 @@ export class ConfigSidebar extends BaseLitComponent {
               .min=${3}
               .max=${8}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
-                this.handleConfigChange('mixer', 'maxResults', e.detail.value)}
+        this.handleConfigChange('mixer', 'maxResults', e.detail.value)}
             ></v4-range-slider>
           </div>
         </div>
@@ -686,7 +677,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Show My Presets Only"
               .checked=${this.presetsConfig.showMyPresetsOnly}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('presets', 'showMyPresetsOnly', e.detail.checked)}
+        this.handleConfigChange('presets', 'showMyPresetsOnly', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
           <div class="config-row">
@@ -694,7 +685,7 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Show Favorites"
               .checked=${this.presetsConfig.showFavorites}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('presets', 'showFavorites', e.detail.checked)}
+        this.handleConfigChange('presets', 'showFavorites', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
         </div>
@@ -705,9 +696,9 @@ export class ConfigSidebar extends BaseLitComponent {
             class="config-select"
             .value=${this.presetsConfig.sortBy}
             @change=${(e: Event) => {
-              const value = (e.target as HTMLSelectElement).value;
-              this.handleConfigChange('presets', 'sortBy', value);
-            }}
+        const value = (e.target as HTMLSelectElement).value;
+        this.handleConfigChange('presets', 'sortBy', value);
+      }}
           >
             <option value="newest">Newest First</option>
             <option value="popular">Most Popular</option>
@@ -736,7 +727,7 @@ export class ConfigSidebar extends BaseLitComponent {
               .step=${5000}
               .valueFormatter=${(v: number) => `${v.toLocaleString()} gil`}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
-                this.handleConfigChange('budget', 'maxPrice', e.detail.value)}
+        this.handleConfigChange('budget', 'maxPrice', e.detail.value)}
             ></v4-range-slider>
           </div>
           <div class="slider-wrapper">
@@ -746,7 +737,7 @@ export class ConfigSidebar extends BaseLitComponent {
               .min=${1}
               .max=${20}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
-                this.handleConfigChange('budget', 'maxResults', e.detail.value)}
+        this.handleConfigChange('budget', 'maxResults', e.detail.value)}
             ></v4-range-slider>
           </div>
         </div>
@@ -760,7 +751,7 @@ export class ConfigSidebar extends BaseLitComponent {
               .min=${0}
               .max=${100}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
-                this.handleConfigChange('budget', 'maxDeltaE', e.detail.value)}
+        this.handleConfigChange('budget', 'maxDeltaE', e.detail.value)}
             ></v4-range-slider>
           </div>
         </div>
@@ -780,9 +771,9 @@ export class ConfigSidebar extends BaseLitComponent {
             class="config-select"
             .value=${this.swatchConfig.colorSheet}
             @change=${(e: Event) => {
-              const value = (e.target as HTMLSelectElement).value;
-              this.handleConfigChange('swatch', 'colorSheet', value);
-            }}
+        const value = (e.target as HTMLSelectElement).value;
+        this.handleConfigChange('swatch', 'colorSheet', value);
+      }}
           >
             <option value="EyeColors.csv">Eye Colors</option>
             <option value="HairColors.csv" disabled>Hair Colors (N/A)</option>
@@ -796,9 +787,9 @@ export class ConfigSidebar extends BaseLitComponent {
             class="config-select"
             .value=${this.swatchConfig.race}
             @change=${(e: Event) => {
-              const value = (e.target as HTMLSelectElement).value;
-              this.handleConfigChange('swatch', 'race', value);
-            }}
+        const value = (e.target as HTMLSelectElement).value;
+        this.handleConfigChange('swatch', 'race', value);
+      }}
           >
             <option value="Hyur (Midlander)">Hyur (Midlander)</option>
             <option value="Hyur (Highlander)">Hyur (Highlander)</option>
@@ -814,9 +805,9 @@ export class ConfigSidebar extends BaseLitComponent {
             class="config-select"
             .value=${this.swatchConfig.gender}
             @change=${(e: Event) => {
-              const value = (e.target as HTMLSelectElement).value;
-              this.handleConfigChange('swatch', 'gender', value);
-            }}
+        const value = (e.target as HTMLSelectElement).value;
+        this.handleConfigChange('swatch', 'gender', value);
+      }}
           >
             <option value="Male">Male</option>
             <option value="Female">Female</option>
@@ -832,7 +823,7 @@ export class ConfigSidebar extends BaseLitComponent {
               .min=${1}
               .max=${8}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
-                this.handleConfigChange('swatch', 'maxResults', e.detail.value)}
+        this.handleConfigChange('swatch', 'maxResults', e.detail.value)}
             ></v4-range-slider>
           </div>
         </div>
