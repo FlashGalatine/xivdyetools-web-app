@@ -149,6 +149,8 @@ export class HarmonyTool extends BaseComponent {
   private displayShowHex: boolean = true;
   private displayShowRgb: boolean = false;
   private displayShowHsv: boolean = true;
+  private displayShowLab: boolean = false;
+  private usePerceptualMatching: boolean = false;
 
   // Child components (desktop left panel)
   private dyeSelector: DyeSelector | null = null;
@@ -325,19 +327,27 @@ export class HarmonyTool extends BaseComponent {
     this.displayShowHex = harmonyConfig.showHex;
     this.displayShowRgb = harmonyConfig.showRgb;
     this.displayShowHsv = harmonyConfig.showHsv;
+    this.displayShowLab = harmonyConfig.showLab;
+    this.usePerceptualMatching = harmonyConfig.strictMatching;
 
     // Subscribe to config changes
     this.subs.add(configController.subscribe('harmony', (config) => {
       const needsRerender =
         this.displayShowHex !== config.showHex ||
         this.displayShowRgb !== config.showRgb ||
-        this.displayShowHsv !== config.showHsv;
+        this.displayShowHsv !== config.showHsv ||
+        this.displayShowLab !== config.showLab;
+
+      // Perceptual matching changes require regenerating harmonies
+      const algorithmChanged = this.usePerceptualMatching !== config.strictMatching;
 
       this.displayShowHex = config.showHex;
       this.displayShowRgb = config.showRgb;
       this.displayShowHsv = config.showHsv;
+      this.displayShowLab = config.showLab;
+      this.usePerceptualMatching = config.strictMatching;
 
-      if (needsRerender && this.selectedDye) {
+      if ((needsRerender || algorithmChanged) && this.selectedDye) {
         this.generateHarmonies();
       }
     }));
@@ -1452,7 +1462,7 @@ export class HarmonyTool extends BaseComponent {
       hueDeviance: options.deviance,
       marketServer: marketServer,
       price: this.showPrices && priceInfo ? priceInfo.currentAverage : undefined,
-      vendorCost: options.matchedDye.vendorCost,
+      vendorCost: options.matchedDye.cost,
     };
 
     card.data = cardData;
@@ -1462,6 +1472,7 @@ export class HarmonyTool extends BaseComponent {
     card.showHex = this.displayShowHex;
     card.showRgb = this.displayShowRgb;
     card.showHsv = this.displayShowHsv;
+    card.showLab = this.displayShowLab;
 
     // Handle card selection
     card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {
@@ -1485,20 +1496,20 @@ export class HarmonyTool extends BaseComponent {
 
     switch (action) {
       case 'add-comparison':
-        RouterService.navigateTo(`/compare?add=${dye.itemID}`);
+        RouterService.navigateTo('comparison', { add: String(dye.itemID) });
         break;
       case 'add-mixer':
-        RouterService.navigateTo(`/mixer?add=${dye.itemID}`);
+        RouterService.navigateTo('mixer', { add: String(dye.itemID) });
         break;
       case 'add-accessibility':
-        RouterService.navigateTo(`/accessibility?add=${dye.itemID}`);
+        RouterService.navigateTo('accessibility', { add: String(dye.itemID) });
         break;
       case 'see-harmonies':
-        // Navigate to harmony with this dye as base
-        this.handleDyeSelect(dye);
+        // Select this dye as base and regenerate harmonies
+        this.selectDye(dye);
         break;
       case 'budget':
-        RouterService.navigateTo(`/budget?base=${dye.hex.replace('#', '')}`);
+        RouterService.navigateTo('budget', { base: dye.hex.replace('#', '') });
         break;
       case 'copy-hex':
         navigator.clipboard.writeText(dye.hex).then(() => {
@@ -1615,6 +1626,7 @@ export class HarmonyTool extends BaseComponent {
   /**
    * Find dyes closest to a target hue
    * Excludes Facewear dyes (generic names like "Red", "Blue")
+   * Supports both hue-based (fast) and DeltaE-based (perceptual) matching
    */
   private findClosestDyesToHue(
     dyes: Dye[],
@@ -1623,15 +1635,33 @@ export class HarmonyTool extends BaseComponent {
   ): Array<{ dye: Dye; deviance: number }> {
     const scored: Array<{ dye: Dye; deviance: number }> = [];
 
+    // For DeltaE matching, generate target color from hue
+    // Use selected dye's saturation and value as base for consistent matching
+    let targetHex: string | undefined;
+    if (this.usePerceptualMatching && this.selectedDye) {
+      const baseSaturation = this.selectedDye.hsv?.s ?? 50;
+      const baseValue = this.selectedDye.hsv?.v ?? 50;
+      targetHex = ColorService.hsvToHex(targetHue, baseSaturation, baseValue);
+    }
+
     for (const dye of dyes) {
       // Skip Facewear dyes - they have generic names and shouldn't appear in harmony results
       if (dye.category === 'Facewear') {
         continue;
       }
 
-      const dyeHsv = ColorService.hexToHsv(dye.hex);
-      const hueDiff = Math.abs(dyeHsv.h - targetHue);
-      const deviance = Math.min(hueDiff, 360 - hueDiff);
+      let deviance: number;
+
+      if (this.usePerceptualMatching && targetHex) {
+        // DeltaE-based matching: use perceptual color difference
+        deviance = ColorService.getDeltaE(targetHex, dye.hex);
+      } else {
+        // Hue-based matching: use angular distance on color wheel
+        const dyeHsv = ColorService.hexToHsv(dye.hex);
+        const hueDiff = Math.abs(dyeHsv.h - targetHue);
+        deviance = Math.min(hueDiff, 360 - hueDiff);
+      }
+
       scored.push({ dye, deviance });
     }
 
@@ -1782,12 +1812,11 @@ export class HarmonyTool extends BaseComponent {
       logger.info(`[HarmonyTool] setConfig: harmonyType -> ${config.harmonyType}`);
     }
 
-    // Handle strict matching filter change
+    // Handle perceptual matching (strictMatching) change
+    // Note: This is now handled by ConfigController subscription in onMount()
+    // which triggers regenerateHarmonies() with the updated usePerceptualMatching flag
     if (config.strictMatching !== undefined) {
-      // Strict matching would affect how harmonies are generated
-      // This requires DyeFilters integration
       logger.info(`[HarmonyTool] setConfig: strictMatching -> ${config.strictMatching}`);
-      // TODO: Update filter config and re-filter
     }
 
     // Handle display option changes (showNames, showHex, showRgb, showHsv)

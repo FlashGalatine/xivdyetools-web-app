@@ -75,6 +75,7 @@ export class ConfigSidebar extends BaseLitComponent {
     showHex: true,
     showRgb: false,
     showHsv: true,
+    showLab: false,
     strictMatching: false,
   };
   @state() private extractorConfig: ExtractorConfig = {
@@ -220,6 +221,14 @@ export class ConfigSidebar extends BaseLitComponent {
       /* Config Row (for toggle switches) */
       .config-row {
         margin-bottom: 12px;
+      }
+
+      /* Config Description (for explanatory text below toggles) */
+      .config-description {
+        font-size: 11px;
+        color: var(--theme-text-muted, #888888);
+        margin-top: 4px;
+        line-height: 1.4;
       }
 
       /* Select Dropdown */
@@ -429,17 +438,30 @@ export class ConfigSidebar extends BaseLitComponent {
         this.handleConfigChange('harmony', 'showHsv', e.detail.checked)}
             ></v4-toggle-switch>
           </div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="LAB Values"
+              .checked=${this.harmonyConfig.showLab}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+        this.handleConfigChange('harmony', 'showLab', e.detail.checked)}
+            ></v4-toggle-switch>
+          </div>
         </div>
 
         <div class="config-group">
-          <div class="config-label">Filters</div>
+          <div class="config-label">Matching Algorithm</div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Strict Matching"
+              label="Perceptual Matching"
               .checked=${this.harmonyConfig.strictMatching}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
         this.handleConfigChange('harmony', 'strictMatching', e.detail.checked)}
             ></v4-toggle-switch>
+          </div>
+          <div class="config-description">
+            ${this.harmonyConfig.strictMatching
+        ? 'Uses DeltaE for perceptually accurate color matching'
+        : 'Uses hue angles for artistic color harmony'}
           </div>
         </div>
       </div>

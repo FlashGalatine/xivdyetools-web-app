@@ -22,6 +22,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ICON_CONTEXT_MENU } from '@shared/ui-icons';
 import type { Dye, DyeWithDistance } from '@shared/types';
+import { ColorService } from '@xivdyetools/core';
 
 /**
  * Data structure for the result card
@@ -132,6 +133,12 @@ export class ResultCard extends BaseLitComponent {
    */
   @property({ type: Boolean, attribute: 'show-hsv' })
   showHsv: boolean = true;
+
+  /**
+   * Show LAB values in technical details
+   */
+  @property({ type: Boolean, attribute: 'show-lab' })
+  showLab: boolean = false;
 
   /**
    * Context menu open state
@@ -462,6 +469,15 @@ export class ResultCard extends BaseLitComponent {
   }
 
   /**
+   * Format LAB values for display (rounded to integers)
+   */
+  private formatLabValues(): string {
+    if (!this.data) return '—';
+    const lab = ColorService.hexToLab(this.data.matchedColor);
+    return `${Math.round(lab.L)},${Math.round(lab.a)},${Math.round(lab.b)}`;
+  }
+
+  /**
    * Handle primary action (Select Dye) click
    */
   private handleSelectClick(e: Event): void {
@@ -598,6 +614,14 @@ export class ResultCard extends BaseLitComponent {
                     <span class="detail-value">
                       ${Math.round(hsv.h)},${Math.round(hsv.s)},${Math.round(hsv.v)}
                     </span>
+                  </div>
+                `
+        : nothing}
+            ${this.showLab
+        ? html`
+                  <div class="detail-row">
+                    <span class="detail-label">LAB</span>
+                    <span class="detail-value">${this.formatLabValues()}</span>
                   </div>
                 `
         : nothing}

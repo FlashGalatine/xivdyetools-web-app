@@ -37,7 +37,9 @@ export interface HarmonyConfig {
   showRgb: boolean;
   /** Show HSV values in results */
   showHsv: boolean;
-  /** Use strict color matching */
+  /** Show LAB values in results */
+  showLab: boolean;
+  /** Use perceptual (DeltaE) color matching instead of hue-based */
   strictMatching: boolean;
 }
 
@@ -189,6 +191,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     showHex: true,
     showRgb: false,
     showHsv: true,
+    showLab: false,
     strictMatching: false,
   },
   extractor: {
