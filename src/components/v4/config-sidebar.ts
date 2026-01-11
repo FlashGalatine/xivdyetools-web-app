@@ -1044,7 +1044,7 @@ export class ConfigSidebar extends BaseLitComponent {
           <div class="config-group-content ${this.marketBoardCollapsed ? 'collapsed' : ''}">
             <div class="config-row">
               <v4-toggle-switch
-                label="Show Prices"
+                label="Enable Market Board"
                 .checked=${this.marketConfig.showPrices}
                 @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                   this.handleConfigChange('market', 'showPrices', e.detail.checked)}
