@@ -225,6 +225,7 @@ export class ConfigController {
   resetAllConfigs(): void {
     const keys: ConfigKey[] = [
       'global',
+      'market',
       'harmony',
       'extractor',
       'accessibility',
@@ -247,6 +248,7 @@ export class ConfigController {
   getAllConfigs(): ToolConfigMap {
     return {
       global: this.getConfig('global'),
+      market: this.getConfig('market'),
       harmony: this.getConfig('harmony'),
       extractor: this.getConfig('extractor'),
       accessibility: this.getConfig('accessibility'),

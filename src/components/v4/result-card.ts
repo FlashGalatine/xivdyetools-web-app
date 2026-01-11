@@ -279,6 +279,7 @@ export class ResultCard extends BaseLitComponent {
         font-size: 13px;
         font-weight: 600;
         color: var(--theme-primary, #d4af37);
+        margin-left: auto; /* Right-align when no label present */
       }
 
       /* Delta-E color coding */

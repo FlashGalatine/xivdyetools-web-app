@@ -145,6 +145,16 @@ export interface SwatchConfig {
   maxResults: number;
 }
 
+/**
+ * Market Board configuration (shared across tools)
+ */
+export interface MarketConfig {
+  /** Selected server (data center name or world name) */
+  selectedServer: string;
+  /** Whether to show market prices */
+  showPrices: boolean;
+}
+
 // ============================================================================
 // Type Mapping
 // ============================================================================
@@ -154,6 +164,7 @@ export interface SwatchConfig {
  */
 export interface ToolConfigMap {
   global: GlobalConfig;
+  market: MarketConfig;
   harmony: HarmonyConfig;
   extractor: ExtractorConfig;
   accessibility: AccessibilityConfig;
@@ -171,9 +182,9 @@ export interface ToolConfigMap {
 export type ToolConfig = ToolConfigMap[keyof ToolConfigMap];
 
 /**
- * Config key type (tool ID or 'global')
+ * Config key type (tool ID, 'global', or 'market')
  */
-export type ConfigKey = ToolId | 'global';
+export type ConfigKey = ToolId | 'global' | 'market';
 
 // ============================================================================
 // Default Values
@@ -185,6 +196,10 @@ export type ConfigKey = ToolId | 'global';
 export const DEFAULT_CONFIGS: ToolConfigMap = {
   global: {
     theme: '',
+  },
+  market: {
+    selectedServer: 'Crystal',
+    showPrices: false,
   },
   harmony: {
     harmonyType: 'tetradic',
@@ -247,7 +262,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
  * Check if a config key is a valid tool ID
  */
 export function isToolId(key: ConfigKey): key is ToolId {
-  return key !== 'global';
+  return key !== 'global' && key !== 'market';
 }
 
 /**

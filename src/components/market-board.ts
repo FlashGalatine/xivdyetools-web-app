@@ -676,6 +676,43 @@ export class MarketBoard extends BaseComponent {
   }
 
   /**
+   * Set selected server (for external config synchronization)
+   */
+  setSelectedServer(server: string): void {
+    if (this.selectedServer !== server) {
+      this.selectedServer = server;
+      appStorage.setItem('market_board_server', this.selectedServer);
+      // Update the dropdown UI if it exists
+      const serverSelect = this.querySelector<HTMLSelectElement>('#mb-server-select');
+      if (serverSelect) {
+        serverSelect.value = server;
+      }
+      this.emit('server-changed', { server: this.selectedServer });
+    }
+  }
+
+  /**
+   * Set show prices (for external config synchronization)
+   */
+  setShowPrices(show: boolean): void {
+    if (this.showPrices !== show) {
+      this.showPrices = show;
+      appStorage.setItem('market_board_show_prices', this.showPrices);
+      // Update the toggle UI if it exists
+      const toggleInput = this.querySelector<HTMLInputElement>('#show-mb-prices-toggle');
+      if (toggleInput) {
+        toggleInput.checked = show;
+      }
+      // Show/hide price settings
+      const priceSettings = this.querySelector('#mb-price-settings');
+      if (priceSettings) {
+        priceSettings.classList.toggle('hidden', !this.showPrices);
+      }
+      this.emit('showPricesChanged', { showPrices: this.showPrices });
+    }
+  }
+
+  /**
    * Get show prices setting
    */
   getShowPrices(): boolean {
@@ -687,5 +724,16 @@ export class MarketBoard extends BaseComponent {
    */
   getPriceCategories(): PriceCategorySettings {
     return { ...this.priceCategories };
+  }
+
+  /**
+   * Resolve a Universalis worldId to world name
+   * @param worldId - Universalis world ID
+   * @returns World name or undefined if not found
+   */
+  getWorldName(worldId: number | undefined): string | undefined {
+    if (worldId === undefined) return undefined;
+    const world = this.worlds.find((w) => w.id === worldId);
+    return world?.name;
   }
 }

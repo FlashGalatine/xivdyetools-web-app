@@ -144,6 +144,10 @@ export class HarmonyTool extends BaseComponent {
   private filterConfig: DyeFilterConfig | null = null;
   /** Tracks user-swapped dyes per harmony slot (harmonyIndex -> swapped dye) */
   private swappedDyes: Map<number, Dye> = new Map();
+  /** V4 result card elements for updating prices after fetch */
+  private v4ResultCards: ResultCard[] = [];
+  /** Request version counter to prevent stale price responses from overwriting newer data */
+  private priceRequestVersion: number = 0;
 
   // Display options (from ConfigController)
   private displayShowHex: boolean = true;
@@ -330,7 +334,23 @@ export class HarmonyTool extends BaseComponent {
     this.displayShowLab = harmonyConfig.showLab;
     this.usePerceptualMatching = harmonyConfig.strictMatching;
 
-    // Subscribe to config changes
+    // Load market config (showPrices, server selection)
+    const marketConfig = configController.getConfig('market');
+    this.showPrices = marketConfig.showPrices;
+
+    // IMPORTANT: Sync MarketBoard components with ConfigController on initial load
+    // MarketBoard loads its own server from localStorage, but ConfigController is the source of truth
+    // This ensures the server used for API calls matches what ConfigSidebar displays
+    if (this.marketBoard) {
+      this.marketBoard.setSelectedServer(marketConfig.selectedServer);
+      this.marketBoard.setShowPrices(marketConfig.showPrices);
+    }
+    if (this.drawerMarketBoard) {
+      this.drawerMarketBoard.setSelectedServer(marketConfig.selectedServer);
+      this.drawerMarketBoard.setShowPrices(marketConfig.showPrices);
+    }
+
+    // Subscribe to harmony config changes
     this.subs.add(configController.subscribe('harmony', (config) => {
       const needsRerender =
         this.displayShowHex !== config.showHex ||
@@ -349,6 +369,48 @@ export class HarmonyTool extends BaseComponent {
 
       if ((needsRerender || algorithmChanged) && this.selectedDye) {
         this.generateHarmonies();
+      }
+    }));
+
+    // Subscribe to market config changes (from ConfigSidebar)
+    this.subs.add(configController.subscribe('market', (config) => {
+      const showPricesChanged = this.showPrices !== config.showPrices;
+      const serverChanged = this.marketBoard?.getSelectedServer?.() !== config.selectedServer;
+
+      // Update showPrices state
+      this.showPrices = config.showPrices;
+
+      // Update MarketBoard components if they exist
+      if (this.marketBoard) {
+        if (serverChanged) {
+          this.marketBoard.setSelectedServer(config.selectedServer);
+        }
+        if (showPricesChanged) {
+          this.marketBoard.setShowPrices(config.showPrices);
+        }
+      }
+      if (this.drawerMarketBoard) {
+        if (serverChanged) {
+          this.drawerMarketBoard.setSelectedServer(config.selectedServer);
+        }
+        if (showPricesChanged) {
+          this.drawerMarketBoard.setShowPrices(config.showPrices);
+        }
+      }
+
+      // When server changes, clear stale price data to prevent showing wrong server names
+      if (serverChanged) {
+        this.priceData.clear();
+      }
+
+      // Regenerate if needed
+      if (showPricesChanged || serverChanged) {
+        if (this.selectedDye) {
+          this.generateHarmonies();
+        }
+        if (this.showPrices) {
+          this.fetchPricesForDisplayedDyes();
+        }
       }
     }));
 
@@ -1372,6 +1434,7 @@ export class HarmonyTool extends BaseComponent {
       panel.destroy();
     }
     this.resultPanels = [];
+    this.v4ResultCards = []; // Clear v4 card references
     clearContainer(this.harmonyGridContainer);
 
     // Update color wheel
@@ -1458,8 +1521,17 @@ export class HarmonyTool extends BaseComponent {
     // Calculate Delta-E between target color and matched dye
     const deltaE = ColorService.getDeltaE?.(options.targetColor, options.matchedDye.hex) ?? undefined;
 
-    // Get market server name from MarketBoard if available
-    const marketServer = this.marketBoard?.getSelectedServer?.() ?? undefined;
+    // Get market server name - prefer worldId from price data (actual listing location)
+    // Fall back to selected server if worldId not available or can't be resolved
+    let marketServer: string | undefined;
+    if (priceInfo?.worldId && this.marketBoard) {
+      // Resolve worldId to world name (e.g., 34 -> "Brynhildr")
+      marketServer = this.marketBoard.getWorldName(priceInfo.worldId);
+    }
+    if (!marketServer) {
+      // Fall back to selected server (data center name)
+      marketServer = this.marketBoard?.getSelectedServer?.();
+    }
 
     // Build ResultCardData
     const cardData: ResultCardData = {
@@ -1492,6 +1564,9 @@ export class HarmonyTool extends BaseComponent {
     card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
       this.handleContextAction(e.detail.action, e.detail.dye);
     }) as EventListener);
+
+    // Store reference for later price updates
+    this.v4ResultCards.push(card);
 
     this.harmonyGridContainer.appendChild(card);
   }
@@ -1718,6 +1793,11 @@ export class HarmonyTool extends BaseComponent {
       return;
     }
 
+    // Increment version to invalidate any in-flight requests
+    // This prevents race conditions when user rapidly changes servers
+    this.priceRequestVersion++;
+    const requestVersion = this.priceRequestVersion;
+
     // Collect all dyes that need price fetching
     const dyesToFetch: Dye[] = [this.selectedDye];
 
@@ -1754,11 +1834,56 @@ export class HarmonyTool extends BaseComponent {
     // Fetch prices from market board
     try {
       const prices = await this.marketBoard.fetchPricesForDyes(dyesToFetch);
+
+      // Check if this response is still current (no newer request was made)
+      if (requestVersion !== this.priceRequestVersion) {
+        logger.info(`[HarmonyTool] Discarding stale price response (v${requestVersion}, current v${this.priceRequestVersion})`);
+        return;
+      }
+
       this.priceData = prices;
       this.updateHarmonyDisplayPrices();
+      this.updateV4ResultCardPrices(); // Update v4 cards with new prices
       logger.info(`[HarmonyTool] Fetched prices for ${prices.size} dyes`);
     } catch (error) {
-      logger.error('[HarmonyTool] Failed to fetch prices:', error);
+      // Only log error if this was the current request
+      if (requestVersion === this.priceRequestVersion) {
+        logger.error('[HarmonyTool] Failed to fetch prices:', error);
+      }
+    }
+  }
+
+  /**
+   * Update v4 result cards with newly fetched price data
+   * Called after fetchPricesForDisplayedDyes() completes
+   */
+  private updateV4ResultCardPrices(): void {
+    for (const card of this.v4ResultCards) {
+      const currentData = card.data;
+      if (!currentData?.dye) continue;
+
+      const priceInfo = this.priceData.get(currentData.dye.itemID);
+
+      // Resolve worldId to world name for the new price data
+      let marketServer: string | undefined;
+      if (priceInfo?.worldId && this.marketBoard) {
+        marketServer = this.marketBoard.getWorldName(priceInfo.worldId);
+      }
+      if (!marketServer) {
+        marketServer = this.marketBoard?.getSelectedServer?.();
+      }
+
+      // Update card data with new price info (triggers Lit re-render)
+      card.data = {
+        dye: currentData.dye,
+        originalColor: currentData.originalColor,
+        matchedColor: currentData.matchedColor,
+        deltaE: currentData.deltaE,
+        hueDeviance: currentData.hueDeviance,
+        vendorCost: currentData.vendorCost,
+        price: this.showPrices && priceInfo ? priceInfo.currentAverage : undefined,
+        marketServer: marketServer,
+      };
     }
   }
 

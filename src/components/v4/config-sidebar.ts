@@ -26,8 +26,11 @@ import type {
   PresetsConfig,
   BudgetConfig,
   SwatchConfig,
+  MarketConfig,
   ConfigKey,
 } from '@shared/tool-config-types';
+import type { DataCenter, World } from '@shared/types';
+import { logger } from '@shared/logger';
 
 // Import child components to ensure registration
 import './toggle-switch-v4';
@@ -121,6 +124,15 @@ export class ConfigSidebar extends BaseLitComponent {
     gender: 'Male',
     maxResults: 3,
   };
+
+  @state() private marketConfig: MarketConfig = {
+    selectedServer: 'Crystal',
+    showPrices: false,
+  };
+
+  // Server data for market config dropdown
+  @state() private dataCenters: DataCenter[] = [];
+  @state() private worlds: World[] = [];
 
   private configController: ConfigController | null = null;
 
@@ -308,6 +320,31 @@ export class ConfigSidebar extends BaseLitComponent {
   override connectedCallback(): void {
     super.connectedCallback();
     this.loadConfigsFromController();
+    this.loadServerData();
+  }
+
+  /**
+   * Load data centers and worlds for market dropdown
+   */
+  private async loadServerData(): Promise<void> {
+    try {
+      const [dcResponse, worldsResponse] = await Promise.all([
+        fetch('/json/data-centers.json'),
+        fetch('/json/worlds.json'),
+      ]);
+
+      if (!dcResponse.ok || !worldsResponse.ok) {
+        throw new Error(`Failed to load server data: ${dcResponse.status}, ${worldsResponse.status}`);
+      }
+
+      this.dataCenters = await dcResponse.json();
+      this.worlds = await worldsResponse.json();
+      logger.info('[ConfigSidebar] Loaded server data:', this.dataCenters.length, 'DCs,', this.worlds.length, 'worlds');
+    } catch (error) {
+      logger.error('[ConfigSidebar] Error loading server data:', error);
+      this.dataCenters = [];
+      this.worlds = [];
+    }
   }
 
   /**
@@ -325,6 +362,7 @@ export class ConfigSidebar extends BaseLitComponent {
     this.presetsConfig = this.configController.getConfig('presets');
     this.budgetConfig = this.configController.getConfig('budget');
     this.swatchConfig = this.configController.getConfig('swatch');
+    this.marketConfig = this.configController.getConfig('market');
   }
 
   /**
@@ -363,6 +401,9 @@ export class ConfigSidebar extends BaseLitComponent {
         break;
       case 'swatch':
         this.swatchConfig = { ...this.swatchConfig, [key]: value };
+        break;
+      case 'market':
+        this.marketConfig = { ...this.marketConfig, [key]: value };
         break;
     }
 
@@ -853,6 +894,78 @@ export class ConfigSidebar extends BaseLitComponent {
     `;
   }
 
+  /**
+   * Check if current tool supports market data
+   */
+  private toolSupportsMarket(): boolean {
+    return ['harmony', 'comparison', 'budget', 'mixer', 'extractor'].includes(this.activeTool);
+  }
+
+  /**
+   * Render Market Board config (shown for tools that support market data)
+   */
+  private renderMarketConfig(): TemplateResult {
+    // Only show for tools that support market data
+    if (!this.toolSupportsMarket()) {
+      return html``;
+    }
+
+    // Sort data centers alphabetically
+    const sortedDataCenters = [...this.dataCenters].sort((a, b) => a.name.localeCompare(b.name));
+
+    return html`
+      <div class="config-section">
+        <div class="config-group">
+          <div class="config-label">Market Board</div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label="Show Prices"
+              .checked=${this.marketConfig.showPrices}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('market', 'showPrices', e.detail.checked)}
+            ></v4-toggle-switch>
+          </div>
+          <select
+            class="config-select"
+            .value=${this.marketConfig.selectedServer}
+            ?disabled=${this.dataCenters.length === 0}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value;
+              this.handleConfigChange('market', 'selectedServer', value);
+            }}
+          >
+            ${this.dataCenters.length === 0
+              ? html`<option value="Crystal">Loading servers...</option>`
+              : sortedDataCenters.map(dc => html`
+                  <optgroup label="${dc.name} (${dc.region})">
+                    <option
+                      value="${dc.name}"
+                      ?selected=${this.marketConfig.selectedServer === dc.name}
+                    >
+                      ${dc.name} - All Worlds
+                    </option>
+                    ${this.worlds
+                      .filter(w => dc.worlds.includes(w.id))
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(world => html`
+                        <option
+                          value="${world.name}"
+                          ?selected=${this.marketConfig.selectedServer === world.name}
+                        >
+                          &nbsp;&nbsp;${world.name}
+                        </option>
+                      `)}
+                  </optgroup>
+                `)}
+          </select>
+          <div class="config-description">
+            Prices fetched from Universalis for ${this.marketConfig.selectedServer}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   protected override render(): TemplateResult {
     return html`
       <aside class="v4-config-sidebar" role="complementary" aria-label="Tool configuration">
@@ -881,6 +994,7 @@ export class ConfigSidebar extends BaseLitComponent {
           ${this.renderPresetsConfig()}
           ${this.renderBudgetConfig()}
           ${this.renderSwatchConfig()}
+          ${this.renderMarketConfig()}
         </div>
       </aside>
     `;
