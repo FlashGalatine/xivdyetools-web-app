@@ -398,10 +398,7 @@ export class CollectionService {
   /**
    * Update a collection's name or description
    */
-  static updateCollection(
-    id: string,
-    updates: { name?: string; description?: string }
-  ): boolean {
+  static updateCollection(id: string, updates: { name?: string; description?: string }): boolean {
     this.initialize();
     if (!this.collectionsData) return false;
 

@@ -16,7 +16,16 @@ import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
-import { ColorService, ConfigController, dyeService, LanguageService, MarketBoardService, StorageService, ToastService, WorldService } from '@services/index';
+import {
+  ColorService,
+  ConfigController,
+  dyeService,
+  LanguageService,
+  MarketBoardService,
+  StorageService,
+  ToastService,
+  WorldService,
+} from '@services/index';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
 import {
   ICON_FILTER,
@@ -160,7 +169,8 @@ export class GradientTool extends BaseComponent {
 
     // Load persisted settings
     this.stepCount = StorageService.getItem<number>(STORAGE_KEYS.stepCount) ?? DEFAULTS.stepCount;
-    this.colorSpace = StorageService.getItem<'rgb' | 'hsv'>(STORAGE_KEYS.colorSpace) ?? DEFAULTS.colorSpace;
+    this.colorSpace =
+      StorageService.getItem<'rgb' | 'hsv'>(STORAGE_KEYS.colorSpace) ?? DEFAULTS.colorSpace;
 
     // Load display options from ConfigController
     const configController = ConfigController.getInstance();
@@ -341,7 +351,9 @@ export class GradientTool extends BaseComponent {
         this.colorSpace = newColorSpace;
         StorageService.setItem(STORAGE_KEYS.colorSpace, newColorSpace);
         needsUpdate = true;
-        logger.info(`[GradientTool] setConfig: interpolation -> ${config.interpolation} (colorSpace: ${newColorSpace})`);
+        logger.info(
+          `[GradientTool] setConfig: interpolation -> ${config.interpolation} (colorSpace: ${newColorSpace})`
+        );
       }
     }
 
@@ -559,7 +571,9 @@ export class GradientTool extends BaseComponent {
     // Instruction text
     const instruction = this.createElement('p', {
       className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to create a gradient (first = start, second = end)',
+      textContent:
+        LanguageService.t('mixer.selectTwoDyes') ||
+        'Select two dyes to create a gradient (first = start, second = end)',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     dyeContainer.appendChild(instruction);
@@ -697,7 +711,8 @@ export class GradientTool extends BaseComponent {
         className: 'w-8 h-8 flex items-center justify-center rounded-full transition-colors',
         textContent: '\u00D7',
         attributes: {
-          style: 'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
+          style:
+            'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
           title: LanguageService.t('common.remove') || 'Remove',
         },
       });
@@ -781,9 +796,10 @@ export class GradientTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: 'RGB',
       attributes: {
-        style: this.colorSpace === 'rgb'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        style:
+          this.colorSpace === 'rgb'
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
       },
     });
 
@@ -791,17 +807,24 @@ export class GradientTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: 'HSV',
       attributes: {
-        style: this.colorSpace === 'hsv'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        style:
+          this.colorSpace === 'hsv'
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
       },
     });
 
     this.on(rgbBtn, 'click', () => {
       this.colorSpace = 'rgb';
       StorageService.setItem(STORAGE_KEYS.colorSpace, 'rgb');
-      rgbBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
-      hsvBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
+      rgbBtn.setAttribute(
+        'style',
+        'background: var(--theme-primary); color: var(--theme-text-header);'
+      );
+      hsvBtn.setAttribute(
+        'style',
+        'background: var(--theme-background-secondary); color: var(--theme-text);'
+      );
       this.updateInterpolation();
       this.updateDrawerContent();
     });
@@ -809,8 +832,14 @@ export class GradientTool extends BaseComponent {
     this.on(hsvBtn, 'click', () => {
       this.colorSpace = 'hsv';
       StorageService.setItem(STORAGE_KEYS.colorSpace, 'hsv');
-      hsvBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
-      rgbBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
+      hsvBtn.setAttribute(
+        'style',
+        'background: var(--theme-primary); color: var(--theme-text-header);'
+      );
+      rgbBtn.setAttribute(
+        'style',
+        'background: var(--theme-background-secondary); color: var(--theme-text);'
+      );
       this.updateInterpolation();
       this.updateDrawerContent();
     });
@@ -832,7 +861,9 @@ export class GradientTool extends BaseComponent {
     clearContainer(right);
 
     // Apply gradient-view styling to the right panel
-    right.setAttribute('style', `
+    right.setAttribute(
+      'style',
+      `
       display: flex;
       flex-direction: column;
       width: 100%;
@@ -841,7 +872,8 @@ export class GradientTool extends BaseComponent {
       gap: 32px;
       box-sizing: border-box;
       overflow-y: auto;
-    `);
+    `
+    );
 
     // Gradient Builder UI section (Start node -> Path -> End node)
     const gradientBuilderUI = this.createElement('div', {
@@ -896,12 +928,14 @@ export class GradientTool extends BaseComponent {
         title: LanguageService.t('gradient.clickToSelectStart') || 'Click to select start color',
       },
     });
-    startCircle.innerHTML = '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
+    startCircle.innerHTML =
+      '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
     const startLabel = this.createElement('span', {
       className: 'node-label',
       textContent: LanguageService.t('gradient.selectColor') || 'Select Color',
       attributes: {
-        style: 'font-size: 12px; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 500;',
+        style:
+          'font-size: 12px; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 500;',
       },
     });
     startNode.appendChild(startCircle);
@@ -980,12 +1014,14 @@ export class GradientTool extends BaseComponent {
         title: LanguageService.t('gradient.clickToSelectEnd') || 'Click to select end color',
       },
     });
-    endCircle.innerHTML = '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
+    endCircle.innerHTML =
+      '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
     const endLabel = this.createElement('span', {
       className: 'node-label',
       textContent: LanguageService.t('gradient.selectColor') || 'Select Color',
       attributes: {
-        style: 'font-size: 12px; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 500;',
+        style:
+          'font-size: 12px; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 500;',
       },
     });
     endNode.appendChild(endCircle);
@@ -997,7 +1033,8 @@ export class GradientTool extends BaseComponent {
     // Results section container
     const resultsSection = this.createElement('div', {
       attributes: {
-        style: 'width: 100%; overflow: hidden; display: flex; flex-direction: column; position: relative; flex: 1;',
+        style:
+          'width: 100%; overflow: hidden; display: flex; flex-direction: column; position: relative; flex: 1;',
       },
     });
 
@@ -1006,7 +1043,8 @@ export class GradientTool extends BaseComponent {
       className: 'instruction-label',
       textContent: LanguageService.t('gradient.gradientResults') || 'Gradient Results',
       attributes: {
-        style: 'font-size: 11px; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 16px;',
+        style:
+          'font-size: 11px; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 16px;',
       },
     });
     resultsSection.appendChild(resultsHeader);
@@ -1099,8 +1137,10 @@ export class GradientTool extends BaseComponent {
         this.startCircleElement.style.background = 'transparent';
         this.startCircleElement.style.borderStyle = 'dashed';
         this.startCircleElement.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-        this.startCircleElement.innerHTML = '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
-        this.startLabelElement.textContent = LanguageService.t('gradient.selectColor') || 'Select Color';
+        this.startCircleElement.innerHTML =
+          '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
+        this.startLabelElement.textContent =
+          LanguageService.t('gradient.selectColor') || 'Select Color';
       }
     }
 
@@ -1116,8 +1156,10 @@ export class GradientTool extends BaseComponent {
         this.endCircleElement.style.background = 'transparent';
         this.endCircleElement.style.borderStyle = 'dashed';
         this.endCircleElement.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-        this.endCircleElement.innerHTML = '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
-        this.endLabelElement.textContent = LanguageService.t('gradient.selectColor') || 'Select Color';
+        this.endCircleElement.innerHTML =
+          '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
+        this.endLabelElement.textContent =
+          LanguageService.t('gradient.selectColor') || 'Select Color';
       }
     }
 
@@ -1130,7 +1172,8 @@ export class GradientTool extends BaseComponent {
       } else if (this.endDye) {
         this.gradientTrackElement.style.background = `linear-gradient(to right, rgba(255,255,255,0.1), ${this.endDye.hex})`;
       } else {
-        this.gradientTrackElement.style.background = 'repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 4px, transparent 4px, transparent 8px)';
+        this.gradientTrackElement.style.background =
+          'repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 4px, transparent 4px, transparent 8px)';
       }
     }
   }
@@ -1222,13 +1265,14 @@ export class GradientTool extends BaseComponent {
         const filteredDyes = this.dyeFilters
           .filterDyes(allDyes)
           .filter((dye) => !excludeIds.includes(dye.id) && dye.category !== 'Facewear');
-        matchedDye = filteredDyes.length > 0
-          ? filteredDyes.reduce((best, dye) => {
-            const bestDist = ColorService.getColorDistance(theoreticalColor, best.hex);
-            const dyeDist = ColorService.getColorDistance(theoreticalColor, dye.hex);
-            return dyeDist < bestDist ? dye : best;
-          })
-          : null;
+        matchedDye =
+          filteredDyes.length > 0
+            ? filteredDyes.reduce((best, dye) => {
+                const bestDist = ColorService.getColorDistance(theoreticalColor, best.hex);
+                const dyeDist = ColorService.getColorDistance(theoreticalColor, dye.hex);
+                return dyeDist < bestDist ? dye : best;
+              })
+            : null;
       }
 
       const distance = matchedDye
@@ -1280,7 +1324,7 @@ export class GradientTool extends BaseComponent {
             transition: transform 0.1s;
             background: ${step.theoreticalColor};
           `,
-          title: `Step ${i}: ${step.matchedDye ? (LanguageService.getDyeName(step.matchedDye.itemID) || step.matchedDye.name) : 'No match'}`,
+          title: `Step ${i}: ${step.matchedDye ? LanguageService.getDyeName(step.matchedDye.itemID) || step.matchedDye.name : 'No match'}`,
         },
       });
 
@@ -1333,14 +1377,16 @@ export class GradientTool extends BaseComponent {
       const header = this.createElement('div', {
         className: 'card-header',
         attributes: {
-          style: 'background: rgba(0, 0, 0, 0.4); padding: 10px 16px; border-bottom: 1px solid var(--theme-border); text-align: center;',
+          style:
+            'background: rgba(0, 0, 0, 0.4); padding: 10px 16px; border-bottom: 1px solid var(--theme-border); text-align: center;',
         },
       });
       const dyeName = this.createElement('span', {
         className: 'dye-name',
         textContent: `Step ${i + 1}: ${LanguageService.getDyeName(dye.itemID) || dye.name}`,
         attributes: {
-          style: 'font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: var(--theme-text);',
+          style:
+            'font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: var(--theme-text);',
         },
       });
       header.appendChild(dyeName);
@@ -1365,7 +1411,8 @@ export class GradientTool extends BaseComponent {
         className: 'preview-label',
         textContent: LanguageService.t('common.original') || 'Original',
         attributes: {
-          style: 'position: absolute; bottom: 4px; width: 100%; text-align: center; font-size: 9px; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);',
+          style:
+            'position: absolute; bottom: 4px; width: 100%; text-align: center; font-size: 9px; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);',
         },
       });
       leftHalf.appendChild(leftLabel);
@@ -1382,7 +1429,8 @@ export class GradientTool extends BaseComponent {
         className: 'preview-label',
         textContent: LanguageService.t('common.match') || 'Match',
         attributes: {
-          style: 'position: absolute; bottom: 4px; width: 100%; text-align: center; font-size: 9px; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);',
+          style:
+            'position: absolute; bottom: 4px; width: 100%; text-align: center; font-size: 9px; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);',
         },
       });
       rightHalf.appendChild(rightLabel);
@@ -1391,7 +1439,8 @@ export class GradientTool extends BaseComponent {
 
       // Card details (technical + acquisition)
       // Check if we need two columns or just one
-      const hasAcquisitionCol = this.displayOptions.showAcquisition || this.displayOptions.showPrice;
+      const hasAcquisitionCol =
+        this.displayOptions.showAcquisition || this.displayOptions.showPrice;
       const gridCols = hasAcquisitionCol ? '1fr 1fr' : '1fr';
       const details = this.createElement('div', {
         className: 'card-details',
@@ -1407,39 +1456,52 @@ export class GradientTool extends BaseComponent {
         attributes: { style: 'display: flex; flex-direction: column; gap: 4px;' },
       });
       const techHeader = `<div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 4px; border-bottom: 1px solid var(--theme-border); padding-bottom: 2px;">${LanguageService.t('common.technical') || 'Technical'}</div>`;
-      const rowStyle = 'font-size: 11px; display: flex; justify-content: space-between; align-items: baseline;';
+      const rowStyle =
+        'font-size: 11px; display: flex; justify-content: space-between; align-items: baseline;';
       const labelStyle = 'color: var(--theme-text-muted);';
-      const valueStyle = "color: var(--theme-text); font-family: 'Consolas', 'Monaco', monospace; text-align: right;";
+      const valueStyle =
+        "color: var(--theme-text); font-family: 'Consolas', 'Monaco', monospace; text-align: right;";
 
       // Build format rows based on displayOptions
       const formatRows: string[] = [];
 
       // Delta-E (always important for gradient matching)
       if (this.displayOptions.showDeltaE) {
-        const deltaColor = step.distance < 2 ? '#4caf50' : step.distance < 5 ? '#ffc107' : '#f44336';
-        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">ΔE</span><span style="color: ${deltaColor};">${step.distance.toFixed(2)}</span></div>`);
+        const deltaColor =
+          step.distance < 2 ? '#4caf50' : step.distance < 5 ? '#ffc107' : '#f44336';
+        formatRows.push(
+          `<div style="${rowStyle}"><span style="${labelStyle}">ΔE</span><span style="color: ${deltaColor};">${step.distance.toFixed(2)}</span></div>`
+        );
       }
 
       // HEX
       if (this.displayOptions.showHex) {
-        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">HEX</span><span style="${valueStyle}">${dye.hex.toUpperCase()}</span></div>`);
+        formatRows.push(
+          `<div style="${rowStyle}"><span style="${labelStyle}">HEX</span><span style="${valueStyle}">${dye.hex.toUpperCase()}</span></div>`
+        );
       }
 
       // RGB
       if (this.displayOptions.showRgb) {
-        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">RGB</span><span style="${valueStyle}">${this.hexToRgbString(dye.hex)}</span></div>`);
+        formatRows.push(
+          `<div style="${rowStyle}"><span style="${labelStyle}">RGB</span><span style="${valueStyle}">${this.hexToRgbString(dye.hex)}</span></div>`
+        );
       }
 
       // HSV
       if (this.displayOptions.showHsv) {
         const hsv = ColorService.hexToHsv(dye.hex);
-        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">HSV</span><span style="${valueStyle}">${Math.round(hsv.h)}°, ${Math.round(hsv.s)}%, ${Math.round(hsv.v)}%</span></div>`);
+        formatRows.push(
+          `<div style="${rowStyle}"><span style="${labelStyle}">HSV</span><span style="${valueStyle}">${Math.round(hsv.h)}°, ${Math.round(hsv.s)}%, ${Math.round(hsv.v)}%</span></div>`
+        );
       }
 
       // LAB
       if (this.displayOptions.showLab) {
         const lab = ColorService.hexToLab(dye.hex);
-        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">LAB</span><span style="${valueStyle}">${lab.L.toFixed(0)}, ${lab.a.toFixed(0)}, ${lab.b.toFixed(0)}</span></div>`);
+        formatRows.push(
+          `<div style="${rowStyle}"><span style="${labelStyle}">LAB</span><span style="${valueStyle}">${lab.L.toFixed(0)}, ${lab.a.toFixed(0)}, ${lab.b.toFixed(0)}</span></div>`
+        );
       }
 
       techCol.innerHTML = techHeader + formatRows.join('');
@@ -1464,8 +1526,12 @@ export class GradientTool extends BaseComponent {
         if (showAcquisition) {
           const source = dye.acquisition || 'Vendor';
           const vendorCost = dye.cost !== undefined ? `${dye.cost.toLocaleString()} G` : '—';
-          acqRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.source') || 'Source'}</span><span style="${valueStyle}">${source}</span></div>`);
-          acqRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.cost') || 'Cost'}</span><span style="${valueStyle}">${vendorCost}</span></div>`);
+          acqRows.push(
+            `<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.source') || 'Source'}</span><span style="${valueStyle}">${source}</span></div>`
+          );
+          acqRows.push(
+            `<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.cost') || 'Cost'}</span><span style="${valueStyle}">${vendorCost}</span></div>`
+          );
         }
 
         // Market server and price rows (when showPrice is true)
@@ -1473,14 +1539,21 @@ export class GradientTool extends BaseComponent {
           const priceInfo = this.priceData.get(dye.itemID);
           // Resolve worldId to world name using WorldService
           // Fall back to selected datacenter/server if worldId not available
-          const worldName = priceInfo?.worldId ? WorldService.getWorldName(priceInfo.worldId) : undefined;
-          const marketServer = worldName || this.getActiveMarketBoard()?.getSelectedServer() || 'N/A';
+          const worldName = priceInfo?.worldId
+            ? WorldService.getWorldName(priceInfo.worldId)
+            : undefined;
+          const marketServer =
+            worldName || this.getActiveMarketBoard()?.getSelectedServer() || 'N/A';
           const marketPrice = priceInfo ? `${priceInfo.currentMinPrice.toLocaleString()} G` : null;
 
-          acqRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.market') || 'Market'}</span><span style="${valueStyle}">${marketServer}</span></div>`);
+          acqRows.push(
+            `<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.market') || 'Market'}</span><span style="${valueStyle}">${marketServer}</span></div>`
+          );
 
           if (marketPrice) {
-            acqRows.push(`<div style="font-size: 13px; font-weight: 600; color: var(--theme-primary); text-align: right;">${marketPrice}</div>`);
+            acqRows.push(
+              `<div style="font-size: 13px; font-weight: 600; color: var(--theme-primary); text-align: right;">${marketPrice}</div>`
+            );
           }
         }
 
@@ -1494,7 +1567,8 @@ export class GradientTool extends BaseComponent {
       const actions = this.createElement('div', {
         className: 'card-actions',
         attributes: {
-          style: 'padding: 8px; display: flex; justify-content: center; border-top: 1px solid var(--theme-border); background: rgba(0, 0, 0, 0.2);',
+          style:
+            'padding: 8px; display: flex; justify-content: center; border-top: 1px solid var(--theme-border); background: rgba(0, 0, 0, 0.2);',
         },
       });
       const actionRow = this.createElement('div', {
@@ -1713,7 +1787,10 @@ export class GradientTool extends BaseComponent {
 
       // Context menu actions
       const contextActions = [
-        { label: LanguageService.t('harmony.addToComparison') || 'Add to Comparison', action: 'comparison' },
+        {
+          label: LanguageService.t('harmony.addToComparison') || 'Add to Comparison',
+          action: 'comparison',
+        },
         { label: LanguageService.t('harmony.addToMixer') || 'Add to Mixer', action: 'mixer' },
         { label: LanguageService.t('harmony.copyHex') || 'Copy Hex Code', action: 'copy' },
       ];
@@ -1816,7 +1893,8 @@ export class GradientTool extends BaseComponent {
       const noSteps = this.createElement('div', {
         textContent: LanguageService.t('gradient.noMatchesFound') || 'No matching dyes found',
         attributes: {
-          style: 'padding: 24px; text-align: center; font-size: 14px; color: var(--theme-text-muted);',
+          style:
+            'padding: 24px; text-align: center; font-size: 14px; color: var(--theme-text-muted);',
         },
       });
       this.matchesContainer.appendChild(noSteps);
@@ -1840,7 +1918,9 @@ export class GradientTool extends BaseComponent {
 
     const card = this.createElement('div', {
       className: 'p-4 rounded-lg flex items-center justify-between',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
 
     const label = this.createElement('span', {
@@ -1855,7 +1935,9 @@ export class GradientTool extends BaseComponent {
     // Copy button
     const copyBtn = this.createElement('button', {
       className: 'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors',
-      attributes: { style: 'background: var(--theme-background-secondary); color: var(--theme-text);' },
+      attributes: {
+        style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
+      },
     });
     const copyIcon = this.createElement('span', { className: 'w-4 h-4' });
     copyIcon.innerHTML = ICON_EXPORT;
@@ -1873,7 +1955,9 @@ export class GradientTool extends BaseComponent {
     const downloadIcon = this.createElement('span', { className: 'w-4 h-4' });
     downloadIcon.innerHTML = ICON_EXPORT;
     downloadBtn.appendChild(downloadIcon);
-    downloadBtn.appendChild(document.createTextNode(LanguageService.t('common.download') || 'Download'));
+    downloadBtn.appendChild(
+      document.createTextNode(LanguageService.t('common.download') || 'Download')
+    );
 
     this.on(downloadBtn, 'click', () => this.downloadPalette());
     buttonGroup.appendChild(downloadBtn);
@@ -1899,11 +1983,14 @@ export class GradientTool extends BaseComponent {
     for (let i = 1; i < this.currentSteps.length - 1; i++) {
       const step = this.currentSteps[i];
       if (step.matchedDye) {
-        lines.push(`  ${i}. ${step.matchedDye.name} (${step.matchedDye.hex}) - Distance: ${step.distance.toFixed(1)}`);
+        lines.push(
+          `  ${i}. ${step.matchedDye.name} (${step.matchedDye.hex}) - Distance: ${step.distance.toFixed(1)}`
+        );
       }
     }
 
-    navigator.clipboard.writeText(lines.join('\n'))
+    navigator.clipboard
+      .writeText(lines.join('\n'))
       .then(() => {
         ToastService.success(LanguageService.t('common.copied') || 'Copied to clipboard');
       })
@@ -1926,11 +2013,13 @@ export class GradientTool extends BaseComponent {
       intermediates: this.currentSteps.slice(1, -1).map((step, i) => ({
         index: i + 1,
         theoreticalColor: step.theoreticalColor,
-        matchedDye: step.matchedDye ? {
-          name: step.matchedDye.name,
-          hex: step.matchedDye.hex,
-          id: step.matchedDye.id,
-        } : null,
+        matchedDye: step.matchedDye
+          ? {
+              name: step.matchedDye.name,
+              hex: step.matchedDye.hex,
+              id: step.matchedDye.id,
+            }
+          : null,
         distance: step.distance,
       })),
       generatedAt: new Date().toISOString(),
@@ -2068,7 +2157,8 @@ export class GradientTool extends BaseComponent {
     // Instruction text
     const instruction = this.createElement('p', {
       className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to create a gradient',
+      textContent:
+        LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to create a gradient',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     dyeContainer.appendChild(instruction);
@@ -2195,7 +2285,8 @@ export class GradientTool extends BaseComponent {
         className: 'w-6 h-6 flex items-center justify-center rounded-full transition-colors',
         textContent: '\u00D7',
         attributes: {
-          style: 'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1rem;',
+          style:
+            'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1rem;',
           title: LanguageService.t('common.remove') || 'Remove',
         },
       });
@@ -2283,9 +2374,10 @@ export class GradientTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: 'RGB',
       attributes: {
-        style: this.colorSpace === 'rgb'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        style:
+          this.colorSpace === 'rgb'
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
       },
     });
 
@@ -2293,25 +2385,38 @@ export class GradientTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: 'HSV',
       attributes: {
-        style: this.colorSpace === 'hsv'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        style:
+          this.colorSpace === 'hsv'
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
       },
     });
 
     this.on(rgbBtn, 'click', () => {
       this.colorSpace = 'rgb';
       StorageService.setItem(STORAGE_KEYS.colorSpace, 'rgb');
-      rgbBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
-      hsvBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
+      rgbBtn.setAttribute(
+        'style',
+        'background: var(--theme-primary); color: var(--theme-text-header);'
+      );
+      hsvBtn.setAttribute(
+        'style',
+        'background: var(--theme-background-secondary); color: var(--theme-text);'
+      );
       this.updateInterpolation();
     });
 
     this.on(hsvBtn, 'click', () => {
       this.colorSpace = 'hsv';
       StorageService.setItem(STORAGE_KEYS.colorSpace, 'hsv');
-      hsvBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
-      rgbBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
+      hsvBtn.setAttribute(
+        'style',
+        'background: var(--theme-primary); color: var(--theme-text-header);'
+      );
+      rgbBtn.setAttribute(
+        'style',
+        'background: var(--theme-background-secondary); color: var(--theme-text);'
+      );
       this.updateInterpolation();
     });
 

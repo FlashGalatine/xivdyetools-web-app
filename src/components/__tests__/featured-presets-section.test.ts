@@ -7,11 +7,7 @@
 
 import { FeaturedPresetsSection } from '../featured-presets-section';
 import { dyeService, type UnifiedPreset } from '@services/index';
-import {
-  createTestContainer,
-  cleanupTestContainer,
-  cleanupComponent,
-} from './test-utils';
+import { createTestContainer, cleanupTestContainer, cleanupComponent } from './test-utils';
 
 // Mock preset data
 const createMockPreset = (overrides: Partial<UnifiedPreset> = {}): UnifiedPreset => ({
@@ -50,7 +46,9 @@ describe('FeaturedPresetsSection', () => {
 
     // Mock dyeService.getDyeById
     getDyeByIdSpy = vi.spyOn(dyeService, 'getDyeById').mockImplementation((id: number) => {
-      return (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null;
+      return (
+        (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null
+      );
     });
   });
 

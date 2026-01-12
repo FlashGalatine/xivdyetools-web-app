@@ -90,11 +90,7 @@ export { ConfigController, getConfigController } from './config-controller';
 export type { ConfigChangeEvent } from './config-controller';
 
 // V4 Market Board Service
-export {
-  MarketBoardService,
-  getMarketBoardService,
-  formatPrice,
-} from './market-board-service';
+export { MarketBoardService, getMarketBoardService, formatPrice } from './market-board-service';
 export type {
   PriceCategorySettings,
   MarketBoardEventType,
@@ -151,9 +147,7 @@ export async function initializeServices(): Promise<void> {
 
     // Initialize WorldService (async - loads worlds.json, data-centers.json)
     await WorldService.initialize();
-    logger.info(
-      `✅ WorldService: ${WorldService.isInitialized() ? 'Ready' : 'Failed'}`
-    );
+    logger.info(`✅ WorldService: ${WorldService.isInitialized() ? 'Ready' : 'Failed'}`);
 
     // Initialize CameraService (async - detects cameras)
     await cameraService.initialize();
@@ -172,9 +166,7 @@ export async function initializeServices(): Promise<void> {
     // Initialize AuthService (async - restores session, handles OAuth callback)
     const { authService } = await import('./auth-service');
     await authService.initialize();
-    logger.info(
-      `✅ AuthService: ${authService.isAuthenticated() ? 'Logged in' : 'Not logged in'}`
-    );
+    logger.info(`✅ AuthService: ${authService.isAuthenticated() ? 'Logged in' : 'Not logged in'}`);
 
     logger.info('🚀 All services initialized successfully');
   } catch (error) {

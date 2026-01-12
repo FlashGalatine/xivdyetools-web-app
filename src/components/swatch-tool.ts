@@ -191,8 +191,10 @@ export class SwatchTool extends BaseComponent {
     // Load persisted settings
     this.subrace = StorageService.getItem<SubRace>(STORAGE_KEYS.subrace) ?? DEFAULTS.subrace;
     this.gender = StorageService.getItem<Gender>(STORAGE_KEYS.gender) ?? DEFAULTS.gender;
-    this.colorCategory = StorageService.getItem<ColorCategory>(STORAGE_KEYS.colorCategory) ?? DEFAULTS.colorCategory;
-    this.maxResults = StorageService.getItem<number>(STORAGE_KEYS.maxResults) ?? DEFAULTS.matchCount;
+    this.colorCategory =
+      StorageService.getItem<ColorCategory>(STORAGE_KEYS.colorCategory) ?? DEFAULTS.colorCategory;
+    this.maxResults =
+      StorageService.getItem<number>(STORAGE_KEYS.maxResults) ?? DEFAULTS.matchCount;
 
     // Load initial colors
     this.loadColors();
@@ -394,7 +396,7 @@ export class SwatchTool extends BaseComponent {
     marketContent.addEventListener('showPricesChanged', ((e: CustomEvent) => {
       this.showPrices = e.detail?.showPrices ?? false;
       if (this.showPrices && this.matchedDyes.length > 0) {
-        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
       } else {
         this.updateMatchResults();
       }
@@ -402,14 +404,14 @@ export class SwatchTool extends BaseComponent {
 
     marketContent.addEventListener('categories-changed', () => {
       if (this.showPrices && this.matchedDyes.length > 0) {
-        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
       }
     });
 
     marketContent.addEventListener('refresh-requested', () => {
       if (this.showPrices && this.matchedDyes.length > 0) {
         this.priceData.clear();
-        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
       }
     });
 
@@ -539,8 +541,14 @@ export class SwatchTool extends BaseComponent {
 
     const categories: Array<{ value: ColorCategory; label: string }> = [
       { value: 'eyeColors', label: LanguageService.t('tools.character.eyeColors') || 'Eye Colors' },
-      { value: 'hairColors', label: LanguageService.t('tools.character.hairColors') || 'Hair Colors' },
-      { value: 'skinColors', label: LanguageService.t('tools.character.skinColors') || 'Skin Colors' },
+      {
+        value: 'hairColors',
+        label: LanguageService.t('tools.character.hairColors') || 'Hair Colors',
+      },
+      {
+        value: 'skinColors',
+        label: LanguageService.t('tools.character.skinColors') || 'Skin Colors',
+      },
       {
         value: 'highlightColors',
         label: LanguageService.t('tools.character.highlightColors') || 'Highlight Colors',
@@ -587,7 +595,8 @@ export class SwatchTool extends BaseComponent {
       this.clearSelection();
 
       // Update gender visibility
-      const genderGroup = this.subraceSelect?.parentElement?.nextElementSibling as HTMLElement | null;
+      const genderGroup = this.subraceSelect?.parentElement
+        ?.nextElementSibling as HTMLElement | null;
       if (genderGroup) {
         this.updateGenderVisibility(genderGroup);
       }
@@ -617,7 +626,9 @@ export class SwatchTool extends BaseComponent {
 
     // Apply V4-style layout to the panel
     // Use min-height instead of height to allow container to grow with content
-    right.setAttribute('style', `
+    right.setAttribute(
+      'style',
+      `
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -628,7 +639,8 @@ export class SwatchTool extends BaseComponent {
       gap: 24px;
       box-sizing: border-box;
       overflow-y: auto;
-    `);
+    `
+    );
 
     // Main layout container: Color Grid (LEFT) | Results Area (RIGHT)
     // Use align-items: flex-start so children size to their content, not stretch to fill
@@ -848,7 +860,8 @@ export class SwatchTool extends BaseComponent {
     this.emptyStateContainer.appendChild(emptyIcon);
 
     const emptyText = this.createElement('span', {
-      textContent: LanguageService.t('tools.character.noColorSelected') ||
+      textContent:
+        LanguageService.t('tools.character.noColorSelected') ||
         'Select a color from the grid to find matching dyes',
       attributes: {
         style: `
@@ -913,7 +926,8 @@ export class SwatchTool extends BaseComponent {
 
     for (const color of this.colors) {
       const swatch = this.createElement('button', {
-        className: 'cursor-pointer transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1',
+        className:
+          'cursor-pointer transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1',
         attributes: {
           style: `
             width: 44px;
@@ -1065,9 +1079,18 @@ export class SwatchTool extends BaseComponent {
     // Add data rows
     dataGrid.appendChild(createDataRow('HEX', this.selectedColor.hex.toUpperCase()));
     dataGrid.appendChild(createDataRow('Index', String(this.selectedColor.index)));
-    dataGrid.appendChild(createDataRow('RGB', `${this.selectedColor.rgb.r},${this.selectedColor.rgb.g},${this.selectedColor.rgb.b}`));
-    dataGrid.appendChild(createDataRow('HSV', `${Math.round(hsv.h)},${Math.round(hsv.s)},${Math.round(hsv.v)}`));
-    dataGrid.appendChild(createDataRow('LAB', `${Math.round(lab.L)},${Math.round(lab.a)},${Math.round(lab.b)}`));
+    dataGrid.appendChild(
+      createDataRow(
+        'RGB',
+        `${this.selectedColor.rgb.r},${this.selectedColor.rgb.g},${this.selectedColor.rgb.b}`
+      )
+    );
+    dataGrid.appendChild(
+      createDataRow('HSV', `${Math.round(hsv.h)},${Math.round(hsv.s)},${Math.round(hsv.v)}`)
+    );
+    dataGrid.appendChild(
+      createDataRow('LAB', `${Math.round(lab.L)},${Math.round(lab.a)},${Math.round(lab.b)}`)
+    );
 
     dataSection.appendChild(dataGrid);
     this.selectedColorDisplay.appendChild(dataSection);
@@ -1090,8 +1113,12 @@ export class SwatchTool extends BaseComponent {
       },
       textContent: 'Copy Color Info',
     });
-    copyBtn.addEventListener('mouseenter', () => { copyBtn.style.opacity = '0.9'; });
-    copyBtn.addEventListener('mouseleave', () => { copyBtn.style.opacity = '1'; });
+    copyBtn.addEventListener('mouseenter', () => {
+      copyBtn.style.opacity = '0.9';
+    });
+    copyBtn.addEventListener('mouseleave', () => {
+      copyBtn.style.opacity = '1';
+    });
     copyBtn.addEventListener('click', () => this.copySelectedColorInfo());
     this.selectedColorDisplay.appendChild(copyBtn);
   }
@@ -1124,11 +1151,16 @@ export class SwatchTool extends BaseComponent {
       `LAB: ${Math.round(lab.L)}, ${Math.round(lab.a)}, ${Math.round(lab.b)}`,
     ].join('\n');
 
-    navigator.clipboard.writeText(info).then(() => {
-      ToastService.success(LanguageService.t('actions.copiedToClipboard') || 'Copied to clipboard');
-    }).catch(() => {
-      ToastService.error(LanguageService.t('actions.copyFailed') || 'Failed to copy');
-    });
+    navigator.clipboard
+      .writeText(info)
+      .then(() => {
+        ToastService.success(
+          LanguageService.t('actions.copiedToClipboard') || 'Copied to clipboard'
+        );
+      })
+      .catch(() => {
+        ToastService.error(LanguageService.t('actions.copyFailed') || 'Failed to copy');
+      });
   }
 
   /**
@@ -1175,10 +1207,13 @@ export class SwatchTool extends BaseComponent {
       (card as unknown as { showLab: boolean }).showLab = this.displayOptions.showLab;
       (card as unknown as { showDeltaE: boolean }).showDeltaE = this.displayOptions.showDeltaE;
       (card as unknown as { showPrice: boolean }).showPrice = this.displayOptions.showPrice;
-      (card as unknown as { showAcquisition: boolean }).showAcquisition = this.displayOptions.showAcquisition;
+      (card as unknown as { showAcquisition: boolean }).showAcquisition =
+        this.displayOptions.showAcquisition;
 
       // Listen for context actions (both primary button and context menu trigger this)
-      card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+      card.addEventListener('context-action', ((
+        e: CustomEvent<{ action: ContextAction; dye: Dye }>
+      ) => {
         this.handleContextAction(e.detail.action, e.detail.dye);
       }) as EventListener);
 
@@ -1192,41 +1227,55 @@ export class SwatchTool extends BaseComponent {
   private handleContextAction(action: ContextAction, dye: Dye): void {
     switch (action) {
       case 'add-comparison':
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'comparison', dye },
-        }));
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'comparison', dye },
+          })
+        );
         ToastService.success(LanguageService.t('toast.addedToComparison') || 'Added to comparison');
         break;
 
       case 'add-mixer':
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'mixer', dye },
-        }));
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'mixer', dye },
+          })
+        );
         ToastService.success(LanguageService.t('toast.addedToMixer') || 'Added to mixer');
         break;
 
       case 'add-accessibility':
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'accessibility', dye },
-        }));
-        ToastService.success(LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check');
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'accessibility', dye },
+          })
+        );
+        ToastService.success(
+          LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check'
+        );
         break;
 
       case 'see-harmonies':
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'harmony', dye },
-        }));
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'harmony', dye },
+          })
+        );
         break;
 
       case 'budget':
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'budget', dye },
-        }));
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'budget', dye },
+          })
+        );
         break;
 
       case 'copy-hex':
         void navigator.clipboard.writeText(dye.hex).then(() => {
-          ToastService.success(LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard');
+          ToastService.success(
+            LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard'
+          );
         });
         break;
     }
@@ -1293,7 +1342,7 @@ export class SwatchTool extends BaseComponent {
     mobileMarketContent.addEventListener('showPricesChanged', ((e: CustomEvent) => {
       this.showPrices = e.detail?.showPrices ?? false;
       if (this.showPrices && this.matchedDyes.length > 0) {
-        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
       } else {
         this.updateMatchResults();
       }
@@ -1301,14 +1350,14 @@ export class SwatchTool extends BaseComponent {
 
     mobileMarketContent.addEventListener('categories-changed', () => {
       if (this.showPrices && this.matchedDyes.length > 0) {
-        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
       }
     });
 
     mobileMarketContent.addEventListener('refresh-requested', () => {
       if (this.showPrices && this.matchedDyes.length > 0) {
         this.priceData.clear();
-        this.fetchPrices(this.matchedDyes.map(m => m.dye));
+        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
       }
     });
 
@@ -1432,8 +1481,14 @@ export class SwatchTool extends BaseComponent {
 
     const categories: Array<{ value: ColorCategory; label: string }> = [
       { value: 'eyeColors', label: LanguageService.t('tools.character.eyeColors') || 'Eye Colors' },
-      { value: 'hairColors', label: LanguageService.t('tools.character.hairColors') || 'Hair Colors' },
-      { value: 'skinColors', label: LanguageService.t('tools.character.skinColors') || 'Skin Colors' },
+      {
+        value: 'hairColors',
+        label: LanguageService.t('tools.character.hairColors') || 'Hair Colors',
+      },
+      {
+        value: 'skinColors',
+        label: LanguageService.t('tools.character.skinColors') || 'Skin Colors',
+      },
       {
         value: 'highlightColors',
         label: LanguageService.t('tools.character.highlightColors') || 'Highlight Colors',
@@ -1583,7 +1638,7 @@ export class SwatchTool extends BaseComponent {
 
     // Fetch prices if enabled
     if (this.showPrices && this.matchedDyes.length > 0) {
-      this.fetchPrices(this.matchedDyes.map(m => m.dye));
+      this.fetchPrices(this.matchedDyes.map((m) => m.dye));
     }
   }
 
@@ -1662,8 +1717,10 @@ export class SwatchTool extends BaseComponent {
       lipColorsDark: LanguageService.t('tools.character.lipColorsDark') || 'Lip Colors (Dark)',
       lipColorsLight: LanguageService.t('tools.character.lipColorsLight') || 'Lip Colors (Light)',
       tattooColors: LanguageService.t('tools.character.tattooColors') || 'Tattoo/Limbal Colors',
-      facePaintColorsDark: LanguageService.t('tools.character.facePaintDark') || 'Face Paint (Dark)',
-      facePaintColorsLight: LanguageService.t('tools.character.facePaintLight') || 'Face Paint (Light)',
+      facePaintColorsDark:
+        LanguageService.t('tools.character.facePaintDark') || 'Face Paint (Dark)',
+      facePaintColorsLight:
+        LanguageService.t('tools.character.facePaintLight') || 'Face Paint (Light)',
     };
     return labels[category];
   }

@@ -219,7 +219,11 @@ class AuthServiceImpl {
       }
 
       if (import.meta.env.DEV) {
-        console.log('🔐 [AuthService] URL params:', { hasCode: !!code, hasError: !!error, provider: providerFromUrl });
+        console.log('🔐 [AuthService] URL params:', {
+          hasCode: !!code,
+          hasError: !!error,
+          provider: providerFromUrl,
+        });
       }
 
       if (code) {
@@ -230,7 +234,8 @@ class AuthServiceImpl {
         await this.handleCallbackCode(code, urlParams.get('csrf'));
         // Get return path before cleaning URL, default to home
         // SECURITY: Sanitize to prevent open redirect attacks
-        const rawPath = urlParams.get('return_path') || sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
+        const rawPath =
+          urlParams.get('return_path') || sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
         const returnPath = sanitizeReturnPath(rawPath);
         if (import.meta.env.DEV) {
           console.log(`🔐 [AuthService] Navigating to return path: ${returnPath}`);
@@ -242,7 +247,8 @@ class AuthServiceImpl {
         logger.error('OAuth error:', error);
         // Get return path before cleaning URL
         // SECURITY: Sanitize to prevent open redirect attacks
-        const rawPath = urlParams.get('return_path') || sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
+        const rawPath =
+          urlParams.get('return_path') || sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
         const returnPath = sanitizeReturnPath(rawPath);
         sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
         // Clean up URL and navigate back (even on error)
@@ -453,7 +459,9 @@ class AuthServiceImpl {
 
     // Log with character info for XIVAuth users
     if (provider === 'xivauth' && payload.primary_character) {
-      logger.info(`Logged in via XIVAuth as ${payload.username} (${payload.primary_character.name} @ ${payload.primary_character.server})`);
+      logger.info(
+        `Logged in via XIVAuth as ${payload.username} (${payload.primary_character.name} @ ${payload.primary_character.server})`
+      );
     } else {
       logger.info(`Logged in as ${this.state.user?.global_name || this.state.user?.username}`);
     }

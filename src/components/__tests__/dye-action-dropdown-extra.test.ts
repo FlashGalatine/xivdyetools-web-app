@@ -61,7 +61,7 @@ vi.mock('@services/modal-service', () => ({
 vi.mock('@services/dye-service-wrapper', () => ({
   DyeService: {
     getInstance: vi.fn(() => ({
-      getDyeById: vi.fn((id: number) => mockDyeData.find(d => d.id === id) || null),
+      getDyeById: vi.fn((id: number) => mockDyeData.find((d) => d.id === id) || null),
     })),
   },
 }));
@@ -81,7 +81,11 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
   let testDye: Dye;
   let StorageService: { getItem: ReturnType<typeof vi.fn>; setItem: ReturnType<typeof vi.fn> };
   let RouterService: { navigateTo: ReturnType<typeof vi.fn> };
-  let ToastService: { success: ReturnType<typeof vi.fn>; info: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+  let ToastService: {
+    success: ReturnType<typeof vi.fn>;
+    info: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     container = createTestContainer();
@@ -119,7 +123,9 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
       (menuItems[0] as HTMLElement).click();
 
-      expect(StorageService.setItem).toHaveBeenCalledWith('v3_comparison_selected_dyes', [testDye.id]);
+      expect(StorageService.setItem).toHaveBeenCalledWith('v3_comparison_selected_dyes', [
+        testDye.id,
+      ]);
       expect(ToastService.success).toHaveBeenCalled();
       expect(RouterService.navigateTo).toHaveBeenCalledWith('comparison');
     });
@@ -152,7 +158,10 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
       (menuItems[0] as HTMLElement).click();
 
-      expect(StorageService.setItem).toHaveBeenCalledWith('v3_comparison_selected_dyes', [2, testDye.id]);
+      expect(StorageService.setItem).toHaveBeenCalledWith('v3_comparison_selected_dyes', [
+        2,
+        testDye.id,
+      ]);
     });
   });
 
@@ -204,7 +213,9 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
       (menuItems[2] as HTMLElement).click();
 
-      expect(StorageService.setItem).toHaveBeenCalledWith('v3_accessibility_selected_dyes', [testDye.id]);
+      expect(StorageService.setItem).toHaveBeenCalledWith('v3_accessibility_selected_dyes', [
+        testDye.id,
+      ]);
       expect(ToastService.success).toHaveBeenCalled();
       expect(RouterService.navigateTo).toHaveBeenCalledWith('accessibility');
     });
@@ -253,7 +264,9 @@ describe('Dye Action Dropdown - Tool Integration Actions', () => {
       const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
       (menuItems[3] as HTMLElement).click();
 
-      expect(RouterService.navigateTo).toHaveBeenCalledWith('harmony', { dyeId: String(testDye.itemID) });
+      expect(RouterService.navigateTo).toHaveBeenCalledWith('harmony', {
+        dyeId: String(testDye.itemID),
+      });
     });
   });
 });
@@ -404,7 +417,9 @@ describe('Dye Action Dropdown - Edge Cases', () => {
 
     expect(() => {
       document.dispatchEvent(
-        new CustomEvent('dye-dropdown-close-all', { detail: { except: document.createElement('div') } })
+        new CustomEvent('dye-dropdown-close-all', {
+          detail: { except: document.createElement('div') },
+        })
       );
     }).not.toThrow();
   });
@@ -465,7 +480,7 @@ describe('Dye Action Dropdown - Clipboard Fallback Error', () => {
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
     (menuItems[5] as HTMLElement).click();
 
-    await new Promise(r => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 50));
     expect(ToastService.error).toHaveBeenCalled();
   });
 });
@@ -514,11 +529,13 @@ describe('Dye Action Dropdown - Full Slots (Modal)', () => {
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
     (menuItems[0] as HTMLElement).click();
 
-    expect(ModalService.show).toHaveBeenCalledWith(expect.objectContaining({
-      type: 'custom',
-      closable: true,
-      closeOnBackdrop: true,
-    }));
+    expect(ModalService.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'custom',
+        closable: true,
+        closeOnBackdrop: true,
+      })
+    );
   });
 
   it('should show slot selection modal when mixer is full', async () => {

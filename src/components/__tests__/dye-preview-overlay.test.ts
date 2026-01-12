@@ -5,7 +5,12 @@
  */
 
 import { DyePreviewOverlay } from '../dye-preview-overlay';
-import { createTestContainer, cleanupTestContainer, cleanupComponent, mockDyeData } from './test-utils';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  cleanupComponent,
+  mockDyeData,
+} from './test-utils';
 import type { Dye } from '@shared/types';
 
 // Mock services
@@ -107,11 +112,13 @@ describe('DyePreviewOverlay', () => {
       component.setCanvasContainer(canvasContainer, canvas);
 
       // Should not throw
-      expect(() => component.showPreview({
-        sampledColor: '#FF0000',
-        sampledPosition: { x: 100, y: 100 },
-        dye: testDye,
-      })).not.toThrow();
+      expect(() =>
+        component.showPreview({
+          sampledColor: '#FF0000',
+          sampledPosition: { x: 100, y: 100 },
+          dye: testDye,
+        })
+      ).not.toThrow();
     });
   });
 
@@ -193,7 +200,7 @@ describe('DyePreviewOverlay', () => {
 
     it('should remove previous overlay before showing new one', () => {
       vi.useFakeTimers();
-      
+
       component.showPreview({
         sampledColor: '#FF0000',
         sampledPosition: { x: 100, y: 100 },
@@ -212,7 +219,7 @@ describe('DyePreviewOverlay', () => {
       const overlays = document.querySelectorAll('.dye-preview-overlay');
       // May be 1 or 2 depending on timing, but should eventually be 1
       expect(overlays.length).toBeLessThanOrEqual(2);
-      
+
       vi.useRealTimers();
     });
 

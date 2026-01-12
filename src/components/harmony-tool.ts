@@ -19,7 +19,15 @@ import { HarmonyType, type HarmonyTypeInfo } from '@components/harmony-type';
 import { HarmonyResultPanel } from '@components/harmony-result-panel';
 import { ColorWheelDisplay } from '@components/color-wheel-display';
 import { PaletteExporter, type PaletteData } from '@components/palette-exporter';
-import { ColorService, dyeService, LanguageService, RouterService, StorageService, WorldService, MarketBoardService } from '@services/index';
+import {
+  ColorService,
+  dyeService,
+  LanguageService,
+  RouterService,
+  StorageService,
+  WorldService,
+  MarketBoardService,
+} from '@services/index';
 import { ConfigController } from '@services/config-controller';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
@@ -34,11 +42,7 @@ import {
   ICON_BEAKER,
   ICON_MUSIC,
 } from '@shared/ui-icons';
-import {
-  COMPANION_DYES_MIN,
-  COMPANION_DYES_MAX,
-  COMPANION_DYES_DEFAULT,
-} from '@shared/constants';
+import { COMPANION_DYES_MIN, COMPANION_DYES_MAX, COMPANION_DYES_DEFAULT } from '@shared/constants';
 import { SubscriptionManager } from '@shared/subscription-manager';
 
 // V4 Components - Import to register custom elements
@@ -201,9 +205,12 @@ export class HarmonyTool extends BaseComponent {
     this.marketBoardService = MarketBoardService.getInstance();
 
     // Load persisted state
-    this.selectedHarmonyType = StorageService.getItem<string>(STORAGE_KEYS.harmonyType) ?? 'complementary';
-    this.companionDyesCount = StorageService.getItem<number>(STORAGE_KEYS.companionCount) ?? COMPANION_DYES_DEFAULT;
-    this.suggestionsMode = StorageService.getItem<SuggestionsMode>(STORAGE_KEYS.suggestionsMode) ?? 'simple';
+    this.selectedHarmonyType =
+      StorageService.getItem<string>(STORAGE_KEYS.harmonyType) ?? 'complementary';
+    this.companionDyesCount =
+      StorageService.getItem<number>(STORAGE_KEYS.companionCount) ?? COMPANION_DYES_DEFAULT;
+    this.suggestionsMode =
+      StorageService.getItem<SuggestionsMode>(STORAGE_KEYS.suggestionsMode) ?? 'simple';
 
     // Load persisted selected dye
     const savedDyeId = StorageService.getItem<number>(STORAGE_KEYS.selectedDyeId);
@@ -211,9 +218,11 @@ export class HarmonyTool extends BaseComponent {
       // Debug: Check database status
       const allDyes = dyeService.getAllDyes();
       const dyeCount = allDyes.length;
-      const minItemId = allDyes.length > 0 ? Math.min(...allDyes.map(d => d.itemID)) : 0;
-      const maxItemId = allDyes.length > 0 ? Math.max(...allDyes.map(d => d.itemID)) : 0;
-      logger.info(`[HarmonyTool] Database has ${dyeCount} dyes, itemID range: ${minItemId}-${maxItemId}`);
+      const minItemId = allDyes.length > 0 ? Math.min(...allDyes.map((d) => d.itemID)) : 0;
+      const maxItemId = allDyes.length > 0 ? Math.max(...allDyes.map((d) => d.itemID)) : 0;
+      logger.info(
+        `[HarmonyTool] Database has ${dyeCount} dyes, itemID range: ${minItemId}-${maxItemId}`
+      );
       logger.info(`[HarmonyTool] Attempting to restore dye with ID: ${savedDyeId}`);
 
       const dye = dyeService.getDyeById(savedDyeId);
@@ -222,14 +231,18 @@ export class HarmonyTool extends BaseComponent {
         logger.info(`[HarmonyTool] Restored persisted dye: ${dye.name} (itemID=${dye.itemID})`);
       } else {
         // Check if dye exists with itemID lookup (diagnostic)
-        const foundBySearch = allDyes.find(d => d.itemID === savedDyeId);
+        const foundBySearch = allDyes.find((d) => d.itemID === savedDyeId);
         if (foundBySearch) {
-          logger.warn(`[HarmonyTool] Dye found by search (${foundBySearch.name}) but getDyeById(${savedDyeId}) returned null!`);
+          logger.warn(
+            `[HarmonyTool] Dye found by search (${foundBySearch.name}) but getDyeById(${savedDyeId}) returned null!`
+          );
           // Use the dye we found manually
           this.selectedDye = foundBySearch;
           logger.info(`[HarmonyTool] Using fallback search to restore: ${foundBySearch.name}`);
         } else {
-          logger.warn(`[HarmonyTool] Dye ID ${savedDyeId} not found in database (range: ${minItemId}-${maxItemId})`);
+          logger.warn(
+            `[HarmonyTool] Dye ID ${savedDyeId} not found in database (range: ${minItemId}-${maxItemId})`
+          );
           StorageService.removeItem(STORAGE_KEYS.selectedDyeId);
         }
       }
@@ -319,16 +332,20 @@ export class HarmonyTool extends BaseComponent {
 
   onMount(): void {
     // Subscribe to language changes (only in onMount, NOT bindEvents - avoids infinite loop)
-    this.subs.add(LanguageService.subscribe(() => {
-      this.update();
-    }));
+    this.subs.add(
+      LanguageService.subscribe(() => {
+        this.update();
+      })
+    );
 
     // Subscribe to route changes to handle deep links when navigating to harmony
-    this.subs.add(RouterService.subscribe((state) => {
-      if (state.toolId === 'harmony') {
-        this.handleDeepLink();
-      }
-    }));
+    this.subs.add(
+      RouterService.subscribe((state) => {
+        if (state.toolId === 'harmony') {
+          this.handleDeepLink();
+        }
+      })
+    );
 
     // Handle deep link (e.g., ?dyeId=5729 from context menu)
     this.handleDeepLink();
@@ -344,40 +361,44 @@ export class HarmonyTool extends BaseComponent {
     // delegate to the service, so no manual sync is needed here.
 
     // Subscribe to harmony config changes
-    this.subs.add(configController.subscribe('harmony', (config) => {
-      const newDisplayOptions = config.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
-      const needsRerender =
-        this.displayOptions.showHex !== newDisplayOptions.showHex ||
-        this.displayOptions.showRgb !== newDisplayOptions.showRgb ||
-        this.displayOptions.showHsv !== newDisplayOptions.showHsv ||
-        this.displayOptions.showLab !== newDisplayOptions.showLab ||
-        this.displayOptions.showPrice !== newDisplayOptions.showPrice ||
-        this.displayOptions.showDeltaE !== newDisplayOptions.showDeltaE ||
-        this.displayOptions.showAcquisition !== newDisplayOptions.showAcquisition;
+    this.subs.add(
+      configController.subscribe('harmony', (config) => {
+        const newDisplayOptions = config.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
+        const needsRerender =
+          this.displayOptions.showHex !== newDisplayOptions.showHex ||
+          this.displayOptions.showRgb !== newDisplayOptions.showRgb ||
+          this.displayOptions.showHsv !== newDisplayOptions.showHsv ||
+          this.displayOptions.showLab !== newDisplayOptions.showLab ||
+          this.displayOptions.showPrice !== newDisplayOptions.showPrice ||
+          this.displayOptions.showDeltaE !== newDisplayOptions.showDeltaE ||
+          this.displayOptions.showAcquisition !== newDisplayOptions.showAcquisition;
 
-      // Perceptual matching changes require regenerating harmonies
-      const algorithmChanged = this.usePerceptualMatching !== config.strictMatching;
+        // Perceptual matching changes require regenerating harmonies
+        const algorithmChanged = this.usePerceptualMatching !== config.strictMatching;
 
-      this.displayOptions = newDisplayOptions;
-      this.usePerceptualMatching = config.strictMatching;
+        this.displayOptions = newDisplayOptions;
+        this.usePerceptualMatching = config.strictMatching;
 
-      if ((needsRerender || algorithmChanged) && this.selectedDye) {
-        this.generateHarmonies();
-      }
-    }));
+        if ((needsRerender || algorithmChanged) && this.selectedDye) {
+          this.generateHarmonies();
+        }
+      })
+    );
 
     // Subscribe to market config changes (from ConfigSidebar)
     // Note: MarketBoardService handles state updates and cache clearing.
     // We just need to regenerate UI when settings change.
-    this.subs.add(configController.subscribe('market', (config) => {
-      // Regenerate harmonies and fetch prices if needed
-      if (this.selectedDye) {
-        this.generateHarmonies();
-        if (config.showPrices) {
-          this.fetchPricesForDisplayedDyes();
+    this.subs.add(
+      configController.subscribe('market', (config) => {
+        // Regenerate harmonies and fetch prices if needed
+        if (this.selectedDye) {
+          this.generateHarmonies();
+          if (config.showPrices) {
+            this.fetchPricesForDisplayedDyes();
+          }
         }
-      }
-    }));
+      })
+    );
 
     // Generate initial harmonies if a dye is selected, otherwise show empty state
     if (this.selectedDye) {
@@ -418,14 +439,16 @@ export class HarmonyTool extends BaseComponent {
     const dyeIdParam = params.get('dyeId');
 
     // Debug: Log what we're reading from the URL
-    logger.info(`[HarmonyTool] handleDeepLink called - URL search: "${window.location.search}", dyeIdParam: "${dyeIdParam}"`);
+    logger.info(
+      `[HarmonyTool] handleDeepLink called - URL search: "${window.location.search}", dyeIdParam: "${dyeIdParam}"`
+    );
 
     if (dyeIdParam) {
       const dyeId = parseInt(dyeIdParam, 10);
       if (!isNaN(dyeId)) {
         // Find dye by itemID (FFXIV item ID)
         const allDyes = dyeService.getAllDyes();
-        const dye = allDyes.find(d => d.itemID === dyeId);
+        const dye = allDyes.find((d) => d.itemID === dyeId);
 
         if (dye) {
           this.selectedDye = dye;
@@ -532,7 +555,8 @@ export class HarmonyTool extends BaseComponent {
       });
       const companionLabel = this.createElement('div', {
         className: 'text-sm mb-2',
-        textContent: LanguageService.t('harmony.companionDyes') || 'Additional Dyes Per Harmony Color',
+        textContent:
+          LanguageService.t('harmony.companionDyes') || 'Additional Dyes Per Harmony Color',
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       companionSection.appendChild(companionLabel);
@@ -592,7 +616,9 @@ export class HarmonyTool extends BaseComponent {
     }
 
     // Listen for dye selection (custom event from DyeSelector)
-    selectorContainer.addEventListener('selection-changed', ((event: CustomEvent<{ selectedDyes: Dye[] }>) => {
+    selectorContainer.addEventListener('selection-changed', ((
+      event: CustomEvent<{ selectedDyes: Dye[] }>
+    ) => {
       const selectedDyes = event.detail.selectedDyes;
       this.selectedDye = selectedDyes.length > 0 ? selectedDyes[0] : null;
 
@@ -668,7 +694,8 @@ export class HarmonyTool extends BaseComponent {
     for (const type of harmonyTypes) {
       const isSelected = this.selectedHarmonyType === type.id;
       const btn = this.createElement('button', {
-        className: 'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
+        className:
+          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
         attributes: {
           style: isSelected
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -857,7 +884,8 @@ export class HarmonyTool extends BaseComponent {
     this.colorWheelContainer = this.createElement('div', {
       className: 'color-wheel-container',
       attributes: {
-        style: 'display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 1.5rem;',
+        style:
+          'display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 1.5rem;',
       },
     });
     right.appendChild(this.colorWheelContainer);
@@ -882,7 +910,8 @@ export class HarmonyTool extends BaseComponent {
     this.harmonyGridContainer = this.createElement('div', {
       className: 'harmony-results-container',
       attributes: {
-        style: 'display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; --v4-result-card-width: 290px;',
+        style:
+          'display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; --v4-result-card-width: 290px;',
       },
     });
     right.appendChild(this.harmonyGridContainer);
@@ -915,7 +944,7 @@ export class HarmonyTool extends BaseComponent {
       const matchedDyes = this.getMatchedDyesForCurrentHarmony();
 
       wheel.setAttribute('base-color', this.selectedDye.hex);
-      wheel.harmonyColors = matchedDyes.map(dye => dye.hex);
+      wheel.harmonyColors = matchedDyes.map((dye) => dye.hex);
       wheel.harmonyDyes = matchedDyes;
     } else {
       // Empty state - show placeholder wheel
@@ -1054,7 +1083,9 @@ export class HarmonyTool extends BaseComponent {
     }
 
     // Listen for dye selection
-    selectorContainer.addEventListener('selection-changed', ((event: CustomEvent<{ selectedDyes: Dye[] }>) => {
+    selectorContainer.addEventListener('selection-changed', ((
+      event: CustomEvent<{ selectedDyes: Dye[] }>
+    ) => {
       const selectedDyes = event.detail.selectedDyes;
       this.selectedDye = selectedDyes.length > 0 ? selectedDyes[0] : null;
 
@@ -1144,7 +1175,8 @@ export class HarmonyTool extends BaseComponent {
       });
       const companionLabel = this.createElement('div', {
         className: 'text-sm mb-2',
-        textContent: LanguageService.t('harmony.companionDyes') || 'Additional Dyes Per Harmony Color',
+        textContent:
+          LanguageService.t('harmony.companionDyes') || 'Additional Dyes Per Harmony Color',
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       companionSection.appendChild(companionLabel);
@@ -1166,7 +1198,8 @@ export class HarmonyTool extends BaseComponent {
     for (const type of harmonyTypes) {
       const isSelected = this.selectedHarmonyType === type.id;
       const btn = this.createElement('button', {
-        className: 'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
+        className:
+          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
         attributes: {
           style: isSelected
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -1444,7 +1477,12 @@ export class HarmonyTool extends BaseComponent {
       });
     });
 
-    logger.info('[HarmonyTool] Generated harmonies for:', this.selectedDye.name, 'type:', this.selectedHarmonyType);
+    logger.info(
+      '[HarmonyTool] Generated harmonies for:',
+      this.selectedDye.name,
+      'type:',
+      this.selectedHarmonyType
+    );
 
     // Fetch prices for displayed dyes if prices are enabled
     if (this.showPrices) {
@@ -1474,7 +1512,8 @@ export class HarmonyTool extends BaseComponent {
     const priceInfo = this.priceData.get(options.matchedDye.itemID);
 
     // Calculate Delta-E between target color and matched dye
-    const deltaE = ColorService.getDeltaE?.(options.targetColor, options.matchedDye.hex) ?? undefined;
+    const deltaE =
+      ColorService.getDeltaE?.(options.targetColor, options.matchedDye.hex) ?? undefined;
 
     // Get market server name - prefer worldId from price data (actual listing location)
     // Fall back to selected server if worldId not available or can't be resolved
@@ -1519,7 +1558,9 @@ export class HarmonyTool extends BaseComponent {
     }) as EventListener);
 
     // Handle context menu actions
-    card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+    card.addEventListener('context-action', ((
+      e: CustomEvent<{ action: ContextAction; dye: Dye }>
+    ) => {
       this.handleContextAction(e.detail.action, e.detail.dye);
     }) as EventListener);
 
@@ -1867,14 +1908,16 @@ export class HarmonyTool extends BaseComponent {
    *
    * @param config Partial HarmonyConfig with updated values
    */
-  public setConfig(config: Partial<{
-    harmonyType: string;
-    showNames: boolean;
-    showHex: boolean;
-    showRgb: boolean;
-    showHsv: boolean;
-    strictMatching: boolean;
-  }>): void {
+  public setConfig(
+    config: Partial<{
+      harmonyType: string;
+      showNames: boolean;
+      showHex: boolean;
+      showRgb: boolean;
+      showHsv: boolean;
+      strictMatching: boolean;
+    }>
+  ): void {
     let needsRerender = false;
 
     // Handle harmony type change

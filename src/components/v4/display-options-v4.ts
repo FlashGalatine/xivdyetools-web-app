@@ -216,7 +216,9 @@ export class DisplayOptionsV4 extends BaseLitComponent {
         gap: var(--v4-display-options-gap, 12px);
         overflow: hidden;
         max-height: 500px;
-        transition: max-height 200ms ease-out, opacity 150ms ease;
+        transition:
+          max-height 200ms ease-out,
+          opacity 150ms ease;
         opacity: 1;
       }
 
@@ -271,10 +273,7 @@ export class DisplayOptionsV4 extends BaseLitComponent {
   /**
    * Handle option change from toggle switch
    */
-  private handleOptionChange(
-    option: keyof DisplayOptionsConfig,
-    checked: boolean
-  ): void {
+  private handleOptionChange(option: keyof DisplayOptionsConfig, checked: boolean): void {
     // Update local property
     (this as unknown as Record<string, boolean>)[option] = checked;
 
@@ -348,16 +347,10 @@ export class DisplayOptionsV4 extends BaseLitComponent {
   private renderColorFormatsGroup(): TemplateResult {
     return html`
       <div class="option-group">
-        ${this.renderSectionHeader(
-          'Color Formats',
-          this.colorFormatsCollapsed,
-          () => this.toggleSection('colorFormats')
+        ${this.renderSectionHeader('Color Formats', this.colorFormatsCollapsed, () =>
+          this.toggleSection('colorFormats')
         )}
-        <div
-          class="option-group-content ${this.colorFormatsCollapsed
-            ? 'collapsed'
-            : ''}"
-        >
+        <div class="option-group-content ${this.colorFormatsCollapsed ? 'collapsed' : ''}">
           <div class="option-row">
             <v4-toggle-switch
               label="Hex Codes"
@@ -401,16 +394,10 @@ export class DisplayOptionsV4 extends BaseLitComponent {
   private renderResultMetadataGroup(): TemplateResult {
     return html`
       <div class="option-group">
-        ${this.renderSectionHeader(
-          'Result Details',
-          this.resultMetadataCollapsed,
-          () => this.toggleSection('resultMetadata')
+        ${this.renderSectionHeader('Result Details', this.resultMetadataCollapsed, () =>
+          this.toggleSection('resultMetadata')
         )}
-        <div
-          class="option-group-content ${this.resultMetadataCollapsed
-            ? 'collapsed'
-            : ''}"
-        >
+        <div class="option-group-content ${this.resultMetadataCollapsed ? 'collapsed' : ''}">
           <div class="option-row">
             <v4-toggle-switch
               label="Show Prices"
@@ -454,12 +441,8 @@ export class DisplayOptionsV4 extends BaseLitComponent {
   protected override render(): TemplateResult {
     return html`
       <div class="display-options">
-        ${this.shouldShowGroup('colorFormats')
-          ? this.renderColorFormatsGroup()
-          : nothing}
-        ${this.shouldShowGroup('resultMetadata')
-          ? this.renderResultMetadataGroup()
-          : nothing}
+        ${this.shouldShowGroup('colorFormats') ? this.renderColorFormatsGroup() : nothing}
+        ${this.shouldShowGroup('resultMetadata') ? this.renderResultMetadataGroup() : nothing}
         ${this.shouldShowGroup('custom') ? this.renderCustomSlot() : nothing}
       </div>
     `;

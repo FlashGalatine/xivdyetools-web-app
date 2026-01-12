@@ -100,7 +100,8 @@ export class V4AppHeader extends BaseLitComponent {
         color: inherit;
         cursor: pointer;
         opacity: 0.8;
-        transition: opacity var(--v4-transition-fast, 150ms),
+        transition:
+          opacity var(--v4-transition-fast, 150ms),
           background-color var(--v4-transition-fast, 150ms);
       }
 
@@ -164,9 +165,7 @@ export class V4AppHeader extends BaseLitComponent {
       <header class="v4-app-header" role="banner">
         <!-- Logo Section -->
         <div class="v4-header-logo">
-          <span class="v4-header-logo-icon" aria-hidden="true">
-            ${unsafeHTML(ICON_LOGO)}
-          </span>
+          <span class="v4-header-logo-icon" aria-hidden="true"> ${unsafeHTML(ICON_LOGO)} </span>
           <span class="v4-header-logo-text">XIV Dye Tools</span>
         </div>
 

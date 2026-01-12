@@ -188,7 +188,8 @@ export class ResultCard extends BaseLitComponent {
         border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
         border-radius: 12px;
         overflow: hidden;
-        transition: transform var(--v4-transition-fast, 150ms),
+        transition:
+          transform var(--v4-transition-fast, 150ms),
           box-shadow var(--v4-transition-fast, 150ms),
           border-color var(--v4-transition-fast, 150ms);
         position: relative;
@@ -418,7 +419,10 @@ export class ResultCard extends BaseLitComponent {
         opacity: 0;
         visibility: hidden;
         transform: translateY(8px);
-        transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+        transition:
+          opacity 0.15s,
+          transform 0.15s,
+          visibility 0.15s;
       }
 
       .context-menu.open {
@@ -574,18 +578,22 @@ export class ResultCard extends BaseLitComponent {
       return html`<div class="result-card">No data</div>`;
     }
 
-    const { dye, originalColor, matchedColor, deltaE, hueDeviance, marketServer, price, vendorCost } =
-      this.data;
+    const {
+      dye,
+      originalColor,
+      matchedColor,
+      deltaE,
+      hueDeviance,
+      marketServer,
+      price,
+      vendorCost,
+    } = this.data;
 
     // Get HSV values from dye (may be undefined for some dye types)
     const hsv = dye.hsv;
 
     return html`
-      <article
-        class="result-card"
-        role="article"
-        aria-label="Dye result: ${dye.name}"
-      >
+      <article class="result-card" role="article" aria-label="Dye result: ${dye.name}">
         <!-- Header - Dark bg, centered name -->
         <header class="card-header">
           <h3 class="dye-name">${dye.name}</h3>
@@ -607,43 +615,41 @@ export class ResultCard extends BaseLitComponent {
           <div class="detail-column">
             <div class="column-header">Technical</div>
             ${this.showDeltaE
-        ? html`
-            <div class="detail-row">
-              <span class="detail-label">ΔE</span>
-              <span class="detail-value ${this.getDeltaEClass(deltaE)}">
-                ${deltaE !== undefined ? deltaE.toFixed(2) : '—'}
-              </span>
-            </div>
+              ? html`
+                  <div class="detail-row">
+                    <span class="detail-label">ΔE</span>
+                    <span class="detail-value ${this.getDeltaEClass(deltaE)}">
+                      ${deltaE !== undefined ? deltaE.toFixed(2) : '—'}
+                    </span>
+                  </div>
                 `
-        : nothing}
+              : nothing}
             ${this.showDeltaE && hueDeviance !== undefined
-        ? html`
+              ? html`
                   <div class="detail-row">
                     <span class="detail-label">Hue°</span>
                     <span class="detail-value">${hueDeviance.toFixed(1)}°</span>
                   </div>
                 `
-        : nothing}
+              : nothing}
             ${this.showHex
-        ? html`
-            <div class="detail-row">
-              <span class="detail-label">HEX</span>
-              <span class="detail-value">${matchedColor.toUpperCase()}</span>
-            </div>
+              ? html`
+                  <div class="detail-row">
+                    <span class="detail-label">HEX</span>
+                    <span class="detail-value">${matchedColor.toUpperCase()}</span>
+                  </div>
                 `
-        : nothing}
+              : nothing}
             ${this.showRgb
-        ? html`
-            <div class="detail-row">
-              <span class="detail-label">RGB</span>
-              <span class="detail-value">
-                ${dye.rgb.r},${dye.rgb.g},${dye.rgb.b}
-              </span>
-            </div>
+              ? html`
+                  <div class="detail-row">
+                    <span class="detail-label">RGB</span>
+                    <span class="detail-value"> ${dye.rgb.r},${dye.rgb.g},${dye.rgb.b} </span>
+                  </div>
                 `
-        : nothing}
+              : nothing}
             ${this.showHsv && hsv
-        ? html`
+              ? html`
                   <div class="detail-row">
                     <span class="detail-label">HSV</span>
                     <span class="detail-value">
@@ -651,60 +657,56 @@ export class ResultCard extends BaseLitComponent {
                     </span>
                   </div>
                 `
-        : nothing}
+              : nothing}
             ${this.showLab
-        ? html`
+              ? html`
                   <div class="detail-row">
                     <span class="detail-label">LAB</span>
                     <span class="detail-value">${this.formatLabValues()}</span>
                   </div>
                 `
-        : nothing}
+              : nothing}
           </div>
 
           <!-- Acquisition Column - only show if acquisition or price enabled -->
           ${this.showAcquisition || this.showPrice
-        ? html`
-          <div class="detail-column">
-            <div class="column-header">Acquisition</div>
-            ${this.showAcquisition
-        ? html`
-            <div class="detail-row">
-              <span class="detail-label">Source</span>
-              <span class="detail-value">${dye.acquisition ?? 'Unknown'}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Cost</span>
-              <span class="detail-value">${this.formatVendorCost(vendorCost)}</span>
-            </div>
-                `
-        : nothing}
-            ${this.showPrice
-        ? html`
-            <div class="detail-row">
-              <span class="detail-label">Market</span>
-              <span class="detail-value">${marketServer ?? 'N/A'}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-value large">${this.formatPrice(price)}</span>
-            </div>
-                `
-        : nothing}
-          </div>
-            `
-        : nothing}
+            ? html`
+                <div class="detail-column">
+                  <div class="column-header">Acquisition</div>
+                  ${this.showAcquisition
+                    ? html`
+                        <div class="detail-row">
+                          <span class="detail-label">Source</span>
+                          <span class="detail-value">${dye.acquisition ?? 'Unknown'}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="detail-label">Cost</span>
+                          <span class="detail-value">${this.formatVendorCost(vendorCost)}</span>
+                        </div>
+                      `
+                    : nothing}
+                  ${this.showPrice
+                    ? html`
+                        <div class="detail-row">
+                          <span class="detail-label">Market</span>
+                          <span class="detail-value">${marketServer ?? 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="detail-value large">${this.formatPrice(price)}</span>
+                        </div>
+                      `
+                    : nothing}
+                </div>
+              `
+            : nothing}
         </div>
 
         <!-- Action Bar at Bottom -->
         ${this.showActions
-        ? html`
+          ? html`
               <div class="card-actions">
                 <div class="action-row">
-                  <button
-                    class="primary-action-btn"
-                    type="button"
-                    @click=${this.handleSelectClick}
-                  >
+                  <button class="primary-action-btn" type="button" @click=${this.handleSelectClick}>
                     ${this.primaryActionLabel}
                   </button>
                   <div class="context-menu-container">
@@ -771,7 +773,7 @@ export class ResultCard extends BaseLitComponent {
                 </div>
               </div>
             `
-        : nothing}
+          : nothing}
       </article>
     `;
   }

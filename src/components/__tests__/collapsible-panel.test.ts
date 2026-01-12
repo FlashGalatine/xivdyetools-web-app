@@ -80,7 +80,8 @@ describe('CollapsiblePanel', () => {
     });
 
     it('should render icon when provided', () => {
-      const testIcon = '<svg class="test-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="5"/></svg>';
+      const testIcon =
+        '<svg class="test-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="5"/></svg>';
       panel = new CollapsiblePanel(container, {
         title: 'Test Panel',
         icon: testIcon,
@@ -308,7 +309,7 @@ describe('CollapsiblePanel', () => {
 
       // No storage key should be set
       const keys = Object.keys(localStorage);
-      const panelKeys = keys.filter(k => k.startsWith('v3_panel_'));
+      const panelKeys = keys.filter((k) => k.startsWith('v3_panel_'));
       expect(panelKeys.length).toBe(0);
     });
   });

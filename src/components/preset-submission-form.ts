@@ -374,7 +374,8 @@ function createDyeSelector(state: FormState): HTMLElement {
 
   // Dye grid
   const dyeGrid = document.createElement('div');
-  dyeGrid.className = 'grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-48 overflow-y-auto p-2 rounded-lg border';
+  dyeGrid.className =
+    'grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-48 overflow-y-auto p-2 rounded-lg border';
   dyeGrid.style.cssText =
     'background-color: var(--theme-card-background); border-color: var(--theme-border);';
 
@@ -556,7 +557,9 @@ function createSubmitButton(state: FormState, onSubmit?: OnSubmitCallback): HTML
           if (result.duplicate.id) {
             sessionStorage.setItem('pendingPresetId', result.duplicate.id);
             // Dispatch event to notify preset browser to switch and show the preset
-            window.dispatchEvent(new CustomEvent('navigate-to-preset', { detail: { presetId: result.duplicate.id } }));
+            window.dispatchEvent(
+              new CustomEvent('navigate-to-preset', { detail: { presetId: result.duplicate.id } })
+            );
           }
 
           onSubmit?.(result);

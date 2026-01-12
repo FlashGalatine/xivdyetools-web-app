@@ -77,7 +77,8 @@ export class IconRail extends BaseComponent {
     tools.forEach((tool) => {
       const isActive = tool.id === this.activeToolId;
       const btn = this.createElement('button', {
-        className: 'relative group w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-200',
+        className:
+          'relative group w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-200',
         attributes: {
           style: isActive
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -98,7 +99,8 @@ export class IconRail extends BaseComponent {
 
       // Tooltip (appears on hover)
       const tooltip = this.createElement('span', {
-        className: 'absolute left-full ml-2 px-2 py-1 text-sm rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50',
+        className:
+          'absolute left-full ml-2 px-2 py-1 text-sm rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50',
         textContent: tool.name,
         attributes: {
           style: 'background: var(--theme-text); color: var(--theme-background);',
@@ -114,9 +116,11 @@ export class IconRail extends BaseComponent {
 
     // Expand button at bottom
     const expandBtn = this.createElement('button', {
-      className: 'w-full py-3 flex items-center justify-center border-t transition-colors hover:brightness-90',
+      className:
+        'w-full py-3 flex items-center justify-center border-t transition-colors hover:brightness-90',
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-background-secondary); color: var(--theme-text);',
+        style:
+          'border-color: var(--theme-border); background: var(--theme-background-secondary); color: var(--theme-text);',
         'aria-label': 'Expand sidebar',
         type: 'button',
       },

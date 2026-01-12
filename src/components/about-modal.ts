@@ -142,8 +142,7 @@ export class AboutModal {
 
     SOCIAL_LINKS.forEach((social) => {
       const link = document.createElement('a');
-      link.className =
-        'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors';
+      link.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors';
       link.style.backgroundColor = 'var(--theme-card-background)';
       link.style.color = 'var(--theme-text)';
       link.href = social.url;

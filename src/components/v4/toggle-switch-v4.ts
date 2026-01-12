@@ -186,13 +186,8 @@ export class ToggleSwitchV4 extends BaseLitComponent {
 
   protected override render(): TemplateResult {
     return html`
-      <div
-        class="toggle-wrapper ${this.disabled ? 'disabled' : ''}"
-        @click=${this.handleToggle}
-      >
-        ${this.label
-          ? html`<span class="toggle-label">${this.label}</span>`
-          : nothing}
+      <div class="toggle-wrapper ${this.disabled ? 'disabled' : ''}" @click=${this.handleToggle}>
+        ${this.label ? html`<span class="toggle-label">${this.label}</span>` : nothing}
         <div
           class="toggle-track"
           role="switch"

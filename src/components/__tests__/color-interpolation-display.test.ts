@@ -462,7 +462,9 @@ describe('ColorInterpolationDisplay', () => {
       component = new ColorInterpolationDisplay(container, '#FF0000', '#00FF00', steps);
       component.init();
 
-      const stopMarker = container.querySelector('button[data-stop-index="0"]') as HTMLButtonElement;
+      const stopMarker = container.querySelector(
+        'button[data-stop-index="0"]'
+      ) as HTMLButtonElement;
       expect(stopMarker).not.toBeNull();
 
       stopMarker.click();
@@ -476,7 +478,9 @@ describe('ColorInterpolationDisplay', () => {
       component = new ColorInterpolationDisplay(container, '#FF0000', '#00FF00', steps);
       component.init();
 
-      const stopMarker = container.querySelector('button[data-stop-index="0"]') as HTMLButtonElement;
+      const stopMarker = container.querySelector(
+        'button[data-stop-index="0"]'
+      ) as HTMLButtonElement;
       stopMarker.click();
       expect(component['selectedStopIndex']).toBe(0);
 
@@ -489,8 +493,12 @@ describe('ColorInterpolationDisplay', () => {
       component = new ColorInterpolationDisplay(container, '#FF0000', '#00FF00', steps);
       component.init();
 
-      const stopMarker0 = container.querySelector('button[data-stop-index="0"]') as HTMLButtonElement;
-      const stopMarker2 = container.querySelector('button[data-stop-index="2"]') as HTMLButtonElement;
+      const stopMarker0 = container.querySelector(
+        'button[data-stop-index="0"]'
+      ) as HTMLButtonElement;
+      const stopMarker2 = container.querySelector(
+        'button[data-stop-index="2"]'
+      ) as HTMLButtonElement;
 
       stopMarker0.click();
       expect(component['selectedStopIndex']).toBe(0);
@@ -517,7 +525,9 @@ describe('ColorInterpolationDisplay', () => {
       component = new ColorInterpolationDisplay(container, '#FF0000', '#00FF00', steps);
       component.init();
 
-      const stopMarker = container.querySelector('button[data-stop-index="0"]') as HTMLButtonElement;
+      const stopMarker = container.querySelector(
+        'button[data-stop-index="0"]'
+      ) as HTMLButtonElement;
       stopMarker.click();
 
       const stepItem = container.querySelector('[data-step-index="0"]') as HTMLElement;
@@ -563,7 +573,9 @@ describe('ColorInterpolationDisplay', () => {
       component = new ColorInterpolationDisplay(container, '#FF0000', '#00FF00', steps);
       component.init();
 
-      const stopMarker = container.querySelector('button[data-stop-index="1"]') as HTMLButtonElement;
+      const stopMarker = container.querySelector(
+        'button[data-stop-index="1"]'
+      ) as HTMLButtonElement;
       stopMarker.click();
 
       // Check that the selected marker has the correct classes
@@ -578,8 +590,12 @@ describe('ColorInterpolationDisplay', () => {
       component = new ColorInterpolationDisplay(container, '#FF0000', '#00FF00', steps);
       component.init();
 
-      const stopMarker0 = container.querySelector('button[data-stop-index="0"]') as HTMLButtonElement;
-      const stopMarker1 = container.querySelector('button[data-stop-index="1"]') as HTMLButtonElement;
+      const stopMarker0 = container.querySelector(
+        'button[data-stop-index="0"]'
+      ) as HTMLButtonElement;
+      const stopMarker1 = container.querySelector(
+        'button[data-stop-index="1"]'
+      ) as HTMLButtonElement;
 
       stopMarker0.click();
       stopMarker1.click();

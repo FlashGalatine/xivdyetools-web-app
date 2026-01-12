@@ -141,7 +141,9 @@ export class V4ColorWheel extends BaseLitComponent {
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         z-index: 2;
         cursor: pointer;
-        transition: transform 0.15s, box-shadow 0.15s;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
       }
 
       .harmony-node:hover {
@@ -429,10 +431,7 @@ export class V4ColorWheel extends BaseLitComponent {
       : `background-color: ${this.baseColor}; box-shadow: 0 0 30px ${this.baseColor}40;`;
 
     return html`
-      <div
-        class="harmony-circle-container"
-        style="--wheel-size: ${this.size}px;"
-      >
+      <div class="harmony-circle-container" style="--wheel-size: ${this.size}px;">
         <!-- Color spectrum ring -->
         <div class="harmony-ring"></div>
 

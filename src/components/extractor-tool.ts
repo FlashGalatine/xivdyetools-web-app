@@ -904,7 +904,9 @@ export class ExtractorTool extends BaseComponent {
         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
       </svg>`,
       attributes: {
-        style: this.mobileOptionsExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+        style: this.mobileOptionsExpanded
+          ? 'transform: rotate(0deg);'
+          : 'transform: rotate(-90deg);',
       },
     });
     header.appendChild(chevron);
@@ -1108,7 +1110,9 @@ export class ExtractorTool extends BaseComponent {
         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
       </svg>`,
       attributes: {
-        style: this.mobileFiltersExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+        style: this.mobileFiltersExpanded
+          ? 'transform: rotate(0deg);'
+          : 'transform: rotate(-90deg);',
       },
     });
     header.appendChild(chevron);
@@ -1211,7 +1215,9 @@ export class ExtractorTool extends BaseComponent {
         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
       </svg>`,
       attributes: {
-        style: this.mobileImageSourceExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+        style: this.mobileImageSourceExpanded
+          ? 'transform: rotate(0deg);'
+          : 'transform: rotate(-90deg);',
       },
     });
     header.appendChild(chevron);
@@ -1316,7 +1322,9 @@ export class ExtractorTool extends BaseComponent {
         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
       </svg>`,
       attributes: {
-        style: this.mobileColorSelectionExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+        style: this.mobileColorSelectionExpanded
+          ? 'transform: rotate(0deg);'
+          : 'transform: rotate(-90deg);',
       },
     });
     header.appendChild(chevron);
@@ -1357,7 +1365,9 @@ export class ExtractorTool extends BaseComponent {
     this.on(header, 'click', () => {
       this.mobileColorSelectionExpanded = !this.mobileColorSelectionExpanded;
       header.setAttribute('aria-expanded', String(this.mobileColorSelectionExpanded));
-      chevron.style.transform = this.mobileColorSelectionExpanded ? 'rotate(0deg)' : 'rotate(-90deg)';
+      chevron.style.transform = this.mobileColorSelectionExpanded
+        ? 'rotate(0deg)'
+        : 'rotate(-90deg)';
       contentWrapper.style.maxHeight = this.mobileColorSelectionExpanded ? '500px' : '0';
       contentWrapper.style.opacity = this.mobileColorSelectionExpanded ? '1' : '0';
     });
@@ -1405,7 +1415,9 @@ export class ExtractorTool extends BaseComponent {
         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
       </svg>`,
       attributes: {
-        style: this.mobileMarketExpanded ? 'transform: rotate(0deg);' : 'transform: rotate(-90deg);',
+        style: this.mobileMarketExpanded
+          ? 'transform: rotate(0deg);'
+          : 'transform: rotate(-90deg);',
       },
     });
     header.appendChild(chevron);
@@ -1610,7 +1622,8 @@ export class ExtractorTool extends BaseComponent {
 
     // Rank badge
     const rank = this.createElement('span', {
-      className: 'w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full flex-shrink-0',
+      className:
+        'w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full flex-shrink-0',
       textContent: String(index + 1),
       attributes: {
         style:
@@ -1704,7 +1717,9 @@ export class ExtractorTool extends BaseComponent {
     const canvas = this.imageZoom?.getCanvas();
 
     if (!canvas || !this.currentImage) {
-      ToastService.error(LanguageService.t('matcher.noImageForPalette') || 'Please load an image first');
+      ToastService.error(
+        LanguageService.t('matcher.noImageForPalette') || 'Please load an image first'
+      );
       return;
     }
 
@@ -1716,7 +1731,8 @@ export class ExtractorTool extends BaseComponent {
 
     // Update button to show loading state
     if (this.extractPaletteBtn) {
-      this.extractPaletteBtn.textContent = LanguageService.t('matcher.extractingPalette') || 'Extracting...';
+      this.extractPaletteBtn.textContent =
+        LanguageService.t('matcher.extractingPalette') || 'Extracting...';
       this.extractPaletteBtn.disabled = true;
       this.extractPaletteBtn.style.opacity = '0.7';
     }
@@ -1759,8 +1775,9 @@ export class ExtractorTool extends BaseComponent {
       }
 
       ToastService.success(
-        LanguageService.tInterpolate('matcher.paletteExtracted', { count: String(matches.length) }) ||
-          `Extracted ${matches.length} colors from image`
+        LanguageService.tInterpolate('matcher.paletteExtracted', {
+          count: String(matches.length),
+        }) || `Extracted ${matches.length} colors from image`
       );
 
       logger.info('[MatcherTool] Palette extracted:', matches.length, 'colors');
@@ -1948,7 +1965,8 @@ export class ExtractorTool extends BaseComponent {
 
     // Index badge
     const badge = this.createElement('span', {
-      className: 'w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full flex-shrink-0',
+      className:
+        'w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full flex-shrink-0',
       textContent: String(index + 1),
       attributes: {
         style: 'background: var(--theme-primary); color: white;',

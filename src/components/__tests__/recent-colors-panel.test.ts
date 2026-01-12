@@ -164,9 +164,7 @@ describe('RecentColorsPanel', () => {
     panel.addRecentColor('#0000FF');
 
     // First button should be blue (most recent)
-    let firstButton = container.querySelector(
-      'button[data-recent-index="0"]'
-    ) as HTMLButtonElement;
+    let firstButton = container.querySelector('button[data-recent-index="0"]') as HTMLButtonElement;
     expect(firstButton.style.backgroundColor).toBe('rgb(0, 0, 255)');
 
     // Now add red again - it should move to front

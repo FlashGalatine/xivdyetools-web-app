@@ -182,7 +182,8 @@ export class RangeSliderV4 extends BaseLitComponent {
         cursor: pointer;
         margin-top: -6px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        transition: transform var(--v4-transition-fast, 150ms),
+        transition:
+          transform var(--v4-transition-fast, 150ms),
           box-shadow var(--v4-transition-fast, 150ms);
       }
 
@@ -194,7 +195,8 @@ export class RangeSliderV4 extends BaseLitComponent {
         cursor: pointer;
         border: none;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        transition: transform var(--v4-transition-fast, 150ms),
+        transition:
+          transform var(--v4-transition-fast, 150ms),
           box-shadow var(--v4-transition-fast, 150ms);
       }
 
@@ -303,9 +305,7 @@ export class RangeSliderV4 extends BaseLitComponent {
         ${this.label || this.showValue
           ? html`
               <div class="slider-header">
-                ${this.label
-                  ? html`<span class="slider-label">${this.label}</span>`
-                  : nothing}
+                ${this.label ? html`<span class="slider-label">${this.label}</span>` : nothing}
                 ${this.showValue
                   ? html`<span class="slider-value">${this.formattedValue}</span>`
                   : nothing}
@@ -313,10 +313,7 @@ export class RangeSliderV4 extends BaseLitComponent {
             `
           : nothing}
         <div class="slider-track-wrapper">
-          <div
-            class="slider-fill"
-            style="width: ${this.fillPercentage}%"
-          ></div>
+          <div class="slider-fill" style="width: ${this.fillPercentage}%"></div>
           <input
             type="range"
             class="slider-input"

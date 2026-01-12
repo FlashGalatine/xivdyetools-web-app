@@ -277,10 +277,7 @@ describe('CommunityPresetService Integration Tests', () => {
 
         server.use(
           http.post(`${API_URL}/api/v1/votes/:presetId`, () => {
-            return HttpResponse.json(
-              { new_vote_count: 42, already_voted: true },
-              { status: 409 }
-            );
+            return HttpResponse.json({ new_vote_count: 42, already_voted: true }, { status: 409 });
           })
         );
 

@@ -8,11 +8,7 @@
 import { PresetCard } from '../preset-card';
 import { dyeService, LanguageService } from '@services/index';
 import type { UnifiedPreset } from '@services/index';
-import {
-  createTestContainer,
-  cleanupTestContainer,
-  cleanupComponent,
-} from './test-utils';
+import { createTestContainer, cleanupTestContainer, cleanupComponent } from './test-utils';
 
 // Mock preset data
 const createMockPreset = (overrides: Partial<UnifiedPreset> = {}): UnifiedPreset => ({
@@ -51,7 +47,9 @@ describe('PresetCard', () => {
 
     // Mock dyeService.getDyeById
     getDyeByIdSpy = vi.spyOn(dyeService, 'getDyeById').mockImplementation((id: number) => {
-      return (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null;
+      return (
+        (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null
+      );
     });
   });
 
@@ -127,7 +125,7 @@ describe('PresetCard', () => {
 
       // Vote count element should not exist
       const voteElements = container.querySelectorAll('.text-indigo-600, .text-indigo-400');
-      const hasVoteCount = Array.from(voteElements).some(el => el.textContent?.includes('0'));
+      const hasVoteCount = Array.from(voteElements).some((el) => el.textContent?.includes('0'));
       // Vote section with star shouldn't show for 0 votes
       expect(container.innerHTML).not.toContain('★');
     });
@@ -338,7 +336,10 @@ describe('PresetCard', () => {
       card.init();
 
       let cardEl = container.querySelector('[data-preset-id]');
-      expect(cardEl?.classList.contains('border-gray-200') || cardEl?.classList.contains('border-gray-700')).toBe(true);
+      expect(
+        cardEl?.classList.contains('border-gray-200') ||
+          cardEl?.classList.contains('border-gray-700')
+      ).toBe(true);
 
       // Clean up
       card.destroy();
@@ -350,7 +351,10 @@ describe('PresetCard', () => {
       card.init();
 
       cardEl = container.querySelector('[data-preset-id]');
-      expect(cardEl?.classList.contains('border-indigo-200') || cardEl?.classList.contains('border-indigo-800')).toBe(true);
+      expect(
+        cardEl?.classList.contains('border-indigo-200') ||
+          cardEl?.classList.contains('border-indigo-800')
+      ).toBe(true);
     });
   });
 });

@@ -15,7 +15,13 @@ import { DyeSelector } from '@components/dye-selector';
 import { CollapsiblePanel } from '@mockups/CollapsiblePanel';
 import { ResultCard } from '@components/v4/result-card';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
-import { ColorService, ConfigController, LanguageService, StorageService, dyeService } from '@services/index';
+import {
+  ColorService,
+  ConfigController,
+  LanguageService,
+  StorageService,
+  dyeService,
+} from '@services/index';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye } from '@shared/types';
@@ -96,11 +102,36 @@ interface DisplayOptions {
  * Vision type configuration
  */
 const VISION_TYPES = [
-  { id: 'normal', localeKey: 'normal', prevalence: '~92%', description: 'Standard Color Perception' },
-  { id: 'deuteranopia', localeKey: 'deuteranopia', prevalence: '~6% males', description: 'Red-Green Colorblindness' },
-  { id: 'protanopia', localeKey: 'protanopia', prevalence: '~2% males', description: 'Red-Green Colorblindness' },
-  { id: 'tritanopia', localeKey: 'tritanopia', prevalence: '~0.01%', description: 'Blue-Yellow Colorblindness' },
-  { id: 'achromatopsia', localeKey: 'achromatopsia', prevalence: '~0.003%', description: 'Total Colorblindness' },
+  {
+    id: 'normal',
+    localeKey: 'normal',
+    prevalence: '~92%',
+    description: 'Standard Color Perception',
+  },
+  {
+    id: 'deuteranopia',
+    localeKey: 'deuteranopia',
+    prevalence: '~6% males',
+    description: 'Red-Green Colorblindness',
+  },
+  {
+    id: 'protanopia',
+    localeKey: 'protanopia',
+    prevalence: '~2% males',
+    description: 'Red-Green Colorblindness',
+  },
+  {
+    id: 'tritanopia',
+    localeKey: 'tritanopia',
+    prevalence: '~0.01%',
+    description: 'Blue-Yellow Colorblindness',
+  },
+  {
+    id: 'achromatopsia',
+    localeKey: 'achromatopsia',
+    prevalence: '~0.003%',
+    description: 'Total Colorblindness',
+  },
 ] as const;
 
 type VisionTypeId = (typeof VISION_TYPES)[number]['id'];
@@ -117,7 +148,13 @@ const STORAGE_KEYS = {
 /**
  * Default enabled vision types (all four colorblindness types plus normal vision)
  */
-const DEFAULT_VISION_TYPES: VisionTypeId[] = ['normal', 'deuteranopia', 'protanopia', 'tritanopia', 'achromatopsia'];
+const DEFAULT_VISION_TYPES: VisionTypeId[] = [
+  'normal',
+  'deuteranopia',
+  'protanopia',
+  'tritanopia',
+  'achromatopsia',
+];
 
 /**
  * Default simulation display options (for vision simulation cards)
@@ -186,11 +223,14 @@ export class AccessibilityTool extends BaseComponent {
     this.options = options;
 
     // Load persisted state
-    const savedVisionTypes = StorageService.getItem<VisionTypeId[]>(STORAGE_KEYS.enabledVisionTypes);
+    const savedVisionTypes = StorageService.getItem<VisionTypeId[]>(
+      STORAGE_KEYS.enabledVisionTypes
+    );
     this.enabledVisionTypes = new Set(savedVisionTypes ?? DEFAULT_VISION_TYPES);
 
-    this.displayOptions =
-      StorageService.getItem<DisplayOptions>(STORAGE_KEYS.displayOptions) ?? { ...DEFAULT_SIMULATION_OPTIONS };
+    this.displayOptions = StorageService.getItem<DisplayOptions>(STORAGE_KEYS.displayOptions) ?? {
+      ...DEFAULT_SIMULATION_OPTIONS,
+    };
 
     // Initialize card display options (for v4-result-cards)
     this.cardDisplayOptions = {
@@ -235,7 +275,9 @@ export class AccessibilityTool extends BaseComponent {
     if (this.selectedDyes.length > 0) {
       this.updateResults();
       this.updateDrawerContent();
-      logger.info(`[AccessibilityTool] Populated results for ${this.selectedDyes.length} restored dyes`);
+      logger.info(
+        `[AccessibilityTool] Populated results for ${this.selectedDyes.length} restored dyes`
+      );
     }
 
     logger.info('[AccessibilityTool] Mounted');
@@ -351,13 +393,19 @@ export class AccessibilityTool extends BaseComponent {
       logger.info(`[AccessibilityTool] setConfig: showLabels -> ${config.showLabels}`);
     }
 
-    if (config.showHexValues !== undefined && config.showHexValues !== this.displayOptions.showHexValues) {
+    if (
+      config.showHexValues !== undefined &&
+      config.showHexValues !== this.displayOptions.showHexValues
+    ) {
       this.displayOptions.showHexValues = config.showHexValues;
       needsRerender = true;
       logger.info(`[AccessibilityTool] setConfig: showHexValues -> ${config.showHexValues}`);
     }
 
-    if (config.highContrastMode !== undefined && config.highContrastMode !== this.displayOptions.highContrastMode) {
+    if (
+      config.highContrastMode !== undefined &&
+      config.highContrastMode !== this.displayOptions.highContrastMode
+    ) {
       this.displayOptions.highContrastMode = config.highContrastMode;
       needsRerender = true;
       logger.info(`[AccessibilityTool] setConfig: highContrastMode -> ${config.highContrastMode}`);
@@ -368,26 +416,41 @@ export class AccessibilityTool extends BaseComponent {
       const newOptions = config.displayOptions;
       let cardOptionsChanged = false;
 
-      if (newOptions.showHex !== undefined && newOptions.showHex !== this.cardDisplayOptions.showHex) {
+      if (
+        newOptions.showHex !== undefined &&
+        newOptions.showHex !== this.cardDisplayOptions.showHex
+      ) {
         this.cardDisplayOptions.showHex = newOptions.showHex;
         cardOptionsChanged = true;
       }
-      if (newOptions.showRgb !== undefined && newOptions.showRgb !== this.cardDisplayOptions.showRgb) {
+      if (
+        newOptions.showRgb !== undefined &&
+        newOptions.showRgb !== this.cardDisplayOptions.showRgb
+      ) {
         this.cardDisplayOptions.showRgb = newOptions.showRgb;
         cardOptionsChanged = true;
       }
-      if (newOptions.showHsv !== undefined && newOptions.showHsv !== this.cardDisplayOptions.showHsv) {
+      if (
+        newOptions.showHsv !== undefined &&
+        newOptions.showHsv !== this.cardDisplayOptions.showHsv
+      ) {
         this.cardDisplayOptions.showHsv = newOptions.showHsv;
         cardOptionsChanged = true;
       }
-      if (newOptions.showLab !== undefined && newOptions.showLab !== this.cardDisplayOptions.showLab) {
+      if (
+        newOptions.showLab !== undefined &&
+        newOptions.showLab !== this.cardDisplayOptions.showLab
+      ) {
         this.cardDisplayOptions.showLab = newOptions.showLab;
         cardOptionsChanged = true;
       }
 
       if (cardOptionsChanged) {
         needsRerender = true;
-        logger.info('[AccessibilityTool] setConfig: cardDisplayOptions updated', this.cardDisplayOptions);
+        logger.info(
+          '[AccessibilityTool] setConfig: cardDisplayOptions updated',
+          this.cardDisplayOptions
+        );
       }
     }
 
@@ -532,7 +595,9 @@ export class AccessibilityTool extends BaseComponent {
         this.selectedDyes = restoredDyes;
         this.updateSelectedDyesDisplay(selectedDisplay);
         // NOTE: updateResults() called in onMount() after right panel containers exist
-        logger.info(`[AccessibilityTool] Restored ${restoredDyes.length} saved dyes from localStorage`);
+        logger.info(
+          `[AccessibilityTool] Restored ${restoredDyes.length} saved dyes from localStorage`
+        );
       }
     }
 
@@ -644,7 +709,10 @@ export class AccessibilityTool extends BaseComponent {
         } else {
           this.enabledVisionTypes.delete(type.id);
         }
-        StorageService.setItem(STORAGE_KEYS.enabledVisionTypes, Array.from(this.enabledVisionTypes));
+        StorageService.setItem(
+          STORAGE_KEYS.enabledVisionTypes,
+          Array.from(this.enabledVisionTypes)
+        );
         this.updateResults();
         this.updateDrawerContent();
       });
@@ -679,8 +747,14 @@ export class AccessibilityTool extends BaseComponent {
 
     const options = [
       { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') || 'Show Labels' },
-      { key: 'showHexValues', label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values' },
-      { key: 'highContrastMode', label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode' },
+      {
+        key: 'showHexValues',
+        label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values',
+      },
+      {
+        key: 'highContrastMode',
+        label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode',
+      },
     ] as const;
 
     for (const option of options) {
@@ -737,7 +811,9 @@ export class AccessibilityTool extends BaseComponent {
           text-align: center;
           min-height: 300px;
           width: 100%;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
     this.renderEmptyState();
@@ -764,7 +840,9 @@ export class AccessibilityTool extends BaseComponent {
           gap: 16px;
           justify-content: center;
           margin-top: 16px;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
     this.selectedDyesSection.appendChild(this.selectedDyesContainer);
@@ -774,7 +852,9 @@ export class AccessibilityTool extends BaseComponent {
     this.visionSimSection = this.createElement('div', {
       attributes: { style: 'display: none;' },
     });
-    this.visionSimSection.appendChild(this.createHeader(LanguageService.t('accessibility.visionSimulation') || 'Vision Simulations'));
+    this.visionSimSection.appendChild(
+      this.createHeader(LanguageService.t('accessibility.visionSimulation') || 'Vision Simulations')
+    );
     this.visionSimulationsContainer = this.createElement('div', {
       className: 'grid gap-4 md:grid-cols-2 lg:grid-cols-3',
       attributes: { style: 'margin-top: 16px;' },
@@ -786,7 +866,9 @@ export class AccessibilityTool extends BaseComponent {
     this.contrastSection = this.createElement('div', {
       attributes: { style: 'display: none;' },
     });
-    this.contrastSection.appendChild(this.createHeader(LanguageService.t('accessibility.contrastRatios') || 'Contrast Analysis'));
+    this.contrastSection.appendChild(
+      this.createHeader(LanguageService.t('accessibility.contrastRatios') || 'Contrast Analysis')
+    );
     this.contrastTableContainer = this.createElement('div', {
       attributes: { style: 'margin-top: 16px;' },
     });
@@ -797,7 +879,11 @@ export class AccessibilityTool extends BaseComponent {
     this.matrixSection = this.createElement('div', {
       attributes: { style: 'display: none;' },
     });
-    this.matrixSection.appendChild(this.createHeader(LanguageService.t('accessibility.pairComparisons') || 'Pairwise Distinguishability'));
+    this.matrixSection.appendChild(
+      this.createHeader(
+        LanguageService.t('accessibility.pairComparisons') || 'Pairwise Distinguishability'
+      )
+    );
     this.matrixContainer = this.createElement('div', {
       attributes: { style: 'margin-top: 16px;' },
     });
@@ -874,7 +960,9 @@ export class AccessibilityTool extends BaseComponent {
       }) as EventListener);
 
       // Handle context menu actions (cross-tool navigation)
-      card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+      card.addEventListener('context-action', ((
+        e: CustomEvent<{ action: ContextAction; dye: Dye }>
+      ) => {
         this.handleContextAction(e.detail.action, e.detail.dye);
       }) as EventListener);
 
@@ -999,16 +1087,21 @@ export class AccessibilityTool extends BaseComponent {
     // Update container to use horizontal flex layout for compact cards, centered
     this.visionSimulationsContainer.style.display = 'flex';
     this.visionSimulationsContainer.style.flexWrap = 'wrap';
-    this.visionSimulationsContainer.style.gap = '12px';
+    this.visionSimulationsContainer.style.gap = '16px';
     this.visionSimulationsContainer.style.justifyContent = 'center';
 
     // Filter out 'normal' vision type - Selected Dyes section already shows original colors
-    const enabledTypes = VISION_TYPES.filter((t) => this.enabledVisionTypes.has(t.id) && t.id !== 'normal');
+    const enabledTypes = VISION_TYPES.filter(
+      (t) => this.enabledVisionTypes.has(t.id) && t.id !== 'normal'
+    );
 
     for (const type of enabledTypes) {
       // Vision card container - compact size
       const card = this.createElement('div', {
         className: 'vision-card',
+        attributes: {
+          style: 'width: 280px; flex-shrink: 0;',
+        },
       });
 
       // Card header with vision type and prevalence
@@ -1036,7 +1129,10 @@ export class AccessibilityTool extends BaseComponent {
       });
 
       for (const result of this.dyeResults) {
-        const simColor = result.colorblindnessSimulations[type.id as keyof typeof result.colorblindnessSimulations];
+        const simColor =
+          result.colorblindnessSimulations[
+            type.id as keyof typeof result.colorblindnessSimulations
+          ];
 
         // Swatch item wrapper
         const swatchItem = this.createElement('div', {
@@ -1101,7 +1197,9 @@ export class AccessibilityTool extends BaseComponent {
           width: 100%;
           border-collapse: collapse;
           font-size: 14px;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1127,7 +1225,9 @@ export class AccessibilityTool extends BaseComponent {
           letter-spacing: 0.05em;
           color: var(--theme-text-muted);
           border-bottom: 1px solid var(--theme-border);
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
     headerRow.appendChild(dyeHeader);
@@ -1146,7 +1246,9 @@ export class AccessibilityTool extends BaseComponent {
           letter-spacing: 0.05em;
           color: var(--theme-text-muted);
           border-bottom: 1px solid var(--theme-border);
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
     headerRow.appendChild(whiteHeader);
@@ -1165,7 +1267,9 @@ export class AccessibilityTool extends BaseComponent {
           letter-spacing: 0.05em;
           color: var(--theme-text-muted);
           border-bottom: 1px solid var(--theme-border);
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
     headerRow.appendChild(blackHeader);
@@ -1252,7 +1356,9 @@ export class AccessibilityTool extends BaseComponent {
     if (this.selectedDyes.length < 2) {
       const notice = this.createElement('p', {
         className: 'text-sm text-center py-4',
-        textContent: LanguageService.t('accessibility.selectTwoDyes') || 'Select at least 2 dyes to see comparisons',
+        textContent:
+          LanguageService.t('accessibility.selectTwoDyes') ||
+          'Select at least 2 dyes to see comparisons',
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       this.matrixContainer.appendChild(notice);
@@ -1280,7 +1386,9 @@ export class AccessibilityTool extends BaseComponent {
           border-collapse: collapse;
           font-size: 14px;
           min-width: max-content;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1308,7 +1416,9 @@ export class AccessibilityTool extends BaseComponent {
             text-align: center;
             vertical-align: bottom;
             min-width: 80px;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
       headerCell.innerHTML = `
@@ -1357,7 +1467,9 @@ export class AccessibilityTool extends BaseComponent {
             position: sticky;
             left: 0;
             z-index: 1;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
       rowHeader.innerHTML = `
@@ -1434,7 +1546,9 @@ export class AccessibilityTool extends BaseComponent {
             display: flex;
             flex-direction: column;
             gap: 8px;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1457,7 +1571,9 @@ export class AccessibilityTool extends BaseComponent {
                 border-radius: 6px;
                 background: ${bgColor};
                 border: 1px solid ${borderColor};
-              `.replace(/\s+/g, ' ').trim(),
+              `
+                .replace(/\s+/g, ' ')
+                .trim(),
             },
           });
 
@@ -1725,7 +1841,10 @@ export class AccessibilityTool extends BaseComponent {
         } else {
           this.enabledVisionTypes.delete(type.id);
         }
-        StorageService.setItem(STORAGE_KEYS.enabledVisionTypes, Array.from(this.enabledVisionTypes));
+        StorageService.setItem(
+          STORAGE_KEYS.enabledVisionTypes,
+          Array.from(this.enabledVisionTypes)
+        );
 
         // Sync desktop checkboxes
         this.syncDesktopVisionCheckboxes();
@@ -1781,8 +1900,14 @@ export class AccessibilityTool extends BaseComponent {
 
     const options = [
       { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') || 'Show Labels' },
-      { key: 'showHexValues', label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values' },
-      { key: 'highContrastMode', label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode' },
+      {
+        key: 'showHexValues',
+        label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values',
+      },
+      {
+        key: 'highContrastMode',
+        label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode',
+      },
     ] as const;
 
     for (const option of options) {
@@ -1828,7 +1953,8 @@ export class AccessibilityTool extends BaseComponent {
    */
   private syncDesktopVisionCheckboxes(): void {
     if (!this.visionTogglesContainer) return;
-    const checkboxes = this.visionTogglesContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    const checkboxes =
+      this.visionTogglesContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     checkboxes.forEach((checkbox) => {
       const visionType = checkbox.getAttribute('data-vision-type') as VisionTypeId;
       if (visionType) {
@@ -1842,7 +1968,8 @@ export class AccessibilityTool extends BaseComponent {
    */
   private syncDesktopDisplayCheckboxes(): void {
     if (!this.displayOptionsContainer) return;
-    const checkboxes = this.displayOptionsContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    const checkboxes =
+      this.displayOptionsContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     checkboxes.forEach((checkbox) => {
       const optionKey = checkbox.getAttribute('data-display-option') as keyof DisplayOptions;
       if (optionKey) {
@@ -1943,24 +2070,32 @@ export class AccessibilityTool extends BaseComponent {
     const distinguishability = Math.round((distance / 441.67) * 100);
 
     // Calculate distinguishability under each vision type
-    const normalDist = Math.round((ColorService.getColorDistance(dye1.hex, dye2.hex) / 441.67) * 100);
+    const normalDist = Math.round(
+      (ColorService.getColorDistance(dye1.hex, dye2.hex) / 441.67) * 100
+    );
     const deuterDist = Math.round(
       (ColorService.getColorDistance(
         ColorService.simulateColorblindnessHex(dye1.hex, 'deuteranopia'),
         ColorService.simulateColorblindnessHex(dye2.hex, 'deuteranopia')
-      ) / 441.67) * 100
+      ) /
+        441.67) *
+        100
     );
     const protanDist = Math.round(
       (ColorService.getColorDistance(
         ColorService.simulateColorblindnessHex(dye1.hex, 'protanopia'),
         ColorService.simulateColorblindnessHex(dye2.hex, 'protanopia')
-      ) / 441.67) * 100
+      ) /
+        441.67) *
+        100
     );
     const tritanDist = Math.round(
       (ColorService.getColorDistance(
         ColorService.simulateColorblindnessHex(dye1.hex, 'tritanopia'),
         ColorService.simulateColorblindnessHex(dye2.hex, 'tritanopia')
-      ) / 441.67) * 100
+      ) /
+        441.67) *
+        100
     );
 
     const warnings: string[] = [];

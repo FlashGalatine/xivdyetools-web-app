@@ -105,7 +105,11 @@ export function showPresetEditForm(preset: CommunityPreset, onEdit?: OnEditCallb
 // Form Content Creation
 // ============================================
 
-function createFormContent(presetId: string, state: FormState, onEdit?: OnEditCallback): HTMLElement {
+function createFormContent(
+  presetId: string,
+  state: FormState,
+  onEdit?: OnEditCallback
+): HTMLElement {
   const form = document.createElement('div');
   form.className = 'preset-edit-form space-y-4';
 
@@ -356,7 +360,8 @@ function createDyeSelector(state: FormState): HTMLElement {
       const empty = document.createElement('div');
       empty.className = 'col-span-full text-center py-4 text-sm';
       empty.style.color = 'var(--theme-text-secondary)';
-      empty.textContent = filteredDyes.length === 0 ? 'No dyes found' : 'All matching dyes selected';
+      empty.textContent =
+        filteredDyes.length === 0 ? 'No dyes found' : 'All matching dyes selected';
       dyeGrid.appendChild(empty);
     }
   }
@@ -365,9 +370,7 @@ function createDyeSelector(state: FormState): HTMLElement {
     const query = searchInput.value.toLowerCase().trim();
     if (query) {
       filteredDyes = allDyes.filter(
-        (d) =>
-          d.name.toLowerCase().includes(query) ||
-          d.category.toLowerCase().includes(query)
+        (d) => d.name.toLowerCase().includes(query) || d.category.toLowerCase().includes(query)
       );
     } else {
       filteredDyes = [...allDyes];
@@ -426,7 +429,11 @@ function createTagsInput(state: FormState): HTMLElement {
   return wrapper;
 }
 
-function createSubmitButton(presetId: string, state: FormState, onEdit?: OnEditCallback): HTMLElement {
+function createSubmitButton(
+  presetId: string,
+  state: FormState,
+  onEdit?: OnEditCallback
+): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'flex justify-end gap-2 pt-4 border-t';
   wrapper.style.borderColor = 'var(--theme-border)';

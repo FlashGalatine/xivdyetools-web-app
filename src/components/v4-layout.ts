@@ -60,7 +60,7 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
 
   // Listen for config changes from ConfigSidebar
   layoutElement.addEventListener('config-change', ((
-    e: CustomEvent<{ tool: string; key: string; value: unknown }>,
+    e: CustomEvent<{ tool: string; key: string; value: unknown }>
   ) => {
     const { tool, key, value } = e.detail;
     logger.debug(`[V4 Layout] Config change: ${tool}.${key} = ${value}`);
@@ -69,14 +69,15 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
     // Pass the full context (tool, key, value) so tools can handle
     // both tool-specific config and shared market config
     if (activeTool && 'setConfig' in activeTool) {
-      (activeTool as BaseComponent & { setConfig: (config: Record<string, unknown>) => void })
-        .setConfig({ _tool: tool, [key]: value });
+      (
+        activeTool as BaseComponent & { setConfig: (config: Record<string, unknown>) => void }
+      ).setConfig({ _tool: tool, [key]: value });
     }
   }) as EventListener);
 
   // Listen for dye selections from the Color Palette drawer
   layoutElement.addEventListener('dye-selected', ((
-    e: CustomEvent<{ dye: { id: number; name: string; hex: string } }>,
+    e: CustomEvent<{ dye: { id: number; name: string; hex: string } }>
   ) => {
     const { dye } = e.detail;
     logger.debug(`[V4 Layout] Dye selected from palette: ${dye.name}`);
@@ -88,7 +89,9 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
       // Fallback for tools that use addDye instead of selectDye
       (activeTool as BaseComponent & { addDye: (dye: unknown) => void }).addDye(dye);
     } else {
-      logger.debug(`[V4 Layout] Tool ${RouterService.getCurrentToolId()} does not support dye selection`);
+      logger.debug(
+        `[V4 Layout] Tool ${RouterService.getCurrentToolId()} does not support dye selection`
+      );
     }
   }) as EventListener);
 
@@ -103,7 +106,9 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
       // Fallback for tools that use clearSelection instead of clearDyes
       (activeTool as BaseComponent & { clearSelection: () => void }).clearSelection();
     } else {
-      logger.debug(`[V4 Layout] Tool ${RouterService.getCurrentToolId()} does not support clearing dyes`);
+      logger.debug(
+        `[V4 Layout] Tool ${RouterService.getCurrentToolId()} does not support clearing dyes`
+      );
     }
   }) as EventListener);
 

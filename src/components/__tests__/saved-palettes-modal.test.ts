@@ -40,7 +40,15 @@ vi.mock('@services/index', () => ({
   },
   PaletteService: {
     getPalettesSortedByDate: vi.fn(() => mockPalettes),
-    savePalette: vi.fn(() => ({ id: 'new-palette', name: 'Test', baseColor: '#FF0000', baseDyeName: 'Red', harmonyType: 'complementary', companions: [], dateCreated: new Date().toISOString() })),
+    savePalette: vi.fn(() => ({
+      id: 'new-palette',
+      name: 'Test',
+      baseColor: '#FF0000',
+      baseDyeName: 'Red',
+      harmonyType: 'complementary',
+      companions: [],
+      dateCreated: new Date().toISOString(),
+    })),
     deletePalette: vi.fn(),
     downloadPalettes: vi.fn(),
     importPalettes: vi.fn(() => 2),

@@ -26,8 +26,14 @@ describe('TooltipService Branch Coverage', () => {
     document.body.appendChild(targetElement);
 
     vi.spyOn(targetElement, 'getBoundingClientRect').mockReturnValue({
-      x: 100, y: 100, width: 100, height: 30,
-      top: 100, left: 100, right: 200, bottom: 130,
+      x: 100,
+      y: 100,
+      width: 100,
+      height: 30,
+      top: 100,
+      left: 100,
+      right: 200,
+      bottom: 130,
       toJSON: () => ({}),
     });
   });

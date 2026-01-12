@@ -93,10 +93,7 @@ describe('DyeComparisonChart', () => {
 
   it('should draw on canvas when dyes are present', async () => {
     // Spy on drawChart method to verify it gets called when dyes are updated
-    const drawChartSpy = vi.spyOn(
-      component as unknown as { drawChart: () => void },
-      'drawChart'
-    );
+    const drawChartSpy = vi.spyOn(component as unknown as { drawChart: () => void }, 'drawChart');
 
     // Initial draw might happen in setTimeout
     await new Promise((resolve) => setTimeout(resolve, 0));

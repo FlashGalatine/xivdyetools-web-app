@@ -11,15 +11,53 @@
 import { BaseComponent } from '@components/base-component';
 import { clearContainer } from '@shared/utils';
 
-const CATEGORIES = ['All', 'Jobs', 'Grand Companies', 'Seasons', 'Events', 'Aesthetics', 'Community'];
+const CATEGORIES = [
+  'All',
+  'Jobs',
+  'Grand Companies',
+  'Seasons',
+  'Events',
+  'Aesthetics',
+  'Community',
+];
 
 const SAMPLE_PRESETS = [
-  { name: 'Warrior of Light', author: 'Hydaelyn', votes: 1234, colors: ['#4A90D9', '#F5A623', '#7ED321', '#D0021B'] },
-  { name: 'Autumn Vibes', author: 'Eorzea', votes: 876, colors: ['#D97706', '#B91C1C', '#78350F', '#F59E0B'] },
-  { name: 'Ocean Dreams', author: 'Limsa', votes: 654, colors: ['#0EA5E9', '#06B6D4', '#14B8A6', '#0891B2'] },
-  { name: 'Royal Court', author: 'Ishgard', votes: 543, colors: ['#7C3AED', '#A855F7', '#C084FC', '#E879F9'] },
-  { name: 'Forest Walk', author: 'Gridania', votes: 432, colors: ['#22C55E', '#16A34A', '#15803D', '#4ADE80'] },
-  { name: 'Desert Rose', author: 'UlDah', votes: 321, colors: ['#F43F5E', '#E11D48', '#BE123C', '#FDA4AF'] },
+  {
+    name: 'Warrior of Light',
+    author: 'Hydaelyn',
+    votes: 1234,
+    colors: ['#4A90D9', '#F5A623', '#7ED321', '#D0021B'],
+  },
+  {
+    name: 'Autumn Vibes',
+    author: 'Eorzea',
+    votes: 876,
+    colors: ['#D97706', '#B91C1C', '#78350F', '#F59E0B'],
+  },
+  {
+    name: 'Ocean Dreams',
+    author: 'Limsa',
+    votes: 654,
+    colors: ['#0EA5E9', '#06B6D4', '#14B8A6', '#0891B2'],
+  },
+  {
+    name: 'Royal Court',
+    author: 'Ishgard',
+    votes: 543,
+    colors: ['#7C3AED', '#A855F7', '#C084FC', '#E879F9'],
+  },
+  {
+    name: 'Forest Walk',
+    author: 'Gridania',
+    votes: 432,
+    colors: ['#22C55E', '#16A34A', '#15803D', '#4ADE80'],
+  },
+  {
+    name: 'Desert Rose',
+    author: 'UlDah',
+    votes: 321,
+    colors: ['#F43F5E', '#E11D48', '#BE123C', '#FDA4AF'],
+  },
 ];
 
 export interface PresetsMockupOptions {
@@ -97,12 +135,17 @@ export class PresetsMockup extends BaseComponent {
   }
 
   private createSection(label: string): HTMLElement {
-    const section = this.createElement('div', { className: 'p-4 border-b', attributes: { style: 'border-color: var(--theme-border);' } });
-    section.appendChild(this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
-      textContent: label,
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    }));
+    const section = this.createElement('div', {
+      className: 'p-4 border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+    section.appendChild(
+      this.createElement('h3', {
+        className: 'text-sm font-semibold uppercase tracking-wider mb-3',
+        textContent: label,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      })
+    );
     return section;
   }
 
@@ -117,7 +160,7 @@ export class PresetsMockup extends BaseComponent {
   private createCategoryFilters(): HTMLElement {
     const container = this.createElement('div', { className: 'space-y-1' });
 
-    CATEGORIES.forEach(cat => {
+    CATEGORIES.forEach((cat) => {
       const isSelected = this.selectedCategory === cat;
       const btn = this.createElement('button', {
         className: 'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
@@ -141,7 +184,7 @@ export class PresetsMockup extends BaseComponent {
       { id: 'popular', label: 'Most Popular' },
       { id: 'recent', label: 'Most Recent' },
       { id: 'name', label: 'Alphabetical' },
-    ].forEach(opt => {
+    ].forEach((opt) => {
       const isSelected = this.sortBy === opt.id;
       const label = this.createElement('label', {
         className: 'flex items-center gap-2 cursor-pointer',
@@ -193,10 +236,12 @@ export class PresetsMockup extends BaseComponent {
   private createFeaturedPresets(): HTMLElement {
     const container = this.createElement('div', { className: 'grid gap-4 md:grid-cols-2' });
 
-    SAMPLE_PRESETS.slice(0, 2).forEach(preset => {
+    SAMPLE_PRESETS.slice(0, 2).forEach((preset) => {
       const card = this.createElement('div', {
         className: 'relative p-4 rounded-lg overflow-hidden',
-        attributes: { style: `background: linear-gradient(135deg, ${preset.colors[0]}40, ${preset.colors[2]}40); border: 2px solid ${preset.colors[0]};` },
+        attributes: {
+          style: `background: linear-gradient(135deg, ${preset.colors[0]}40, ${preset.colors[2]}40); border: 2px solid ${preset.colors[0]};`,
+        },
       });
 
       card.innerHTML = `
@@ -206,7 +251,7 @@ export class PresetsMockup extends BaseComponent {
         <h4 class="font-bold text-lg mb-2" style="color: var(--theme-text);">${preset.name}</h4>
         <p class="text-sm mb-3" style="color: var(--theme-text-muted);">by ${preset.author}</p>
         <div class="flex gap-1 mb-3">
-          ${preset.colors.map(c => `<div class="w-8 h-8 rounded" style="background: ${c};"></div>`).join('')}
+          ${preset.colors.map((c) => `<div class="w-8 h-8 rounded" style="background: ${c};"></div>`).join('')}
         </div>
         <div class="flex items-center gap-1 text-sm" style="color: var(--theme-text-muted);">
           <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -221,17 +266,21 @@ export class PresetsMockup extends BaseComponent {
   }
 
   private createPresetGrid(): HTMLElement {
-    const grid = this.createElement('div', { className: 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' });
+    const grid = this.createElement('div', {
+      className: 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3',
+    });
 
-    SAMPLE_PRESETS.forEach(preset => {
+    SAMPLE_PRESETS.forEach((preset) => {
       const card = this.createElement('div', {
         className: 'p-4 rounded-lg cursor-pointer transition-transform hover:scale-102',
-        attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+        attributes: {
+          style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        },
       });
 
       card.innerHTML = `
         <div class="flex gap-1 mb-3">
-          ${preset.colors.map(c => `<div class="flex-1 h-12 first:rounded-l-lg last:rounded-r-lg" style="background: ${c};"></div>`).join('')}
+          ${preset.colors.map((c) => `<div class="flex-1 h-12 first:rounded-l-lg last:rounded-r-lg" style="background: ${c};"></div>`).join('')}
         </div>
         <h4 class="font-medium text-sm mb-1" style="color: var(--theme-text);">${preset.name}</h4>
         <div class="flex items-center justify-between text-xs" style="color: var(--theme-text-muted);">
@@ -250,5 +299,7 @@ export class PresetsMockup extends BaseComponent {
   }
 
   bindEvents(): void {}
-  destroy(): void { super.destroy(); }
+  destroy(): void {
+    super.destroy();
+  }
 }

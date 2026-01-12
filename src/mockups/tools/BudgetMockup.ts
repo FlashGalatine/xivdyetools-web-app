@@ -189,7 +189,10 @@ export class BudgetMockup extends BaseComponent {
       className: 'mt-3 w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors',
       textContent: 'Change Dye',
       attributes: {
-        style: 'background: rgba(255,255,255,0.2); color: ' + textColor + '; backdrop-filter: blur(4px);',
+        style:
+          'background: rgba(255,255,255,0.2); color: ' +
+          textColor +
+          '; backdrop-filter: blur(4px);',
         type: 'button',
       },
     });
@@ -206,7 +209,7 @@ export class BudgetMockup extends BaseComponent {
       className: 'grid grid-cols-3 gap-2',
     });
 
-    POPULAR_EXPENSIVE_DYES.forEach(dye => {
+    POPULAR_EXPENSIVE_DYES.forEach((dye) => {
       const isSelected = dye.name === this.targetDye.name;
       const btn = this.createElement('button', {
         className: 'flex flex-col items-center gap-1 p-2 rounded-lg transition-colors',
@@ -283,7 +286,7 @@ export class BudgetMockup extends BaseComponent {
 
     const container = this.createElement('div', { className: 'space-y-2' });
 
-    options.forEach(opt => {
+    options.forEach((opt) => {
       const isSelected = this.sortBy === opt.id;
       const label = this.createElement('label', {
         className: 'flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors',
@@ -325,7 +328,8 @@ export class BudgetMockup extends BaseComponent {
     const select = this.createElement('select', {
       className: 'w-full p-2 rounded text-sm',
       attributes: {
-        style: 'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
+        style:
+          'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
       },
     });
     select.innerHTML = `
@@ -350,7 +354,7 @@ export class BudgetMockup extends BaseComponent {
     const container = this.createElement('div', { className: 'space-y-2' });
     const filters = ['Exclude Metallic', 'Exclude Pastel', 'Exclude Stainable-only'];
 
-    filters.forEach(filter => {
+    filters.forEach((filter) => {
       const label = this.createElement('label', {
         className: 'flex items-center gap-2 cursor-pointer',
       });
@@ -398,7 +402,7 @@ export class BudgetMockup extends BaseComponent {
       className: 'flex items-center justify-between mb-4',
     });
 
-    const count = SAMPLE_ALTERNATIVES.filter(a => a.price <= this.budgetLimit).length;
+    const count = SAMPLE_ALTERNATIVES.filter((a) => a.price <= this.budgetLimit).length;
 
     header.innerHTML = `
       <h3 class="font-semibold" style="color: var(--theme-text);">
@@ -415,7 +419,7 @@ export class BudgetMockup extends BaseComponent {
   private createAlternativesList(): HTMLElement {
     const container = this.createElement('div', { className: 'space-y-3' });
 
-    const alternatives = SAMPLE_ALTERNATIVES.filter(a => a.price <= this.budgetLimit);
+    const alternatives = SAMPLE_ALTERNATIVES.filter((a) => a.price <= this.budgetLimit);
 
     if (alternatives.length === 0) {
       const emptyState = this.createElement('div', {
@@ -442,7 +446,8 @@ export class BudgetMockup extends BaseComponent {
 
       // Rank badge
       const rankBadge = this.createElement('div', {
-        className: 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
+        className:
+          'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0',
         textContent: String(index + 1),
         attributes: {
           style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);',

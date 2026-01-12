@@ -17,7 +17,15 @@ import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import '@components/v4/result-card';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
-import { ColorService, ConfigController, dyeService, LanguageService, MarketBoardService, StorageService, ToastService } from '@services/index';
+import {
+  ColorService,
+  ConfigController,
+  dyeService,
+  LanguageService,
+  MarketBoardService,
+  StorageService,
+  ToastService,
+} from '@services/index';
 import { RouterService } from '@services/router-service';
 import { ICON_TOOL_BUDGET } from '@shared/tool-icons';
 import {
@@ -166,10 +174,14 @@ export class BudgetTool extends BaseComponent {
     this.marketBoardService = MarketBoardService.getInstance();
 
     // Load persisted settings
-    this.budgetLimit = StorageService.getItem<number>(STORAGE_KEYS.budgetLimit) ?? DEFAULTS.budgetLimit;
-    this.sortBy = StorageService.getItem<'match' | 'price' | 'value'>(STORAGE_KEYS.sortBy) ?? DEFAULTS.sortBy;
-    this.colorDistance = StorageService.getItem<number>(STORAGE_KEYS.colorDistance) ?? DEFAULTS.colorDistance;
-    this.resultLimit = StorageService.getItem<number>(STORAGE_KEYS.resultLimit) ?? DEFAULTS.resultLimit;
+    this.budgetLimit =
+      StorageService.getItem<number>(STORAGE_KEYS.budgetLimit) ?? DEFAULTS.budgetLimit;
+    this.sortBy =
+      StorageService.getItem<'match' | 'price' | 'value'>(STORAGE_KEYS.sortBy) ?? DEFAULTS.sortBy;
+    this.colorDistance =
+      StorageService.getItem<number>(STORAGE_KEYS.colorDistance) ?? DEFAULTS.colorDistance;
+    this.resultLimit =
+      StorageService.getItem<number>(STORAGE_KEYS.resultLimit) ?? DEFAULTS.resultLimit;
 
     // Load persisted target dye
     const savedDyeId = StorageService.getItem<number>(STORAGE_KEYS.targetDyeId);
@@ -345,7 +357,7 @@ export class BudgetTool extends BaseComponent {
     if (dyeName) {
       // Search for dye by name (exact match preferred)
       const matches = dyeService.searchByName(dyeName);
-      const dye = matches.find(d => d.name.toLowerCase() === dyeName.toLowerCase()) || matches[0];
+      const dye = matches.find((d) => d.name.toLowerCase() === dyeName.toLowerCase()) || matches[0];
       if (dye) {
         this.targetDye = dye;
         this.updateTargetDyeDisplay();
@@ -587,14 +599,17 @@ export class BudgetTool extends BaseComponent {
     const hex = this.createElement('p', {
       className: 'text-sm number mb-2',
       textContent: this.targetDye.hex,
-      attributes: { style: `color: ${textColor} !important; opacity: 0.8; text-shadow: ${textShadow};` },
+      attributes: {
+        style: `color: ${textColor} !important; opacity: 0.8; text-shadow: ${textShadow};`,
+      },
     });
 
     const price = this.createElement('p', {
       className: 'text-sm font-medium number',
-      textContent: this.targetPrice > 0
-        ? `~${this.targetPrice.toLocaleString()} gil`
-        : LanguageService.t('budget.loadingPrice') || 'Loading price...',
+      textContent:
+        this.targetPrice > 0
+          ? `~${this.targetPrice.toLocaleString()} gil`
+          : LanguageService.t('budget.loadingPrice') || 'Loading price...',
       attributes: { style: `color: ${textColor} !important; text-shadow: ${textShadow};` },
     });
 
@@ -614,9 +629,9 @@ export class BudgetTool extends BaseComponent {
 
     this.quickPickButtons = [];
 
-    POPULAR_EXPENSIVE_DYE_NAMES.forEach(dyeName => {
+    POPULAR_EXPENSIVE_DYE_NAMES.forEach((dyeName) => {
       const matches = dyeService.searchByName(dyeName);
-      const dye = matches.find(d => d.name === dyeName) || matches[0];
+      const dye = matches.find((d) => d.name === dyeName) || matches[0];
       if (!dye) return;
 
       const isSelected = this.targetDye?.id === dye.id;
@@ -667,12 +682,15 @@ export class BudgetTool extends BaseComponent {
     this.quickPickButtons.forEach((btn, index) => {
       const dyeName = POPULAR_EXPENSIVE_DYE_NAMES[index];
       const matches = dyeService.searchByName(dyeName);
-      const dye = matches.find(d => d.name === dyeName) || matches[0];
+      const dye = matches.find((d) => d.name === dyeName) || matches[0];
       const isSelected = dye && this.targetDye?.id === dye.id;
 
-      btn.setAttribute('style', isSelected
-        ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-        : 'background: var(--theme-card-background); color: var(--theme-text);');
+      btn.setAttribute(
+        'style',
+        isSelected
+          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+          : 'background: var(--theme-card-background); color: var(--theme-text);'
+      );
     });
   }
 
@@ -730,7 +748,7 @@ export class BudgetTool extends BaseComponent {
     const ticksContainer = this.createElement('div', {
       className: 'flex justify-between mt-1',
     });
-    ['0', '50K', '100K', '150K', '200K'].forEach(tick => {
+    ['0', '50K', '100K', '150K', '200K'].forEach((tick) => {
       const tickLabel = this.createElement('span', {
         className: 'text-xs',
         textContent: tick,
@@ -797,7 +815,7 @@ export class BudgetTool extends BaseComponent {
     const resultLimitTicks = this.createElement('div', {
       className: 'flex justify-between mt-1',
     });
-    ['1', '3', '5', '7', '10'].forEach(tick => {
+    ['1', '3', '5', '7', '10'].forEach((tick) => {
       const tickLabel = this.createElement('span', {
         className: 'text-xs',
         textContent: tick,
@@ -836,7 +854,9 @@ export class BudgetTool extends BaseComponent {
     // Description text
     const description = this.createElement('p', {
       className: 'text-xs mb-3',
-      textContent: LanguageService.t('budget.distanceDesc') || 'Higher values show more alternatives, lower values show closer matches',
+      textContent:
+        LanguageService.t('budget.distanceDesc') ||
+        'Higher values show more alternatives, lower values show closer matches',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     container.appendChild(description);
@@ -870,7 +890,7 @@ export class BudgetTool extends BaseComponent {
     const ticksContainer = this.createElement('div', {
       className: 'flex justify-between mt-1',
     });
-    ['25', '50', '75', '100'].forEach(tick => {
+    ['25', '50', '75', '100'].forEach((tick) => {
       const tickLabel = this.createElement('span', {
         className: 'text-xs',
         textContent: tick,
@@ -886,14 +906,26 @@ export class BudgetTool extends BaseComponent {
    */
   private renderSortSection(container: HTMLElement): void {
     const options = [
-      { id: 'match', label: LanguageService.t('budget.sortMatch') || 'Best Match', desc: LanguageService.t('budget.sortMatchDesc') || 'Closest color first' },
-      { id: 'price', label: LanguageService.t('budget.sortPrice') || 'Lowest Price', desc: LanguageService.t('budget.sortPriceDesc') || 'Cheapest first' },
-      { id: 'value', label: LanguageService.t('budget.sortValue') || 'Best Value', desc: LanguageService.t('budget.sortValueDesc') || 'Balance of match + price' },
+      {
+        id: 'match',
+        label: LanguageService.t('budget.sortMatch') || 'Best Match',
+        desc: LanguageService.t('budget.sortMatchDesc') || 'Closest color first',
+      },
+      {
+        id: 'price',
+        label: LanguageService.t('budget.sortPrice') || 'Lowest Price',
+        desc: LanguageService.t('budget.sortPriceDesc') || 'Cheapest first',
+      },
+      {
+        id: 'value',
+        label: LanguageService.t('budget.sortValue') || 'Best Value',
+        desc: LanguageService.t('budget.sortValueDesc') || 'Balance of match + price',
+      },
     ];
 
     const optionsContainer = this.createElement('div', { className: 'space-y-2' });
 
-    options.forEach(opt => {
+    options.forEach((opt) => {
       const isSelected = this.sortBy === opt.id;
       const label = this.createElement('label', {
         className: 'flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors',
@@ -934,9 +966,12 @@ export class BudgetTool extends BaseComponent {
         // Update all label styles
         optionsContainer.querySelectorAll('label').forEach((lbl, idx) => {
           const selected = options[idx].id === opt.id;
-          lbl.setAttribute('style', selected
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: transparent;');
+          lbl.setAttribute(
+            'style',
+            selected
+              ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+              : 'background: transparent;'
+          );
           const pEl = lbl.querySelector('p');
           if (pEl) {
             pEl.setAttribute('style', selected ? '' : 'color: var(--theme-text-muted);');
@@ -1055,7 +1090,8 @@ export class BudgetTool extends BaseComponent {
     const sectionLabel = this.createElement('div', {
       textContent: LanguageService.t('budget.selectedDye') || 'Selected Dye',
       attributes: {
-        style: 'font-size: 14px; margin-bottom: 12px; text-align: center; color: var(--theme-text-muted);',
+        style:
+          'font-size: 14px; margin-bottom: 12px; text-align: center; color: var(--theme-text-muted);',
       },
     });
     this.targetOverviewContainer.appendChild(sectionLabel);
@@ -1086,14 +1122,19 @@ export class BudgetTool extends BaseComponent {
 
     (card as unknown as { data: ResultCardData }).data = cardData;
     card.setAttribute('show-actions', 'true');
-    card.setAttribute('primary-action-label', LanguageService.t('budget.currentlySelected') || 'Currently Selected');
-    card.setAttribute('show-delta-e', 'false');  // Hide delta-E for target card
+    card.setAttribute(
+      'primary-action-label',
+      LanguageService.t('budget.currentlySelected') || 'Currently Selected'
+    );
+    card.setAttribute('show-delta-e', 'false'); // Hide delta-E for target card
 
     // Disable the primary button visually
     card.style.setProperty('--v4-result-card-width', '320px');
 
     // Event handlers - clicking the card opens context menu
-    card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+    card.addEventListener('context-action', ((
+      e: CustomEvent<{ action: ContextAction; dye: Dye }>
+    ) => {
       this.handleContextAction(e.detail.action, e.detail.dye);
     }) as EventListener);
 
@@ -1119,8 +1160,8 @@ export class BudgetTool extends BaseComponent {
     // Show "Showing X of Y" when results are limited, otherwise show total count
     const countLabel = isLimited
       ? `${LanguageService.t('budget.showingXOfY') || 'Showing {showing} of {total}'}`
-        .replace('{showing}', String(displayCount))
-        .replace('{total}', String(totalCount))
+          .replace('{showing}', String(displayCount))
+          .replace('{total}', String(totalCount))
       : `${totalCount} ${LanguageService.t('budget.alternativesWithinBudget') || 'alternatives within budget'}`;
 
     const countText = this.createElement('h3', {
@@ -1138,7 +1179,9 @@ export class BudgetTool extends BaseComponent {
     const sortBadge = this.createElement('span', {
       className: 'text-sm px-2 py-1 rounded',
       textContent: `${LanguageService.t('budget.sortedBy') || 'Sorted by'}: ${sortLabels[this.sortBy]}`,
-      attributes: { style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);' },
+      attributes: {
+        style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);',
+      },
     });
 
     header.appendChild(countText);
@@ -1223,8 +1266,8 @@ export class BudgetTool extends BaseComponent {
       // Build ResultCardData
       const cardData: ResultCardData = {
         dye: alt.dye,
-        originalColor: this.targetDye!.hex,  // Target dye (original)
-        matchedColor: alt.dye.hex,           // Alternative dye (match)
+        originalColor: this.targetDye!.hex, // Target dye (original)
+        matchedColor: alt.dye.hex, // Alternative dye (match)
         deltaE: alt.distance,
         marketServer: marketServer,
         price: priceInfo?.currentMinPrice,
@@ -1239,7 +1282,9 @@ export class BudgetTool extends BaseComponent {
         this.handleCardSelect(e.detail.dye);
       }) as EventListener);
 
-      card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+      card.addEventListener('context-action', ((
+        e: CustomEvent<{ action: ContextAction; dye: Dye }>
+      ) => {
         this.handleContextAction(e.detail.action, e.detail.dye);
       }) as EventListener);
 
@@ -1250,7 +1295,8 @@ export class BudgetTool extends BaseComponent {
         const savingsBadge = this.createElement('div', {
           textContent: `${LanguageService.t('budget.save') || 'Save'} ${alt.savings.toLocaleString()} gil`,
           attributes: {
-            style: 'background: rgba(34, 197, 94, 0.15); color: #22C55E; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-align: center;',
+            style:
+              'background: rgba(34, 197, 94, 0.15); color: #22C55E; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-align: center;',
           },
         });
         wrapper.appendChild(savingsBadge);
@@ -1282,10 +1328,14 @@ export class BudgetTool extends BaseComponent {
 
     try {
       // 1. Get all dyes within user-configurable color distance threshold
-      const candidates = dyeService.findDyesWithinDistance(this.targetDye.hex, this.colorDistance, 50);
+      const candidates = dyeService.findDyesWithinDistance(
+        this.targetDye.hex,
+        this.colorDistance,
+        50
+      );
 
       // 2. Apply filters
-      let filtered = candidates.filter(dye => dye.id !== this.targetDye?.id);
+      let filtered = candidates.filter((dye) => dye.id !== this.targetDye?.id);
       if (this.dyeFilters) {
         filtered = this.dyeFilters.filterDyes(filtered);
       }
@@ -1298,7 +1348,7 @@ export class BudgetTool extends BaseComponent {
       this.targetPrice = targetPriceData?.currentMinPrice ?? 0;
 
       // 5. Build alternatives with price data
-      this.alternatives = filtered.map(dye => {
+      this.alternatives = filtered.map((dye) => {
         const priceData = this.priceData.get(dye.itemID);
         const price = priceData?.currentMinPrice ?? Infinity;
         const distance = ColorService.getColorDistance(this.targetDye!.hex, dye.hex);
@@ -1313,10 +1363,11 @@ export class BudgetTool extends BaseComponent {
 
       // 7. Filter and sort
       this.filterAndSortAlternatives();
-
     } catch (error) {
       logger.error('[BudgetTool] Error finding alternatives:', error);
-      ToastService.error(LanguageService.t('budget.errorFindingAlternatives') || 'Error finding alternatives');
+      ToastService.error(
+        LanguageService.t('budget.errorFindingAlternatives') || 'Error finding alternatives'
+      );
       this.isLoading = false;
       this.renderAlternativesList(); // Show error state, not loading spinner
     } finally {
@@ -1330,7 +1381,7 @@ export class BudgetTool extends BaseComponent {
    */
   private filterAndSortAlternatives(): void {
     // Filter by budget
-    const affordable = this.alternatives.filter(alt => alt.price <= this.budgetLimit);
+    const affordable = this.alternatives.filter((alt) => alt.price <= this.budgetLimit);
 
     // Sort by selected criteria
     affordable.sort((a, b) => {
@@ -1362,7 +1413,7 @@ export class BudgetTool extends BaseComponent {
     const maxPrice = 200000;
     const normalizedDistance = (distance / maxDistance) * 100;
     const normalizedPrice = (price / maxPrice) * 100;
-    return (normalizedDistance * 0.7) + (normalizedPrice * 0.3);
+    return normalizedDistance * 0.7 + normalizedPrice * 0.3;
   }
 
   /**
@@ -1600,14 +1651,17 @@ export class BudgetTool extends BaseComponent {
     const hex = this.createElement('p', {
       className: 'text-sm number mb-2',
       textContent: this.targetDye.hex,
-      attributes: { style: `color: ${textColor} !important; opacity: 0.8; text-shadow: ${textShadow};` },
+      attributes: {
+        style: `color: ${textColor} !important; opacity: 0.8; text-shadow: ${textShadow};`,
+      },
     });
 
     const price = this.createElement('p', {
       className: 'text-sm font-medium number',
-      textContent: this.targetPrice > 0
-        ? `~${this.targetPrice.toLocaleString()} gil`
-        : LanguageService.t('budget.loadingPrice') || 'Loading price...',
+      textContent:
+        this.targetPrice > 0
+          ? `~${this.targetPrice.toLocaleString()} gil`
+          : LanguageService.t('budget.loadingPrice') || 'Loading price...',
       attributes: { style: `color: ${textColor} !important; text-shadow: ${textShadow};` },
     });
 
@@ -1627,9 +1681,9 @@ export class BudgetTool extends BaseComponent {
 
     this.mobileQuickPickButtons = [];
 
-    POPULAR_EXPENSIVE_DYE_NAMES.forEach(dyeName => {
+    POPULAR_EXPENSIVE_DYE_NAMES.forEach((dyeName) => {
       const matches = dyeService.searchByName(dyeName);
-      const dye = matches.find(d => d.name === dyeName) || matches[0];
+      const dye = matches.find((d) => d.name === dyeName) || matches[0];
       if (!dye) return;
 
       const isSelected = this.targetDye?.id === dye.id;
@@ -1681,12 +1735,15 @@ export class BudgetTool extends BaseComponent {
     this.mobileQuickPickButtons.forEach((btn, index) => {
       const dyeName = POPULAR_EXPENSIVE_DYE_NAMES[index];
       const matches = dyeService.searchByName(dyeName);
-      const dye = matches.find(d => d.name === dyeName) || matches[0];
+      const dye = matches.find((d) => d.name === dyeName) || matches[0];
       const isSelected = dye && this.targetDye?.id === dye.id;
 
-      btn.setAttribute('style', isSelected
-        ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-        : 'background: var(--theme-card-background); color: var(--theme-text);');
+      btn.setAttribute(
+        'style',
+        isSelected
+          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+          : 'background: var(--theme-card-background); color: var(--theme-text);'
+      );
     });
   }
 
@@ -1743,7 +1800,7 @@ export class BudgetTool extends BaseComponent {
     const ticksContainer = this.createElement('div', {
       className: 'flex justify-between mt-1',
     });
-    ['0', '50K', '100K', '150K', '200K'].forEach(tick => {
+    ['0', '50K', '100K', '150K', '200K'].forEach((tick) => {
       const tickLabel = this.createElement('span', {
         className: 'text-xs',
         textContent: tick,
@@ -1812,7 +1869,7 @@ export class BudgetTool extends BaseComponent {
     const resultLimitTicks = this.createElement('div', {
       className: 'flex justify-between mt-1',
     });
-    ['1', '3', '5', '7', '10'].forEach(tick => {
+    ['1', '3', '5', '7', '10'].forEach((tick) => {
       const tickLabel = this.createElement('span', {
         className: 'text-xs',
         textContent: tick,
@@ -1849,7 +1906,9 @@ export class BudgetTool extends BaseComponent {
 
     const description = this.createElement('p', {
       className: 'text-xs mb-3',
-      textContent: LanguageService.t('budget.distanceDesc') || 'Higher values show more alternatives, lower values show closer matches',
+      textContent:
+        LanguageService.t('budget.distanceDesc') ||
+        'Higher values show more alternatives, lower values show closer matches',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     container.appendChild(description);
@@ -1883,7 +1942,7 @@ export class BudgetTool extends BaseComponent {
     const ticksContainer = this.createElement('div', {
       className: 'flex justify-between mt-1',
     });
-    ['25', '50', '75', '100'].forEach(tick => {
+    ['25', '50', '75', '100'].forEach((tick) => {
       const tickLabel = this.createElement('span', {
         className: 'text-xs',
         textContent: tick,
@@ -1899,14 +1958,26 @@ export class BudgetTool extends BaseComponent {
    */
   private renderMobileSortSection(container: HTMLElement): void {
     const options = [
-      { id: 'match', label: LanguageService.t('budget.sortMatch') || 'Best Match', desc: LanguageService.t('budget.sortMatchDesc') || 'Closest color first' },
-      { id: 'price', label: LanguageService.t('budget.sortPrice') || 'Lowest Price', desc: LanguageService.t('budget.sortPriceDesc') || 'Cheapest first' },
-      { id: 'value', label: LanguageService.t('budget.sortValue') || 'Best Value', desc: LanguageService.t('budget.sortValueDesc') || 'Balance of match + price' },
+      {
+        id: 'match',
+        label: LanguageService.t('budget.sortMatch') || 'Best Match',
+        desc: LanguageService.t('budget.sortMatchDesc') || 'Closest color first',
+      },
+      {
+        id: 'price',
+        label: LanguageService.t('budget.sortPrice') || 'Lowest Price',
+        desc: LanguageService.t('budget.sortPriceDesc') || 'Cheapest first',
+      },
+      {
+        id: 'value',
+        label: LanguageService.t('budget.sortValue') || 'Best Value',
+        desc: LanguageService.t('budget.sortValueDesc') || 'Balance of match + price',
+      },
     ];
 
     const optionsContainer = this.createElement('div', { className: 'space-y-2' });
 
-    options.forEach(opt => {
+    options.forEach((opt) => {
       const isSelected = this.sortBy === opt.id;
       const label = this.createElement('label', {
         className: 'flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors',
@@ -1947,9 +2018,12 @@ export class BudgetTool extends BaseComponent {
         // Update mobile label styles
         optionsContainer.querySelectorAll('label').forEach((lbl, idx) => {
           const selected = options[idx].id === opt.id;
-          lbl.setAttribute('style', selected
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: transparent;');
+          lbl.setAttribute(
+            'style',
+            selected
+              ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+              : 'background: transparent;'
+          );
           const pEl = lbl.querySelector('p');
           if (pEl) {
             pEl.setAttribute('style', selected ? '' : 'color: var(--theme-text-muted);');

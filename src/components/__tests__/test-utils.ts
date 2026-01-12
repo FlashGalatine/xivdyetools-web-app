@@ -22,12 +22,7 @@ import {
 } from '@xivdyetools/test-utils';
 
 // Re-export shared utilities for convenience
-export {
-  MockLocalStorage,
-  setupLocalStorageMock,
-  setupResizeObserverMock,
-  setupCanvasMocks,
-};
+export { MockLocalStorage, setupLocalStorageMock, setupResizeObserverMock, setupCanvasMocks };
 
 // Re-export the package version as well for cases that use the new API
 export { setupFetchMockFromPackage };
@@ -93,9 +88,8 @@ export function renderComponent<T extends BaseComponent>(
   const options = isOptions ? optionsOrContainerId : undefined;
 
   const container = createTestContainer(actualContainerId as string);
-  const component = options !== undefined
-    ? new ComponentClass(container, options)
-    : new ComponentClass(container);
+  const component =
+    options !== undefined ? new ComponentClass(container, options) : new ComponentClass(container);
   component.init();
   return [component, container];
 }
@@ -118,9 +112,8 @@ export function createComponent<T extends BaseComponent>(
   const options = isOptions ? optionsOrContainerId : undefined;
 
   const container = createTestContainer(actualContainerId as string);
-  const component = options !== undefined
-    ? new ComponentClass(container, options)
-    : new ComponentClass(container);
+  const component =
+    options !== undefined ? new ComponentClass(container, options) : new ComponentClass(container);
   return [component, container];
 }
 

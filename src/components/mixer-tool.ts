@@ -22,10 +22,23 @@ import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
-import { ColorService, dyeService, LanguageService, StorageService, ToastService, MarketBoardService } from '@services/index';
+import {
+  ColorService,
+  dyeService,
+  LanguageService,
+  StorageService,
+  ToastService,
+  MarketBoardService,
+} from '@services/index';
 import { ConfigController } from '@services/config-controller';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
-import { ICON_FILTER, ICON_MARKET, ICON_PALETTE, ICON_BEAKER, ICON_SLIDERS } from '@shared/ui-icons';
+import {
+  ICON_FILTER,
+  ICON_MARKET,
+  ICON_PALETTE,
+  ICON_BEAKER,
+  ICON_SLIDERS,
+} from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
@@ -64,8 +77,8 @@ const STORAGE_KEYS = {
  * Slot dimensions in pixels
  */
 const SLOT_SIZE = {
-  input: 100,   // 100x100px for input slots
-  result: 120,  // 120x120px for result slot
+  input: 100, // 100x100px for input slots
+  result: 120, // 120x120px for result slot
 } as const;
 
 // ============================================================================
@@ -157,20 +170,19 @@ export class MixerTool extends BaseComponent {
    * Load selected dyes from storage
    */
   private loadSelectedDyes(): void {
-    const savedDyeIds = StorageService.getItem<[number | null, number | null]>(STORAGE_KEYS.selectedDyes);
+    const savedDyeIds = StorageService.getItem<[number | null, number | null]>(
+      STORAGE_KEYS.selectedDyes
+    );
 
     if (savedDyeIds) {
       this.selectedDyes = [
-        savedDyeIds[0] ? dyeService.getDyeById(savedDyeIds[0]) ?? null : null,
-        savedDyeIds[1] ? dyeService.getDyeById(savedDyeIds[1]) ?? null : null,
+        savedDyeIds[0] ? (dyeService.getDyeById(savedDyeIds[0]) ?? null) : null,
+        savedDyeIds[1] ? (dyeService.getDyeById(savedDyeIds[1]) ?? null) : null,
       ];
 
       // Recalculate blend if both dyes present
       if (this.selectedDyes[0] && this.selectedDyes[1]) {
-        this.blendedColor = this.blendColors(
-          this.selectedDyes[0].hex,
-          this.selectedDyes[1].hex
-        );
+        this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
       }
     }
   }
@@ -217,7 +229,7 @@ export class MixerTool extends BaseComponent {
     // Get exclude IDs (the two input dyes)
     const excludeIds = this.selectedDyes
       .filter((dye): dye is Dye => dye !== null)
-      .map(dye => dye.id);
+      .map((dye) => dye.id);
 
     // Get all dyes and calculate distances
     const allDyes = dyeService.getAllDyes();
@@ -279,10 +291,7 @@ export class MixerTool extends BaseComponent {
 
     // If dyes were loaded from storage, calculate blend and matches
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
-      this.blendedColor = this.blendColors(
-        this.selectedDyes[0].hex,
-        this.selectedDyes[1].hex
-      );
+      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
       this.findMatchingDyes();
       this.showEmptyState(false);
       this.updateCraftingUI();
@@ -359,10 +368,7 @@ export class MixerTool extends BaseComponent {
 
     // Calculate blend if both dyes selected
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
-      this.blendedColor = this.blendColors(
-        this.selectedDyes[0].hex,
-        this.selectedDyes[1].hex
-      );
+      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
       this.findMatchingDyes();
       this.showEmptyState(false);
       this.updateCraftingUI();
@@ -384,7 +390,9 @@ export class MixerTool extends BaseComponent {
    * shared market config (showPrices, selectedServer)
    * Note: Market state is managed by MarketBoardService
    */
-  public setConfig(config: Partial<MixerConfig> & { _tool?: string; showPrices?: boolean; selectedServer?: string }): void {
+  public setConfig(
+    config: Partial<MixerConfig> & { _tool?: string; showPrices?: boolean; selectedServer?: string }
+  ): void {
     let needsUpdate = false;
     let needsRerender = false;
     let needsPriceFetch = false;
@@ -640,20 +648,14 @@ export class MixerTool extends BaseComponent {
    */
   private handleDyeSelection(dyes: Dye[]): void {
     // Update selectedDyes array (limit to 2)
-    this.selectedDyes = [
-      dyes[0] ?? null,
-      dyes[1] ?? null,
-    ];
+    this.selectedDyes = [dyes[0] ?? null, dyes[1] ?? null];
 
     this.saveSelectedDyes();
     this.updateSelectedDyesDisplay();
 
     // Calculate blend if both dyes selected
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
-      this.blendedColor = this.blendColors(
-        this.selectedDyes[0].hex,
-        this.selectedDyes[1].hex
-      );
+      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
       this.findMatchingDyes();
       this.showEmptyState(false);
       this.updateCraftingUI();
@@ -758,7 +760,8 @@ export class MixerTool extends BaseComponent {
         className: 'w-8 h-8 flex items-center justify-center rounded-full transition-colors',
         textContent: '\u00D7',
         attributes: {
-          style: 'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
+          style:
+            'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
           title: LanguageService.t('common.remove') || 'Remove',
         },
       });
@@ -787,10 +790,7 @@ export class MixerTool extends BaseComponent {
 
     // Recalculate
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
-      this.blendedColor = this.blendColors(
-        this.selectedDyes[0].hex,
-        this.selectedDyes[1].hex
-      );
+      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
       this.findMatchingDyes();
       this.showEmptyState(false);
     } else {
@@ -880,7 +880,9 @@ export class MixerTool extends BaseComponent {
     clearContainer(right);
 
     // Apply flex styling to the right panel for proper layout
-    right.setAttribute('style', `
+    right.setAttribute(
+      'style',
+      `
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -890,7 +892,8 @@ export class MixerTool extends BaseComponent {
       gap: 32px;
       box-sizing: border-box;
       overflow-y: auto;
-    `);
+    `
+    );
 
     // Empty state (shown when dyes not selected)
     this.emptyStateContainer = this.createElement('div', {
@@ -1290,16 +1293,21 @@ export class MixerTool extends BaseComponent {
       (card as unknown as { showLab: boolean }).showLab = this.displayOptions.showLab;
       (card as unknown as { showDeltaE: boolean }).showDeltaE = this.displayOptions.showDeltaE;
       (card as unknown as { showPrice: boolean }).showPrice = this.displayOptions.showPrice;
-      (card as unknown as { showAcquisition: boolean }).showAcquisition = this.displayOptions.showAcquisition;
+      (card as unknown as { showAcquisition: boolean }).showAcquisition =
+        this.displayOptions.showAcquisition;
 
       // Listen for context actions
-      card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+      card.addEventListener('context-action', ((
+        e: CustomEvent<{ action: ContextAction; dye: Dye }>
+      ) => {
         this.handleContextAction(e.detail.action, e.detail.dye);
       }) as EventListener);
 
       // Listen for card selection
       card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {
-        ToastService.info(`${LanguageService.getDyeName(e.detail.dye.itemID) || e.detail.dye.name}`);
+        ToastService.info(
+          `${LanguageService.getDyeName(e.detail.dye.itemID) || e.detail.dye.name}`
+        );
       }) as EventListener);
 
       this.resultsGridContainer.appendChild(card);
@@ -1313,9 +1321,11 @@ export class MixerTool extends BaseComponent {
     switch (action) {
       case 'add-comparison':
         // Navigate to comparison tool with this dye
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'comparison', dye },
-        }));
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'comparison', dye },
+          })
+        );
         ToastService.success(LanguageService.t('toast.addedToComparison') || 'Added to comparison');
         break;
 
@@ -1326,7 +1336,9 @@ export class MixerTool extends BaseComponent {
         } else if (!this.selectedDyes[1]) {
           this.selectedDyes[1] = dye;
         } else {
-          ToastService.warning(LanguageService.t('mixer.slotsFullReplacing') || 'Both slots full. Replacing first dye.');
+          ToastService.warning(
+            LanguageService.t('mixer.slotsFullReplacing') || 'Both slots full. Replacing first dye.'
+          );
           this.selectedDyes[0] = this.selectedDyes[1];
           this.selectedDyes[1] = dye;
         }
@@ -1334,27 +1346,37 @@ export class MixerTool extends BaseComponent {
         break;
 
       case 'add-accessibility':
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'accessibility', dye },
-        }));
-        ToastService.success(LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check');
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'accessibility', dye },
+          })
+        );
+        ToastService.success(
+          LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check'
+        );
         break;
 
       case 'see-harmonies':
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'harmony', dye },
-        }));
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'harmony', dye },
+          })
+        );
         break;
 
       case 'budget':
-        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
-          detail: { toolId: 'budget', dye },
-        }));
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'budget', dye },
+          })
+        );
         break;
 
       case 'copy-hex':
         void navigator.clipboard.writeText(dye.hex).then(() => {
-          ToastService.success(LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard');
+          ToastService.success(
+            LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard'
+          );
         });
         break;
     }
@@ -1684,7 +1706,7 @@ export class MixerTool extends BaseComponent {
   private async fetchPricesForDisplayedDyes(): Promise<void> {
     if (!this.showPrices) return;
 
-    const dyes = this.matchedResults.map(r => r.matchedDye);
+    const dyes = this.matchedResults.map((r) => r.matchedDye);
     if (dyes.length === 0) return;
 
     try {

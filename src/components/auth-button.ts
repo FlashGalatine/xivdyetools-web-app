@@ -87,7 +87,8 @@ export class AuthButton extends BaseComponent {
     // Discord login button
     const discordBtn = this.createElement('button', {
       id: 'auth-login-discord-btn',
-      className: 'flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90',
+      className:
+        'flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90',
       attributes: {
         style: `background-color: ${DISCORD_BLURPLE};`,
         'aria-label': 'Login with Discord',
@@ -98,7 +99,8 @@ export class AuthButton extends BaseComponent {
     // XIVAuth login button
     const xivauthBtn = this.createElement('button', {
       id: 'auth-login-xivauth-btn',
-      className: 'flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90',
+      className:
+        'flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90',
       attributes: {
         style: `background-color: ${XIVAUTH_BLUE};`,
         'aria-label': 'Login with XIVAuth',
@@ -148,7 +150,8 @@ export class AuthButton extends BaseComponent {
       avatar.appendChild(img);
     } else {
       // Default avatar with initials
-      avatar.className = 'w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium';
+      avatar.className =
+        'w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium';
       avatar.style.backgroundColor = DISCORD_BLURPLE;
       avatar.textContent = (user.global_name || user.username).charAt(0).toUpperCase();
     }

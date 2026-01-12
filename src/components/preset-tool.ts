@@ -78,7 +78,11 @@ const DEFAULTS = {
 const CATEGORIES: Array<{ id: string; labelKey: string; fallback: string }> = [
   { id: 'all', labelKey: 'preset.categories.all', fallback: 'All' },
   { id: 'jobs', labelKey: 'preset.categories.jobs', fallback: 'Jobs' },
-  { id: 'grand-companies', labelKey: 'preset.categories.grandCompanies', fallback: 'Grand Companies' },
+  {
+    id: 'grand-companies',
+    labelKey: 'preset.categories.grandCompanies',
+    fallback: 'Grand Companies',
+  },
   { id: 'seasons', labelKey: 'preset.categories.seasons', fallback: 'Seasons' },
   { id: 'events', labelKey: 'preset.categories.events', fallback: 'Events' },
   { id: 'aesthetics', labelKey: 'preset.categories.aesthetics', fallback: 'Aesthetics' },
@@ -161,9 +165,11 @@ export class PresetTool extends BaseComponent {
     this.options = options;
 
     // Load persisted settings
-    this.selectedCategory = StorageService.getItem<string>(STORAGE_KEYS.category) ?? DEFAULTS.category;
+    this.selectedCategory =
+      StorageService.getItem<string>(STORAGE_KEYS.category) ?? DEFAULTS.category;
     this.sortBy = StorageService.getItem<PresetSortOption>(STORAGE_KEYS.sortBy) ?? DEFAULTS.sortBy;
-    this.currentTab = StorageService.getItem<'browse' | 'my-submissions'>(STORAGE_KEYS.tab) ?? DEFAULTS.tab;
+    this.currentTab =
+      StorageService.getItem<'browse' | 'my-submissions'>(STORAGE_KEYS.tab) ?? DEFAULTS.tab;
     this.showFavoritesOnly = StorageService.getItem<boolean>(STORAGE_KEYS.showFavorites) ?? false;
   }
 
@@ -236,9 +242,9 @@ export class PresetTool extends BaseComponent {
 
     try {
       // First check if the preset is already in our loaded presets
-      let preset = this.presets.find(p => p.id === presetId);
+      let preset = this.presets.find((p) => p.id === presetId);
       if (!preset) {
-        preset = this.featuredPresets.find(p => p.id === presetId);
+        preset = this.featuredPresets.find((p) => p.id === presetId);
       }
 
       // If not found locally, fetch from API via hybridPresetService
@@ -271,11 +277,11 @@ export class PresetTool extends BaseComponent {
     this.detailView?.destroy();
 
     // Clean up collapsible panels (desktop)
-    this.collapsiblePanels.forEach(panel => panel.destroy());
+    this.collapsiblePanels.forEach((panel) => panel.destroy());
     this.collapsiblePanels = [];
 
     // Clean up mobile collapsible panels
-    this.mobileCollapsiblePanels.forEach(panel => panel.destroy());
+    this.mobileCollapsiblePanels.forEach((panel) => panel.destroy());
     this.mobileCollapsiblePanels = [];
 
     if (this.searchDebounceTimeout) {
@@ -308,7 +314,9 @@ export class PresetTool extends BaseComponent {
         this.currentTab = newTab;
         StorageService.setItem(STORAGE_KEYS.tab, newTab);
         needsReload = true;
-        logger.info(`[PresetTool] setConfig: showMyPresetsOnly -> ${config.showMyPresetsOnly} (tab: ${newTab})`);
+        logger.info(
+          `[PresetTool] setConfig: showMyPresetsOnly -> ${config.showMyPresetsOnly} (tab: ${newTab})`
+        );
 
         // Update tab visibility UI
         this.updateTabVisibility();
@@ -356,7 +364,7 @@ export class PresetTool extends BaseComponent {
     clearContainer(left);
 
     // Clean up existing panels before re-rendering
-    this.collapsiblePanels.forEach(panel => panel.destroy());
+    this.collapsiblePanels.forEach((panel) => panel.destroy());
     this.collapsiblePanels = [];
 
     // Section 1: Search (with tabs if authenticated)
@@ -474,7 +482,8 @@ export class PresetTool extends BaseComponent {
       attributes: {
         type: 'text',
         placeholder: LanguageService.t('preset.searchPlaceholder') || 'Search presets...',
-        style: 'background: var(--theme-background); border-color: var(--theme-border); color: var(--theme-text);',
+        style:
+          'background: var(--theme-background); border-color: var(--theme-border); color: var(--theme-text);',
       },
     }) as HTMLInputElement;
 
@@ -520,9 +529,10 @@ export class PresetTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: LanguageService.t('preset.browse') || 'Browse',
       attributes: {
-        style: this.currentTab === 'browse'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        style:
+          this.currentTab === 'browse'
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
       },
     });
 
@@ -530,9 +540,10 @@ export class PresetTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: LanguageService.t('preset.mySubmissions') || 'My Submissions',
       attributes: {
-        style: this.currentTab === 'my-submissions'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        style:
+          this.currentTab === 'my-submissions'
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
       },
     });
 
@@ -563,7 +574,7 @@ export class PresetTool extends BaseComponent {
   private renderCategories(container: HTMLElement): void {
     this.categoryContainer = this.createElement('div', { className: 'space-y-1' });
 
-    CATEGORIES.forEach(cat => {
+    CATEGORIES.forEach((cat) => {
       const isSelected = this.selectedCategory === cat.id;
       const btn = this.createElement('button', {
         className: 'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
@@ -613,7 +624,7 @@ export class PresetTool extends BaseComponent {
   private renderSortOptions(container: HTMLElement): void {
     this.sortContainer = this.createElement('div', { className: 'space-y-2' });
 
-    SORT_OPTIONS.forEach(opt => {
+    SORT_OPTIONS.forEach((opt) => {
       const isSelected = this.sortBy === opt.id;
       const label = this.createElement('label', {
         className: 'flex items-center gap-2 cursor-pointer',
@@ -683,7 +694,9 @@ export class PresetTool extends BaseComponent {
         });
         avatar.appendChild(img);
       } else {
-        avatar.textContent = (this.authState.user.global_name || this.authState.user.username).charAt(0).toUpperCase();
+        avatar.textContent = (this.authState.user.global_name || this.authState.user.username)
+          .charAt(0)
+          .toUpperCase();
       }
 
       userCard.appendChild(avatar);
@@ -711,7 +724,8 @@ export class PresetTool extends BaseComponent {
         className: 'w-full px-3 py-2 text-sm rounded-lg',
         textContent: LanguageService.t('preset.viewMySubmissions') || 'My Submissions',
         attributes: {
-          style: 'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
+          style:
+            'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
         },
       });
       this.on(mySubmissionsBtn, 'click', () => {
@@ -795,7 +809,9 @@ export class PresetTool extends BaseComponent {
     // Featured section (hidden on my-submissions tab)
     const featuredSection = this.createElement('div', { className: 'mb-6 hidden' });
     featuredSection.setAttribute('data-section', 'featured');
-    featuredSection.appendChild(this.createHeader(LanguageService.t('preset.featured') || 'Featured Presets'));
+    featuredSection.appendChild(
+      this.createHeader(LanguageService.t('preset.featured') || 'Featured Presets')
+    );
     this.featuredContainer = this.createElement('div', { className: 'grid gap-4 grid-cols-2' });
     featuredSection.appendChild(this.featuredContainer);
     right.appendChild(featuredSection);
@@ -803,7 +819,9 @@ export class PresetTool extends BaseComponent {
     // Presets grid section
     const gridSection = this.createElement('div', { className: 'hidden' });
     gridSection.setAttribute('data-section', 'grid');
-    gridSection.appendChild(this.createHeader(LanguageService.t('preset.allPresets') || 'All Presets'));
+    gridSection.appendChild(
+      this.createHeader(LanguageService.t('preset.allPresets') || 'All Presets')
+    );
     this.presetsGridContainer = this.createElement('div', {
       className: 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3',
     });
@@ -876,7 +894,7 @@ export class PresetTool extends BaseComponent {
 
     if (this.currentTab === 'my-submissions') return;
 
-    this.featuredPresets.slice(0, 4).forEach(preset => {
+    this.featuredPresets.slice(0, 4).forEach((preset) => {
       const card = this.createFeaturedCard(preset);
       this.featuredContainer!.appendChild(card);
     });
@@ -888,7 +906,8 @@ export class PresetTool extends BaseComponent {
   private createFeaturedCard(preset: UnifiedPreset): HTMLElement {
     const colors = this.getPresetColors(preset);
     const card = this.createElement('div', {
-      className: 'relative p-4 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-102',
+      className:
+        'relative p-4 rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-102',
       attributes: {
         style: `background: linear-gradient(135deg, ${colors[0]}40, ${colors[2] || colors[0]}40); border: 2px solid ${colors[0]};`,
       },
@@ -924,7 +943,7 @@ export class PresetTool extends BaseComponent {
 
     // Color swatches
     const swatches = this.createElement('div', { className: 'flex gap-1 mb-3' });
-    colors.slice(0, 4).forEach(color => {
+    colors.slice(0, 4).forEach((color) => {
       const swatch = this.createElement('div', {
         className: 'w-8 h-8 rounded',
         attributes: { style: `background: ${color};` },
@@ -958,16 +977,18 @@ export class PresetTool extends BaseComponent {
     const gridSection = this.options.rightPanel.querySelector('[data-section="grid"]');
     const header = gridSection?.querySelector('h3');
     if (header) {
-      header.textContent = this.currentTab === 'my-submissions'
-        ? LanguageService.t('preset.mySubmissions') || 'My Submissions'
-        : LanguageService.t('preset.allPresets') || 'All Presets';
+      header.textContent =
+        this.currentTab === 'my-submissions'
+          ? LanguageService.t('preset.mySubmissions') || 'My Submissions'
+          : LanguageService.t('preset.allPresets') || 'All Presets';
     }
 
-    const presetsToShow = this.currentTab === 'my-submissions'
-      ? this.userSubmissions.map(p => this.communityToUnified(p))
-      : this.presets;
+    const presetsToShow =
+      this.currentTab === 'my-submissions'
+        ? this.userSubmissions.map((p) => this.communityToUnified(p))
+        : this.presets;
 
-    presetsToShow.forEach(preset => {
+    presetsToShow.forEach((preset) => {
       const card = this.createPresetCard(preset);
       this.presetsGridContainer!.appendChild(card);
     });
@@ -980,7 +1001,9 @@ export class PresetTool extends BaseComponent {
     const colors = this.getPresetColors(preset);
     const card = this.createElement('div', {
       className: 'p-4 rounded-lg cursor-pointer transition-transform hover:scale-102',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
 
     this.on(card, 'click', (e: MouseEvent) => {
@@ -1044,7 +1067,8 @@ export class PresetTool extends BaseComponent {
 
       // Edit button
       const editBtn = this.createElement('button', {
-        className: 'flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded transition-colors',
+        className:
+          'flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded transition-colors',
         attributes: {
           style: 'background: var(--theme-primary); color: var(--theme-text-header);',
           'data-action': 'edit',
@@ -1062,7 +1086,8 @@ export class PresetTool extends BaseComponent {
 
       // Delete button
       const deleteBtn = this.createElement('button', {
-        className: 'flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded transition-colors text-red-500',
+        className:
+          'flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium rounded transition-colors text-red-500',
         attributes: {
           style: 'background: transparent; border: 1px solid var(--theme-border);',
           'data-action': 'delete',
@@ -1071,7 +1096,9 @@ export class PresetTool extends BaseComponent {
       const deleteIcon = this.createElement('span', { className: 'w-3 h-3' });
       deleteIcon.innerHTML = ICON_TRASH;
       deleteBtn.appendChild(deleteIcon);
-      deleteBtn.appendChild(document.createTextNode(LanguageService.t('preset.delete') || 'Delete'));
+      deleteBtn.appendChild(
+        document.createTextNode(LanguageService.t('preset.delete') || 'Delete')
+      );
       this.on(deleteBtn, 'click', (e: MouseEvent) => {
         e.stopPropagation();
         this.handleDeletePreset(preset);
@@ -1101,7 +1128,10 @@ export class PresetTool extends BaseComponent {
     const loadMoreBtn = this.createElement('button', {
       className: 'px-6 py-2 text-sm rounded-lg transition-colors',
       textContent: LanguageService.t('preset.loadMore') || 'Load More',
-      attributes: { style: 'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style:
+          'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
+      },
     });
 
     this.on(loadMoreBtn, 'click', async () => {
@@ -1117,9 +1147,7 @@ export class PresetTool extends BaseComponent {
    */
   private getPresetColors(preset: UnifiedPreset): string[] {
     const dyes = hybridPresetService.resolveDyes(preset.dyes);
-    return dyes
-      .filter((d): d is NonNullable<typeof d> => d !== null)
-      .map(d => d.hex);
+    return dyes.filter((d): d is NonNullable<typeof d> => d !== null).map((d) => d.hex);
   }
 
   /**
@@ -1187,7 +1215,6 @@ export class PresetTool extends BaseComponent {
 
       // Check if there might be more presets
       this.hasMorePresets = newPresets.length === this.pageSize;
-
     } catch (error) {
       logger.error('[PresetTool] Failed to load presets:', error);
       this.presets = [];
@@ -1317,7 +1344,7 @@ export class PresetTool extends BaseComponent {
   private handleVoteUpdate(updatedPreset: UnifiedPreset): void {
     // Update the preset in our local arrays
     const updateInArray = (arr: UnifiedPreset[]) => {
-      const index = arr.findIndex(p => p.id === updatedPreset.id);
+      const index = arr.findIndex((p) => p.id === updatedPreset.id);
       if (index !== -1) {
         arr[index] = updatedPreset;
       }
@@ -1326,7 +1353,12 @@ export class PresetTool extends BaseComponent {
     updateInArray(this.presets);
     updateInArray(this.featuredPresets);
 
-    logger.info('[PresetTool] Vote updated for:', updatedPreset.name, 'new count:', updatedPreset.voteCount);
+    logger.info(
+      '[PresetTool] Vote updated for:',
+      updatedPreset.name,
+      'new count:',
+      updatedPreset.voteCount
+    );
   }
 
   /**
@@ -1339,7 +1371,7 @@ export class PresetTool extends BaseComponent {
     }
 
     // Find the original CommunityPreset from userSubmissions
-    const communityPreset = this.userSubmissions.find(p => p.id === preset.apiPresetId);
+    const communityPreset = this.userSubmissions.find((p) => p.id === preset.apiPresetId);
     if (!communityPreset) {
       logger.warn('[PresetTool] Cannot find original community preset for editing');
       return;
@@ -1367,8 +1399,8 @@ export class PresetTool extends BaseComponent {
     }
 
     // Show confirmation dialog
-    const confirmMessage = LanguageService.t('preset.confirmDelete') ||
-      'Are you sure you want to delete this preset?';
+    const confirmMessage =
+      LanguageService.t('preset.confirmDelete') || 'Are you sure you want to delete this preset?';
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -1403,7 +1435,7 @@ export class PresetTool extends BaseComponent {
     const drawer = this.options.drawerContent;
 
     // Clean up existing mobile panels
-    this.mobileCollapsiblePanels.forEach(panel => panel.destroy());
+    this.mobileCollapsiblePanels.forEach((panel) => panel.destroy());
     this.mobileCollapsiblePanels = [];
     this.mobileAuthButton?.destroy();
     this.mobileAuthButton = null;
@@ -1486,9 +1518,10 @@ export class PresetTool extends BaseComponent {
         className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
         textContent: LanguageService.t('preset.browse') || 'Browse',
         attributes: {
-          style: this.currentTab === 'browse'
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+          style:
+            this.currentTab === 'browse'
+              ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+              : 'background: var(--theme-background-secondary); color: var(--theme-text);',
         },
       });
 
@@ -1496,9 +1529,10 @@ export class PresetTool extends BaseComponent {
         className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
         textContent: LanguageService.t('preset.mySubmissions') || 'My Submissions',
         attributes: {
-          style: this.currentTab === 'my-submissions'
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+          style:
+            this.currentTab === 'my-submissions'
+              ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+              : 'background: var(--theme-background-secondary); color: var(--theme-text);',
         },
       });
 
@@ -1540,7 +1574,8 @@ export class PresetTool extends BaseComponent {
         type: 'text',
         placeholder: LanguageService.t('preset.searchPlaceholder') || 'Search presets...',
         value: this.searchQuery,
-        style: 'background: var(--theme-background); border-color: var(--theme-border); color: var(--theme-text);',
+        style:
+          'background: var(--theme-background); border-color: var(--theme-border); color: var(--theme-text);',
       },
     }) as HTMLInputElement;
 
@@ -1572,7 +1607,7 @@ export class PresetTool extends BaseComponent {
   private renderMobileCategories(container: HTMLElement): void {
     const categoryWrapper = this.createElement('div', { className: 'space-y-1' });
 
-    CATEGORIES.forEach(cat => {
+    CATEGORIES.forEach((cat) => {
       const isSelected = this.selectedCategory === cat.id;
       const btn = this.createElement('button', {
         className: 'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
@@ -1605,7 +1640,7 @@ export class PresetTool extends BaseComponent {
   private renderMobileSortOptions(container: HTMLElement): void {
     const sortWrapper = this.createElement('div', { className: 'space-y-2' });
 
-    SORT_OPTIONS.forEach(opt => {
+    SORT_OPTIONS.forEach((opt) => {
       const isSelected = this.sortBy === opt.id;
       const label = this.createElement('label', {
         className: 'flex items-center gap-2 cursor-pointer',
@@ -1628,8 +1663,9 @@ export class PresetTool extends BaseComponent {
         void this.loadPresets();
         // Update desktop sort options if present
         if (this.sortContainer) {
-          const desktopRadios = this.sortContainer.querySelectorAll<HTMLInputElement>('input[type="radio"]');
-          desktopRadios.forEach(r => {
+          const desktopRadios =
+            this.sortContainer.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+          desktopRadios.forEach((r) => {
             r.checked = r.value === opt.id;
           });
         }
@@ -1679,7 +1715,9 @@ export class PresetTool extends BaseComponent {
         });
         avatar.appendChild(img);
       } else {
-        avatar.textContent = (this.authState.user.global_name || this.authState.user.username).charAt(0).toUpperCase();
+        avatar.textContent = (this.authState.user.global_name || this.authState.user.username)
+          .charAt(0)
+          .toUpperCase();
       }
 
       userCard.appendChild(avatar);

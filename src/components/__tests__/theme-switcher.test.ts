@@ -722,9 +722,7 @@ describe('ThemeSwitcher', () => {
       [component, container] = renderComponent(ThemeSwitcher);
 
       const themeButtons = container.querySelectorAll('[data-theme]');
-      const themeOrder = Array.from(themeButtons).map(
-        (btn) => btn.getAttribute('data-theme')
-      );
+      const themeOrder = Array.from(themeButtons).map((btn) => btn.getAttribute('data-theme'));
 
       // Verify that within each family, light comes before dark
       // standard-light should come before standard-dark

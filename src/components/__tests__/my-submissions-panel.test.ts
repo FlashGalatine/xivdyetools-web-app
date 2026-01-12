@@ -8,10 +8,7 @@
 import { MySubmissionsPanel } from '../my-submissions-panel';
 import { authService, dyeService, presetSubmissionService } from '@services/index';
 import type { CommunityPreset, PresetStatus } from '@services/community-preset-service';
-import {
-  createTestContainer,
-  cleanupTestContainer,
-} from './test-utils';
+import { createTestContainer, cleanupTestContainer } from './test-utils';
 
 // Mock submission data
 const createMockSubmission = (overrides: Partial<CommunityPreset> = {}): CommunityPreset => ({
@@ -51,15 +48,19 @@ describe('MySubmissionsPanel', () => {
 
     // Mock dyeService.getDyeById
     vi.spyOn(dyeService, 'getDyeById').mockImplementation((id: number) => {
-      return (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null;
+      return (
+        (mockDyes[id as keyof typeof mockDyes] as ReturnType<typeof dyeService.getDyeById>) || null
+      );
     });
 
     // Mock presetSubmissionService.getStatusInfo
-    vi.spyOn(presetSubmissionService, 'getStatusInfo').mockImplementation((status: PresetStatus) => ({
-      label: status.charAt(0).toUpperCase() + status.slice(1),
-      colorClass: 'bg-yellow-100 text-yellow-800',
-      icon: '⏳',
-    }));
+    vi.spyOn(presetSubmissionService, 'getStatusInfo').mockImplementation(
+      (status: PresetStatus) => ({
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        colorClass: 'bg-yellow-100 text-yellow-800',
+        icon: '⏳',
+      })
+    );
 
     // Default: not authenticated
     vi.spyOn(authService, 'isAuthenticated').mockReturnValue(false);
@@ -109,9 +110,11 @@ describe('MySubmissionsPanel', () => {
 
       // Create a promise that we can resolve later
       let resolvePromise: (value: { presets: CommunityPreset[]; total: number }) => void;
-      const pendingPromise = new Promise<{ presets: CommunityPreset[]; total: number }>((resolve) => {
-        resolvePromise = resolve;
-      });
+      const pendingPromise = new Promise<{ presets: CommunityPreset[]; total: number }>(
+        (resolve) => {
+          resolvePromise = resolve;
+        }
+      );
 
       vi.spyOn(presetSubmissionService, 'getMySubmissions').mockReturnValue(pendingPromise);
 
@@ -119,7 +122,7 @@ describe('MySubmissionsPanel', () => {
       panel.render(); // Don't await yet
 
       // Check loading state is shown initially
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
       expect(container.textContent).toContain('Loading your submissions...');
 
       // Resolve the promise
@@ -130,16 +133,18 @@ describe('MySubmissionsPanel', () => {
       vi.mocked(authService.isAuthenticated).mockReturnValue(true);
 
       let resolvePromise: (value: { presets: CommunityPreset[]; total: number }) => void;
-      const pendingPromise = new Promise<{ presets: CommunityPreset[]; total: number }>((resolve) => {
-        resolvePromise = resolve;
-      });
+      const pendingPromise = new Promise<{ presets: CommunityPreset[]; total: number }>(
+        (resolve) => {
+          resolvePromise = resolve;
+        }
+      );
 
       vi.spyOn(presetSubmissionService, 'getMySubmissions').mockReturnValue(pendingPromise);
 
       panel = new MySubmissionsPanel(container);
       panel.render();
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
       const spinner = container.querySelector('.animate-spin');
       expect(spinner).not.toBeNull();
 
@@ -295,7 +300,9 @@ describe('MySubmissionsPanel', () => {
   describe('Error State', () => {
     it('should show error state when API fails', async () => {
       vi.mocked(authService.isAuthenticated).mockReturnValue(true);
-      vi.spyOn(presetSubmissionService, 'getMySubmissions').mockRejectedValue(new Error('API Error'));
+      vi.spyOn(presetSubmissionService, 'getMySubmissions').mockRejectedValue(
+        new Error('API Error')
+      );
       vi.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console error
 
       panel = new MySubmissionsPanel(container);

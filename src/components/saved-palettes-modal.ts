@@ -7,7 +7,13 @@
  * @module components/saved-palettes-modal
  */
 
-import { ModalService, PaletteService, LanguageService, ToastService, dyeService } from '@services/index';
+import {
+  ModalService,
+  PaletteService,
+  LanguageService,
+  ToastService,
+  dyeService,
+} from '@services/index';
 import type { SavedPalette } from '@services/palette-service';
 import { ICON_FOLDER } from '@shared/empty-state-icons';
 
@@ -117,7 +123,13 @@ export function showSavedPalettesModal(onLoad?: OnPaletteLoadCallback): void {
   }
 
   const maybeShow = (ModalService as unknown as Record<string, unknown>).show as
-    | ((config: { type: 'custom'; title: string; content: HTMLElement; size?: 'sm' | 'md' | 'lg'; closable?: boolean }) => void)
+    | ((config: {
+        type: 'custom';
+        title: string;
+        content: HTMLElement;
+        size?: 'sm' | 'md' | 'lg';
+        closable?: boolean;
+      }) => void)
     | undefined;
   if (typeof maybeShow === 'function') {
     maybeShow({
@@ -134,7 +146,6 @@ export function showSavedPalettesModal(onLoad?: OnPaletteLoadCallback): void {
     fallback.appendChild(content);
     document.body.appendChild(fallback);
   }
-
 }
 
 /**
@@ -411,7 +422,13 @@ export function showSavePaletteDialog(
 
   try {
     const maybeShow = (ModalService as unknown as Record<string, unknown>).show as
-      | ((config: { type: 'custom'; title: string; content: HTMLElement; size?: 'sm' | 'md' | 'lg'; closable?: boolean }) => void)
+      | ((config: {
+          type: 'custom';
+          title: string;
+          content: HTMLElement;
+          size?: 'sm' | 'md' | 'lg';
+          closable?: boolean;
+        }) => void)
       | undefined;
     if (typeof maybeShow === 'function') {
       maybeShow({

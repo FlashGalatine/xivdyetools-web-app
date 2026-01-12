@@ -981,7 +981,7 @@ describe('BaseComponent', () => {
 
       // Should be stored with custom_ prefix (key format: custom_${eventName}_${timestamp}_${size})
       const keys = Array.from(component.getListeners().keys());
-      expect(keys.some(key => key.startsWith('custom_stored-event_'))).toBe(true);
+      expect(keys.some((key) => key.startsWith('custom_stored-event_'))).toBe(true);
     });
 
     it('should clean up custom event listeners on destroy', () => {
@@ -991,7 +991,7 @@ describe('BaseComponent', () => {
 
       // Verify listener is added (key format: custom_${eventName}_${timestamp}_${size})
       const keys = Array.from(component.getListeners().keys());
-      expect(keys.some(key => key.startsWith('custom_cleanup-event_'))).toBe(true);
+      expect(keys.some((key) => key.startsWith('custom_cleanup-event_'))).toBe(true);
 
       // Destroy component
       component.destroy();

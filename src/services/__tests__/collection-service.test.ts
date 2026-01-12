@@ -149,7 +149,10 @@ describe('CollectionService', () => {
     });
 
     it('should create a collection', () => {
-      const collection = CollectionService.createCollection('Test Collection', 'A test description');
+      const collection = CollectionService.createCollection(
+        'Test Collection',
+        'A test description'
+      );
 
       expect(collection).not.toBeNull();
       expect(collection!.name).toBe('Test Collection');

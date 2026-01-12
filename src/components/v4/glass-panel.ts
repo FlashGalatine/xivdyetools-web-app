@@ -91,7 +91,8 @@ export class GlassPanel extends BaseLitComponent {
         border: 1px solid var(--v4-glass-border, rgba(255, 255, 255, 0.1));
         border-radius: 12px;
         overflow: hidden;
-        transition: transform var(--v4-transition-fast, 150ms),
+        transition:
+          transform var(--v4-transition-fast, 150ms),
           box-shadow var(--v4-transition-fast, 150ms);
       }
 

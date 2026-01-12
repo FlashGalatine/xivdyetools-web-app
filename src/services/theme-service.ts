@@ -56,7 +56,7 @@ function createThemePalette(config: ThemePaletteConfig): ThemePalette {
     // Default card: same as main background
     cardBackground: overrides.cardBackground ?? background,
     // Default hover: same as secondary background
-    cardHover: overrides.cardHover ?? (overrides.backgroundSecondary ?? background),
+    cardHover: overrides.cardHover ?? overrides.backgroundSecondary ?? background,
     // Default muted text: inherit from text (should be overridden for proper contrast)
     textMuted: overrides.textMuted ?? text,
     // Apply any additional overrides
@@ -566,7 +566,16 @@ export class ThemeService {
    * Use this for guaranteed string returns on core theme properties
    */
   static getRequiredColor(
-    key: 'primary' | 'background' | 'text' | 'textHeader' | 'border' | 'backgroundSecondary' | 'cardBackground' | 'cardHover' | 'textMuted'
+    key:
+      | 'primary'
+      | 'background'
+      | 'text'
+      | 'textHeader'
+      | 'border'
+      | 'backgroundSecondary'
+      | 'cardBackground'
+      | 'cardHover'
+      | 'textMuted'
   ): string {
     const palette = THEME_PALETTES[this.currentTheme];
     return palette[key];

@@ -92,6 +92,8 @@ export interface ComparisonConfig {
   showHsv: boolean;
   /** Show market prices */
   showMarketPrices: boolean;
+  /** Display options for result cards */
+  displayOptions: DisplayOptionsConfig;
 }
 
 /**
@@ -294,6 +296,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     showRgb: true,
     showHsv: false,
     showMarketPrices: true,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   gradient: {
     stepCount: 8,

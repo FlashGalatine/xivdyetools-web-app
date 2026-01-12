@@ -964,7 +964,7 @@ describe('SecureStorage', () => {
       }
 
       StorageService.clear();
-      
+
       await SecureStorage.setItem('indexed', 'test-value');
 
       // Entry should be stored
@@ -978,7 +978,7 @@ describe('SecureStorage', () => {
       }
 
       StorageService.clear();
-      
+
       await SecureStorage.setItem('to_remove', 'value');
       SecureStorage.removeItem('to_remove');
 
@@ -1007,7 +1007,7 @@ describe('SecureStorage', () => {
       }
 
       StorageService.clear();
-      
+
       // First setItem populates the index
       await SecureStorage.setItem('first', 'value1');
       // Second setItem should use cached index
@@ -1043,7 +1043,7 @@ describe('SecureStorage', () => {
 
       // Should still work with fallback hash
       const result = await SecureStorage.setItem('fallback-test', 'value');
-      
+
       Object.defineProperty(window.crypto, 'subtle', {
         value: originalSubtle,
         configurable: true,
@@ -1101,8 +1101,10 @@ describe('SecureStorage', () => {
 
       // Store valid entry then tamper with it
       await SecureStorage.setItem('tampered', 'original');
-      
-      const entry = StorageService.getItem<{ value: string; checksum: string; timestamp: number }>('tampered');
+
+      const entry = StorageService.getItem<{ value: string; checksum: string; timestamp: number }>(
+        'tampered'
+      );
       if (entry) {
         entry.value = 'modified_value';
         StorageService.setItem('tampered', entry);
@@ -1264,7 +1266,7 @@ describe('SecureStorage', () => {
       }
 
       StorageService.clear();
-      
+
       await SecureStorage.setItem('to_delete', 'value');
       const success = SecureStorage.removeItem('to_delete');
 
@@ -1279,7 +1281,7 @@ describe('SecureStorage', () => {
       }
 
       StorageService.clear();
-      
+
       // Removing a key that doesn't exist
       const success = SecureStorage.removeItem('never_existed');
 

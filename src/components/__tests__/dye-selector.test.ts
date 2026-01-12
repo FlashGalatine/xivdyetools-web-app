@@ -321,9 +321,7 @@ describe('DyeSelector', () => {
       await waitForComponent(50);
 
       // Re-query buttons after component update
-      const updatedAllBtn = container.querySelector(
-        '[data-category="all"]'
-      ) as HTMLButtonElement;
+      const updatedAllBtn = container.querySelector('[data-category="all"]') as HTMLButtonElement;
       const updatedRedsBtn = container.querySelector('[data-category="Reds"]') as HTMLButtonElement;
 
       // All should no longer be highlighted

@@ -15,11 +15,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { DyeSelector, type DyeSelectorOptions } from '../dye-selector';
 import { CollectionService } from '@services/collection-service';
 import { DyeService } from '@services/index';
-import {
-  createTestContainer,
-  cleanupComponent,
-  waitForComponent,
-} from './test-utils';
+import { createTestContainer, cleanupComponent, waitForComponent } from './test-utils';
 
 describe('DyeSelector Branch Coverage', () => {
   let container: HTMLElement;

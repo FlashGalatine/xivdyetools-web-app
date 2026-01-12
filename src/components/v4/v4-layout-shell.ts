@@ -174,7 +174,8 @@ export class V4LayoutShell extends BaseLitComponent {
         background: var(--theme-primary, #d4af37);
         color: var(--theme-text-on-primary, #000);
         cursor: pointer;
-        box-shadow: var(--v4-shadow-soft, 0 4px 6px rgba(0, 0, 0, 0.3)),
+        box-shadow:
+          var(--v4-shadow-soft, 0 4px 6px rgba(0, 0, 0, 0.3)),
           var(--v4-shadow-glow, 0 0 10px rgba(212, 175, 55, 0.2));
         z-index: 100;
         font-size: 24px;
@@ -205,7 +206,9 @@ export class V4LayoutShell extends BaseLitComponent {
         cursor: pointer;
         box-shadow: var(--v4-shadow-soft, 0 4px 6px rgba(0, 0, 0, 0.3));
         z-index: 100;
-        transition: transform var(--v4-transition-fast, 150ms), opacity 0.2s;
+        transition:
+          transform var(--v4-transition-fast, 150ms),
+          opacity 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -365,7 +368,9 @@ export class V4LayoutShell extends BaseLitComponent {
         border-radius: 12px;
         overflow: hidden;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
         flex: 1 1 200px;
         min-width: 200px;
         max-width: 280px;
@@ -805,7 +810,7 @@ export class V4LayoutShell extends BaseLitComponent {
 
         <!-- Right Palette Drawer (hidden for extractor, swatch, presets) -->
         ${this.shouldShowPalette
-        ? html`
+          ? html`
               <dye-palette-drawer
                 ?is-open=${this.paletteDrawerOpen}
                 @drawer-toggle=${this.handlePaletteDrawerToggle}
@@ -813,7 +818,7 @@ export class V4LayoutShell extends BaseLitComponent {
                 @clear-all-dyes=${this.handleClearAllDyes}
               ></dye-palette-drawer>
             `
-        : ''}
+          : ''}
       </div>
 
       <!-- Mobile Sidebar Toggle FAB -->
@@ -830,7 +835,10 @@ export class V4LayoutShell extends BaseLitComponent {
 
       <!-- Palette Drawer Toggle FAB (hidden when drawer is open or tool doesn't use palette) -->
       <button
-        class="v4-palette-toggle ${this.paletteDrawerOpen ? 'drawer-open' : ''} ${!this.shouldShowPalette ? 'no-palette' : ''}"
+        class="v4-palette-toggle ${this.paletteDrawerOpen ? 'drawer-open' : ''} ${!this
+          .shouldShowPalette
+          ? 'no-palette'
+          : ''}"
         type="button"
         title="Show color palette"
         aria-label="Show color palette"
@@ -838,7 +846,9 @@ export class V4LayoutShell extends BaseLitComponent {
         @click=${this.togglePaletteDrawer}
       >
         <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+          <path
+            d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
+          />
         </svg>
       </button>
     `;

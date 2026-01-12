@@ -19,7 +19,14 @@
  * @deprecated Import directly from '@xivdyetools/types' instead.
  * These re-exports will be removed in the next major version.
  */
-export type { RGB, HSV, HexColor, VisionType, Matrix3x3, ColorblindMatrices } from '@xivdyetools/types';
+export type {
+  RGB,
+  HSV,
+  HexColor,
+  VisionType,
+  Matrix3x3,
+  ColorblindMatrices,
+} from '@xivdyetools/types';
 /**
  * @deprecated Import directly from '@xivdyetools/types' instead.
  * These re-exports will be removed in the next major version.

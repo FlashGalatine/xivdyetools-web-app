@@ -346,8 +346,8 @@ describe('ChangelogModal Branch Coverage - Version Section Styling', () => {
     const versionHeaders = content.querySelectorAll('h4');
 
     // Find the one with the version number pattern vX.X.X
-    const currentVersionHeader = Array.from(versionHeaders).find(
-      (h) => h.textContent?.match(/^v2\.3\.0$/)
+    const currentVersionHeader = Array.from(versionHeaders).find((h) =>
+      h.textContent?.match(/^v2\.3\.0$/)
     );
 
     // Current version should NOT have its own header (that's only for non-current entries)

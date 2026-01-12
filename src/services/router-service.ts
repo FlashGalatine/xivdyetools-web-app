@@ -158,7 +158,7 @@ export class RouterService {
     const newParams = new URLSearchParams();
 
     // Copy preserved params
-    PRESERVED_PARAMS.forEach(key => {
+    PRESERVED_PARAMS.forEach((key) => {
       const value = currentParams.get(key);
       if (value) newParams.set(key, value);
     });
@@ -200,7 +200,7 @@ export class RouterService {
     const currentParams = new URLSearchParams(window.location.search);
     const newParams = new URLSearchParams();
 
-    PRESERVED_PARAMS.forEach(key => {
+    PRESERVED_PARAMS.forEach((key) => {
       const value = currentParams.get(key);
       if (value) newParams.set(key, value);
     });
@@ -254,7 +254,7 @@ export class RouterService {
    * Get route definition for a tool
    */
   static getRouteForTool(toolId: ToolId): RouteDefinition | undefined {
-    return ROUTES.find(r => r.id === toolId);
+    return ROUTES.find((r) => r.id === toolId);
   }
 
   /**
@@ -263,12 +263,12 @@ export class RouterService {
    */
   static getToolFromPath(path: string): ToolId | null {
     // First try exact match
-    const exactMatch = ROUTES.find(r => r.path === path || r.path === `/${path}`);
+    const exactMatch = ROUTES.find((r) => r.path === path || r.path === `/${path}`);
     if (exactMatch) return exactMatch.id;
 
     // Try prefix match for nested routes (e.g., /presets/community-xxx)
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    const prefixMatch = ROUTES.find(r => normalizedPath.startsWith(r.path + '/'));
+    const prefixMatch = ROUTES.find((r) => normalizedPath.startsWith(r.path + '/'));
     return prefixMatch?.id ?? null;
   }
 
@@ -297,7 +297,7 @@ export class RouterService {
    * Check if a tool ID is valid
    */
   static isValidToolId(id: string): id is ToolId {
-    return ROUTES.some(r => r.id === id);
+    return ROUTES.some((r) => r.id === id);
   }
 
   /**
@@ -377,7 +377,7 @@ export class RouterService {
 
   private static notifyListeners(): void {
     const state = this.getCurrentRoute();
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(state);
       } catch (error) {

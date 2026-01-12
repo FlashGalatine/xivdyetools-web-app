@@ -303,21 +303,21 @@ describe('createDyeActionDropdown', () => {
 // Branch Coverage - Additional Tests
 // ==========================================================================
 
-describe('Branch Coverage - Clipboard Fallback', function() {
+describe('Branch Coverage - Clipboard Fallback', function () {
   let container: HTMLElement;
   let testDye: Dye;
 
-  beforeEach(function() {
+  beforeEach(function () {
     container = createTestContainer();
     testDye = mockDyeData[0] as Dye;
   });
 
-  afterEach(function() {
+  afterEach(function () {
     cleanupTestContainer(container);
     vi.clearAllMocks();
   });
 
-  it('should use fallback when navigator.clipboard fails', async function() {
+  it('should use fallback when navigator.clipboard fails', async function () {
     Object.assign(navigator, {
       clipboard: {
         writeText: vi.fn().mockRejectedValue(new Error('Clipboard denied')),
@@ -336,7 +336,7 @@ describe('Branch Coverage - Clipboard Fallback', function() {
     const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
     (menuItems[5] as HTMLElement).click();
 
-    await new Promise(r => setTimeout(r, 20));
+    await new Promise((r) => setTimeout(r, 20));
     expect(execMock).toHaveBeenCalledWith('copy');
   });
 });

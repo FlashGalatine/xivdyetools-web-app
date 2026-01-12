@@ -188,7 +188,8 @@ export class ThemeModal {
       // Check mark for selected
       if (isSelected) {
         const checkMark = document.createElement('span');
-        checkMark.className = 'absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs';
+        checkMark.className =
+          'absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs';
         checkMark.style.backgroundColor = 'var(--theme-primary)';
         checkMark.style.color = textColor;
         checkMark.textContent = '✓';

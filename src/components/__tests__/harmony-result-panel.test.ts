@@ -8,11 +8,7 @@
 import { HarmonyResultPanel, type HarmonyResultPanelOptions } from '../harmony-result-panel';
 import { LanguageService, APIService } from '@services/index';
 import type { Dye, PriceData } from '@shared/types';
-import {
-  createTestContainer,
-  cleanupTestContainer,
-  cleanupComponent,
-} from './test-utils';
+import { createTestContainer, cleanupTestContainer, cleanupComponent } from './test-utils';
 
 // Mock dye data
 const createMockDye = (overrides: Partial<Dye> = {}): Dye => ({
@@ -34,7 +30,9 @@ const createMockDye = (overrides: Partial<Dye> = {}): Dye => ({
 });
 
 // Mock options
-const createMockOptions = (overrides: Partial<HarmonyResultPanelOptions> = {}): HarmonyResultPanelOptions => ({
+const createMockOptions = (
+  overrides: Partial<HarmonyResultPanelOptions> = {}
+): HarmonyResultPanelOptions => ({
   label: 'Harmony 1',
   targetColor: '#FF5500',
   matchedDye: createMockDye(),
@@ -127,21 +125,27 @@ describe('HarmonyResultPanel', () => {
 
   describe('Deviance Display', () => {
     it('should display deviance for harmony panels', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        deviance: 12.5,
-        isBase: false,
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createMockOptions({
+          deviance: 12.5,
+          isBase: false,
+        })
+      );
       panel.init();
 
       expect(container.textContent).toContain('12.5°');
     });
 
     it('should not display deviance for base panel', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        deviance: 0,
-        isBase: true,
-        label: 'Base',
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createMockOptions({
+          deviance: 0,
+          isBase: true,
+          label: 'Base',
+        })
+      );
       panel.init();
 
       // Should not have deviance display
@@ -202,10 +206,13 @@ describe('HarmonyResultPanel', () => {
 
     it('should not display closest dyes for base panel', () => {
       const closestDyes = [createMockDye({ id: 2 })];
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        closestDyes,
-        isBase: true,
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createMockOptions({
+          closestDyes,
+          isBase: true,
+        })
+      );
       panel.init();
 
       const swatches = container.querySelectorAll('button[aria-label^="Swap to"]');
@@ -215,10 +222,13 @@ describe('HarmonyResultPanel', () => {
     it('should call onSwapDye when closest dye swatch is clicked', () => {
       const onSwapDye = vi.fn();
       const closestDye = createMockDye({ id: 2, name: 'Swap Target' });
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        closestDyes: [closestDye],
-        onSwapDye,
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createMockOptions({
+          closestDyes: [closestDye],
+          onSwapDye,
+        })
+      );
       panel.init();
 
       const swatch = container.querySelector('button[aria-label^="Swap to"]') as HTMLButtonElement;
@@ -257,11 +267,14 @@ describe('HarmonyResultPanel', () => {
       // Mock APIService.formatPrice
       vi.spyOn(APIService, 'formatPrice').mockReturnValue('5,000 gil');
 
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        matchedDye: dye,
-        showPrices: true,
-        priceData,
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createMockOptions({
+          matchedDye: dye,
+          showPrices: true,
+          priceData,
+        })
+      );
       panel.init();
 
       expect(container.textContent).toContain('5,000 gil');
@@ -278,11 +291,14 @@ describe('HarmonyResultPanel', () => {
         lastUpdate: Date.now(),
       });
 
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        matchedDye: dye,
-        showPrices: false,
-        priceData,
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createMockOptions({
+          matchedDye: dye,
+          showPrices: false,
+          priceData,
+        })
+      );
       panel.init();
 
       expect(container.textContent).not.toContain('gil');
@@ -301,11 +317,14 @@ describe('HarmonyResultPanel', () => {
 
       vi.spyOn(APIService, 'formatPrice').mockReturnValue('5,000 gil');
 
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        matchedDye: dye,
-        showPrices: false,
-        priceData,
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createMockOptions({
+          matchedDye: dye,
+          showPrices: false,
+          priceData,
+        })
+      );
       panel.init();
 
       expect(container.textContent).not.toContain('5,000 gil');
@@ -322,12 +341,15 @@ describe('HarmonyResultPanel', () => {
   describe('State Getter', () => {
     it('should return correct state', () => {
       const closestDyes = [createMockDye(), createMockDye()];
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        label: 'Test Label',
-        deviance: 7.5,
-        isBase: false,
-        closestDyes,
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createMockOptions({
+          label: 'Test Label',
+          deviance: 7.5,
+          isBase: false,
+          closestDyes,
+        })
+      );
       panel.init();
 
       const state = panel['getState']();

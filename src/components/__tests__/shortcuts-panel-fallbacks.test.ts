@@ -36,7 +36,7 @@ describe('shortcuts-panel fallbacks', () => {
       });
 
       showShortcutsPanel();
-      
+
       const call = vi.mocked(ModalService.show).mock.calls[0][0];
       const content = call.content as HTMLElement;
       expect(content.textContent).toContain('Navigation');
@@ -49,7 +49,7 @@ describe('shortcuts-panel fallbacks', () => {
       });
 
       showShortcutsPanel();
-      
+
       const call = vi.mocked(ModalService.show).mock.calls[0][0];
       const content = call.content as HTMLElement;
       expect(content.textContent).toContain('Switch between tools');
@@ -62,7 +62,7 @@ describe('shortcuts-panel fallbacks', () => {
       });
 
       showShortcutsPanel();
-      
+
       const call = vi.mocked(ModalService.show).mock.calls[0][0];
       const content = call.content as HTMLElement;
       expect(content.textContent).toContain('Close modal or dropdown');
@@ -75,7 +75,7 @@ describe('shortcuts-panel fallbacks', () => {
       });
 
       showShortcutsPanel();
-      
+
       const call = vi.mocked(ModalService.show).mock.calls[0][0];
       const content = call.content as HTMLElement;
       expect(content.textContent).toContain('Quick Actions');
@@ -88,7 +88,7 @@ describe('shortcuts-panel fallbacks', () => {
       });
 
       showShortcutsPanel();
-      
+
       const call = vi.mocked(ModalService.show).mock.calls[0][0];
       const content = call.content as HTMLElement;
       expect(content.textContent).toContain('Toggle theme');
@@ -101,7 +101,7 @@ describe('shortcuts-panel fallbacks', () => {
       });
 
       showShortcutsPanel();
-      
+
       expect(ModalService.show).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Keyboard Shortcuts',
@@ -118,7 +118,8 @@ describe('shortcuts-panel fallbacks', () => {
       const content = call.content as HTMLElement;
 
       // Should contain either Ctrl or Cmd depending on platform
-      const hasModifier = content.textContent?.includes('Ctrl') || content.textContent?.includes('Cmd');
+      const hasModifier =
+        content.textContent?.includes('Ctrl') || content.textContent?.includes('Cmd');
       expect(hasModifier).toBe(true);
     });
 

@@ -28,11 +28,23 @@ interface ToolDefinition {
  * Tool definitions in display order
  */
 const TOOLS: ToolDefinition[] = [
-  { id: 'harmony', label: 'Harmony', description: 'Explore color harmonies and find complementary dyes' },
+  {
+    id: 'harmony',
+    label: 'Harmony',
+    description: 'Explore color harmonies and find complementary dyes',
+  },
   { id: 'extractor', label: 'Extractor', description: 'Extract color palettes from images' },
-  { id: 'accessibility', label: 'Access', description: 'Simulate colorblindness and check WCAG contrast' },
+  {
+    id: 'accessibility',
+    label: 'Access',
+    description: 'Simulate colorblindness and check WCAG contrast',
+  },
   { id: 'comparison', label: 'Compare', description: 'Compare multiple dyes side by side' },
-  { id: 'gradient', label: 'Gradient', description: 'Create smooth color transitions between dyes' },
+  {
+    id: 'gradient',
+    label: 'Gradient',
+    description: 'Create smooth color transitions between dyes',
+  },
   { id: 'mixer', label: 'Mixer', description: 'Mix two dyes to find blended color matches' },
   { id: 'presets', label: 'Presets', description: 'Browse and share community dye palettes' },
   { id: 'budget', label: 'Budget', description: 'Find affordable alternatives to expensive dyes' },
@@ -116,7 +128,8 @@ export class ToolBanner extends BaseLitComponent {
         color: var(--theme-text-muted, #a0a0a0);
         cursor: pointer;
         position: relative;
-        transition: color var(--v4-transition-fast, 150ms),
+        transition:
+          color var(--v4-transition-fast, 150ms),
           background-color var(--v4-transition-fast, 150ms);
         flex-shrink: 0;
       }
@@ -272,9 +285,7 @@ export class ToolBanner extends BaseLitComponent {
         data-tool=${tool.id}
         @click=${() => this.handleToolClick(tool.id)}
       >
-        <span class="v4-tool-icon" aria-hidden="true">
-          ${icon ? unsafeHTML(icon) : nothing}
-        </span>
+        <span class="v4-tool-icon" aria-hidden="true"> ${icon ? unsafeHTML(icon) : nothing} </span>
         <span class="v4-tool-label">${tool.label}</span>
       </button>
     `;

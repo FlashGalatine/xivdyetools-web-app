@@ -83,7 +83,9 @@ export class ComparisonMockup extends BaseComponent {
     chartsGrid.appendChild(this.createChart('Hue-Saturation Plot', this.createHueSatPlot()));
 
     // Brightness Chart
-    chartsGrid.appendChild(this.createChart('Brightness Distribution', this.createBrightnessChart()));
+    chartsGrid.appendChild(
+      this.createChart('Brightness Distribution', this.createBrightnessChart())
+    );
 
     right.appendChild(chartsGrid);
 
@@ -105,12 +107,17 @@ export class ComparisonMockup extends BaseComponent {
   }
 
   private createSection(label: string): HTMLElement {
-    const section = this.createElement('div', { className: 'p-4 border-b', attributes: { style: 'border-color: var(--theme-border);' } });
-    section.appendChild(this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
-      textContent: label,
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    }));
+    const section = this.createElement('div', {
+      className: 'p-4 border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+    section.appendChild(
+      this.createElement('h3', {
+        className: 'text-sm font-semibold uppercase tracking-wider mb-3',
+        textContent: label,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      })
+    );
     return section;
   }
 
@@ -125,7 +132,7 @@ export class ComparisonMockup extends BaseComponent {
   private createDyeSelector(): HTMLElement {
     const container = this.createElement('div', { className: 'space-y-2' });
 
-    this.selectedDyes.forEach(dye => {
+    this.selectedDyes.forEach((dye) => {
       const item = this.createElement('div', {
         className: 'flex items-center gap-3 p-2 rounded-lg',
         attributes: { style: 'background: var(--theme-background-secondary);' },
@@ -152,8 +159,10 @@ export class ComparisonMockup extends BaseComponent {
 
   private createOptions(): HTMLElement {
     const container = this.createElement('div', { className: 'space-y-2' });
-    ['Show Distance Values', 'Highlight Closest Pair', 'Show Price Comparison'].forEach(opt => {
-      const label = this.createElement('label', { className: 'flex items-center gap-2 cursor-pointer' });
+    ['Show Distance Values', 'Highlight Closest Pair', 'Show Price Comparison'].forEach((opt) => {
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-2 cursor-pointer',
+      });
       label.innerHTML = `<input type="checkbox" class="w-4 h-4 rounded"><span class="text-sm" style="color: var(--theme-text);">${opt}</span>`;
       container.appendChild(label);
     });
@@ -174,13 +183,17 @@ export class ComparisonMockup extends BaseComponent {
     // Use flex column so content can expand to fill available height (for Grid alignment)
     const card = this.createElement('div', {
       className: 'p-4 rounded-lg flex flex-col',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
-    card.appendChild(this.createElement('h4', {
-      className: 'text-sm font-medium mb-3 flex-shrink-0',
-      textContent: title,
-      attributes: { style: 'color: var(--theme-text);' },
-    }));
+    card.appendChild(
+      this.createElement('h4', {
+        className: 'text-sm font-medium mb-3 flex-shrink-0',
+        textContent: title,
+        attributes: { style: 'color: var(--theme-text);' },
+      })
+    );
     // Wrap content in flex-1 container to fill remaining space
     const contentWrapper = this.createElement('div', { className: 'flex-1 flex flex-col min-h-0' });
     contentWrapper.appendChild(content);
@@ -206,9 +219,13 @@ export class ComparisonMockup extends BaseComponent {
           <line x1="50" y1="0" x2="50" y2="100" stroke="var(--theme-border)" stroke-dasharray="2" opacity="0.5" />
           <line x1="75" y1="0" x2="75" y2="100" stroke="var(--theme-border)" stroke-dasharray="2" opacity="0.5" />
           <!-- Data points - smaller dots (r=4) -->
-          ${this.selectedDyes.map(d => `
+          ${this.selectedDyes
+            .map(
+              (d) => `
             <circle cx="${(d.h / 360) * 100}" cy="${100 - d.s}" r="4" fill="${d.hex}" stroke="white" stroke-width="1.5" />
-          `).join('')}
+          `
+            )
+            .join('')}
           <!-- X-axis tick labels (Hue: 0° to 360°) -->
           <text x="0" y="105" text-anchor="middle" font-size="4" fill="var(--theme-text-muted)">0°</text>
           <text x="25" y="105" text-anchor="middle" font-size="4" fill="var(--theme-text-muted)">90°</text>
@@ -238,7 +255,7 @@ export class ComparisonMockup extends BaseComponent {
     // Bar chart area - flex-1 expands to fill available space, items-end aligns bars to bottom
     // h-full ensures it takes the flex-1 calculated height
     const chart = this.createElement('div', { className: 'flex items-end gap-4 flex-1 h-full' });
-    this.selectedDyes.forEach(dye => {
+    this.selectedDyes.forEach((dye) => {
       // h-full on wrapper + percentage height on bar = proportional bars that fill space
       const bar = this.createElement('div', { className: 'flex-1 h-full flex items-end' });
       bar.innerHTML = `
@@ -249,8 +266,11 @@ export class ComparisonMockup extends BaseComponent {
     container.appendChild(chart);
 
     // Labels row with name + percentage (bars already show color)
-    const labels = this.createElement('div', { className: 'flex gap-4 mt-2 pt-2 border-t flex-shrink-0', attributes: { style: 'border-color: var(--theme-border);' } });
-    this.selectedDyes.forEach(dye => {
+    const labels = this.createElement('div', {
+      className: 'flex gap-4 mt-2 pt-2 border-t flex-shrink-0',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+    this.selectedDyes.forEach((dye) => {
       const label = this.createElement('div', { className: 'flex-1 text-center' });
       label.innerHTML = `
         <span class="text-xs font-medium block truncate" style="color: var(--theme-text);">${dye.name}</span>
@@ -266,12 +286,14 @@ export class ComparisonMockup extends BaseComponent {
   private createDistanceMatrix(): HTMLElement {
     const matrix = this.createElement('div', {
       className: 'rounded-lg overflow-hidden',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
 
     let html = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th></th>';
     // Column headers with swatch + name
-    this.selectedDyes.forEach(d => {
+    this.selectedDyes.forEach((d) => {
       html += `<th class="p-2 text-center">
         <div class="w-6 h-6 rounded mx-auto mb-1" style="background: ${d.hex};"></div>
         <span class="text-xs font-normal block truncate max-w-20" style="color: var(--theme-text-muted);">${d.name}</span>

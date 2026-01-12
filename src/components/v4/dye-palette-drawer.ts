@@ -131,7 +131,9 @@ export class DyePaletteDrawer extends BaseLitComponent {
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: color 0.2s, background 0.2s;
+        transition:
+          color 0.2s,
+          background 0.2s;
       }
 
       .close-btn:hover {
@@ -157,7 +159,10 @@ export class DyePaletteDrawer extends BaseLitComponent {
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: color 0.2s, background 0.2s, transform 0.15s;
+        transition:
+          color 0.2s,
+          background 0.2s,
+          transform 0.15s;
       }
 
       .action-btn:hover {
@@ -220,7 +225,9 @@ export class DyePaletteDrawer extends BaseLitComponent {
         color: var(--theme-text, #e0e0e0);
         font-size: 14px;
         outline: none;
-        transition: border-color 0.2s, background 0.2s;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
       }
 
       .search-input::placeholder {
@@ -351,7 +358,10 @@ export class DyePaletteDrawer extends BaseLitComponent {
         border-radius: 6px;
         cursor: pointer;
         border: 2px solid transparent;
-        transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+        transition:
+          transform 0.15s,
+          border-color 0.15s,
+          box-shadow 0.15s;
         position: relative;
       }
 
@@ -403,7 +413,11 @@ export class DyePaletteDrawer extends BaseLitComponent {
         cursor: pointer;
         opacity: 0;
         transform: scale(0.8);
-        transition: opacity 0.15s, transform 0.15s, color 0.15s, background 0.15s;
+        transition:
+          opacity 0.15s,
+          transform 0.15s,
+          color 0.15s,
+          background 0.15s;
         z-index: 20;
         display: flex;
         align-items: center;
@@ -659,9 +673,13 @@ export class DyePaletteDrawer extends BaseLitComponent {
     if (!result && !wasFavorite) {
       // Failed to add - likely at limit
       const maxFavorites = CollectionService.getMaxFavorites();
-      ToastService.warning(`Maximum ${maxFavorites} favorites reached. Remove a favorite to add new ones.`);
+      ToastService.warning(
+        `Maximum ${maxFavorites} favorites reached. Remove a favorite to add new ones.`
+      );
     } else {
-      logger.debug(`[DyePaletteDrawer] ${wasFavorite ? 'Removed' : 'Added'} ${dye.name} ${wasFavorite ? 'from' : 'to'} favorites`);
+      logger.debug(
+        `[DyePaletteDrawer] ${wasFavorite ? 'Removed' : 'Added'} ${dye.name} ${wasFavorite ? 'from' : 'to'} favorites`
+      );
     }
   }
 
@@ -701,7 +719,13 @@ export class DyePaletteDrawer extends BaseLitComponent {
               ${unsafeHTML(ICON_BROOM)}
             </button>
             <button class="close-btn" @click=${this.handleClose} title="Close palette">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
@@ -719,7 +743,13 @@ export class DyePaletteDrawer extends BaseLitComponent {
   private renderSearch(): TemplateResult {
     return html`
       <div class="search-box">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg
+          class="search-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <circle cx="11" cy="11" r="8" />
           <path d="M21 21l-4.35-4.35" />
         </svg>
@@ -776,17 +806,22 @@ export class DyePaletteDrawer extends BaseLitComponent {
           class="swatch-favorite-btn ${isFav ? 'is-favorite' : ''}"
           type="button"
           title="${isFav ? 'Remove from favorites' : 'Add to favorites'}"
-          aria-label="${isFav ? `Remove ${dye.name} from favorites` : `Add ${dye.name} to favorites`}"
+          aria-label="${isFav
+            ? `Remove ${dye.name} from favorites`
+            : `Add ${dye.name} to favorites`}"
           @click=${(e: Event) => this.handleFavoriteToggle(e, dye)}
         >
           ${isFav
             ? html`<svg viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
               </svg>`
             : html`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>`
-          }
+                <path
+                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
+              </svg>`}
         </button>
       </div>
     `;
@@ -804,7 +839,13 @@ export class DyePaletteDrawer extends BaseLitComponent {
             </svg>
             Favorites (${this.favoriteDyes.length})
           </span>
-          <svg class="chevron ${this.favoritesExpanded ? '' : 'collapsed'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            class="chevron ${this.favoritesExpanded ? '' : 'collapsed'}"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M19 9l-7 7-7-7" />
           </svg>
         </div>
@@ -815,11 +856,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
                   ${this.favoriteDyes.map((dye) => this.renderSwatch(dye))}
                 </div>
               `
-            : html`
-                <div class="favorites-empty">
-                  Click the ★ on any dye to add favorites
-                </div>
-              `}
+            : html` <div class="favorites-empty">Click the ★ on any dye to add favorites</div> `}
         </div>
       </div>
     `;
@@ -829,7 +866,13 @@ export class DyePaletteDrawer extends BaseLitComponent {
     if (groupedDyes.size === 0) {
       return html`
         <div class="no-results">
-          <svg class="no-results-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            class="no-results-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="11" cy="11" r="8" />
             <path d="M21 21l-4.35-4.35" />
             <path d="M8 8l6 6M14 8l-6 6" />
@@ -844,9 +887,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
         ([category, dyes]) => html`
           <div class="category-section">
             <div class="category-label">${category}</div>
-            <div class="swatch-grid">
-              ${dyes.map((dye) => this.renderSwatch(dye))}
-            </div>
+            <div class="swatch-grid">${dyes.map((dye) => this.renderSwatch(dye))}</div>
           </div>
         `
       )}

@@ -166,7 +166,9 @@ export class ImageUploadDisplay extends BaseComponent {
     });
     privacyNotice.appendChild(privacyTitle);
     // Message text
-    const privacyMessage = document.createTextNode(` ${LanguageService.t('matcher.privacyMessage')} `);
+    const privacyMessage = document.createTextNode(
+      ` ${LanguageService.t('matcher.privacyMessage')} `
+    );
     privacyNotice.appendChild(privacyMessage);
     // Learn more link (hardcoded URL is safe, only text is translated)
     const privacyLink = this.createElement('a', {

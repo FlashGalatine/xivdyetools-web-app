@@ -360,7 +360,9 @@ export class ModalContainer extends BaseComponent {
 
     // Update z-index and backdrop styling for all modals (order might have changed)
     this.modals.forEach((modal, index) => {
-      const modalWrapper = this.element?.querySelector(`[data-modal-id="${modal.id}"]`) as HTMLElement;
+      const modalWrapper = this.element?.querySelector(
+        `[data-modal-id="${modal.id}"]`
+      ) as HTMLElement;
       if (modalWrapper) {
         const isTopModal = index === this.modals.length - 1;
         modalWrapper.style.zIndex = String(50 + index);

@@ -184,10 +184,7 @@ export class ConfigController {
    * @param listener - Callback function
    * @returns Unsubscribe function
    */
-  subscribe<K extends ConfigKey>(
-    key: K,
-    listener: ConfigListener<ToolConfigMap[K]>,
-  ): () => void {
+  subscribe<K extends ConfigKey>(key: K, listener: ConfigListener<ToolConfigMap[K]>): () => void {
     // Get or create listener set for this key
     if (!this.listeners.has(key)) {
       this.listeners.set(key, new Set());

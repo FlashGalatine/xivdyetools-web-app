@@ -188,8 +188,11 @@ export class MatcherMockup extends BaseComponent {
 
     // Drop zone
     const dropZone = this.createElement('div', {
-      className: 'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-opacity-70',
-      attributes: { style: 'border-color: var(--theme-border); background: var(--theme-background-secondary);' },
+      className:
+        'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors hover:border-opacity-70',
+      attributes: {
+        style: 'border-color: var(--theme-border); background: var(--theme-background-secondary);',
+      },
     });
     dropZone.innerHTML = `
       <span class="w-10 h-10 mx-auto mb-2 block opacity-50" style="color: var(--theme-text);">${ICON_UPLOAD}</span>
@@ -200,11 +203,14 @@ export class MatcherMockup extends BaseComponent {
 
     // Action buttons
     const actions = this.createElement('div', { className: 'flex gap-2' });
-    ['Camera', 'Paste'].forEach(action => {
+    ['Camera', 'Paste'].forEach((action) => {
       const btn = this.createElement('button', {
         className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
         textContent: action,
-        attributes: { style: 'background: var(--theme-card-background); color: var(--theme-text); border: 1px solid var(--theme-border);' },
+        attributes: {
+          style:
+            'background: var(--theme-card-background); color: var(--theme-text); border: 1px solid var(--theme-border);',
+        },
       });
       actions.appendChild(btn);
     });
@@ -223,7 +229,9 @@ export class MatcherMockup extends BaseComponent {
     });
     const swatch = this.createElement('div', {
       className: 'w-12 h-12 rounded-lg border',
-      attributes: { style: `background: ${this.selectedColor}; border-color: var(--theme-border);` },
+      attributes: {
+        style: `background: ${this.selectedColor}; border-color: var(--theme-border);`,
+      },
     });
     const colorInfo = this.createElement('div');
     colorInfo.innerHTML = `
@@ -240,11 +248,17 @@ export class MatcherMockup extends BaseComponent {
       attributes: { type: 'text', value: this.selectedColor, placeholder: '#RRGGBB' },
       className: 'flex-1 px-3 py-2 rounded-lg text-sm font-mono',
     });
-    input.setAttribute('style', 'background: var(--theme-card-background); color: var(--theme-text); border: 1px solid var(--theme-border);');
+    input.setAttribute(
+      'style',
+      'background: var(--theme-card-background); color: var(--theme-text); border: 1px solid var(--theme-border);'
+    );
     const eyedropperBtn = this.createElement('button', {
       className: 'px-3 py-2 rounded-lg transition-colors',
       innerHTML: `<span class="w-5 h-5 block">${ICON_EYEDROPPER}</span>`,
-      attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);', title: 'Pick from image' },
+      attributes: {
+        style: 'background: var(--theme-primary); color: var(--theme-text-header);',
+        title: 'Pick from image',
+      },
     });
     hexInput.appendChild(input);
     hexInput.appendChild(eyedropperBtn);
@@ -292,8 +306,10 @@ export class MatcherMockup extends BaseComponent {
 
   private createFiltersContent(): HTMLElement {
     const container = this.createElement('div', { className: 'space-y-2' });
-    ['Exclude Metallic', 'Exclude Pastel', 'Exclude Expensive'].forEach(filter => {
-      const label = this.createElement('label', { className: 'flex items-center gap-2 cursor-pointer' });
+    ['Exclude Metallic', 'Exclude Pastel', 'Exclude Expensive'].forEach((filter) => {
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-2 cursor-pointer',
+      });
       label.innerHTML = `
         <input type="checkbox" class="w-4 h-4 rounded">
         <span class="text-sm" style="color: var(--theme-text);">${filter}</span>
@@ -326,7 +342,9 @@ export class MatcherMockup extends BaseComponent {
     // Zoom controls
     const controls = this.createElement('div', {
       className: 'flex items-center justify-between p-2 rounded-lg',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
     controls.innerHTML = `
       <div class="flex gap-1">
@@ -344,7 +362,10 @@ export class MatcherMockup extends BaseComponent {
     // Canvas placeholder
     const canvas = this.createElement('div', {
       className: 'aspect-video rounded-lg flex items-center justify-center',
-      attributes: { style: 'background: var(--theme-background-secondary); border: 2px dashed var(--theme-border);' },
+      attributes: {
+        style:
+          'background: var(--theme-background-secondary); border: 2px dashed var(--theme-border);',
+      },
     });
     canvas.innerHTML = `
       <div class="text-center">
@@ -363,13 +384,20 @@ export class MatcherMockup extends BaseComponent {
     SAMPLE_MATCHED_DYES.forEach((dye, index) => {
       const card = this.createElement('div', {
         className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+        attributes: {
+          style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        },
       });
 
       const rank = this.createElement('span', {
         className: 'w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full',
         textContent: String(index + 1),
-        attributes: { style: index === 0 ? 'background: var(--theme-primary); color: var(--theme-text-header);' : 'background: var(--theme-background-secondary); color: var(--theme-text-muted);' },
+        attributes: {
+          style:
+            index === 0
+              ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+              : 'background: var(--theme-background-secondary); color: var(--theme-text-muted);',
+        },
       });
 
       const swatch = this.createElement('div', {
@@ -395,10 +423,13 @@ export class MatcherMockup extends BaseComponent {
   private createRecentColors(): HTMLElement {
     const container = this.createElement('div', { className: 'flex gap-2' });
 
-    RECENT_COLORS.forEach(color => {
+    RECENT_COLORS.forEach((color) => {
       const btn = this.createElement('button', {
         className: 'w-10 h-10 rounded-lg border-2 transition-transform hover:scale-110',
-        attributes: { style: `background: ${color}; border-color: var(--theme-border);`, title: color },
+        attributes: {
+          style: `background: ${color}; border-color: var(--theme-border);`,
+          title: color,
+        },
       });
       container.appendChild(btn);
     });

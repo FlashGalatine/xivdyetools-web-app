@@ -1,10 +1,6 @@
 import { DyeCardRenderer, type DyeCardOptions } from '../dye-card-renderer';
 import { Dye } from '@shared/types';
-import {
-  createTestContainer,
-  cleanupTestContainer,
-  mockDyeData,
-} from './test-utils';
+import { createTestContainer, cleanupTestContainer, mockDyeData } from './test-utils';
 
 // Mock Services
 vi.mock('@services/index', async () => {
@@ -96,7 +92,13 @@ describe('DyeCardRenderer', () => {
       const card = component.render({
         dye: mockDye,
         showPrice: true,
-        price: { itemID: mockDye.itemID, currentAverage: 500, currentMinPrice: 400, currentMaxPrice: 600, lastUpdate: 0 },
+        price: {
+          itemID: mockDye.itemID,
+          currentAverage: 500,
+          currentMinPrice: 400,
+          currentMaxPrice: 600,
+          lastUpdate: 0,
+        },
       });
       container.appendChild(card);
 

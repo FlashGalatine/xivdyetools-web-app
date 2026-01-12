@@ -76,23 +76,23 @@ export class DyeGrid extends BaseComponent {
       const emptyHtml =
         this.emptyState.type === 'search'
           ? getEmptyStateHTML({
-            icon: ICON_SEARCH,
-            title:
-              LanguageService.tInterpolate('dyeSelector.noResults', {
-                query: this.emptyState.query || '',
-              }) || `No dyes match "${this.emptyState.query}"`,
-            description:
-              LanguageService.t('dyeSelector.noResultsHint') ||
-              'Try checking your spelling or search for a category like "purple".',
-          })
+              icon: ICON_SEARCH,
+              title:
+                LanguageService.tInterpolate('dyeSelector.noResults', {
+                  query: this.emptyState.query || '',
+                }) || `No dyes match "${this.emptyState.query}"`,
+              description:
+                LanguageService.t('dyeSelector.noResultsHint') ||
+                'Try checking your spelling or search for a category like "purple".',
+            })
           : getEmptyStateHTML({
-            icon: ICON_PALETTE,
-            title:
-              LanguageService.t('dyeSelector.noDyesInCategory') || 'No dyes in this category',
-            description:
-              LanguageService.t('dyeSelector.tryCategoryHint') ||
-              'Try selecting a different category.',
-          });
+              icon: ICON_PALETTE,
+              title:
+                LanguageService.t('dyeSelector.noDyesInCategory') || 'No dyes in this category',
+              description:
+                LanguageService.t('dyeSelector.tryCategoryHint') ||
+                'Try selecting a different category.',
+            });
       wrapper.innerHTML = emptyHtml;
       wrapper.classList.remove(
         'grid',
@@ -110,10 +110,11 @@ export class DyeGrid extends BaseComponent {
         const isFavorite = this.favorites.has(dye.id);
 
         const btn = this.createElement('button', {
-          className: `dye-select-btn group relative flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${isSelected
-            ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500 shadow-md transform scale-[1.02]'
-            : 'bg-white dark:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5 hover:bg-gray-50 dark:hover:bg-gray-750 border border-gray-100 dark:border-gray-700'
-            }`,
+          className: `dye-select-btn group relative flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${
+            isSelected
+              ? 'bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500 shadow-md transform scale-[1.02]'
+              : 'bg-white dark:bg-gray-800 hover:shadow-lg hover:-translate-y-0.5 hover:bg-gray-50 dark:hover:bg-gray-750 border border-gray-100 dark:border-gray-700'
+          }`,
           attributes: {
             'data-dye-id': String(dye.id),
             'aria-label': dye.name,
@@ -142,14 +143,16 @@ export class DyeGrid extends BaseComponent {
 
           // Add to Collection button
           const collectionBtn = this.createElement('button', {
-            className: 'collection-btn p-1.5 rounded-full transition-all duration-200 text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700',
+            className:
+              'collection-btn p-1.5 rounded-full transition-all duration-200 text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700',
             attributes: {
               'data-collection-dye-id': String(dye.id),
               'aria-label': LanguageService.t('collections.addToCollection') || 'Add to collection',
               type: 'button',
             },
           });
-          collectionBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>';
+          collectionBtn.innerHTML =
+            '<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>';
           actionsContainer.appendChild(collectionBtn);
 
           // Favorite star button
@@ -318,11 +321,33 @@ export class DyeGrid extends BaseComponent {
 
       // Update classes
       if (isFavorite) {
-        btn.classList.remove('text-gray-400', 'opacity-0', 'group-hover:opacity-100', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
-        btn.classList.add('text-yellow-500', 'hover:text-yellow-600', 'bg-yellow-50', 'dark:bg-yellow-900/30');
+        btn.classList.remove(
+          'text-gray-400',
+          'opacity-0',
+          'group-hover:opacity-100',
+          'hover:bg-gray-100',
+          'dark:hover:bg-gray-700'
+        );
+        btn.classList.add(
+          'text-yellow-500',
+          'hover:text-yellow-600',
+          'bg-yellow-50',
+          'dark:bg-yellow-900/30'
+        );
       } else {
-        btn.classList.remove('text-yellow-500', 'hover:text-yellow-600', 'bg-yellow-50', 'dark:bg-yellow-900/30');
-        btn.classList.add('text-gray-400', 'opacity-0', 'group-hover:opacity-100', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+        btn.classList.remove(
+          'text-yellow-500',
+          'hover:text-yellow-600',
+          'bg-yellow-50',
+          'dark:bg-yellow-900/30'
+        );
+        btn.classList.add(
+          'text-gray-400',
+          'opacity-0',
+          'group-hover:opacity-100',
+          'hover:bg-gray-100',
+          'dark:hover:bg-gray-700'
+        );
       }
 
       // Update aria attributes
@@ -416,7 +441,11 @@ export class DyeGrid extends BaseComponent {
       case 'f':
       case 'F':
         // Toggle favorite on focused dye
-        if (this.options.showFavorites && this.focusedIndex >= 0 && this.focusedIndex < this.dyes.length) {
+        if (
+          this.options.showFavorites &&
+          this.focusedIndex >= 0 &&
+          this.focusedIndex < this.dyes.length
+        ) {
           event.preventDefault();
           const focusedDye = this.dyes[this.focusedIndex];
           this.handleFavoriteToggle(focusedDye.id);
@@ -426,7 +455,11 @@ export class DyeGrid extends BaseComponent {
       case 'c':
       case 'C':
         // Open add-to-collection menu on focused dye
-        if (this.options.showFavorites && this.focusedIndex >= 0 && this.focusedIndex < this.dyes.length) {
+        if (
+          this.options.showFavorites &&
+          this.focusedIndex >= 0 &&
+          this.focusedIndex < this.dyes.length
+        ) {
           event.preventDefault();
           const focusedDye = this.dyes[this.focusedIndex];
           const dyeButtons = this.container.querySelectorAll<HTMLButtonElement>('.dye-select-btn');

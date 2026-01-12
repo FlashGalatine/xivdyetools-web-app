@@ -10,7 +10,9 @@ import {
 
 // Helper to create a modal with required fields
 // Use Omit to exclude the branded id type and replace with string for test convenience
-const createModal = (overrides: Omit<Partial<Modal>, 'id'> & { id: string; title: string }): Modal => ({
+const createModal = (
+  overrides: Omit<Partial<Modal>, 'id'> & { id: string; title: string }
+): Modal => ({
   type: 'custom' as ModalType,
   timestamp: Date.now(),
   ...overrides,
@@ -244,7 +246,10 @@ describe('ModalContainer', () => {
 
       // Dispatch Escape key on document
       // Since we can't easily dispatch on document, call the handler directly
-      component['handleKeyDown']({ key: 'Escape', preventDefault: vi.fn() } as unknown as KeyboardEvent);
+      component['handleKeyDown']({
+        key: 'Escape',
+        preventDefault: vi.fn(),
+      } as unknown as KeyboardEvent);
 
       expect(ModalService.dismiss).toHaveBeenCalledWith('escape-modal');
     });
@@ -265,7 +270,10 @@ describe('ModalContainer', () => {
       ModalService._updateModals([modal]);
       vi.clearAllMocks();
 
-      component['handleKeyDown']({ key: 'Escape', preventDefault: vi.fn() } as unknown as KeyboardEvent);
+      component['handleKeyDown']({
+        key: 'Escape',
+        preventDefault: vi.fn(),
+      } as unknown as KeyboardEvent);
 
       expect(ModalService.dismiss).not.toHaveBeenCalled();
     });
@@ -285,7 +293,10 @@ describe('ModalContainer', () => {
       ModalService._updateModals([modal]);
       vi.clearAllMocks();
 
-      component['handleKeyDown']({ key: 'Escape', preventDefault: vi.fn() } as unknown as KeyboardEvent);
+      component['handleKeyDown']({
+        key: 'Escape',
+        preventDefault: vi.fn(),
+      } as unknown as KeyboardEvent);
 
       expect(ModalService.dismiss).not.toHaveBeenCalled();
     });
@@ -560,8 +571,20 @@ describe('ModalContainer', () => {
       [component, container] = renderComponent(ModalContainer);
 
       const modals: Modal[] = [
-        { id: 'modal-1' as ModalId, title: 'Modal 1', content: 'Content 1', type: 'custom', timestamp: Date.now() },
-        { id: 'modal-2' as ModalId, title: 'Modal 2', content: 'Content 2', type: 'custom', timestamp: Date.now() + 1 },
+        {
+          id: 'modal-1' as ModalId,
+          title: 'Modal 1',
+          content: 'Content 1',
+          type: 'custom',
+          timestamp: Date.now(),
+        },
+        {
+          id: 'modal-2' as ModalId,
+          title: 'Modal 2',
+          content: 'Content 2',
+          type: 'custom',
+          timestamp: Date.now() + 1,
+        },
       ];
 
       // @ts-ignore

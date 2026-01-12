@@ -24,9 +24,10 @@ export const PricingMixin = {
       this.setupMarketBoardListeners(container);
 
       // Get initial showPrices state (defensive in test envs)
-      this.showPrices = typeof this.marketBoard?.getShowPrices === 'function'
-        ? this.marketBoard.getShowPrices()
-        : false;
+      this.showPrices =
+        typeof this.marketBoard?.getShowPrices === 'function'
+          ? this.marketBoard.getShowPrices()
+          : false;
     }
   },
 

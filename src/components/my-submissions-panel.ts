@@ -139,7 +139,8 @@ export class MySubmissionsPanel extends BaseComponent {
     });
 
     const spinner = this.createElement('div', {
-      className: 'inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-indigo-600 mb-2',
+      className:
+        'inline-block animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-indigo-600 mb-2',
     });
     loading.appendChild(spinner);
 
@@ -218,7 +219,8 @@ export class MySubmissionsPanel extends BaseComponent {
 
     // Header row (always visible)
     const headerRow = this.createElement('div', {
-      className: 'p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750',
+      className:
+        'p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750',
       dataAttributes: { action: 'toggle-expand' },
     });
 
@@ -339,7 +341,8 @@ export class MySubmissionsPanel extends BaseComponent {
       if (!dye) return;
 
       const dyeChip = this.createElement('div', {
-        className: 'flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs',
+        className:
+          'flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs',
       });
 
       const colorDot = this.createElement('div', {
@@ -378,7 +381,8 @@ export class MySubmissionsPanel extends BaseComponent {
 
       preset.tags.forEach((tag) => {
         const tagChip = this.createElement('span', {
-          className: 'px-2 py-0.5 bg-[var(--theme-primary)]/10 text-[var(--theme-primary)] rounded text-xs',
+          className:
+            'px-2 py-0.5 bg-[var(--theme-primary)]/10 text-[var(--theme-primary)] rounded text-xs',
           textContent: tag,
         });
         tagList.appendChild(tagChip);
@@ -460,7 +464,10 @@ export class MySubmissionsPanel extends BaseComponent {
       if (deleteBtn) {
         e.stopPropagation(); // Prevent toggle
         const presetId = deleteBtn.dataset.presetId;
-        if (presetId && confirm('Are you sure you want to delete this preset? This cannot be undone.')) {
+        if (
+          presetId &&
+          confirm('Are you sure you want to delete this preset? This cannot be undone.')
+        ) {
           this.handleDelete(presetId);
         }
       }

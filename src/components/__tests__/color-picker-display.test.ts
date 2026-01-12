@@ -297,7 +297,9 @@ describe('ColorPickerDisplay', () => {
       const mockContext = {
         getImageData: vi.fn().mockReturnValue(mockImageData),
       };
-      vi.spyOn(canvas, 'getContext').mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
+      vi.spyOn(canvas, 'getContext').mockReturnValue(
+        mockContext as unknown as CanvasRenderingContext2D
+      );
 
       const spy = vi.fn();
       container.addEventListener('color-selected', (e: Event) => {
@@ -329,7 +331,9 @@ describe('ColorPickerDisplay', () => {
       const mockContext = {
         getImageData: vi.fn().mockReturnValue(mockImageData),
       };
-      vi.spyOn(canvas, 'getContext').mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
+      vi.spyOn(canvas, 'getContext').mockReturnValue(
+        mockContext as unknown as CanvasRenderingContext2D
+      );
 
       component.setColorFromImage(canvas, 50, 50, 5);
 
@@ -352,7 +356,9 @@ describe('ColorPickerDisplay', () => {
       const mockContext = {
         getImageData: vi.fn().mockReturnValue(mockImageData),
       };
-      vi.spyOn(canvas, 'getContext').mockReturnValue(mockContext as unknown as CanvasRenderingContext2D);
+      vi.spyOn(canvas, 'getContext').mockReturnValue(
+        mockContext as unknown as CanvasRenderingContext2D
+      );
 
       // Sample near edge with large sample size - should clamp
       component.setColorFromImage(canvas, 0, 0, 5);

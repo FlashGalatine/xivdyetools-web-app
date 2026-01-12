@@ -8,11 +8,7 @@
 import { AuthButton } from '../auth-button';
 import { authService } from '@services/index';
 import type { AuthState, AuthUser } from '@services/auth-service';
-import {
-  createTestContainer,
-  cleanupTestContainer,
-  cleanupComponent,
-} from './test-utils';
+import { createTestContainer, cleanupTestContainer, cleanupComponent } from './test-utils';
 
 // Mock auth state helpers
 const createMockUser = (overrides: Partial<AuthUser> = {}): AuthUser => ({
@@ -49,12 +45,14 @@ describe('AuthButton', () => {
 
     // Set up spies - default to unauthenticated state
     vi.spyOn(authService, 'getState').mockReturnValue(createAuthState());
-    vi.spyOn(authService, 'subscribe').mockImplementation((callback: (state: AuthState) => void) => {
-      subscriberCallback = callback;
-      return () => {
-        subscriberCallback = null;
-      };
-    });
+    vi.spyOn(authService, 'subscribe').mockImplementation(
+      (callback: (state: AuthState) => void) => {
+        subscriberCallback = callback;
+        return () => {
+          subscriberCallback = null;
+        };
+      }
+    );
     vi.spyOn(authService, 'login').mockImplementation(async () => {});
     vi.spyOn(authService, 'loginWithXIVAuth').mockImplementation(async () => {});
     vi.spyOn(authService, 'logout').mockResolvedValue(undefined);

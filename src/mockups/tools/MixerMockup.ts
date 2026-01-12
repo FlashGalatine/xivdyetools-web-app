@@ -129,12 +129,17 @@ export class MixerMockup extends BaseComponent {
   }
 
   private createSection(label: string): HTMLElement {
-    const section = this.createElement('div', { className: 'p-4 border-b', attributes: { style: 'border-color: var(--theme-border);' } });
-    section.appendChild(this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
-      textContent: label,
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    }));
+    const section = this.createElement('div', {
+      className: 'p-4 border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+    section.appendChild(
+      this.createElement('h3', {
+        className: 'text-sm font-semibold uppercase tracking-wider mb-3',
+        textContent: label,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      })
+    );
     return section;
   }
 
@@ -147,7 +152,10 @@ export class MixerMockup extends BaseComponent {
   }
 
   private createDyeSection(label: string, dye: { name: string; hex: string }): HTMLElement {
-    const section = this.createElement('div', { className: 'p-4 border-b', attributes: { style: 'border-color: var(--theme-border);' } });
+    const section = this.createElement('div', {
+      className: 'p-4 border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
     section.innerHTML = `
       <h3 class="text-sm font-semibold uppercase tracking-wider mb-3" style="color: var(--theme-text-muted);">${label}</h3>
       <div class="flex items-center gap-3 p-3 rounded-lg" style="background: var(--theme-primary);">
@@ -194,8 +202,10 @@ export class MixerMockup extends BaseComponent {
 
   private createFiltersContent(): HTMLElement {
     const container = this.createElement('div', { className: 'space-y-2' });
-    ['Exclude Metallic', 'Exclude Pastel'].forEach(filter => {
-      const label = this.createElement('label', { className: 'flex items-center gap-2 cursor-pointer' });
+    ['Exclude Metallic', 'Exclude Pastel'].forEach((filter) => {
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-2 cursor-pointer',
+      });
       label.innerHTML = `<input type="checkbox" class="w-4 h-4 rounded"><span class="text-sm" style="color: var(--theme-text);">${filter}</span>`;
       container.appendChild(label);
     });
@@ -215,13 +225,17 @@ export class MixerMockup extends BaseComponent {
   private createGradientPreview(): HTMLElement {
     const container = this.createElement('div', {
       className: 'p-4 rounded-lg',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
 
     // Gradient bar
     const gradient = this.createElement('div', {
       className: 'h-16 rounded-lg mb-3',
-      attributes: { style: `background: linear-gradient(to right, ${this.startDye.hex}, ${this.endDye.hex});` },
+      attributes: {
+        style: `background: linear-gradient(to right, ${this.startDye.hex}, ${this.endDye.hex});`,
+      },
     });
     container.appendChild(gradient);
 
@@ -251,7 +265,9 @@ export class MixerMockup extends BaseComponent {
 
       const row = this.createElement('div', {
         className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+        attributes: {
+          style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        },
       });
 
       row.innerHTML = `
@@ -274,7 +290,9 @@ export class MixerMockup extends BaseComponent {
   private createExportOptions(): HTMLElement {
     const container = this.createElement('div', {
       className: 'p-4 rounded-lg flex items-center justify-between',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
 
     container.innerHTML = `
@@ -304,14 +322,14 @@ export class MixerMockup extends BaseComponent {
     const g = Math.round(g1 + (g2 - g1) * t);
     const b = Math.round(b1 + (b2 - b1) * t);
 
-    return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+    return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
   }
 
   private adjustColor(hex: string, offset: number): string {
     const r = Math.min(255, Math.max(0, parseInt(hex.slice(1, 3), 16) + offset));
     const g = Math.min(255, Math.max(0, parseInt(hex.slice(3, 5), 16) + offset));
     const b = Math.min(255, Math.max(0, parseInt(hex.slice(5, 7), 16) - offset));
-    return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+    return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
   }
 
   bindEvents(): void {}

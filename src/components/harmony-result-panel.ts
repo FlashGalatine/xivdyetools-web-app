@@ -56,7 +56,8 @@ export class HarmonyResultPanel extends BaseComponent {
   }
 
   renderContent(): void {
-    const { label, matchedDye, deviance, closestDyes, isBase, showPrices, priceData } = this.options;
+    const { label, matchedDye, deviance, closestDyes, isBase, showPrices, priceData } =
+      this.options;
 
     // Main card container
     const card = this.createElement('div', {
@@ -148,7 +149,8 @@ export class HarmonyResultPanel extends BaseComponent {
     const header = this.createElement('div', {
       className: 'flex items-center justify-between p-3',
       attributes: {
-        style: 'background: var(--theme-background-secondary); border-bottom: 1px solid var(--theme-border);',
+        style:
+          'background: var(--theme-background-secondary); border-bottom: 1px solid var(--theme-border);',
       },
     });
 
@@ -252,7 +254,8 @@ export class HarmonyResultPanel extends BaseComponent {
     closestDyes.forEach((dye) => {
       const dyeName = LanguageService.getDyeName(dye.itemID) ?? dye.name;
       const swatch = this.createElement('button', {
-        className: 'w-7 h-7 rounded cursor-pointer transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1',
+        className:
+          'w-7 h-7 rounded cursor-pointer transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1',
         attributes: {
           style: `background: ${dye.hex}; border: 1px solid var(--theme-border);`,
           title: dyeName,

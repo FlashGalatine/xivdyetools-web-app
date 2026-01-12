@@ -23,7 +23,7 @@ const MOCKUP_GRADIENT_THEMES = [
   { id: 'gradient-dark', label: 'Gradient Dark', description: 'Cool twilight (purple → teal)' },
 ] as const;
 
-type MockupGradientThemeId = typeof MOCKUP_GRADIENT_THEMES[number]['id'];
+type MockupGradientThemeId = (typeof MOCKUP_GRADIENT_THEMES)[number]['id'];
 
 // Track current mockup gradient theme
 let currentMockupGradientTheme: MockupGradientThemeId | null = null;
@@ -36,7 +36,7 @@ function applyMockupGradientTheme(themeId: MockupGradientThemeId | null): void {
   const root = document.documentElement;
 
   // Remove all mockup gradient theme classes
-  MOCKUP_GRADIENT_THEMES.forEach(t => {
+  MOCKUP_GRADIENT_THEMES.forEach((t) => {
     root.classList.remove(`theme-${t.id}`);
   });
 
@@ -57,9 +57,11 @@ function applyMockupGradientTheme(themeId: MockupGradientThemeId | null): void {
  */
 function updateThemeSwitcherUI(): void {
   const buttons = document.querySelectorAll('.mockup-theme-btn');
-  buttons.forEach(btn => {
+  buttons.forEach((btn) => {
     const btnTheme = btn.getAttribute('data-theme');
-    const isActive = btnTheme === currentMockupGradientTheme || (btnTheme === 'standard' && !currentMockupGradientTheme);
+    const isActive =
+      btnTheme === currentMockupGradientTheme ||
+      (btnTheme === 'standard' && !currentMockupGradientTheme);
     btn.classList.toggle('active', isActive);
   });
 }
@@ -88,11 +90,14 @@ export function loadMockupSystem(container: HTMLElement): void {
   // Create info banner
   const banner = document.createElement('div');
   banner.className = 'mb-4 p-4 rounded-lg border-2 border-dashed';
-  banner.setAttribute('style', `
+  banner.setAttribute(
+    'style',
+    `
     background: var(--theme-background-secondary);
     border-color: var(--theme-primary);
     color: var(--theme-text);
-  `);
+  `
+  );
   banner.innerHTML = `
     <div class="flex items-start gap-3">
       <span class="flex-shrink-0 w-6 h-6 mt-0.5" style="color: var(--theme-primary);">
@@ -135,7 +140,7 @@ export function loadMockupSystem(container: HTMLElement): void {
 
   // Wire up theme switcher buttons
   const themeBtns = banner.querySelectorAll('.mockup-theme-btn');
-  themeBtns.forEach(btn => {
+  themeBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const themeId = btn.getAttribute('data-theme');
       if (themeId === 'standard') {
@@ -325,8 +330,20 @@ function renderPlaceholderMockup(
       rightItems: ['Color Wheel', 'Harmony Cards Grid', 'Matched Dyes', 'Palette Export'],
     },
     matcher: {
-      leftItems: ['Image Upload', 'Color Picker', 'Sample Size', 'Palette Mode', 'Dye Filters', 'Market Board'],
-      rightItems: ['Image Canvas + Zoom', 'Matched Dye Results', 'Recent Colors', 'Extracted Palette'],
+      leftItems: [
+        'Image Upload',
+        'Color Picker',
+        'Sample Size',
+        'Palette Mode',
+        'Dye Filters',
+        'Market Board',
+      ],
+      rightItems: [
+        'Image Canvas + Zoom',
+        'Matched Dye Results',
+        'Recent Colors',
+        'Extracted Palette',
+      ],
     },
     accessibility: {
       leftItems: ['Dye Selector (up to 4)', 'Vision Type Toggles', 'Display Options'],
@@ -337,7 +354,14 @@ function renderPlaceholderMockup(
       rightItems: ['Hue-Saturation Plot', 'Brightness Chart', 'Color Distance Matrix'],
     },
     mixer: {
-      leftItems: ['Start Dye', 'End Dye', 'Steps Slider', 'Color Space Toggle', 'Dye Filters', 'Market Board'],
+      leftItems: [
+        'Start Dye',
+        'End Dye',
+        'Steps Slider',
+        'Color Space Toggle',
+        'Dye Filters',
+        'Market Board',
+      ],
       rightItems: ['Interpolation Gradient', 'Intermediate Dye Matches', 'Palette Export'],
     },
     presets: {
@@ -345,7 +369,14 @@ function renderPlaceholderMockup(
       rightItems: ['Featured Presets', 'Preset Grid', 'Preset Detail View'],
     },
     budget: {
-      leftItems: ['Target Dye', 'Quick Picks', 'Budget Slider', 'Sort Options', 'Dye Filters', 'Data Center'],
+      leftItems: [
+        'Target Dye',
+        'Quick Picks',
+        'Budget Slider',
+        'Sort Options',
+        'Dye Filters',
+        'Data Center',
+      ],
       rightItems: ['Target Overview', 'Alternatives List', 'Savings Summary', 'Value Score'],
     },
   };

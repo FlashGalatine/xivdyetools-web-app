@@ -14,7 +14,15 @@ import { BaseComponent } from '@components/base-component';
 import { CollapsiblePanel } from '@components/collapsible-panel';
 import { DyeSelector } from '@components/dye-selector';
 import { ResultCard, type ResultCardData } from '@components/v4/result-card';
-import { ColorService, ConfigController, DyeService, LanguageService, MarketBoardService, StorageService, WorldService } from '@services/index';
+import {
+  ColorService,
+  ConfigController,
+  DyeService,
+  LanguageService,
+  MarketBoardService,
+  StorageService,
+  WorldService,
+} from '@services/index';
 import { ICON_TOOL_COMPARISON } from '@shared/tool-icons';
 import { ICON_BEAKER, ICON_SETTINGS } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
@@ -41,6 +49,7 @@ interface ComparisonOptions {
   showHex: boolean;
   showRgb: boolean;
   showHsv: boolean;
+  showLab: boolean;
   showMarketPrices: boolean;
 }
 
@@ -74,6 +83,7 @@ const STORAGE_KEYS = {
   showHex: 'v3_comparison_show_hex',
   showRgb: 'v3_comparison_show_rgb',
   showHsv: 'v3_comparison_show_hsv',
+  showLab: 'v3_comparison_show_lab',
   showMarketPrices: 'v3_comparison_show_prices',
 } as const;
 
@@ -86,6 +96,7 @@ const DEFAULT_OPTIONS: ComparisonOptions = {
   showHex: true,
   showRgb: true,
   showHsv: false,
+  showLab: false,
   showMarketPrices: true,
 };
 
@@ -144,13 +155,18 @@ export class ComparisonTool extends BaseComponent {
     // Load persisted options
     this.comparisonOptions = {
       showDistanceValues:
-        StorageService.getItem<boolean>(STORAGE_KEYS.showDistanceValues) ?? DEFAULT_OPTIONS.showDistanceValues,
+        StorageService.getItem<boolean>(STORAGE_KEYS.showDistanceValues) ??
+        DEFAULT_OPTIONS.showDistanceValues,
       highlightClosestPair:
-        StorageService.getItem<boolean>(STORAGE_KEYS.highlightClosestPair) ?? DEFAULT_OPTIONS.highlightClosestPair,
+        StorageService.getItem<boolean>(STORAGE_KEYS.highlightClosestPair) ??
+        DEFAULT_OPTIONS.highlightClosestPair,
       showHex: StorageService.getItem<boolean>(STORAGE_KEYS.showHex) ?? DEFAULT_OPTIONS.showHex,
       showRgb: StorageService.getItem<boolean>(STORAGE_KEYS.showRgb) ?? DEFAULT_OPTIONS.showRgb,
       showHsv: StorageService.getItem<boolean>(STORAGE_KEYS.showHsv) ?? DEFAULT_OPTIONS.showHsv,
-      showMarketPrices: StorageService.getItem<boolean>(STORAGE_KEYS.showMarketPrices) ?? DEFAULT_OPTIONS.showMarketPrices,
+      showLab: StorageService.getItem<boolean>(STORAGE_KEYS.showLab) ?? DEFAULT_OPTIONS.showLab,
+      showMarketPrices:
+        StorageService.getItem<boolean>(STORAGE_KEYS.showMarketPrices) ??
+        DEFAULT_OPTIONS.showMarketPrices,
     };
   }
 
@@ -251,7 +267,10 @@ export class ComparisonTool extends BaseComponent {
     let needsRerender = false;
 
     // Handle showDeltaE (maps to showDistanceValues)
-    if (config.showDeltaE !== undefined && config.showDeltaE !== this.comparisonOptions.showDistanceValues) {
+    if (
+      config.showDeltaE !== undefined &&
+      config.showDeltaE !== this.comparisonOptions.showDistanceValues
+    ) {
       this.comparisonOptions.showDistanceValues = config.showDeltaE;
       StorageService.setItem(STORAGE_KEYS.showDistanceValues, config.showDeltaE);
       needsRerender = true;
@@ -275,11 +294,44 @@ export class ComparisonTool extends BaseComponent {
     }
 
     // Handle showMarketPrices
-    if (config.showMarketPrices !== undefined && config.showMarketPrices !== this.comparisonOptions.showMarketPrices) {
+    if (
+      config.showMarketPrices !== undefined &&
+      config.showMarketPrices !== this.comparisonOptions.showMarketPrices
+    ) {
       this.comparisonOptions.showMarketPrices = config.showMarketPrices;
       StorageService.setItem(STORAGE_KEYS.showMarketPrices, config.showMarketPrices);
       needsRerender = true;
       logger.info(`[ComparisonTool] setConfig: showMarketPrices -> ${config.showMarketPrices}`);
+    }
+
+    // Handle displayOptions from v4-display-options component
+    if (config.displayOptions) {
+      const opts = config.displayOptions;
+      // Map displayOptions to internal comparisonOptions
+      if (opts.showHex !== undefined && opts.showHex !== this.comparisonOptions.showHex) {
+        this.comparisonOptions.showHex = opts.showHex;
+        StorageService.setItem(STORAGE_KEYS.showHex, opts.showHex);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showHex -> ${opts.showHex}`);
+      }
+      if (opts.showRgb !== undefined && opts.showRgb !== this.comparisonOptions.showRgb) {
+        this.comparisonOptions.showRgb = opts.showRgb;
+        StorageService.setItem(STORAGE_KEYS.showRgb, opts.showRgb);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showRgb -> ${opts.showRgb}`);
+      }
+      if (opts.showHsv !== undefined && opts.showHsv !== this.comparisonOptions.showHsv) {
+        this.comparisonOptions.showHsv = opts.showHsv;
+        StorageService.setItem(STORAGE_KEYS.showHsv, opts.showHsv);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showHsv -> ${opts.showHsv}`);
+      }
+      if (opts.showLab !== undefined && opts.showLab !== this.comparisonOptions.showLab) {
+        this.comparisonOptions.showLab = opts.showLab;
+        StorageService.setItem(STORAGE_KEYS.showLab, opts.showLab);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showLab -> ${opts.showLab}`);
+      }
     }
 
     // Re-render if config changed and we have dyes selected
@@ -343,14 +395,16 @@ export class ComparisonTool extends BaseComponent {
   }
 
   /**
-   * Create a header for right panel sections
+   * Create a header for right panel sections (styled like mock-up with golden underline)
    */
   private createHeader(text: string): HTMLElement {
-    return this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
+    const header = this.createElement('div', { className: 'section-header' });
+    const title = this.createElement('span', {
+      className: 'section-title',
       textContent: text,
-      attributes: { style: 'color: var(--theme-text-muted);' },
     });
+    header.appendChild(title);
+    return header;
   }
 
   /**
@@ -408,7 +462,8 @@ export class ComparisonTool extends BaseComponent {
     if (this.selectedDyes.length === 0) {
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
+        textContent:
+          LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -491,8 +546,14 @@ export class ComparisonTool extends BaseComponent {
       LanguageService.t('comparison.comparisonOptions') || 'Comparison Options'
     );
     const comparisonOptions = [
-      { key: 'showDistanceValues' as const, label: LanguageService.t('comparison.showDistanceValues') || 'Show Distance Values' },
-      { key: 'highlightClosestPair' as const, label: LanguageService.t('comparison.highlightClosestPair') || 'Highlight Closest Pair' },
+      {
+        key: 'showDistanceValues' as const,
+        label: LanguageService.t('comparison.showDistanceValues') || 'Show Distance Values',
+      },
+      {
+        key: 'highlightClosestPair' as const,
+        label: LanguageService.t('comparison.highlightClosestPair') || 'Highlight Closest Pair',
+      },
     ];
     for (const option of comparisonOptions) {
       comparisonSection.content.appendChild(this.createToggleRow(option.key, option.label));
@@ -506,7 +567,10 @@ export class ComparisonTool extends BaseComponent {
 
     // Enable Market Board toggle
     marketBoardSection.content.appendChild(
-      this.createToggleRow('showMarketPrices', LanguageService.t('common.enableMarketBoard') || 'Enable Market Board')
+      this.createToggleRow(
+        'showMarketPrices',
+        LanguageService.t('common.enableMarketBoard') || 'Enable Market Board'
+      )
     );
 
     // Server/World dropdown
@@ -521,7 +585,9 @@ export class ComparisonTool extends BaseComponent {
           background: var(--theme-card-background);
           border: 1px solid var(--theme-border);
           color: var(--theme-text);
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     }) as HTMLSelectElement;
 
@@ -561,7 +627,9 @@ export class ComparisonTool extends BaseComponent {
           background: rgba(0, 0, 0, 0.2);
           border-radius: 8px;
           padding: 12px;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -573,7 +641,9 @@ export class ComparisonTool extends BaseComponent {
           color: var(--theme-text-muted);
           text-transform: uppercase;
           letter-spacing: 0.5px;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -607,7 +677,9 @@ export class ComparisonTool extends BaseComponent {
           width: 44px;
           height: 24px;
           flex-shrink: 0;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -632,7 +704,9 @@ export class ComparisonTool extends BaseComponent {
           background: ${checkbox.checked ? 'var(--theme-primary)' : 'rgba(255, 255, 255, 0.2)'};
           border-radius: 24px;
           transition: background 0.2s;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -649,7 +723,9 @@ export class ComparisonTool extends BaseComponent {
           border-radius: 50%;
           transition: left 0.2s;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -663,7 +739,9 @@ export class ComparisonTool extends BaseComponent {
       StorageService.setItem(STORAGE_KEYS[key], checkbox.checked);
 
       // Update slider visual
-      slider.style.background = checkbox.checked ? 'var(--theme-primary)' : 'rgba(255, 255, 255, 0.2)';
+      slider.style.background = checkbox.checked
+        ? 'var(--theme-primary)'
+        : 'rgba(255, 255, 255, 0.2)';
       knob.style.left = checkbox.checked ? '23px' : '3px';
 
       this.renderSelectedDyesCards();
@@ -715,7 +793,7 @@ export class ComparisonTool extends BaseComponent {
 
       // Individual world options
       const dcWorlds = worlds
-        .filter(w => dc.worlds.includes(w.id))
+        .filter((w) => dc.worlds.includes(w.id))
         .sort((a, b) => a.name.localeCompare(b.name));
 
       for (const world of dcWorlds) {
@@ -749,7 +827,9 @@ export class ComparisonTool extends BaseComponent {
           max-width: 1200px;
           margin: 0 auto;
           width: 100%;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -760,11 +840,14 @@ export class ComparisonTool extends BaseComponent {
 
     // Selected Dyes Cards Section (V4 result-cards in a horizontal row, centered)
     this.selectedDyesSection = this.createElement('div', { className: 'mb-6 hidden' });
-    this.selectedDyesSection.appendChild(this.createHeader(LanguageService.t('comparison.selectedDyes') || 'Selected Dyes'));
+    this.selectedDyesSection.appendChild(
+      this.createHeader(LanguageService.t('comparison.selectedDyes') || 'Selected Dyes')
+    );
     this.selectedDyesCardsContainer = this.createElement('div', {
-      className: 'flex flex-wrap gap-4 justify-center',
+      className: 'flex flex-wrap gap-4 justify-center comparison-cards-container',
       attributes: {
-        style: 'display: flex; flex-direction: row; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: flex-start;',
+        style:
+          'display: flex; flex-direction: row; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: flex-start; --v4-result-card-width: 280px;',
       },
     });
     this.selectedDyesSection.appendChild(this.selectedDyesCardsContainer);
@@ -772,17 +855,23 @@ export class ComparisonTool extends BaseComponent {
 
     // Statistics Summary
     this.statsSection = this.createElement('div', { className: 'mb-8 hidden' });
-    this.statsSection.appendChild(this.createHeader(LanguageService.t('comparison.statistics') || 'Statistics'));
+    this.statsSection.appendChild(
+      this.createHeader(LanguageService.t('comparison.statistics') || 'Statistics')
+    );
     this.statsContainer = this.createElement('div');
     this.statsSection.appendChild(this.statsContainer);
     contentWrapper.appendChild(this.statsSection);
 
-    // Charts Grid - side by side on medium+ screens
-    this.chartsSection = this.createElement('div', { className: 'mb-8 hidden' });
+    // Charts Grid - side by side on medium+ screens (with margin-top for spacing after Statistics)
+    this.chartsSection = this.createElement('div', {
+      className: 'mb-8 hidden',
+      attributes: { style: 'margin-top: 1.5rem;' },
+    });
     this.chartsContainer = this.createElement('div', {
       className: 'grid gap-4 md:grid-cols-2',
       attributes: {
-        style: 'display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr);',
+        style:
+          'display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); max-width: 1168px; margin: 0 auto;',
       },
     });
     this.chartsSection.appendChild(this.chartsContainer);
@@ -790,7 +879,11 @@ export class ComparisonTool extends BaseComponent {
 
     // Distance Matrix
     this.matrixSection = this.createElement('div', { className: 'hidden' });
-    this.matrixSection.appendChild(this.createHeader(LanguageService.t('comparison.colorDistanceMatrix') || 'Color Distance Matrix'));
+    this.matrixSection.appendChild(
+      this.createHeader(
+        LanguageService.t('comparison.colorDistanceMatrix') || 'Color Distance Matrix'
+      )
+    );
     this.matrixContainer = this.createElement('div');
     this.matrixSection.appendChild(this.matrixContainer);
     contentWrapper.appendChild(this.matrixSection);
@@ -813,7 +906,9 @@ export class ComparisonTool extends BaseComponent {
           flex-direction: column;
           align-items: center;
           padding: 2rem;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -827,7 +922,9 @@ export class ComparisonTool extends BaseComponent {
           padding: 20px;
           justify-content: center;
           margin-bottom: 2rem;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -847,7 +944,9 @@ export class ComparisonTool extends BaseComponent {
             background: rgba(0, 0, 0, 0.1);
             transition: all 0.2s ease;
             cursor: pointer;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -873,7 +972,9 @@ export class ComparisonTool extends BaseComponent {
             align-items: center;
             justify-content: center;
             margin-bottom: 12px;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -891,7 +992,9 @@ export class ComparisonTool extends BaseComponent {
             font-size: 0.85rem;
             color: var(--theme-text-muted);
             opacity: 0.6;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -915,7 +1018,9 @@ export class ComparisonTool extends BaseComponent {
           background: rgba(0, 0, 0, 0.2);
           border-radius: 12px;
           border: 1px dashed rgba(255, 255, 255, 0.15);
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -928,21 +1033,27 @@ export class ComparisonTool extends BaseComponent {
           margin-bottom: 20px;
           opacity: 0.4;
           color: var(--theme-text-muted);
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
     iconEl.innerHTML = ICON_TOOL_COMPARISON;
 
     // Message text
     const message = this.createElement('p', {
-      textContent: LanguageService.t('comparison.selectAtLeastTwoDyes') || 'Select 2 or more dyes from the Color Palette to compare them',
+      textContent:
+        LanguageService.t('comparison.selectAtLeastTwoDyes') ||
+        'Select 2 or more dyes from the Color Palette to compare them',
       attributes: {
         style: `
           font-size: 1.1rem;
           color: var(--theme-text-muted);
           max-width: 400px;
           line-height: 1.5;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1020,6 +1131,7 @@ export class ComparisonTool extends BaseComponent {
       card.showHex = this.comparisonOptions.showHex;
       card.showRgb = this.comparisonOptions.showRgb;
       card.showHsv = this.comparisonOptions.showHsv;
+      card.showLab = this.comparisonOptions.showLab;
       card.showDeltaE = false; // No Delta-E in comparison context
       card.showPrice = this.comparisonOptions.showMarketPrices;
       card.showAcquisition = true;
@@ -1072,11 +1184,7 @@ export class ComparisonTool extends BaseComponent {
    * Analysis sections require 2+ dyes to be meaningful
    */
   private showAnalysisSections(show: boolean): void {
-    const analysisSections = [
-      this.statsSection,
-      this.chartsSection,
-      this.matrixSection,
-    ];
+    const analysisSections = [this.statsSection, this.chartsSection, this.matrixSection];
 
     for (const section of analysisSections) {
       if (section) {
@@ -1110,8 +1218,10 @@ export class ComparisonTool extends BaseComponent {
     }
 
     // Calculate averages
-    const avgSaturation = this.dyesWithHSV.reduce((sum, d) => sum + d.s, 0) / this.dyesWithHSV.length;
-    const avgBrightness = this.dyesWithHSV.reduce((sum, d) => sum + d.v, 0) / this.dyesWithHSV.length;
+    const avgSaturation =
+      this.dyesWithHSV.reduce((sum, d) => sum + d.s, 0) / this.dyesWithHSV.length;
+    const avgBrightness =
+      this.dyesWithHSV.reduce((sum, d) => sum + d.v, 0) / this.dyesWithHSV.length;
 
     // Calculate hue range (considering hue wrapping)
     const hues = this.dyesWithHSV.map((d) => d.h).sort((a, b) => a - b);
@@ -1132,7 +1242,10 @@ export class ComparisonTool extends BaseComponent {
     let pairCount = 0;
     for (let i = 0; i < this.selectedDyes.length; i++) {
       for (let j = i + 1; j < this.selectedDyes.length; j++) {
-        totalDistance += ColorService.getColorDistance(this.selectedDyes[i].hex, this.selectedDyes[j].hex);
+        totalDistance += ColorService.getColorDistance(
+          this.selectedDyes[i].hex,
+          this.selectedDyes[j].hex
+        );
         pairCount++;
       }
     }
@@ -1160,7 +1273,10 @@ export class ComparisonTool extends BaseComponent {
 
     for (let i = 0; i < this.selectedDyes.length; i++) {
       for (let j = i + 1; j < this.selectedDyes.length; j++) {
-        const distance = ColorService.getColorDistance(this.selectedDyes[i].hex, this.selectedDyes[j].hex);
+        const distance = ColorService.getColorDistance(
+          this.selectedDyes[i].hex,
+          this.selectedDyes[j].hex
+        );
         if (distance < minDistance) {
           minDistance = distance;
           closest = [i, j];
@@ -1178,11 +1294,11 @@ export class ComparisonTool extends BaseComponent {
     if (!this.statsContainer || !this.stats) return;
     clearContainer(this.statsContainer);
 
-    // V4 Stats Grid - 4 columns on desktop, responsive on mobile
+    // V4 Stats Grid - Flex row centered to match dyes card layout
     const grid = this.createElement('div', {
-      className: 'grid grid-cols-2 gap-4 md:grid-cols-4',
+      className: 'flex flex-wrap justify-center gap-4',
       attributes: {
-        style: 'display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr);',
+        style: 'display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;',
       },
     });
 
@@ -1222,7 +1338,11 @@ export class ComparisonTool extends BaseComponent {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
             cursor: default;
-          `.replace(/\s+/g, ' ').trim(),
+            width: 280px;
+            flex-shrink: 0;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1246,7 +1366,9 @@ export class ComparisonTool extends BaseComponent {
             font-weight: 700;
             color: var(--theme-primary);
             line-height: 1;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1264,7 +1386,9 @@ export class ComparisonTool extends BaseComponent {
               font-weight: 500;
               color: var(--theme-text-muted);
               margin-left: 2px;
-            `.replace(/\s+/g, ' ').trim(),
+            `
+              .replace(/\s+/g, ' ')
+              .trim(),
           },
         });
         valueContainer.appendChild(unitSpan);
@@ -1280,7 +1404,9 @@ export class ComparisonTool extends BaseComponent {
             color: var(--theme-text-muted);
             letter-spacing: 1px;
             margin-top: 12px;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1300,16 +1426,20 @@ export class ComparisonTool extends BaseComponent {
     clearContainer(this.chartsContainer);
 
     // Hue-Saturation Plot
-    this.chartsContainer.appendChild(this.createChartCard(
-      LanguageService.t('comparison.hueSaturationPlot') || 'Hue-Saturation Plot',
-      this.createHueSatPlot()
-    ));
+    this.chartsContainer.appendChild(
+      this.createChartCard(
+        LanguageService.t('comparison.hueSaturationPlot') || 'Hue-Saturation Plot',
+        this.createHueSatPlot()
+      )
+    );
 
     // Brightness Distribution
-    this.chartsContainer.appendChild(this.createChartCard(
-      LanguageService.t('comparison.brightnessDistribution') || 'Brightness Distribution',
-      this.createBrightnessChart()
-    ));
+    this.chartsContainer.appendChild(
+      this.createChartCard(
+        LanguageService.t('comparison.brightnessDistribution') || 'Brightness Distribution',
+        this.createBrightnessChart()
+      )
+    );
   }
 
   /**
@@ -1317,22 +1447,29 @@ export class ComparisonTool extends BaseComponent {
    */
   private createChartCard(title: string, content: HTMLElement): HTMLElement {
     const card = this.createElement('div', {
-      className: 'p-4 rounded-lg flex flex-col',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      className: 'p-4 flex flex-col',
+      attributes: {
+        style:
+          'background: var(--theme-card-background); border: 1px solid var(--theme-border); border-radius: 12px;',
+      },
     });
     // Centered chart title
-    card.appendChild(this.createElement('h4', {
-      className: 'text-sm font-medium mb-3 flex-shrink-0',
-      textContent: title,
-      attributes: {
-        style: `
+    card.appendChild(
+      this.createElement('h4', {
+        className: 'text-sm font-medium mb-3 flex-shrink-0',
+        textContent: title,
+        attributes: {
+          style: `
           color: var(--theme-text);
           text-align: center;
           text-transform: uppercase;
           letter-spacing: 1px;
-        `.replace(/\s+/g, ' ').trim(),
-      },
-    }));
+        `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      })
+    );
     const contentWrapper = this.createElement('div', { className: 'flex-1 flex flex-col min-h-0' });
     contentWrapper.appendChild(content);
     card.appendChild(contentWrapper);
@@ -1349,10 +1486,12 @@ export class ComparisonTool extends BaseComponent {
         style: `
           position: relative;
           width: 100%;
-          max-width: 320px;
+          max-width: 304px;
           height: 280px;
           margin: 0 auto;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1365,7 +1504,9 @@ export class ComparisonTool extends BaseComponent {
           left: 0;
           width: 100%;
           height: 100%;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1422,7 +1563,9 @@ export class ComparisonTool extends BaseComponent {
           left: 13.16%;
           width: 78.95%;
           height: 71.43%;
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1435,7 +1578,8 @@ export class ComparisonTool extends BaseComponent {
       const xPercent = (d.h / 360) * 100;
       const yPercent = 100 - d.s; // Invert so 100% saturation is at top
 
-      const isClosest = this.comparisonOptions.highlightClosestPair &&
+      const isClosest =
+        this.comparisonOptions.highlightClosestPair &&
         this.closestPair &&
         (i === this.closestPair[0] || i === this.closestPair[1]);
 
@@ -1458,7 +1602,9 @@ export class ComparisonTool extends BaseComponent {
             transition: transform 0.15s ease, box-shadow 0.15s ease;
             z-index: 2;
             background: ${d.dye.hex};
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1492,7 +1638,12 @@ export class ComparisonTool extends BaseComponent {
           display: flex;
           flex-direction: column;
           height: 320px;
-        `.replace(/\s+/g, ' ').trim(),
+          width: 100%;
+          max-width: 304px;
+          margin: 0 auto;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1514,7 +1665,9 @@ export class ComparisonTool extends BaseComponent {
             rgba(255, 255, 255, 0.05) calc(25% - 1px),
             rgba(255, 255, 255, 0.05) 25%
           );
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1528,7 +1681,9 @@ export class ComparisonTool extends BaseComponent {
           bottom: 48px;
           height: 1px;
           background: rgba(255, 255, 255, 0.2);
-        `.replace(/\s+/g, ' ').trim(),
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
     chartArea.appendChild(xAxisLine);
@@ -1537,7 +1692,8 @@ export class ComparisonTool extends BaseComponent {
     for (let i = 0; i < this.dyesWithHSV.length; i++) {
       const d = this.dyesWithHSV[i];
       const dyeName = LanguageService.getDyeName(d.dye.itemID) || d.dye.name;
-      const isClosest = this.comparisonOptions.highlightClosestPair &&
+      const isClosest =
+        this.comparisonOptions.highlightClosestPair &&
         this.closestPair &&
         (i === this.closestPair[0] || i === this.closestPair[1]);
 
@@ -1553,7 +1709,9 @@ export class ComparisonTool extends BaseComponent {
             max-width: 80px;
             position: relative;
             height: 208px;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1570,7 +1728,9 @@ export class ComparisonTool extends BaseComponent {
             font-weight: 600;
             color: var(--theme-text);
             white-space: nowrap;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1586,7 +1746,9 @@ export class ComparisonTool extends BaseComponent {
             box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
             background: ${d.dye.hex};
             ${isClosest ? 'box-shadow: 0 0 0 3px var(--theme-primary), 0 -2px 8px rgba(0, 0, 0, 0.3);' : ''}
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1623,7 +1785,9 @@ export class ComparisonTool extends BaseComponent {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-          `.replace(/\s+/g, ' ').trim(),
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
         },
       });
 
@@ -1655,7 +1819,12 @@ export class ComparisonTool extends BaseComponent {
           border-radius: 12px;
           overflow: hidden;
           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        `.replace(/\s+/g, ' ').trim(),
+          max-width: 1168px;
+          width: 100%;
+          margin: 0 auto;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
@@ -1710,7 +1879,8 @@ export class ComparisonTool extends BaseComponent {
     for (let i = 0; i < this.selectedDyes.length; i++) {
       const rowDye = this.selectedDyes[i];
       const rowDyeName = LanguageService.getDyeName(rowDye.itemID) || rowDye.name;
-      const isRowClosest = this.comparisonOptions.highlightClosestPair &&
+      const isRowClosest =
+        this.comparisonOptions.highlightClosestPair &&
         this.closestPair &&
         (i === this.closestPair[0] || i === this.closestPair[1]);
 
@@ -1747,13 +1917,15 @@ export class ComparisonTool extends BaseComponent {
 
       // Data cells
       for (let j = 0; j < this.selectedDyes.length; j++) {
-        const isColClosest = this.comparisonOptions.highlightClosestPair &&
+        const isColClosest =
+          this.comparisonOptions.highlightClosestPair &&
           this.closestPair &&
           (j === this.closestPair[0] || j === this.closestPair[1]);
-        const isPair = this.comparisonOptions.highlightClosestPair &&
+        const isPair =
+          this.comparisonOptions.highlightClosestPair &&
           this.closestPair &&
           ((i === this.closestPair[0] && j === this.closestPair[1]) ||
-           (i === this.closestPair[1] && j === this.closestPair[0]));
+            (i === this.closestPair[1] && j === this.closestPair[0]));
 
         if (i === j) {
           // Diagonal cell
@@ -1952,7 +2124,8 @@ export class ComparisonTool extends BaseComponent {
       // Show placeholder
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
+        textContent:
+          LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },

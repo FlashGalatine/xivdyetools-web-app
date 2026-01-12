@@ -147,8 +147,9 @@ export class MarketBoardService extends EventTarget {
     this.apiService = APIService.getInstance();
 
     // Load saved categories from localStorage
-    this.priceCategories = appStorage.getItem(STORAGE_KEY_CATEGORIES, DEFAULT_CATEGORIES)
-      ?? { ...DEFAULT_CATEGORIES };
+    this.priceCategories = appStorage.getItem(STORAGE_KEY_CATEGORIES, DEFAULT_CATEGORIES) ?? {
+      ...DEFAULT_CATEGORIES,
+    };
 
     // Subscribe to ConfigController for market config changes
     this.subscribeToConfigController();
@@ -297,8 +298,9 @@ export class MarketBoardService extends EventTarget {
 
     // Check if anything actually changed
     const hasChanges = Object.keys(categories).some(
-      key => this.priceCategories[key as keyof PriceCategorySettings] !==
-             categories[key as keyof PriceCategorySettings]
+      (key) =>
+        this.priceCategories[key as keyof PriceCategorySettings] !==
+        categories[key as keyof PriceCategorySettings]
     );
 
     if (!hasChanges) return;
@@ -359,7 +361,9 @@ export class MarketBoardService extends EventTarget {
     // Check Allied Society Dyes
     if (
       this.priceCategories.alliedSocietyDyes &&
-      (PRICE_CATEGORIES.alliedSocietyDyes.acquisitions as readonly string[]).includes(dye.acquisition)
+      (PRICE_CATEGORIES.alliedSocietyDyes.acquisitions as readonly string[]).includes(
+        dye.acquisition
+      )
     ) {
       return true;
     }
@@ -398,7 +402,7 @@ export class MarketBoardService extends EventTarget {
     const requestVersion = this.requestVersion;
 
     // Filter dyes that should have prices fetched
-    const dyesToFetch = dyes.filter(dye => this.showPrices && this.shouldFetchPrice(dye));
+    const dyesToFetch = dyes.filter((dye) => this.showPrices && this.shouldFetchPrice(dye));
     const total = dyesToFetch.length;
 
     if (total === 0) {
@@ -413,7 +417,7 @@ export class MarketBoardService extends EventTarget {
 
     try {
       // Extract item IDs for batch fetch
-      const itemIDs = dyesToFetch.map(dye => dye.itemID);
+      const itemIDs = dyesToFetch.map((dye) => dye.itemID);
 
       // Use batch API to fetch all prices in a single request
       const batchResults = await this.apiService.getPricesForDataCenter(
