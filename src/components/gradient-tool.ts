@@ -148,6 +148,7 @@ export class GradientTool extends BaseComponent {
   private gradientContainer: HTMLElement | null = null;
   private matchesContainer: HTMLElement | null = null;
   private exportContainer: HTMLElement | null = null;
+  private resultsHeader: HTMLElement | null = null;
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
@@ -1039,15 +1040,15 @@ export class GradientTool extends BaseComponent {
     });
 
     // Results header
-    const resultsHeader = this.createElement('div', {
+    this.resultsHeader = this.createElement('div', {
       className: 'instruction-label',
-      textContent: LanguageService.t('gradient.gradientResults') || 'Gradient Results',
+      textContent: `${LanguageService.t('gradient.gradientResults') || 'Gradient Results'} (${this.stepCount} Steps)`,
       attributes: {
         style:
-          'font-size: 11px; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 16px;',
+          'font-size: 11px; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 10px;',
       },
     });
-    resultsSection.appendChild(resultsHeader);
+    resultsSection.appendChild(this.resultsHeader);
 
     // Matches container (for harmony-cards)
     this.matchesContainer = this.createElement('div', {
@@ -1184,6 +1185,11 @@ export class GradientTool extends BaseComponent {
   private updateInterpolation(): void {
     // Always update gradient nodes to reflect current selection state
     this.updateGradientNodes();
+
+    // Update results header with current step count
+    if (this.resultsHeader) {
+      this.resultsHeader.textContent = `${LanguageService.t('gradient.gradientResults') || 'Gradient Results'} (${this.stepCount} Steps)`;
+    }
 
     if (!this.startDye || !this.endDye) {
       this.showEmptyState(true);
@@ -1359,8 +1365,8 @@ export class GradientTool extends BaseComponent {
         className: 'harmony-card',
         attributes: {
           style: `
-            min-width: 300px;
-            max-width: 320px;
+            flex-shrink: 0;
+            width: 280px;
             background: var(--theme-card-background);
             border-radius: 12px;
             overflow: hidden;
