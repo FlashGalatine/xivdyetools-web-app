@@ -1223,7 +1223,7 @@ export class BudgetTool extends BaseComponent {
     // Section header (using consistent section-header/section-title pattern from other tools)
     const sectionHeader = this.createElement('div', {
       className: 'section-header',
-      attributes: { style: 'width: 100%; justify-content: center; margin-bottom: 12px;' },
+      attributes: { style: 'width: 100%; margin-bottom: 12px;' },
     });
     const sectionTitle = this.createElement('span', {
       className: 'section-title',
