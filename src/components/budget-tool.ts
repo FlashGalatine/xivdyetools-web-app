@@ -76,6 +76,9 @@ const STORAGE_KEYS = {
   showHex: 'v3_budget_show_hex',
   showRgb: 'v3_budget_show_rgb',
   showHsv: 'v3_budget_show_hsv',
+  showPrice: 'v3_budget_show_price',
+  showDeltaE: 'v3_budget_show_delta_e',
+  showAcquisition: 'v3_budget_show_acquisition',
 } as const;
 
 /**
@@ -129,6 +132,9 @@ export class BudgetTool extends BaseComponent {
   private showHex: boolean = true;
   private showRgb: boolean = false;
   private showHsv: boolean = false;
+  private showPrice: boolean = true;
+  private showDeltaE: boolean = true;
+  private showAcquisition: boolean = true;
 
   // Child components
   private dyeSelector: DyeSelector | null = null;
@@ -198,6 +204,9 @@ export class BudgetTool extends BaseComponent {
     this.showHex = StorageService.getItem<boolean>(STORAGE_KEYS.showHex) ?? true;
     this.showRgb = StorageService.getItem<boolean>(STORAGE_KEYS.showRgb) ?? false;
     this.showHsv = StorageService.getItem<boolean>(STORAGE_KEYS.showHsv) ?? false;
+    this.showPrice = StorageService.getItem<boolean>(STORAGE_KEYS.showPrice) ?? true;
+    this.showDeltaE = StorageService.getItem<boolean>(STORAGE_KEYS.showDeltaE) ?? true;
+    this.showAcquisition = StorageService.getItem<boolean>(STORAGE_KEYS.showAcquisition) ?? true;
 
     // Load persisted target dye
     const savedDyeId = StorageService.getItem<number>(STORAGE_KEYS.targetDyeId);
@@ -369,6 +378,24 @@ export class BudgetTool extends BaseComponent {
         StorageService.setItem(STORAGE_KEYS.showHsv, opts.showHsv);
         needsRerender = true;
         logger.info(`[BudgetTool] setConfig: displayOptions.showHsv -> ${opts.showHsv}`);
+      }
+      if (opts.showPrice !== undefined && opts.showPrice !== this.showPrice) {
+        this.showPrice = opts.showPrice;
+        StorageService.setItem(STORAGE_KEYS.showPrice, opts.showPrice);
+        needsRerender = true;
+        logger.info(`[BudgetTool] setConfig: displayOptions.showPrice -> ${opts.showPrice}`);
+      }
+      if (opts.showDeltaE !== undefined && opts.showDeltaE !== this.showDeltaE) {
+        this.showDeltaE = opts.showDeltaE;
+        StorageService.setItem(STORAGE_KEYS.showDeltaE, opts.showDeltaE);
+        needsRerender = true;
+        logger.info(`[BudgetTool] setConfig: displayOptions.showDeltaE -> ${opts.showDeltaE}`);
+      }
+      if (opts.showAcquisition !== undefined && opts.showAcquisition !== this.showAcquisition) {
+        this.showAcquisition = opts.showAcquisition;
+        StorageService.setItem(STORAGE_KEYS.showAcquisition, opts.showAcquisition);
+        needsRerender = true;
+        logger.info(`[BudgetTool] setConfig: displayOptions.showAcquisition -> ${opts.showAcquisition}`);
       }
     }
 
@@ -1233,14 +1260,14 @@ export class BudgetTool extends BaseComponent {
     card.showActions = true;
     card.primaryActionLabel =
       LanguageService.t('budget.currentlySelected') || 'Currently Selected';
-    card.showDeltaE = false; // Hide delta-E for target card
+    card.showDeltaE = false; // Hide delta-E for target card (it's the reference)
 
-    // Configure display options
+    // Configure display options from global settings
     card.showHex = this.showHex;
     card.showRgb = this.showRgb;
     card.showHsv = this.showHsv;
-    card.showPrice = true;
-    card.showAcquisition = true;
+    card.showPrice = this.showPrice;
+    card.showAcquisition = this.showAcquisition;
 
     // Card width
     card.style.setProperty('--v4-result-card-width', '320px');
@@ -1375,13 +1402,13 @@ export class BudgetTool extends BaseComponent {
       card.data = cardData;
       card.showActions = true;
 
-      // Configure display options
+      // Configure display options from global settings
       card.showHex = this.showHex;
       card.showRgb = this.showRgb;
       card.showHsv = this.showHsv;
-      card.showDeltaE = true;
-      card.showPrice = true;
-      card.showAcquisition = true;
+      card.showDeltaE = this.showDeltaE;
+      card.showPrice = this.showPrice;
+      card.showAcquisition = this.showAcquisition;
 
       // Event handlers
       card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {

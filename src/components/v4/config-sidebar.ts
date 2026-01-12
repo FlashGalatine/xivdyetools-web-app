@@ -951,9 +951,10 @@ export class ConfigSidebar extends BaseLitComponent {
           .showRgb=${this.globalDisplayOptions.showRgb}
           .showHsv=${this.globalDisplayOptions.showHsv}
           .showLab=${this.globalDisplayOptions.showLab}
+          .showPrice=${this.globalDisplayOptions.showPrice}
           .showDeltaE=${this.globalDisplayOptions.showDeltaE}
           .showAcquisition=${this.globalDisplayOptions.showAcquisition}
-          .visibleGroups=${['colorFormats']}
+          .visibleGroups=${['colorFormats', 'resultMetadata']}
           @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
             this.handleDisplayOptionsChange('budget', e)}
         ></v4-display-options>
