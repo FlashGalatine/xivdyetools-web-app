@@ -504,6 +504,7 @@
     "loading": "加载替代品中...",
     "marketPrice": "市场布告板价格",
     "alternativesWithinBudget": "个预算内替代品",
+    "alternativeWithinBudget": "个预算内替代品",
     "sortedBy": "排序方式",
     "sortMatch": "最佳匹配",
     "sortMatchDesc": "颜色最接近优先",

@@ -504,6 +504,7 @@
     "loading": "Chargement des alternatives...",
     "marketPrice": "Prix du tableau des ventes",
     "alternativesWithinBudget": "alternatives dans le budget",
+    "alternativeWithinBudget": "alternative dans le budget",
     "sortedBy": "Trié par",
     "sortMatch": "Meilleure correspondance",
     "sortMatchDesc": "Couleur la plus proche d'abord",

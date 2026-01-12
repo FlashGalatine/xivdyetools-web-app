@@ -504,6 +504,7 @@
     "loading": "Loading alternatives...",
     "marketPrice": "Market Price",
     "alternativesWithinBudget": "alternatives within budget",
+    "alternativeWithinBudget": "alternative within budget",
     "sortedBy": "Sorted by",
     "sortMatch": "Best Match",
     "sortMatchDesc": "Closest color first",

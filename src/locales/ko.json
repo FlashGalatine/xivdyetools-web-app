@@ -504,6 +504,7 @@
     "loading": "대안 로딩 중...",
     "marketPrice": "마켓보드 가격",
     "alternativesWithinBudget": "개의 예산 내 대안",
+    "alternativeWithinBudget": "개의 예산 내 대안",
     "sortedBy": "정렬 기준",
     "sortMatch": "최고 매치",
     "sortMatchDesc": "가장 유사한 색상 우선",

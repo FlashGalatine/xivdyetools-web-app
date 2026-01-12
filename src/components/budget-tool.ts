@@ -1299,7 +1299,9 @@ export class BudgetTool extends BaseComponent {
       ? `${LanguageService.t('budget.showingXOfY') || 'Showing {showing} of {total}'}`
           .replace('{showing}', String(displayCount))
           .replace('{total}', String(totalCount))
-      : `${totalCount} ${LanguageService.t('budget.alternativesWithinBudget') || 'Alternatives Within Budget'}`;
+      : `${totalCount} ${totalCount === 1
+          ? (LanguageService.t('budget.alternativeWithinBudget') || 'Alternative Within Budget')
+          : (LanguageService.t('budget.alternativesWithinBudget') || 'Alternatives Within Budget')}`;
 
     // Section header (using consistent section-header/section-title pattern from other tools)
     const sectionHeader = this.createElement('div', {

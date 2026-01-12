@@ -504,6 +504,7 @@
     "loading": "代替品を検索中...",
     "marketPrice": "マーケットボード価格",
     "alternativesWithinBudget": "件の予算内代替品",
+    "alternativeWithinBudget": "件の予算内代替品",
     "sortedBy": "並べ替え",
     "sortMatch": "ベストマッチ",
     "sortMatchDesc": "最も近い色から",
