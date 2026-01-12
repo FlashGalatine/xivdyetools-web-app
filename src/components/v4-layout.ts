@@ -92,6 +92,21 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
     }
   }) as EventListener);
 
+  // Listen for clear all dyes request from the Color Palette drawer
+  layoutElement.addEventListener('clear-all-dyes', (() => {
+    logger.debug('[V4 Layout] Clear all dyes requested');
+
+    // Route clear request to active tool if it has clearDyes or clearSelection method
+    if (activeTool && 'clearDyes' in activeTool) {
+      (activeTool as BaseComponent & { clearDyes: () => void }).clearDyes();
+    } else if (activeTool && 'clearSelection' in activeTool) {
+      // Fallback for tools that use clearSelection instead of clearDyes
+      (activeTool as BaseComponent & { clearSelection: () => void }).clearSelection();
+    } else {
+      logger.debug(`[V4 Layout] Tool ${RouterService.getCurrentToolId()} does not support clearing dyes`);
+    }
+  }) as EventListener);
+
   // Listen for theme button click from header
   layoutElement.addEventListener('theme-click', (() => {
     logger.debug('[V4 Layout] Theme button clicked');

@@ -33,6 +33,7 @@ import type { Dye } from '@services/dye-service-wrapper';
  *
  * @fires tool-change - When active tool changes, with detail: { toolId: ToolId }
  * @fires dye-selected - When a dye is selected from the palette drawer, with detail: { dye: Dye }
+ * @fires clear-all-dyes - When clear all dyes button is clicked in palette drawer
  * @fires theme-click - Bubbled from V4AppHeader
  * @fires language-click - Bubbled from V4AppHeader
  * @fires about-click - Bubbled from V4AppHeader
@@ -373,6 +374,14 @@ export class V4LayoutShell extends BaseLitComponent {
   }
 
   /**
+   * Handle clear all dyes request from DyePaletteDrawer
+   * Re-emits for parent to clear selections on active tool
+   */
+  private handleClearAllDyes(): void {
+    this.emit('clear-all-dyes');
+  }
+
+  /**
    * Handle theme button click from header
    * Bubbles up to v4-layout.ts
    */
@@ -444,6 +453,7 @@ export class V4LayoutShell extends BaseLitComponent {
                 ?is-open=${this.paletteDrawerOpen}
                 @drawer-toggle=${this.handlePaletteDrawerToggle}
                 @dye-selected=${this.handleDyeSelected}
+                @clear-all-dyes=${this.handleClearAllDyes}
               ></dye-palette-drawer>
             `
           : ''}

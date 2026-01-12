@@ -10,11 +10,13 @@
 
 import { html, css, CSSResultGroup, TemplateResult, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseLitComponent } from './base-lit-component';
 import { DyeService, type Dye } from '@services/dye-service-wrapper';
 import { CollectionService } from '@services/collection-service';
 import { ToastService } from '@services/toast-service';
 import { logger } from '@shared/logger';
+import { ICON_DICE, ICON_BROOM } from '@shared/ui-icons';
 
 /**
  * Filter types for dye categories
@@ -41,9 +43,10 @@ const DYE_CATEGORY_ORDER = [
 /**
  * V4 Dye Palette Drawer - Right-side color selection panel
  *
- * @fires dye-selected - When a dye swatch is clicked
+ * @fires dye-selected - When a dye swatch is clicked or random dye is selected
  *   - detail.dye: The selected Dye object
  * @fires drawer-toggle - When close button is clicked
+ * @fires clear-all-dyes - When clear all button is clicked, signals tool to reset
  *
  * @example
  * ```html
@@ -51,6 +54,7 @@ const DYE_CATEGORY_ORDER = [
  *   .isOpen=${true}
  *   @dye-selected=${this.handleDyeSelected}
  *   @drawer-toggle=${this.handleToggle}
+ *   @clear-all-dyes=${this.handleClearDyes}
  * ></dye-palette-drawer>
  * ```
  */
@@ -133,6 +137,51 @@ export class DyePaletteDrawer extends BaseLitComponent {
       .close-btn:hover {
         color: var(--theme-text, #e0e0e0);
         background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Header Actions Container */
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* Action Buttons (Random, Clear) */
+      .action-btn {
+        background: none;
+        border: none;
+        color: var(--v4-text-secondary, #a0a0a0);
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s, background 0.2s, transform 0.15s;
+      }
+
+      .action-btn:hover {
+        color: var(--theme-primary, #d4af37);
+        background: rgba(212, 175, 55, 0.1);
+        transform: scale(1.05);
+      }
+
+      .action-btn:active {
+        transform: scale(0.95);
+      }
+
+      .action-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .action-btn.random-btn:hover {
+        color: var(--theme-primary, #d4af37);
+      }
+
+      .action-btn.clear-btn:hover {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
       }
 
       /* Drawer Content */
@@ -570,6 +619,33 @@ export class DyePaletteDrawer extends BaseLitComponent {
   }
 
   /**
+   * Select a random dye from all available dyes.
+   * Emits dye-selected with the randomly chosen dye.
+   */
+  private handleRandomDye(): void {
+    if (this.allDyes.length === 0) {
+      ToastService.warning('No dyes available');
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * this.allDyes.length);
+    const randomDye = this.allDyes[randomIndex];
+
+    this.emit('dye-selected', { dye: randomDye });
+    logger.debug(`[DyePaletteDrawer] Random dye selected: ${randomDye.name}`);
+    ToastService.info(`Selected: ${randomDye.name}`);
+  }
+
+  /**
+   * Clear all dye selections for the active tool.
+   * Emits clear-all-dyes event for parent to handle.
+   */
+  private handleClearDyes(): void {
+    this.emit('clear-all-dyes');
+    logger.debug('[DyePaletteDrawer] Clear all dyes requested');
+  }
+
+  /**
    * Toggle favorite status for a dye.
    * Prevents event bubbling to avoid triggering dye selection.
    */
@@ -607,11 +683,29 @@ export class DyePaletteDrawer extends BaseLitComponent {
       <aside class="drawer">
         <div class="drawer-header">
           <span class="drawer-title">Color Palette</span>
-          <button class="close-btn" @click=${this.handleClose} title="Close palette">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
+          <div class="header-actions">
+            <button
+              class="action-btn random-btn"
+              @click=${this.handleRandomDye}
+              title="Select random dye"
+              aria-label="Select random dye"
+            >
+              ${unsafeHTML(ICON_DICE)}
+            </button>
+            <button
+              class="action-btn clear-btn"
+              @click=${this.handleClearDyes}
+              title="Clear all dyes"
+              aria-label="Clear all dyes"
+            >
+              ${unsafeHTML(ICON_BROOM)}
+            </button>
+            <button class="close-btn" @click=${this.handleClose} title="Close palette">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="drawer-content">
