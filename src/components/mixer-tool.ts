@@ -914,20 +914,16 @@ export class MixerTool extends BaseComponent {
     this.resultsSection = this.createElement('div', {
       attributes: { style: 'display: none; width: 100%; max-width: 1400px;' },
     });
-    const resultsHeader = this.createElement('h3', {
-      textContent: LanguageService.t('mixer.matchingDyes') || 'Matching Dyes',
-      attributes: {
-        style: `
-          font-size: 0.875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 16px;
-          text-align: center;
-          color: var(--theme-text-muted);
-        `,
-      },
+    // Results header (using consistent section-header/section-title pattern from other tools)
+    const resultsHeader = this.createElement('div', {
+      className: 'section-header',
+      attributes: { style: 'width: 100%; justify-content: center;' },
     });
+    const resultsTitle = this.createElement('span', {
+      className: 'section-title',
+      textContent: LanguageService.t('mixer.matchingDyes') || 'Matching Dyes',
+    });
+    resultsHeader.appendChild(resultsTitle);
     this.resultsSection.appendChild(resultsHeader);
     this.resultsGridContainer = this.createElement('div', {
       attributes: {

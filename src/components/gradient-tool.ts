@@ -78,7 +78,7 @@ const STORAGE_KEYS = {
  * Default values
  */
 const DEFAULTS = {
-  stepCount: 5,
+  stepCount: 8,
   colorSpace: 'hsv' as const,
 };
 
