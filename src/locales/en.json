@@ -133,11 +133,19 @@
     "loading": "Loading...",
     "showMore": "Show More",
     "showLess": "Show Less",
-    "selectDye": "Select a dye",
+    "selectDye": "Select Dye",
     "noDyeSelected": "No dye selected",
     "download": "Download",
     "slot": "Slot",
-    "replace": "Replace"
+    "replace": "Replace",
+    "technical": "Technical",
+    "acquisition": "Acquisition",
+    "source": "Source",
+    "recommended": "Recommended",
+    "original": "Original",
+    "match": "Match",
+    "cost": "Cost",
+    "market": "Market"
   },
   "harmony": {
     "suggestionMode": "Suggestion Mode",

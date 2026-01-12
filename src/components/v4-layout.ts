@@ -66,9 +66,11 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
     logger.debug(`[V4 Layout] Config change: ${tool}.${key} = ${value}`);
 
     // Notify active tool if it has setConfig method
+    // Pass the full context (tool, key, value) so tools can handle
+    // both tool-specific config and shared market config
     if (activeTool && 'setConfig' in activeTool) {
       (activeTool as BaseComponent & { setConfig: (config: Record<string, unknown>) => void })
-        .setConfig({ [key]: value });
+        .setConfig({ _tool: tool, [key]: value });
     }
   }) as EventListener);
 

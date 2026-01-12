@@ -16,7 +16,7 @@ import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
-import { ColorService, ConfigController, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
+import { ColorService, ConfigController, dyeService, LanguageService, MarketBoardService, StorageService, ToastService, WorldService } from '@services/index';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
 import {
   ICON_FILTER,
@@ -30,7 +30,7 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { GradientConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
+import type { GradientConfig, DisplayOptionsConfig, MarketConfig } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 
 // ============================================================================
@@ -90,8 +90,18 @@ export class GradientTool extends BaseComponent {
   private stepCount: number;
   private colorSpace: 'rgb' | 'hsv';
   private currentSteps: InterpolationStep[] = [];
-  private showPrices: boolean = false;
-  private priceData: Map<number, PriceData> = new Map();
+
+  // Market Board Service integration
+  private marketBoardService: MarketBoardService;
+
+  // Computed getters for market data (delegates to shared service)
+  private get showPrices(): boolean {
+    return this.marketBoardService.getShowPrices();
+  }
+
+  private get priceData(): Map<number, PriceData> {
+    return this.marketBoardService.getAllPrices();
+  }
 
   // Computed getters for backward compatibility
   private get startDye(): Dye | null {
@@ -133,21 +143,31 @@ export class GradientTool extends BaseComponent {
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
   private configUnsubscribe: (() => void) | null = null;
+  private marketConfigUnsubscribe: (() => void) | null = null;
 
   // Display options (from ConfigController) - for future v4-result-card migration
   private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
 
+  // Guard flag to prevent selection-changed event from overwriting state during external selection
+  private isExternalSelection = false;
+
   constructor(container: HTMLElement, options: GradientToolOptions) {
     super(container);
     this.options = options;
+
+    // Initialize shared MarketBoardService
+    this.marketBoardService = MarketBoardService.getInstance();
 
     // Load persisted settings
     this.stepCount = StorageService.getItem<number>(STORAGE_KEYS.stepCount) ?? DEFAULTS.stepCount;
     this.colorSpace = StorageService.getItem<'rgb' | 'hsv'>(STORAGE_KEYS.colorSpace) ?? DEFAULTS.colorSpace;
 
     // Load display options from ConfigController
-    const gradientConfig = ConfigController.getInstance().getConfig('gradient');
+    const configController = ConfigController.getInstance();
+    const gradientConfig = configController.getConfig('gradient');
     this.displayOptions = gradientConfig.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
+
+    // Note: showPrices now comes from MarketBoardService getter
 
     // Load persisted dye selections (with migration from old format)
     this.loadSelectedDyes();
@@ -226,9 +246,26 @@ export class GradientTool extends BaseComponent {
     });
 
     // Subscribe to config changes from V4 ConfigSidebar
-    this.configUnsubscribe = ConfigController.getInstance().subscribe('gradient', (config) => {
+    const configController = ConfigController.getInstance();
+    this.configUnsubscribe = configController.subscribe('gradient', (config) => {
       this.setConfig(config);
     });
+
+    // Subscribe to market config changes
+    this.marketConfigUnsubscribe = configController.subscribe('market', (config) => {
+      this.setConfig(config);
+    });
+
+    // Sync MarketBoard components with ConfigController on initial load
+    const marketConfig = configController.getConfig('market');
+    if (this.marketBoard) {
+      this.marketBoard.setSelectedServer(marketConfig.selectedServer);
+      this.marketBoard.setShowPrices(marketConfig.showPrices);
+    }
+    if (this.mobileMarketBoard) {
+      this.mobileMarketBoard.setSelectedServer(marketConfig.selectedServer);
+      this.mobileMarketBoard.setShowPrices(marketConfig.showPrices);
+    }
 
     // If dyes were loaded from storage, calculate interpolation
     if (this.startDye && this.endDye) {
@@ -242,6 +279,7 @@ export class GradientTool extends BaseComponent {
   destroy(): void {
     this.languageUnsubscribe?.();
     this.configUnsubscribe?.();
+    this.marketConfigUnsubscribe?.();
 
     // Destroy desktop components
     this.dyeSelector?.destroy();
@@ -274,8 +312,9 @@ export class GradientTool extends BaseComponent {
 
   /**
    * Update tool configuration from external source (V4 ConfigSidebar)
+   * Accepts both GradientConfig and MarketConfig properties
    */
-  public setConfig(config: Partial<GradientConfig>): void {
+  public setConfig(config: Partial<GradientConfig> & Partial<MarketConfig>): void {
     let needsUpdate = false;
 
     // Handle stepCount
@@ -306,12 +345,64 @@ export class GradientTool extends BaseComponent {
       }
     }
 
-    // Handle display options changes (for future v4-result-card migration)
+    // Handle display options changes - re-render results when these change
     if (config.displayOptions) {
-      this.displayOptions = config.displayOptions;
-      logger.info('[GradientTool] setConfig: displayOptions updated');
-      // Note: Currently using custom rendering, so no re-render needed yet.
-      // When migrating to v4-result-card, add needsUpdate = true here.
+      const oldOptions = this.displayOptions;
+      this.displayOptions = { ...this.displayOptions, ...config.displayOptions };
+      logger.info('[GradientTool] setConfig: displayOptions updated', config.displayOptions);
+
+      // Check if any display option actually changed
+      const hasChanged = Object.keys(config.displayOptions).some(
+        (key) =>
+          oldOptions[key as keyof typeof oldOptions] !==
+          config.displayOptions![key as keyof typeof config.displayOptions]
+      );
+
+      if (hasChanged) {
+        // Re-render results to reflect new display options
+        this.renderIntermediateMatches();
+        logger.info('[GradientTool] Re-rendered results with new display options');
+      }
+    }
+
+    // Handle market config changes (showPrices, selectedServer)
+    // Note: MarketBoardService manages state via ConfigController subscription
+    if ('showPrices' in config) {
+      const showPrices = config.showPrices as boolean;
+      logger.info(`[GradientTool] setConfig: showPrices -> ${showPrices}`);
+
+      // Update both MarketBoard UI instances
+      if (this.marketBoard) {
+        this.marketBoard.setShowPrices(showPrices);
+      }
+      if (this.mobileMarketBoard) {
+        this.mobileMarketBoard.setShowPrices(showPrices);
+      }
+
+      // Fetch prices if enabled, or re-render to hide them
+      if (showPrices) {
+        this.fetchPricesForDisplayedDyes();
+      } else {
+        this.renderIntermediateMatches();
+      }
+    }
+
+    if ('selectedServer' in config) {
+      const selectedServer = config.selectedServer as string;
+      logger.info(`[GradientTool] setConfig: selectedServer -> ${selectedServer}`);
+
+      // Update both MarketBoard UI instances with the new server
+      if (this.marketBoard) {
+        this.marketBoard.setSelectedServer(selectedServer);
+      }
+      if (this.mobileMarketBoard) {
+        this.mobileMarketBoard.setSelectedServer(selectedServer);
+      }
+
+      // Re-fetch prices with the new server (service clears cache automatically on server change)
+      if (this.showPrices) {
+        this.fetchPricesForDisplayedDyes();
+      }
     }
 
     // Re-interpolate if any config changed and we have data
@@ -395,16 +486,13 @@ export class GradientTool extends BaseComponent {
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
-    // Listen for price toggle changes
-    marketContent.addEventListener('showPricesChanged', ((event: Event) => {
-      const customEvent = event as CustomEvent<{ showPrices: boolean }>;
-      this.showPrices = customEvent.detail.showPrices;
+    // Listen for price toggle changes (service manages state, we just react)
+    marketContent.addEventListener('showPricesChanged', ((_event: Event) => {
       if (this.showPrices) {
         // Fetch prices - this will update displays after fetching
         void this.fetchPricesForDisplayedDyes();
       } else {
-        // Prices disabled - clear price data and update displays to remove prices
-        this.priceData.clear();
+        // Prices disabled - update displays to remove price indicators
         this.updateSelectedDyesDisplay();
         this.renderIntermediateMatches();
       }
@@ -507,6 +595,10 @@ export class GradientTool extends BaseComponent {
 
     // Listen for selection changes
     selectorContainer.addEventListener('selection-changed', () => {
+      // Skip if this change was triggered by external selection (e.g., from Color Palette drawer)
+      if (this.isExternalSelection) {
+        return;
+      }
       this.selectedDyes = selector.getSelectedDyes();
       this.saveSelectedDyes();
       this.updateSelectedDyesDisplay();
@@ -739,56 +831,317 @@ export class GradientTool extends BaseComponent {
     const right = this.options.rightPanel;
     clearContainer(right);
 
-    // Empty state (shown when dyes not selected)
-    this.emptyStateContainer = this.createElement('div');
-    this.renderEmptyState();
-    right.appendChild(this.emptyStateContainer);
+    // Apply gradient-view styling to the right panel
+    right.setAttribute('style', `
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: 32px;
+      gap: 32px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    `);
 
-    // Gradient Preview section
-    const gradientSection = this.createElement('div', { className: 'mb-6 hidden' });
-    gradientSection.appendChild(this.createHeader(LanguageService.t('mixer.interpolationPreview') || 'Interpolation Preview'));
-    this.gradientContainer = this.createElement('div');
-    gradientSection.appendChild(this.gradientContainer);
-    right.appendChild(gradientSection);
-
-    // Intermediate Matches section
-    const matchesSection = this.createElement('div', { className: 'mb-6 hidden' });
-    matchesSection.appendChild(this.createHeader(LanguageService.t('mixer.intermediateDyeMatches') || 'Intermediate Dye Matches'));
-    this.matchesContainer = this.createElement('div');
-    matchesSection.appendChild(this.matchesContainer);
-    right.appendChild(matchesSection);
-
-    // Export section
-    this.exportContainer = this.createElement('div', { className: 'hidden' });
-    right.appendChild(this.exportContainer);
-  }
-
-  /**
-   * Render empty state
-   */
-  private renderEmptyState(): void {
-    if (!this.emptyStateContainer) return;
-    clearContainer(this.emptyStateContainer);
-
-    const empty = this.createElement('div', {
-      className: 'flex flex-col items-center justify-center text-center',
+    // Gradient Builder UI section (Start node -> Path -> End node)
+    const gradientBuilderUI = this.createElement('div', {
+      className: 'gradient-builder-ui',
       attributes: {
-        style: 'min-height: 400px; padding: 3rem 2rem;',
+        style: `
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          position: relative;
+          min-height: 150px;
+          background: radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+          border-radius: 20px;
+          padding: 20px;
+        `,
       },
     });
 
-    empty.innerHTML = `
-      <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
-      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('mixer.selectStartEndDyes') || 'Select start and end dyes to create a color transition'}</p>
+    // Start Node
+    const startNode = this.createElement('div', {
+      className: 'gradient-node main start',
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          z-index: 2;
+          cursor: pointer;
+          transition: transform 0.2s;
+        `,
+      },
+    });
+    const startCircle = this.createElement('div', {
+      className: 'node-circle start-circle',
+      attributes: {
+        style: `
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+          border: 4px solid rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border-style: dashed;
+          border-color: rgba(255, 255, 255, 0.3);
+        `,
+        title: LanguageService.t('gradient.clickToSelectStart') || 'Click to select start color',
+      },
+    });
+    startCircle.innerHTML = '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
+    const startLabel = this.createElement('span', {
+      className: 'node-label',
+      textContent: LanguageService.t('gradient.selectColor') || 'Select Color',
+      attributes: {
+        style: 'font-size: 12px; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 500;',
+      },
+    });
+    startNode.appendChild(startCircle);
+    startNode.appendChild(startLabel);
+    gradientBuilderUI.appendChild(startNode);
+
+    // Gradient Path Container
+    const pathContainer = this.createElement('div', {
+      className: 'gradient-path-container',
+      attributes: {
+        style: `
+          flex: 1;
+          height: 6px;
+          background: rgba(255, 255, 255, 0.05);
+          margin: 0 16px;
+          position: relative;
+          border-radius: 3px;
+          max-width: 400px;
+        `,
+      },
+    });
+
+    // Gradient Track (filled gradient)
+    const gradientTrack = this.createElement('div', {
+      className: 'gradient-track',
+      attributes: {
+        style: `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border-radius: 3px;
+          opacity: 0.8;
+          background: repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 4px, transparent 4px, transparent 8px);
+        `,
+      },
+    });
+    pathContainer.appendChild(gradientTrack);
+
+    // Step markers container (we'll update these dynamically)
+    this.gradientContainer = pathContainer; // Repurpose for step markers
+    gradientBuilderUI.appendChild(pathContainer);
+
+    // End Node
+    const endNode = this.createElement('div', {
+      className: 'gradient-node main end',
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          z-index: 2;
+          cursor: pointer;
+          transition: transform 0.2s;
+        `,
+      },
+    });
+    const endCircle = this.createElement('div', {
+      className: 'node-circle end-circle',
+      attributes: {
+        style: `
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+          border: 4px solid rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border-style: dashed;
+          border-color: rgba(255, 255, 255, 0.3);
+        `,
+        title: LanguageService.t('gradient.clickToSelectEnd') || 'Click to select end color',
+      },
+    });
+    endCircle.innerHTML = '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
+    const endLabel = this.createElement('span', {
+      className: 'node-label',
+      textContent: LanguageService.t('gradient.selectColor') || 'Select Color',
+      attributes: {
+        style: 'font-size: 12px; color: var(--theme-text-muted); text-transform: uppercase; font-weight: 500;',
+      },
+    });
+    endNode.appendChild(endCircle);
+    endNode.appendChild(endLabel);
+    gradientBuilderUI.appendChild(endNode);
+
+    right.appendChild(gradientBuilderUI);
+
+    // Results section container
+    const resultsSection = this.createElement('div', {
+      attributes: {
+        style: 'width: 100%; overflow: hidden; display: flex; flex-direction: column; position: relative; flex: 1;',
+      },
+    });
+
+    // Results header
+    const resultsHeader = this.createElement('div', {
+      className: 'instruction-label',
+      textContent: LanguageService.t('gradient.gradientResults') || 'Gradient Results',
+      attributes: {
+        style: 'font-size: 11px; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 16px;',
+      },
+    });
+    resultsSection.appendChild(resultsHeader);
+
+    // Matches container (for harmony-cards)
+    this.matchesContainer = this.createElement('div', {
+      className: 'gradient-results-list',
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 16px;
+          overflow-y: auto;
+          width: 100%;
+          max-width: 1400px;
+          align-self: center;
+          padding: 20px 0;
+        `,
+      },
+    });
+
+    // Empty state message (inside results area)
+    this.emptyStateContainer = this.createElement('div', {
+      className: 'empty-state-message',
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          min-height: 200px;
+          color: var(--theme-text-muted);
+          text-align: center;
+          padding: 40px;
+        `,
+      },
+    });
+    this.emptyStateContainer.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width: 64px; height: 64px; opacity: 0.3; margin-bottom: 16px;">
+        <path d="M 4 8 C 4 6 5 5 7 5 L 17 5 C 19 5 20 6 20 8 L 20 16 C 20 18 19 19 17 19 L 7 19 C 5 19 4 18 4 16 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="8" cy="10" r="2" opacity="0.5" />
+        <circle cx="12" cy="10" r="2" opacity="0.5" />
+        <circle cx="16" cy="10" r="2" opacity="0.5" />
+        <line x1="6" y1="15" x2="10" y2="15" stroke="currentColor" stroke-width="2" />
+        <path d="M 10 15 L 12 13 L 12 17 Z" opacity="0.7" />
+      </svg>
+      <div style="font-size: 16px; color: var(--theme-text); margin-bottom: 8px;">${LanguageService.t('gradient.setStartAndEnd') || 'Set a start and end color to generate gradient steps'}</div>
+      <div style="font-size: 14px; opacity: 0.7;">${LanguageService.t('gradient.clickPlusButtons') || 'Select dyes from the Color Palette to set gradient colors'}</div>
     `;
 
-    this.emptyStateContainer.appendChild(empty);
+    resultsSection.appendChild(this.emptyStateContainer);
+    resultsSection.appendChild(this.matchesContainer);
+    right.appendChild(resultsSection);
+
+    // Export container (hidden by default)
+    this.exportContainer = this.createElement('div', { attributes: { style: 'display: none;' } });
+    right.appendChild(this.exportContainer);
+
+    // Store references to update dynamically
+    this.startCircleElement = startCircle;
+    this.startLabelElement = startLabel;
+    this.endCircleElement = endCircle;
+    this.endLabelElement = endLabel;
+    this.gradientTrackElement = gradientTrack;
+  }
+
+  // DOM element references for dynamic updates
+  private startCircleElement: HTMLElement | null = null;
+  private startLabelElement: HTMLElement | null = null;
+  private endCircleElement: HTMLElement | null = null;
+  private endLabelElement: HTMLElement | null = null;
+  private gradientTrackElement: HTMLElement | null = null;
+
+  /**
+   * Update gradient nodes and track based on current dye selections
+   */
+  private updateGradientNodes(): void {
+    // Update Start node
+    if (this.startCircleElement && this.startLabelElement) {
+      if (this.startDye) {
+        this.startCircleElement.style.background = this.startDye.hex;
+        this.startCircleElement.style.borderStyle = 'solid';
+        this.startCircleElement.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        this.startCircleElement.innerHTML = '';
+        this.startLabelElement.textContent = `Start (${LanguageService.getDyeName(this.startDye.itemID) || this.startDye.name})`;
+      } else {
+        this.startCircleElement.style.background = 'transparent';
+        this.startCircleElement.style.borderStyle = 'dashed';
+        this.startCircleElement.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        this.startCircleElement.innerHTML = '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
+        this.startLabelElement.textContent = LanguageService.t('gradient.selectColor') || 'Select Color';
+      }
+    }
+
+    // Update End node
+    if (this.endCircleElement && this.endLabelElement) {
+      if (this.endDye) {
+        this.endCircleElement.style.background = this.endDye.hex;
+        this.endCircleElement.style.borderStyle = 'solid';
+        this.endCircleElement.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        this.endCircleElement.innerHTML = '';
+        this.endLabelElement.textContent = `End (${LanguageService.getDyeName(this.endDye.itemID) || this.endDye.name})`;
+      } else {
+        this.endCircleElement.style.background = 'transparent';
+        this.endCircleElement.style.borderStyle = 'dashed';
+        this.endCircleElement.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        this.endCircleElement.innerHTML = '<span style="font-size: 32px; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>';
+        this.endLabelElement.textContent = LanguageService.t('gradient.selectColor') || 'Select Color';
+      }
+    }
+
+    // Update gradient track
+    if (this.gradientTrackElement) {
+      if (this.startDye && this.endDye) {
+        this.gradientTrackElement.style.background = `linear-gradient(to right, ${this.startDye.hex}, ${this.endDye.hex})`;
+      } else if (this.startDye) {
+        this.gradientTrackElement.style.background = `linear-gradient(to right, ${this.startDye.hex}, rgba(255,255,255,0.1))`;
+      } else if (this.endDye) {
+        this.gradientTrackElement.style.background = `linear-gradient(to right, rgba(255,255,255,0.1), ${this.endDye.hex})`;
+      } else {
+        this.gradientTrackElement.style.background = 'repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 4px, transparent 4px, transparent 8px)';
+      }
+    }
   }
 
   /**
    * Update all results
    */
   private updateInterpolation(): void {
+    // Always update gradient nodes to reflect current selection state
+    this.updateGradientNodes();
+
     if (!this.startDye || !this.endDye) {
       this.showEmptyState(true);
       this.currentSteps = [];
@@ -803,19 +1156,15 @@ export class GradientTool extends BaseComponent {
   }
 
   /**
-   * Show/hide empty state
+   * Show/hide empty state and matches container
    */
   private showEmptyState(show: boolean): void {
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.classList.toggle('hidden', !show);
+      this.emptyStateContainer.style.display = show ? 'flex' : 'none';
     }
-
-    // Toggle all result sections
-    const rightPanel = this.options.rightPanel;
-    const sections = rightPanel.querySelectorAll(':scope > div:not(:first-child)');
-    sections.forEach((section) => {
-      section.classList.toggle('hidden', show);
-    });
+    if (this.matchesContainer) {
+      this.matchesContainer.style.display = show ? 'none' : 'flex';
+    }
   }
 
   /**
@@ -898,148 +1247,588 @@ export class GradientTool extends BaseComponent {
   }
 
   /**
-   * Render gradient preview with step markers
+   * Render gradient preview with step markers on the gradient track
    */
   private renderGradientPreview(): void {
     if (!this.gradientContainer || !this.startDye || !this.endDye) return;
-    clearContainer(this.gradientContainer);
 
-    const card = this.createElement('div', {
-      className: 'p-4 rounded-lg',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
-    });
+    // Remove existing step markers (but keep the gradient track element)
+    const existingSteps = this.gradientContainer.querySelectorAll('.gradient-step');
+    existingSteps.forEach((el) => el.remove());
 
-    // Gradient bar
-    const gradient = this.createElement('div', {
-      className: 'h-16 rounded-lg mb-3',
-      attributes: { style: `background: linear-gradient(to right, ${this.startDye.hex}, ${this.endDye.hex});` },
-    });
-    card.appendChild(gradient);
-
-    // Step markers
-    const markers = this.createElement('div', { className: 'flex justify-between' });
+    // Add step markers for each interpolation step
     for (let i = 0; i < this.currentSteps.length; i++) {
       const step = this.currentSteps[i];
-      const marker = this.createElement('div', { className: 'text-center' });
-      marker.innerHTML = `
-        <div class="w-8 h-8 rounded mx-auto mb-1" style="background: ${step.theoreticalColor}; border: 1px solid var(--theme-border);"></div>
-        <span class="text-xs number" style="color: var(--theme-text-muted);">${i}</span>
-      `;
-      markers.appendChild(marker);
-    }
-    card.appendChild(markers);
+      // Calculate position as percentage (0 to 100)
+      const leftPercent = step.position * 100;
 
-    this.gradientContainer.appendChild(card);
+      const stepMarker = this.createElement('div', {
+        className: 'gradient-step',
+        attributes: {
+          style: `
+            position: absolute;
+            top: 50%;
+            left: ${leftPercent}%;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            z-index: 1;
+            transition: transform 0.1s;
+            background: ${step.theoreticalColor};
+          `,
+          title: `Step ${i}: ${step.matchedDye ? (LanguageService.getDyeName(step.matchedDye.itemID) || step.matchedDye.name) : 'No match'}`,
+        },
+      });
+
+      // Hover effect
+      this.on(stepMarker, 'mouseenter', () => {
+        stepMarker.style.transform = 'translate(-50%, -50%) scale(1.2)';
+      });
+      this.on(stepMarker, 'mouseleave', () => {
+        stepMarker.style.transform = 'translate(-50%, -50%)';
+      });
+
+      this.gradientContainer.appendChild(stepMarker);
+    }
   }
 
   /**
-   * Render intermediate dye matches list
+   * Render intermediate dye matches as harmony-card styled cards
    */
   private renderIntermediateMatches(): void {
     if (!this.matchesContainer) return;
     clearContainer(this.matchesContainer);
 
-    const container = this.createElement('div', { className: 'space-y-2' });
-
-    // Only show intermediate steps (skip first and last which are the start/end dyes)
-    for (let i = 1; i < this.currentSteps.length - 1; i++) {
+    // Render ALL steps as cards (including start and end for complete gradient view)
+    for (let i = 0; i < this.currentSteps.length; i++) {
       const step = this.currentSteps[i];
-      const row = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
-      });
+      if (!step.matchedDye) continue;
 
-      // Step number
-      const stepNum = this.createElement('span', {
-        className: 'w-6 text-center font-medium',
-        textContent: String(i),
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      row.appendChild(stepNum);
+      const dye = step.matchedDye;
 
-      // Theoretical color swatch
-      const theoreticalSwatch = this.createElement('div', {
-        className: 'w-10 h-10 rounded border',
+      // Create harmony-card
+      const card = this.createElement('div', {
+        className: 'harmony-card',
         attributes: {
-          style: `background: ${step.theoreticalColor}; border-color: var(--theme-border);`,
-          title: LanguageService.t('mixer.targetColor') || 'Target',
+          style: `
+            min-width: 300px;
+            max-width: 320px;
+            background: var(--theme-card-background);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--theme-border);
+            transition: transform 0.2s, box-shadow 0.2s;
+          `,
         },
       });
-      row.appendChild(theoreticalSwatch);
 
-      // Arrow
-      const arrow = this.createElement('span', {
-        textContent: '\u2192',
-        attributes: { style: 'color: var(--theme-text-muted);' },
+      // Card header
+      const header = this.createElement('div', {
+        className: 'card-header',
+        attributes: {
+          style: 'background: rgba(0, 0, 0, 0.4); padding: 10px 16px; border-bottom: 1px solid var(--theme-border); text-align: center;',
+        },
       });
-      row.appendChild(arrow);
+      const dyeName = this.createElement('span', {
+        className: 'dye-name',
+        textContent: `Step ${i + 1}: ${LanguageService.getDyeName(dye.itemID) || dye.name}`,
+        attributes: {
+          style: 'font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: var(--theme-text);',
+        },
+      });
+      header.appendChild(dyeName);
+      card.appendChild(header);
 
-      // Matched dye swatch
-      if (step.matchedDye) {
-        const matchedSwatch = this.createElement('div', {
-          className: 'w-10 h-10 rounded',
-          attributes: {
-            style: `background: ${step.matchedDye.hex};`,
-            title: LanguageService.t('mixer.bestMatch') || 'Best Match',
-          },
-        });
-        row.appendChild(matchedSwatch);
+      // Card preview (split - shows target vs matched)
+      const preview = this.createElement('div', {
+        className: 'card-preview',
+        attributes: {
+          style: 'height: 100px; width: 100%; display: flex; position: relative; flex-shrink: 0;',
+        },
+      });
 
-        // Dye info
-        const info = this.createElement('div', { className: 'flex-1' });
-        const dyeName = this.createElement('p', {
-          className: 'text-sm font-medium',
-          textContent: LanguageService.getDyeName(step.matchedDye.itemID) || step.matchedDye.name,
-          attributes: { style: 'color: var(--theme-text);' },
-        });
-        const distance = this.createElement('p', {
-          className: 'text-xs number',
-          textContent: `${LanguageService.t('mixer.distance') || 'Distance'}: ${step.distance.toFixed(1)}`,
-          attributes: { style: 'color: var(--theme-text-muted);' },
-        });
-        info.appendChild(dyeName);
-        info.appendChild(distance);
+      // Left half - theoretical/target color
+      const leftHalf = this.createElement('div', {
+        className: 'preview-half',
+        attributes: {
+          style: `flex: 1; height: 100%; position: relative; background-color: ${step.theoreticalColor};`,
+        },
+      });
+      const leftLabel = this.createElement('span', {
+        className: 'preview-label',
+        textContent: LanguageService.t('common.original') || 'Original',
+        attributes: {
+          style: 'position: absolute; bottom: 4px; width: 100%; text-align: center; font-size: 9px; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);',
+        },
+      });
+      leftHalf.appendChild(leftLabel);
+      preview.appendChild(leftHalf);
 
-        // Add price if enabled
-        const priceText = this.formatPrice(step.matchedDye);
-        if (priceText) {
-          const price = this.createElement('p', {
-            className: 'text-xs number',
-            textContent: priceText,
-            attributes: { style: 'color: var(--theme-text-muted);' },
-          });
-          info.appendChild(price);
-        }
+      // Right half - matched dye color
+      const rightHalf = this.createElement('div', {
+        className: 'preview-half',
+        attributes: {
+          style: `flex: 1; height: 100%; position: relative; background-color: ${dye.hex};`,
+        },
+      });
+      const rightLabel = this.createElement('span', {
+        className: 'preview-label',
+        textContent: LanguageService.t('common.match') || 'Match',
+        attributes: {
+          style: 'position: absolute; bottom: 4px; width: 100%; text-align: center; font-size: 9px; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);',
+        },
+      });
+      rightHalf.appendChild(rightLabel);
+      preview.appendChild(rightHalf);
+      card.appendChild(preview);
 
-        row.appendChild(info);
+      // Card details (technical + acquisition)
+      // Check if we need two columns or just one
+      const hasAcquisitionCol = this.displayOptions.showAcquisition || this.displayOptions.showPrice;
+      const gridCols = hasAcquisitionCol ? '1fr 1fr' : '1fr';
+      const details = this.createElement('div', {
+        className: 'card-details',
+        attributes: {
+          style: `padding: 12px; display: grid; grid-template-columns: ${gridCols}; gap: 12px; background: linear-gradient(to bottom, var(--theme-card-background), var(--theme-background));`,
+        },
+      });
 
-        // Action dropdown menu
-        const dropdown = createDyeActionDropdown(step.matchedDye);
-        row.appendChild(dropdown);
-      } else {
-        // No match found
-        const noMatch = this.createElement('span', {
-          className: 'text-sm italic',
-          textContent: LanguageService.t('mixer.noMatchFound') || 'No match found',
-          attributes: { style: 'color: var(--theme-text-muted);' },
-        });
-        row.appendChild(noMatch);
+      // Build technical column content based on displayOptions
+      // Using styles that match v4-result-card for consistency
+      const techCol = this.createElement('div', {
+        className: 'detail-col',
+        attributes: { style: 'display: flex; flex-direction: column; gap: 4px;' },
+      });
+      const techHeader = `<div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 4px; border-bottom: 1px solid var(--theme-border); padding-bottom: 2px;">${LanguageService.t('common.technical') || 'Technical'}</div>`;
+      const rowStyle = 'font-size: 11px; display: flex; justify-content: space-between; align-items: baseline;';
+      const labelStyle = 'color: var(--theme-text-muted);';
+      const valueStyle = "color: var(--theme-text); font-family: 'Consolas', 'Monaco', monospace; text-align: right;";
+
+      // Build format rows based on displayOptions
+      const formatRows: string[] = [];
+
+      // Delta-E (always important for gradient matching)
+      if (this.displayOptions.showDeltaE) {
+        const deltaColor = step.distance < 2 ? '#4caf50' : step.distance < 5 ? '#ffc107' : '#f44336';
+        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">ΔE</span><span style="color: ${deltaColor};">${step.distance.toFixed(2)}</span></div>`);
       }
 
-      container.appendChild(row);
-    }
+      // HEX
+      if (this.displayOptions.showHex) {
+        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">HEX</span><span style="${valueStyle}">${dye.hex.toUpperCase()}</span></div>`);
+      }
 
-    // If no intermediate steps (only 2 steps total)
-    if (this.currentSteps.length <= 2) {
-      const noSteps = this.createElement('div', {
-        className: 'p-4 text-center text-sm',
-        textContent: LanguageService.t('mixer.increaseSteps') || 'Increase steps to see intermediate matches',
-        attributes: { style: 'color: var(--theme-text-muted);' },
+      // RGB
+      if (this.displayOptions.showRgb) {
+        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">RGB</span><span style="${valueStyle}">${this.hexToRgbString(dye.hex)}</span></div>`);
+      }
+
+      // HSV
+      if (this.displayOptions.showHsv) {
+        const hsv = ColorService.hexToHsv(dye.hex);
+        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">HSV</span><span style="${valueStyle}">${Math.round(hsv.h)}°, ${Math.round(hsv.s)}%, ${Math.round(hsv.v)}%</span></div>`);
+      }
+
+      // LAB
+      if (this.displayOptions.showLab) {
+        const lab = ColorService.hexToLab(dye.hex);
+        formatRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">LAB</span><span style="${valueStyle}">${lab.L.toFixed(0)}, ${lab.a.toFixed(0)}, ${lab.b.toFixed(0)}</span></div>`);
+      }
+
+      techCol.innerHTML = techHeader + formatRows.join('');
+      details.appendChild(techCol);
+
+      // Acquisition column (conditionally rendered)
+      const showAcquisition = this.displayOptions.showAcquisition;
+      const showPrice = this.displayOptions.showPrice;
+
+      if (showAcquisition || showPrice) {
+        const acqCol = this.createElement('div', {
+          className: 'detail-col',
+          attributes: { style: 'display: flex; flex-direction: column; gap: 4px;' },
+        });
+
+        const acqHeader = `<div style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 4px; border-bottom: 1px solid var(--theme-border); padding-bottom: 2px;">${LanguageService.t('common.acquisition') || 'Acquisition'}</div>`;
+
+        // Build acquisition rows
+        const acqRows: string[] = [];
+
+        // Source and Cost rows (when showAcquisition is true)
+        if (showAcquisition) {
+          const source = dye.acquisition || 'Vendor';
+          const vendorCost = dye.cost !== undefined ? `${dye.cost.toLocaleString()} G` : '—';
+          acqRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.source') || 'Source'}</span><span style="${valueStyle}">${source}</span></div>`);
+          acqRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.cost') || 'Cost'}</span><span style="${valueStyle}">${vendorCost}</span></div>`);
+        }
+
+        // Market server and price rows (when showPrice is true)
+        if (showPrice) {
+          const priceInfo = this.priceData.get(dye.itemID);
+          // Resolve worldId to world name using WorldService
+          // Fall back to selected datacenter/server if worldId not available
+          const worldName = priceInfo?.worldId ? WorldService.getWorldName(priceInfo.worldId) : undefined;
+          const marketServer = worldName || this.getActiveMarketBoard()?.getSelectedServer() || 'N/A';
+          const marketPrice = priceInfo ? `${priceInfo.currentMinPrice.toLocaleString()} G` : null;
+
+          acqRows.push(`<div style="${rowStyle}"><span style="${labelStyle}">${LanguageService.t('common.market') || 'Market'}</span><span style="${valueStyle}">${marketServer}</span></div>`);
+
+          if (marketPrice) {
+            acqRows.push(`<div style="font-size: 13px; font-weight: 600; color: var(--theme-primary); text-align: right;">${marketPrice}</div>`);
+          }
+        }
+
+        acqCol.innerHTML = acqHeader + acqRows.join('');
+        details.appendChild(acqCol);
+      }
+
+      card.appendChild(details);
+
+      // Card actions
+      const actions = this.createElement('div', {
+        className: 'card-actions',
+        attributes: {
+          style: 'padding: 8px; display: flex; justify-content: center; border-top: 1px solid var(--theme-border); background: rgba(0, 0, 0, 0.2);',
+        },
       });
-      container.appendChild(noSteps);
+      const actionRow = this.createElement('div', {
+        className: 'action-row',
+        attributes: { style: 'display: flex; gap: 8px; align-items: center; width: 100%;' },
+      });
+
+      // Primary action button with smart slot selection dropdown
+      const selectBtnContainer = this.createElement('div', {
+        className: 'select-dye-container',
+        attributes: { style: 'position: relative; flex: 1;' },
+      });
+
+      const selectBtn = this.createElement('button', {
+        className: 'primary-action-btn',
+        textContent: LanguageService.t('common.selectDye') || 'Select Dye',
+        attributes: {
+          style: `
+            width: 100%;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--theme-primary);
+            color: var(--theme-card-background, #121212);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+          `,
+        },
+      });
+
+      // Create dropdown menu for slot selection
+      const selectMenu = this.createElement('div', {
+        className: 'select-dye-menu',
+        attributes: {
+          style: `
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 4px;
+            min-width: 160px;
+            padding: 4px 0;
+            background: var(--theme-card-background);
+            border: 1px solid var(--theme-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: none;
+          `,
+        },
+      });
+
+      // Determine recommended option based on step position
+      const isEarlyStep = i < this.currentSteps.length / 2;
+      const startLabel = LanguageService.t('mixer.startDye') || 'Start Dye';
+      const endLabel = LanguageService.t('mixer.endDye') || 'End Dye';
+      const recommendedLabel = ` (${LanguageService.t('common.recommended') || 'Recommended'})`;
+
+      // Create menu options (recommended option first)
+      const options = isEarlyStep
+        ? [
+            { label: `Set as ${startLabel}${recommendedLabel}`, slot: 'start' as const },
+            { label: `Set as ${endLabel}`, slot: 'end' as const },
+          ]
+        : [
+            { label: `Set as ${endLabel}${recommendedLabel}`, slot: 'end' as const },
+            { label: `Set as ${startLabel}`, slot: 'start' as const },
+          ];
+
+      options.forEach((option, optIndex) => {
+        const menuItem = this.createElement('button', {
+          textContent: option.label,
+          attributes: {
+            style: `
+              display: block;
+              width: 100%;
+              padding: 8px 12px;
+              text-align: left;
+              font-size: 12px;
+              background: transparent;
+              border: none;
+              color: var(--theme-text);
+              cursor: pointer;
+              transition: background 0.15s;
+              ${optIndex === 0 ? 'font-weight: 600;' : ''}
+            `,
+          },
+        });
+
+        // Hover effect
+        this.on(menuItem, 'mouseenter', () => {
+          menuItem.style.background = 'rgba(255, 255, 255, 0.1)';
+        });
+        this.on(menuItem, 'mouseleave', () => {
+          menuItem.style.background = 'transparent';
+        });
+
+        // Click handler for slot selection
+        this.on(menuItem, 'click', (e) => {
+          e.stopPropagation();
+          if (option.slot === 'start') {
+            this.selectedDyes[0] = dye;
+            logger.info(`[GradientTool] Set ${dye.name} as start dye from result card`);
+          } else {
+            this.selectedDyes[1] = dye;
+            logger.info(`[GradientTool] Set ${dye.name} as end dye from result card`);
+          }
+
+          // Update UI
+          this.isExternalSelection = true;
+          try {
+            if (this.dyeSelector) {
+              this.dyeSelector.setSelectedDyes(this.selectedDyes);
+            }
+          } finally {
+            this.isExternalSelection = false;
+          }
+          this.saveSelectedDyes();
+          this.updateSelectedDyesDisplay();
+          this.updateMobileSelectedDyesDisplay();
+          this.updateInterpolation();
+          this.updateDrawerContent();
+
+          // Hide menu
+          selectMenu.style.display = 'none';
+        });
+
+        selectMenu.appendChild(menuItem);
+      });
+
+      // Toggle menu on button click
+      this.on(selectBtn, 'click', (e) => {
+        e.stopPropagation();
+        const isVisible = selectMenu.style.display === 'block';
+        // Hide all other select menus first
+        document.querySelectorAll('.select-dye-menu').forEach((menu) => {
+          (menu as HTMLElement).style.display = 'none';
+        });
+        selectMenu.style.display = isVisible ? 'none' : 'block';
+      });
+
+      // Close menu when clicking outside
+      this.on(document, 'click', () => {
+        selectMenu.style.display = 'none';
+      });
+
+      selectBtnContainer.appendChild(selectBtn);
+      selectBtnContainer.appendChild(selectMenu);
+      actionRow.appendChild(selectBtnContainer);
+
+      // Context menu button (matching mockup structure)
+      const contextMenuContainer = this.createElement('div', {
+        className: 'context-menu-container',
+        attributes: { style: 'position: relative;' },
+      });
+
+      const contextMenuBtn = this.createElement('button', {
+        className: 'context-menu-btn',
+        attributes: {
+          style: `
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--theme-text-muted);
+            transition: color 0.2s, background-color 0.2s;
+          `,
+          title: LanguageService.t('harmony.actions') || 'Actions',
+        },
+      });
+
+      // Three-dot vertical icon (matching mockup's SVG path)
+      contextMenuBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+        </svg>
+      `;
+
+      // Hover effects for context menu button
+      this.on(contextMenuBtn, 'mouseenter', () => {
+        contextMenuBtn.style.color = 'var(--theme-text)';
+        contextMenuBtn.style.background = 'var(--theme-card-hover, rgba(255,255,255,0.1))';
+      });
+      this.on(contextMenuBtn, 'mouseleave', () => {
+        contextMenuBtn.style.color = 'var(--theme-text-muted)';
+        contextMenuBtn.style.background = 'transparent';
+      });
+
+      // Create dropdown menu for context actions
+      const contextMenu = this.createElement('div', {
+        className: 'context-dropdown-menu',
+        attributes: {
+          style: `
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            margin-bottom: 4px;
+            min-width: 180px;
+            padding: 4px 0;
+            background: var(--theme-card-background);
+            border: 1px solid var(--theme-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            display: none;
+          `,
+        },
+      });
+
+      // Context menu actions
+      const contextActions = [
+        { label: LanguageService.t('harmony.addToComparison') || 'Add to Comparison', action: 'comparison' },
+        { label: LanguageService.t('harmony.addToMixer') || 'Add to Mixer', action: 'mixer' },
+        { label: LanguageService.t('harmony.copyHex') || 'Copy Hex Code', action: 'copy' },
+      ];
+
+      contextActions.forEach((item) => {
+        const menuItem = this.createElement('button', {
+          textContent: item.label,
+          attributes: {
+            style: `
+              display: block;
+              width: 100%;
+              padding: 8px 12px;
+              text-align: left;
+              font-size: 12px;
+              background: transparent;
+              border: none;
+              color: var(--theme-text);
+              cursor: pointer;
+              transition: background 0.15s;
+            `,
+          },
+        });
+
+        this.on(menuItem, 'mouseenter', () => {
+          menuItem.style.background = 'rgba(255, 255, 255, 0.1)';
+        });
+        this.on(menuItem, 'mouseleave', () => {
+          menuItem.style.background = 'transparent';
+        });
+
+        this.on(menuItem, 'click', (e) => {
+          e.stopPropagation();
+          contextMenu.style.display = 'none';
+
+          if (item.action === 'copy') {
+            navigator.clipboard.writeText(dye.hex).then(() => {
+              ToastService.success(LanguageService.t('common.copied') || 'Copied to clipboard!');
+            });
+          } else if (item.action === 'comparison') {
+            // Store in localStorage and navigate
+            const existing = StorageService.getItem<number[]>('v3_comparison_selected_dyes') || [];
+            if (!existing.includes(dye.id) && existing.length < 4) {
+              existing.push(dye.id);
+              StorageService.setItem('v3_comparison_selected_dyes', existing);
+              ToastService.success(`${dye.name} added to comparison`);
+            }
+          } else if (item.action === 'mixer') {
+            const existing = StorageService.getItem<number[]>('v3_mixer_selected_dyes') || [];
+            if (!existing.includes(dye.id) && existing.length < 2) {
+              existing.push(dye.id);
+              StorageService.setItem('v3_mixer_selected_dyes', existing);
+              ToastService.success(`${dye.name} added to mixer`);
+            }
+          }
+        });
+
+        contextMenu.appendChild(menuItem);
+      });
+
+      // Toggle context menu on button click
+      this.on(contextMenuBtn, 'click', (e) => {
+        e.stopPropagation();
+        const isVisible = contextMenu.style.display === 'block';
+        // Hide all other context menus first
+        document.querySelectorAll('.context-dropdown-menu').forEach((menu) => {
+          (menu as HTMLElement).style.display = 'none';
+        });
+        contextMenu.style.display = isVisible ? 'none' : 'block';
+      });
+
+      // Close context menu when clicking outside
+      this.on(document, 'click', () => {
+        contextMenu.style.display = 'none';
+      });
+
+      contextMenuContainer.appendChild(contextMenuBtn);
+      contextMenuContainer.appendChild(contextMenu);
+      actionRow.appendChild(contextMenuContainer);
+
+      actions.appendChild(actionRow);
+      card.appendChild(actions);
+
+      // Hover effects
+      this.on(card, 'mouseenter', () => {
+        card.style.transform = 'translateY(-4px)';
+        card.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.4)';
+        card.style.borderColor = 'var(--theme-text-muted)';
+      });
+      this.on(card, 'mouseleave', () => {
+        card.style.transform = '';
+        card.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.3)';
+        card.style.borderColor = 'var(--theme-border)';
+      });
+
+      this.matchesContainer.appendChild(card);
     }
 
-    this.matchesContainer.appendChild(container);
+    // If no steps have matches
+    if (this.currentSteps.every((s) => !s.matchedDye)) {
+      const noSteps = this.createElement('div', {
+        textContent: LanguageService.t('gradient.noMatchesFound') || 'No matching dyes found',
+        attributes: {
+          style: 'padding: 24px; text-align: center; font-size: 14px; color: var(--theme-text-muted);',
+        },
+      });
+      this.matchesContainer.appendChild(noSteps);
+    }
+  }
+
+  /**
+   * Helper to convert hex to RGB string
+   */
+  private hexToRgbString(hex: string): string {
+    const rgb = ColorService.hexToRgb(hex);
+    return `${rgb.r},${rgb.g},${rgb.b}`;
   }
 
   /**
@@ -1234,14 +2023,12 @@ export class GradientTool extends BaseComponent {
     this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
     this.mobileMarketBoard.init();
 
-    // Listen for price toggle changes (mobile)
-    mobileMarketContent.addEventListener('showPricesChanged', ((event: Event) => {
-      const customEvent = event as CustomEvent<{ showPrices: boolean }>;
-      this.showPrices = customEvent.detail.showPrices;
+    // Listen for price toggle changes (mobile - service manages state, we just react)
+    mobileMarketContent.addEventListener('showPricesChanged', ((_event: Event) => {
       if (this.showPrices) {
         void this.fetchPricesForDisplayedDyes();
       } else {
-        this.priceData.clear();
+        // Prices disabled - update displays to remove price indicators
         this.updateSelectedDyesDisplay();
         this.updateMobileSelectedDyesDisplay();
         this.renderIntermediateMatches();
@@ -1317,6 +2104,10 @@ export class GradientTool extends BaseComponent {
 
     // Listen for selection changes
     selectorContainer.addEventListener('selection-changed', () => {
+      // Skip if this change was triggered by external selection (e.g., from Color Palette drawer)
+      if (this.isExternalSelection) {
+        return;
+      }
       this.selectedDyes = selector.getSelectedDyes();
       this.saveSelectedDyes();
       // Sync to desktop selector
@@ -1538,8 +2329,14 @@ export class GradientTool extends BaseComponent {
    */
   private updateDrawerContent(): void {
     // Sync mobile selector with current state (if it exists)
+    // Use guard flag to prevent event handler from overwriting state
     if (this.mobileDyeSelector && this.selectedDyes.length > 0) {
-      this.mobileDyeSelector.setSelectedDyes(this.selectedDyes);
+      this.isExternalSelection = true;
+      try {
+        this.mobileDyeSelector.setSelectedDyes(this.selectedDyes);
+      } finally {
+        this.isExternalSelection = false;
+      }
     }
     // Update the mobile display
     this.updateMobileSelectedDyesDisplay();
@@ -1576,34 +2373,28 @@ export class GradientTool extends BaseComponent {
 
   /**
    * Fetch prices for all displayed dyes (start, end, and intermediate matches)
+   * Uses shared MarketBoardService for centralized price caching.
    */
   private async fetchPricesForDisplayedDyes(): Promise<void> {
     if (!this.showPrices) {
       return;
     }
 
-    // Get whichever MarketBoard instance is active (desktop or mobile)
-    const activeMarketBoard = this.getActiveMarketBoard();
-    if (!activeMarketBoard) {
-      logger.warn('[MixerTool] No active MarketBoard found for price fetching');
-      return;
-    }
-
     const dyesToFetch: Dye[] = [];
 
     // Add start dye if selected
-    if (this.startDye && activeMarketBoard.shouldFetchPrice(this.startDye)) {
+    if (this.startDye && this.marketBoardService.shouldFetchPrice(this.startDye)) {
       dyesToFetch.push(this.startDye);
     }
 
     // Add end dye if selected
-    if (this.endDye && activeMarketBoard.shouldFetchPrice(this.endDye)) {
+    if (this.endDye && this.marketBoardService.shouldFetchPrice(this.endDye)) {
       dyesToFetch.push(this.endDye);
     }
 
     // Add intermediate dyes from interpolation steps
     for (const step of this.currentSteps) {
-      if (step.matchedDye && activeMarketBoard.shouldFetchPrice(step.matchedDye)) {
+      if (step.matchedDye && this.marketBoardService.shouldFetchPrice(step.matchedDye)) {
         // Avoid duplicates
         if (!dyesToFetch.some((d) => d.id === step.matchedDye!.id)) {
           dyesToFetch.push(step.matchedDye);
@@ -1613,11 +2404,11 @@ export class GradientTool extends BaseComponent {
 
     if (dyesToFetch.length > 0) {
       try {
-        const prices = await activeMarketBoard.fetchPricesForDyes(dyesToFetch);
-        this.priceData = prices;
-        logger.info(`[MixerTool] Fetched prices for ${prices.size} dyes`);
+        const prices = await this.marketBoardService.fetchPricesForDyes(dyesToFetch);
+        // Note: Service updates its shared cache, priceData getter returns latest
+        logger.info(`[GradientTool] Fetched prices for ${prices.size} dyes`);
       } catch (error) {
-        logger.error('[MixerTool] Failed to fetch prices:', error);
+        logger.error('[GradientTool] Failed to fetch prices:', error);
       }
     }
 
@@ -1648,6 +2439,21 @@ export class GradientTool extends BaseComponent {
   public selectDye(dye: Dye): void {
     if (!dye) return;
 
+    // Prevent selecting the same dye for both Start and End
+    // Check if the dye is already selected in either slot
+    const isAlreadyStart = this.startDye && this.startDye.id === dye.id;
+    const isAlreadyEnd = this.endDye && this.endDye.id === dye.id;
+
+    if (isAlreadyStart || isAlreadyEnd) {
+      // Show a toast message to inform the user
+      ToastService.warning(
+        LanguageService.t('gradient.sameDyeWarning') ||
+          'This dye is already selected. Choose a different dye for the gradient.'
+      );
+      logger.info(`[GradientTool] Prevented duplicate dye selection: ${dye.name}`);
+      return;
+    }
+
     // If no start dye, set as start
     if (!this.startDye) {
       this.selectedDyes[0] = dye;
@@ -1658,16 +2464,21 @@ export class GradientTool extends BaseComponent {
       this.selectedDyes[1] = dye;
       logger.info(`[GradientTool] External dye set as end: ${dye.name}`);
     }
-    // If both are set, replace start and shift
+    // If both are set: old Start → new End, new dye → new Start
     else {
-      this.selectedDyes[0] = this.selectedDyes[1];
-      this.selectedDyes[1] = dye;
-      logger.info(`[GradientTool] External dye replaced end: ${dye.name}`);
+      this.selectedDyes[1] = this.selectedDyes[0]; // Old start becomes new end
+      this.selectedDyes[0] = dye; // New dye becomes new start
+      logger.info(`[GradientTool] Shifted dyes: ${dye.name} is now start`);
     }
 
-    // Update DyeSelector if it exists
+    // Update DyeSelector if it exists (with guard flag to prevent event handler loop)
     if (this.dyeSelector) {
-      this.dyeSelector.setSelectedDyes(this.selectedDyes);
+      this.isExternalSelection = true;
+      try {
+        this.dyeSelector.setSelectedDyes(this.selectedDyes);
+      } finally {
+        this.isExternalSelection = false;
+      }
     }
 
     // Persist and update UI

@@ -137,7 +137,15 @@
     "noDyeSelected": "未选择染剂",
     "download": "下载",
     "slot": "槽位",
-    "replace": "替换"
+    "replace": "替换",
+    "technical": "技术信息",
+    "acquisition": "获取方式",
+    "source": "来源",
+    "recommended": "推荐",
+    "original": "原始",
+    "match": "匹配",
+    "cost": "成本",
+    "market": "市场"
   },
   "harmony": {
     "suggestionMode": "建议模式",

@@ -137,7 +137,15 @@
     "noDyeSelected": "Kein Farbstoff ausgewählt",
     "download": "Herunterladen",
     "slot": "Platz",
-    "replace": "Ersetzen"
+    "replace": "Ersetzen",
+    "technical": "Technisch",
+    "acquisition": "Beschaffung",
+    "source": "Quelle",
+    "recommended": "Empfohlen",
+    "original": "Original",
+    "match": "Übereinstimmung",
+    "cost": "Kosten",
+    "market": "Markt"
   },
   "harmony": {
     "suggestionMode": "Vorschlagsmodus",

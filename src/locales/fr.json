@@ -137,7 +137,15 @@
     "noDyeSelected": "Aucune teinture sélectionnée",
     "download": "Télécharger",
     "slot": "Emplacement",
-    "replace": "Remplacer"
+    "replace": "Remplacer",
+    "technical": "Technique",
+    "acquisition": "Acquisition",
+    "source": "Source",
+    "recommended": "Recommandé",
+    "original": "Original",
+    "match": "Correspondance",
+    "cost": "Coût",
+    "market": "Marché"
   },
   "harmony": {
     "suggestionMode": "Mode de Suggestion",

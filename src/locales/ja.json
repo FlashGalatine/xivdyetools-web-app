@@ -137,7 +137,15 @@
     "noDyeSelected": "カララント未選択",
     "download": "ダウンロード",
     "slot": "スロット",
-    "replace": "置き換え"
+    "replace": "置き換え",
+    "technical": "技術情報",
+    "acquisition": "入手方法",
+    "source": "入手先",
+    "recommended": "おすすめ",
+    "original": "オリジナル",
+    "match": "マッチ",
+    "cost": "コスト",
+    "market": "マーケット"
   },
   "harmony": {
     "suggestionMode": "提案モード",

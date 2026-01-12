@@ -22,7 +22,7 @@ import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
-import { ColorService, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
+import { ColorService, dyeService, LanguageService, StorageService, ToastService, MarketBoardService } from '@services/index';
 import { ConfigController } from '@services/config-controller';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
 import { ICON_FILTER, ICON_MARKET, ICON_PALETTE, ICON_BEAKER, ICON_SLIDERS } from '@shared/ui-icons';
@@ -85,8 +85,17 @@ export class MixerTool extends BaseComponent {
   private blendedColor: string | null = null;
   private matchedResults: MixedColorResult[] = [];
   private maxResults: number = 5;
-  private showPrices: boolean = false;
-  private priceData: Map<number, PriceData> = new Map();
+
+  // Market Board Service (shared price cache with race condition protection)
+  private marketBoardService: MarketBoardService;
+
+  // Getters for service state
+  private get showPrices(): boolean {
+    return this.marketBoardService.getShowPrices();
+  }
+  private get priceData(): Map<number, PriceData> {
+    return this.marketBoardService.getAllPrices();
+  }
 
   // Child components (desktop)
   private dyeSelector: DyeSelector | null = null;
@@ -113,6 +122,7 @@ export class MixerTool extends BaseComponent {
   private maxResultsValueDisplay: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
   private craftingContainer: HTMLElement | null = null;
+  private resultsSection: HTMLElement | null = null;
   private resultsGridContainer: HTMLElement | null = null;
   private slot1Element: HTMLElement | null = null;
   private slot2Element: HTMLElement | null = null;
@@ -128,6 +138,9 @@ export class MixerTool extends BaseComponent {
   constructor(container: HTMLElement, options: MixerToolOptions) {
     super(container);
     this.options = options;
+
+    // Initialize MarketBoardService (shared price cache)
+    this.marketBoardService = MarketBoardService.getInstance();
 
     // Load config from ConfigController (v4 unified config)
     const config = ConfigController.getInstance().getConfig('mixer');
@@ -266,7 +279,12 @@ export class MixerTool extends BaseComponent {
 
     // If dyes were loaded from storage, calculate blend and matches
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
+      this.blendedColor = this.blendColors(
+        this.selectedDyes[0].hex,
+        this.selectedDyes[1].hex
+      );
       this.findMatchingDyes();
+      this.showEmptyState(false);
       this.updateCraftingUI();
       this.renderResultsGrid();
     }
@@ -362,11 +380,38 @@ export class MixerTool extends BaseComponent {
 
   /**
    * Update tool configuration from external source (V4 ConfigSidebar)
+   * Handles both tool-specific config (maxResults, displayOptions) and
+   * shared market config (showPrices, selectedServer)
+   * Note: Market state is managed by MarketBoardService
    */
-  public setConfig(config: Partial<MixerConfig>): void {
+  public setConfig(config: Partial<MixerConfig> & { _tool?: string; showPrices?: boolean; selectedServer?: string }): void {
     let needsUpdate = false;
     let needsRerender = false;
+    let needsPriceFetch = false;
 
+    // Handle market config changes (_tool === 'market')
+    // Note: MarketBoardService handles state persistence and cache clearing
+    if (config._tool === 'market') {
+      if (config.showPrices !== undefined) {
+        logger.info(`[MixerTool] setConfig: showPrices -> ${config.showPrices}`);
+        if (config.showPrices) {
+          needsPriceFetch = true;
+        } else {
+          needsRerender = true;
+        }
+      }
+
+      if (config.selectedServer !== undefined) {
+        logger.info(`[MixerTool] setConfig: selectedServer -> ${config.selectedServer}`);
+        // Service clears cache on server change
+        needsRerender = true;
+        if (this.showPrices && this.matchedResults.length > 0) {
+          needsPriceFetch = true;
+        }
+      }
+    }
+
+    // Handle tool-specific config
     if (config.maxResults !== undefined && config.maxResults !== this.maxResults) {
       this.maxResults = config.maxResults;
       needsUpdate = true;
@@ -400,6 +445,7 @@ export class MixerTool extends BaseComponent {
       }
     }
 
+    // Apply updates
     if (needsUpdate && this.blendedColor) {
       this.findMatchingDyes();
       this.renderResultsGrid();
@@ -409,6 +455,11 @@ export class MixerTool extends BaseComponent {
     } else if (needsRerender && this.blendedColor) {
       // Only re-render cards (no need to recalculate matches)
       this.renderResultsGrid();
+    }
+
+    // Fetch prices if needed (after render so cards exist)
+    if (needsPriceFetch && this.blendedColor && this.matchedResults.length > 0) {
+      void this.fetchPricesForDisplayedDyes();
     }
   }
 
@@ -486,25 +537,25 @@ export class MixerTool extends BaseComponent {
     });
     this.marketPanel.init();
 
+    // Create market board content
+    // Note: MarketBoard delegates to MarketBoardService for state management
     const marketContent = this.createElement('div');
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
-    // Listen for price toggle changes
-    marketContent.addEventListener('showPricesChanged', ((event: Event) => {
-      const customEvent = event as CustomEvent<{ showPrices: boolean }>;
-      this.showPrices = customEvent.detail.showPrices;
+    // Listen for price toggle changes - re-render with prices
+    marketContent.addEventListener('showPricesChanged', (() => {
       if (this.showPrices) {
         void this.fetchPricesForDisplayedDyes();
       } else {
-        this.priceData.clear();
         this.renderResultsGrid();
       }
     }) as EventListener);
 
-    // Listen for server changes
+    // Listen for server changes - service handles cache clearing
     marketContent.addEventListener('server-changed', (() => {
-      if (this.showPrices) {
+      this.renderResultsGrid();
+      if (this.showPrices && this.matchedResults.length > 0) {
         void this.fetchPricesForDisplayedDyes();
       }
     }) as EventListener);
@@ -824,34 +875,69 @@ export class MixerTool extends BaseComponent {
 
   private renderRightPanel(): void {
     const right = this.options.rightPanel;
+    // In V4, leftPanel and rightPanel are the same element.
+    // Clear to remove leftPanel content (V4 uses ConfigSidebar instead).
     clearContainer(right);
 
+    // Apply flex styling to the right panel for proper layout
+    right.setAttribute('style', `
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 32px;
+      gap: 32px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    `);
+
     // Empty state (shown when dyes not selected)
-    this.emptyStateContainer = this.createElement('div');
+    this.emptyStateContainer = this.createElement('div', {
+      attributes: { style: 'display: flex; width: 100%; justify-content: center;' },
+    });
     this.renderEmptyState();
     right.appendChild(this.emptyStateContainer);
 
-    // Crafting UI section
-    this.craftingContainer = this.createElement('div', { className: 'mb-6 hidden' });
+    // Crafting UI section (hidden initially)
+    this.craftingContainer = this.createElement('div', {
+      className: 'mb-6',
+      attributes: { style: 'display: none; width: 100%;' },
+    });
     this.renderCraftingUI();
     right.appendChild(this.craftingContainer);
 
-    // Results grid section
-    const resultsSection = this.createElement('div', { className: 'hidden' });
-    const resultsHeader = this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-4',
-      textContent: LanguageService.t('mixer.matchingDyes') || 'Matching Dyes',
-      attributes: { style: 'color: var(--theme-text-muted);' },
+    // Results grid section (hidden initially)
+    this.resultsSection = this.createElement('div', {
+      attributes: { style: 'display: none; width: 100%; max-width: 1400px;' },
     });
-    resultsSection.appendChild(resultsHeader);
-    this.resultsGridContainer = this.createElement('div', {
-      className: 'grid gap-4',
+    const resultsHeader = this.createElement('h3', {
+      textContent: LanguageService.t('mixer.matchingDyes') || 'Matching Dyes',
       attributes: {
-        style: 'grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));',
+        style: `
+          font-size: 0.875rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 16px;
+          text-align: center;
+          color: var(--theme-text-muted);
+        `,
       },
     });
-    resultsSection.appendChild(this.resultsGridContainer);
-    right.appendChild(resultsSection);
+    this.resultsSection.appendChild(resultsHeader);
+    this.resultsGridContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 16px;
+        `,
+      },
+    });
+    this.resultsSection.appendChild(this.resultsGridContainer);
+    right.appendChild(this.resultsSection);
   }
 
   /**
@@ -885,14 +971,28 @@ export class MixerTool extends BaseComponent {
 
     // Main container with centered layout
     const craftingArea = this.createElement('div', {
-      className: 'flex flex-col items-center py-6',
-      attributes: { style: 'gap: 16px;' },
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 24px 0;
+          gap: 16px;
+        `,
+      },
     });
 
     // Equation row: [Slot1] + [Slot2] → [Result]
     const equationRow = this.createElement('div', {
-      className: 'flex items-center justify-center flex-wrap',
-      attributes: { style: 'gap: 16px;' },
+      attributes: {
+        style: `
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 24px;
+        `,
+      },
     });
 
     // Slot 1
@@ -958,6 +1058,7 @@ export class MixerTool extends BaseComponent {
           transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
           position: relative;
           overflow: hidden;
+          flex-shrink: 0;
         `,
       },
     });
@@ -1061,6 +1162,7 @@ export class MixerTool extends BaseComponent {
           justify-content: center;
           box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
           position: relative;
+          flex-shrink: 0;
         `,
       },
     });
@@ -1137,16 +1239,18 @@ export class MixerTool extends BaseComponent {
    * Show/hide empty state
    */
   private showEmptyState(show: boolean): void {
+    // Toggle empty state visibility (show when empty, hide when dyes selected)
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.classList.toggle('hidden', !show);
+      this.emptyStateContainer.style.display = show ? 'flex' : 'none';
     }
 
-    // Toggle all result sections
-    const rightPanel = this.options.rightPanel;
-    const sections = rightPanel.querySelectorAll(':scope > div:not(:first-child)');
-    sections.forEach((section) => {
-      section.classList.toggle('hidden', show);
-    });
+    // Toggle crafting UI and results (hide when empty, show when dyes selected)
+    if (this.craftingContainer) {
+      this.craftingContainer.style.display = show ? 'none' : 'block';
+    }
+    if (this.resultsSection) {
+      this.resultsSection.style.display = show ? 'none' : 'block';
+    }
   }
 
   /**
@@ -1166,13 +1270,16 @@ export class MixerTool extends BaseComponent {
       card.setAttribute('show-actions', 'true');
 
       // Set data property (ResultCardData interface)
+      // Get price data to resolve both price and world name
+      const priceDataForDye = this.priceData.get(result.matchedDye.itemID);
       const cardData: ResultCardData = {
         dye: result.matchedDye,
         originalColor: result.blendedHex,
         matchedColor: result.matchedDye.hex,
         deltaE: result.distance,
-        marketServer: this.marketBoard?.getSelectedServer(),
-        price: this.priceData.get(result.matchedDye.itemID)?.currentMinPrice,
+        // Resolve worldId to actual world name (e.g., "Balmung" instead of "Crystal")
+        marketServer: this.marketBoardService.getWorldNameForPrice(priceDataForDye),
+        price: priceDataForDye?.currentMinPrice,
       };
       (card as unknown as { data: ResultCardData }).data = cardData;
 
@@ -1337,24 +1444,24 @@ export class MixerTool extends BaseComponent {
     });
     this.mobileMarketPanel.init();
 
+    // Create mobile market board content
+    // Note: MarketBoard delegates to MarketBoardService for state management
     const mobileMarketContent = this.createElement('div');
     this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
     this.mobileMarketBoard.init();
 
-    // Mirror desktop market events
-    mobileMarketContent.addEventListener('showPricesChanged', ((event: Event) => {
-      const customEvent = event as CustomEvent<{ showPrices: boolean }>;
-      this.showPrices = customEvent.detail.showPrices;
+    // Mirror desktop market events - re-render with prices
+    mobileMarketContent.addEventListener('showPricesChanged', (() => {
       if (this.showPrices) {
         void this.fetchPricesForDisplayedDyes();
       } else {
-        this.priceData.clear();
         this.renderResultsGrid();
       }
     }) as EventListener);
 
     mobileMarketContent.addEventListener('server-changed', (() => {
-      if (this.showPrices) {
+      this.renderResultsGrid();
+      if (this.showPrices && this.matchedResults.length > 0) {
         void this.fetchPricesForDisplayedDyes();
       }
     }) as EventListener);
@@ -1572,17 +1679,19 @@ export class MixerTool extends BaseComponent {
 
   /**
    * Fetch prices for displayed dyes
+   * Delegates to MarketBoardService with race condition protection
    */
   private async fetchPricesForDisplayedDyes(): Promise<void> {
-    if (!this.marketBoard) return;
+    if (!this.showPrices) return;
 
     const dyes = this.matchedResults.map(r => r.matchedDye);
     if (dyes.length === 0) return;
 
     try {
-      const prices = await this.marketBoard.fetchPricesForDyes(dyes);
-      this.priceData = prices;
-      this.renderResultsGrid();
+      const prices = await this.marketBoardService.fetchPricesForDyes(dyes);
+      if (prices.size > 0) {
+        this.renderResultsGrid();
+      }
     } catch (error) {
       logger.error('[MixerTool] Failed to fetch prices:', error);
     }

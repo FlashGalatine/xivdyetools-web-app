@@ -142,14 +142,27 @@ export interface BudgetConfig {
  * Swatch Matcher (Character Matcher) configuration
  */
 export interface SwatchConfig {
-  /** Selected color sheet (EyeColors, HairColors, SkinColors) */
+  /**
+   * Selected color sheet category.
+   * Values: 'eyeColors', 'hairColors', 'skinColors', 'highlightColors',
+   * 'lipColorsDark', 'lipColorsLight', 'tattooColors',
+   * 'facePaintColorsDark', 'facePaintColorsLight'
+   */
   colorSheet: string;
-  /** Selected race */
+  /**
+   * Selected subrace (SubRace type).
+   * Values: 'Midlander', 'Highlander', 'Wildwood', 'Duskwight',
+   * 'Plainsfolk', 'Dunesfolk', 'SeekerOfTheSun', 'KeeperOfTheMoon',
+   * 'SeaWolf', 'Hellsguard', 'Raen', 'Xaela', 'Helion', 'TheLost',
+   * 'Rava', 'Veena'
+   */
   race: string;
-  /** Selected gender */
+  /** Selected gender: 'Male' or 'Female' */
   gender: string;
-  /** Maximum results to show (1-8) */
+  /** Maximum results to show (1-6) */
   maxResults: number;
+  /** Display options for result cards */
+  displayOptions: DisplayOptionsConfig;
 }
 
 /**
@@ -294,10 +307,11 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     maxDeltaE: 75,
   },
   swatch: {
-    colorSheet: 'EyeColors.csv',
-    race: 'Hyur (Midlander)',
+    colorSheet: 'eyeColors',
+    race: 'Midlander',
     gender: 'Male',
     maxResults: 3,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
 };
 

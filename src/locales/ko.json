@@ -137,7 +137,15 @@
     "noDyeSelected": "선택된 염료 없음",
     "download": "다운로드",
     "slot": "슬롯",
-    "replace": "교체"
+    "replace": "교체",
+    "technical": "기술 정보",
+    "acquisition": "획득",
+    "source": "출처",
+    "recommended": "추천",
+    "original": "원본",
+    "match": "매치",
+    "cost": "비용",
+    "market": "시장"
   },
   "harmony": {
     "suggestionMode": "제안 모드",

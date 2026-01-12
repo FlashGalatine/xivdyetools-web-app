@@ -111,6 +111,13 @@ export class ResultCard extends BaseLitComponent {
   primaryActionLabel: string = 'Select Dye';
 
   /**
+   * When true, clicking the primary button opens the context menu
+   * instead of emitting the card-select event
+   */
+  @property({ type: Boolean, attribute: 'primary-opens-menu' })
+  primaryOpensMenu: boolean = false;
+
+  /**
    * Selected state styling
    */
   @property({ type: Boolean, reflect: true })
@@ -499,10 +506,14 @@ export class ResultCard extends BaseLitComponent {
 
   /**
    * Handle primary action (Select Dye) click
+   * If primaryOpensMenu is true, opens context menu instead of emitting card-select
    */
   private handleSelectClick(e: Event): void {
     e.stopPropagation();
-    if (this.data) {
+    if (this.primaryOpensMenu) {
+      // Open context menu instead of emitting card-select
+      this.menuOpen = !this.menuOpen;
+    } else if (this.data) {
       this.emit<{ dye: Dye }>('card-select', { dye: this.data.dye });
     }
   }

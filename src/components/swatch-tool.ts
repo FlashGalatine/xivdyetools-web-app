@@ -20,6 +20,7 @@ import {
   ConfigController,
   dyeService,
   LanguageService,
+  MarketBoardService,
   StorageService,
   ToastService,
 } from '@services/index';
@@ -30,7 +31,11 @@ import { ICON_PALETTE, ICON_MARKET } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { SwatchConfig } from '@shared/tool-config-types';
+import type { SwatchConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
+import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
+import type { ResultCardData, ContextAction } from '@components/v4/result-card';
+// Import v4-result-card custom element to ensure it's registered
+import '@components/v4/result-card';
 
 // ============================================================================
 // Types and Constants
@@ -130,6 +135,7 @@ const DEFAULTS = {
 export class SwatchTool extends BaseComponent {
   private options: SwatchToolOptions;
   private characterColorService: CharacterColorService;
+  private marketBoardService: MarketBoardService;
 
   // State
   private subrace: SubRace;
@@ -141,6 +147,9 @@ export class SwatchTool extends BaseComponent {
   private colors: CharacterColor[] = [];
   private priceData: Map<number, PriceData> = new Map();
   private showPrices: boolean = false;
+
+  // Display options (from ConfigController) - for v4-result-card
+  private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
 
   // Child components
   private marketBoard: MarketBoard | null = null;
@@ -177,6 +186,7 @@ export class SwatchTool extends BaseComponent {
     super(container);
     this.options = options;
     this.characterColorService = new CharacterColorService();
+    this.marketBoardService = MarketBoardService.getInstance();
 
     // Load persisted settings
     this.subrace = StorageService.getItem<SubRace>(STORAGE_KEYS.subrace) ?? DEFAULTS.subrace;
@@ -254,8 +264,9 @@ export class SwatchTool extends BaseComponent {
   public setConfig(config: Partial<SwatchConfig>): void {
     let needsReload = false;
     let needsRematch = false;
+    let needsRedraw = false;
 
-    // Handle race (maps to subrace)
+    // Handle race (now receives SubRace values directly like 'Midlander')
     if (config.race !== undefined && config.race !== this.subrace) {
       this.subrace = config.race as SubRace;
       StorageService.setItem(STORAGE_KEYS.subrace, config.race);
@@ -271,25 +282,13 @@ export class SwatchTool extends BaseComponent {
       logger.info(`[SwatchTool] setConfig: gender -> ${config.gender}`);
     }
 
-    // Handle colorSheet (maps to colorCategory)
-    if (config.colorSheet !== undefined) {
-      // Map colorSheet names to colorCategory values
-      const categoryMap: Record<string, ColorCategory> = {
-        'EyeColors.csv': 'eyeColors',
-        'HairColors.csv': 'hairColors',
-        'SkinColors.csv': 'skinColors',
-        // Also support direct category names
-        'eyeColors': 'eyeColors',
-        'hairColors': 'hairColors',
-        'skinColors': 'skinColors',
-      };
-      const newCategory = categoryMap[config.colorSheet] || 'eyeColors';
-      if (newCategory !== this.colorCategory) {
-        this.colorCategory = newCategory;
-        StorageService.setItem(STORAGE_KEYS.colorCategory, newCategory);
-        needsReload = true;
-        logger.info(`[SwatchTool] setConfig: colorSheet -> ${config.colorSheet} (category: ${newCategory})`);
-      }
+    // Handle colorSheet (now receives category keys directly like 'eyeColors')
+    if (config.colorSheet !== undefined && config.colorSheet !== this.colorCategory) {
+      // ConfigSidebar now sends category keys directly (e.g., 'eyeColors', 'hairColors')
+      this.colorCategory = config.colorSheet as ColorCategory;
+      StorageService.setItem(STORAGE_KEYS.colorCategory, config.colorSheet);
+      needsReload = true;
+      logger.info(`[SwatchTool] setConfig: colorSheet -> ${config.colorSheet}`);
     }
 
     // Handle maxResults
@@ -298,6 +297,13 @@ export class SwatchTool extends BaseComponent {
       StorageService.setItem(STORAGE_KEYS.maxResults, config.maxResults);
       needsRematch = true;
       logger.info(`[SwatchTool] setConfig: maxResults -> ${config.maxResults}`);
+    }
+
+    // Handle displayOptions (for v4-result-card display settings)
+    if (config.displayOptions !== undefined) {
+      this.displayOptions = { ...this.displayOptions, ...config.displayOptions };
+      needsRedraw = true;
+      logger.info(`[SwatchTool] setConfig: displayOptions updated`);
     }
 
     // Sync UI selectors (both desktop and mobile)
@@ -316,9 +322,14 @@ export class SwatchTool extends BaseComponent {
     if (needsReload) {
       this.selectedColor = null;
       this.loadColors();
+      // Update the grid header title
+      this.updateColorGrid();
     } else if (needsRematch && this.selectedColor) {
       // Just re-match if only maxResults changed
       this.findMatchingDyes();
+    } else if (needsRedraw && this.matchedDyes.length > 0) {
+      // Just redraw results if only display options changed
+      this.updateMatchResults();
     }
   }
 
@@ -595,129 +606,293 @@ export class SwatchTool extends BaseComponent {
   }
 
   // ============================================================================
-  // Right Panel Rendering
+  // Right Panel Rendering (V4 Layout)
   // ============================================================================
 
   private renderRightPanel(): void {
     const right = this.options.rightPanel;
+    // In V4, leftPanel and rightPanel are the same element.
+    // Clear to remove leftPanel content (V4 uses ConfigSidebar instead).
     clearContainer(right);
 
-    // Sticky results panel at TOP (two-column layout: Selected Color | Matching Dyes)
-    // The parent has p-4 (1rem) on mobile and p-6 (1.5rem) on desktop.
-    // We use negative margins to extend edge-to-edge and negative top to stick to the visual top.
-    const resultsPanel = this.createElement('div', {
-      className: 'border-b',
+    // Apply V4-style layout to the panel
+    // Use min-height instead of height to allow container to grow with content
+    right.setAttribute('style', `
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      min-height: 100%;
+      height: auto;
+      padding: 32px;
+      gap: 24px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    `);
+
+    // Main layout container: Color Grid (LEFT) | Results Area (RIGHT)
+    // Use align-items: flex-start so children size to their content, not stretch to fill
+    const mainLayout = this.createElement('div', {
       attributes: {
-        style: 'background: var(--theme-card-background); border-color: var(--theme-border);',
+        style: `
+          display: flex;
+          gap: 24px;
+          min-height: 500px;
+          justify-content: center;
+          align-items: flex-start;
+          width: 100%;
+          max-width: 1400px;
+        `,
       },
     });
 
-    // On larger screens (md+), adjust margins/padding for p-6
-    // For sticky to work inside an overflow-y-auto container:
-    // - Use negative margins to extend edge-to-edge (cancel parent padding)
-    // - Use margin-top: -padding to pull element to the container's edge
-    // - Use top: 0 so the element sticks at the container's scroll viewport top
-    // On mobile: page-level scrolling is used, so we don't use sticky (it would need
-    // to account for the header height which varies). Instead, let it scroll naturally.
-    const mediaQuery = window.matchMedia('(min-width: 768px)');
-    const updateResultsPanelSpacing = () => {
-      if (mediaQuery.matches) {
-        // Desktop: parent has p-6 (1.5rem), internal scrolling in rightPanelContent
-        resultsPanel.style.cssText = `
-          position: -webkit-sticky;
-          position: sticky;
-          top: 0;
-          z-index: 10;
-          background: var(--theme-card-background);
-          border-color: var(--theme-border);
-          margin: -1.5rem -1.5rem 0 -1.5rem;
-          padding: 1.5rem;
-          padding-bottom: 1rem;
-        `;
-      } else {
-        // Mobile: page-level scrolling, no sticky (would conflict with sticky header)
-        // Just style it as a regular panel with negative margins for edge-to-edge look
-        resultsPanel.style.cssText = `
-          position: relative;
-          z-index: 10;
-          background: var(--theme-card-background);
-          border-color: var(--theme-border);
-          margin: -1rem -1rem 0 -1rem;
-          padding: 1rem;
-          padding-bottom: 0.75rem;
-        `;
-      }
-    };
-    updateResultsPanelSpacing();
-    mediaQuery.addEventListener('change', updateResultsPanelSpacing);
-
-    // Store the cleanup function
-    this.resultsPanelMediaQueryCleanup = () => {
-      mediaQuery.removeEventListener('change', updateResultsPanelSpacing);
-    };
-
-    // Two-column grid layout
-    const resultsGrid = this.createElement('div', {
-      className: 'grid gap-4',
+    // LEFT: Color Grid Panel (glassmorphism container)
+    // height: fit-content ensures panel sizes to contain all swatches (96 or 192)
+    const gridPanel = this.createElement('div', {
+      className: 'glass',
       attributes: {
-        style: 'grid-template-columns: 1fr 1fr;',
+        style: `
+          flex: 0 0 auto;
+          width: 420px;
+          height: fit-content;
+          background: var(--v4-glass-bg, rgba(30, 30, 30, 0.7));
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        `,
       },
     });
 
-    // Left column: Selected color display
-    this.selectedColorDisplay = this.createElement('div');
-    resultsGrid.appendChild(this.selectedColorDisplay);
+    // Grid header
+    const gridHeader = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        `,
+      },
+    });
+    const gridTitle = this.createElement('span', {
+      className: 'section-title',
+      textContent: `${this.getCategoryDisplayName(this.colorCategory)} (${this.colors.length})`,
+      attributes: {
+        style: `
+          font-size: 14px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: var(--theme-text-muted, #a0a0a0);
+        `,
+      },
+    });
+    gridHeader.appendChild(gridTitle);
+    gridPanel.appendChild(gridHeader);
 
-    // Right column: Matched dyes section
-    const matchSection = this.createElement('div', { className: 'space-y-2' });
-    const matchLabel = this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-2',
+    // Color grid (8 columns with larger swatches)
+    this.colorGridContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: grid;
+          grid-template-columns: repeat(8, 44px);
+          gap: 4px;
+          width: fit-content;
+        `,
+      },
+    });
+    gridPanel.appendChild(this.colorGridContainer);
+    mainLayout.appendChild(gridPanel);
+
+    // RIGHT: Results Area (wider to accommodate 4 cards per row)
+    const resultsArea = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          flex: 1;
+          min-width: 0;
+        `,
+      },
+    });
+
+    // Selected Color Section (shows technical info of selected swatch)
+    const selectedSection = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        `,
+      },
+    });
+
+    const selectedHeader = this.createElement('span', {
+      textContent: LanguageService.t('tools.character.selectedColor') || 'Selected Color',
+      attributes: {
+        style: `
+          font-size: 14px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: var(--theme-text-muted, #a0a0a0);
+        `,
+      },
+    });
+    selectedSection.appendChild(selectedHeader);
+
+    // Selected Color Card (V4 style matching result cards)
+    this.selectedColorDisplay = this.createElement('div', {
+      attributes: {
+        style: `
+          background: var(--theme-card-background, #2a2a2a);
+          border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+          border-radius: 12px;
+          overflow: hidden;
+          max-width: 320px;
+        `,
+      },
+    });
+    selectedSection.appendChild(this.selectedColorDisplay);
+    resultsArea.appendChild(selectedSection);
+
+    // Matching Dyes Section
+    const matchSection = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        `,
+      },
+    });
+
+    const matchHeader = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          align-items: center;
+        `,
+      },
+    });
+    const matchTitle = this.createElement('span', {
       textContent: LanguageService.t('tools.character.matchingDyes') || 'Matching Dyes',
-      attributes: { style: 'color: var(--theme-text-muted);' },
+      attributes: {
+        style: `
+          font-size: 14px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: var(--theme-text-muted, #a0a0a0);
+        `,
+      },
     });
-    matchSection.appendChild(matchLabel);
+    matchHeader.appendChild(matchTitle);
+    matchSection.appendChild(matchHeader);
 
+    // Match results container (CSS grid with max 4 columns)
     this.matchResultsContainer = this.createElement('div', {
-      className: 'space-y-2',
+      attributes: {
+        style: `
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 16px;
+          width: 100%;
+        `,
+      },
     });
     matchSection.appendChild(this.matchResultsContainer);
-    resultsGrid.appendChild(matchSection);
+    resultsArea.appendChild(matchSection);
 
-    // Empty state (shown in match results when no color selected)
+    // Empty state (shown when no color selected)
     this.emptyStateContainer = this.createElement('div', {
-      className: 'text-center py-4',
-      attributes: { style: 'color: var(--theme-text-muted); font-size: 0.875rem;' },
-    });
-    this.emptyStateContainer.textContent =
-      LanguageService.t('tools.character.noColorSelected') ||
-      'Select a color from the grid to find matching dyes';
-    this.matchResultsContainer.appendChild(this.emptyStateContainer);
-
-    resultsPanel.appendChild(resultsGrid);
-    right.appendChild(resultsPanel);
-
-    // Color grid section (scrolls naturally with the page)
-    // Parent already provides padding, so we just need top spacing after the sticky panel
-    const gridSection = this.createElement('div', { className: 'space-y-3 pt-4' });
-    const gridLabel = this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider',
-      textContent: this.getCategoryDisplayName(this.colorCategory),
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    gridSection.appendChild(gridLabel);
-
-    this.colorGridContainer = this.createElement('div', {
-      className: 'grid gap-1',
       attributes: {
-        style: 'grid-template-columns: repeat(8, 1fr);',
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 48px 24px;
+          background: var(--theme-card-background, #2a2a2a);
+          border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+          border-radius: 12px;
+          min-width: 320px;
+        `,
       },
     });
-    gridSection.appendChild(this.colorGridContainer);
-    right.appendChild(gridSection);
+    // Empty state icon
+    const emptyIcon = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 64px;
+          height: 64px;
+          opacity: 0.3;
+          margin-bottom: 16px;
+          color: var(--theme-text-muted, #888888);
+        `,
+      },
+    });
+    emptyIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="64" height="64">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" opacity="0.3"/>
+      <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.5"/>
+    </svg>`;
+    this.emptyStateContainer.appendChild(emptyIcon);
 
-    // Update the selected color display and render color grid
+    const emptyText = this.createElement('span', {
+      textContent: LanguageService.t('tools.character.noColorSelected') ||
+        'Select a color from the grid to find matching dyes',
+      attributes: {
+        style: `
+          color: var(--theme-text-muted, #888888);
+          font-size: 14px;
+          text-align: center;
+          max-width: 280px;
+        `,
+      },
+    });
+    this.emptyStateContainer.appendChild(emptyText);
+
+    // Add empty state to results area (will be shown/hidden by updateMatchResults)
+    resultsArea.appendChild(this.emptyStateContainer);
+
+    mainLayout.appendChild(resultsArea);
+    right.appendChild(mainLayout);
+
+    // Initialize displays
     this.updateSelectedColorDisplay();
+    this.updateEmptyState();
     this.updateColorGrid();
+  }
+
+  /**
+   * Update empty state visibility based on selection
+   */
+  private updateEmptyState(): void {
+    if (!this.emptyStateContainer || !this.matchResultsContainer) return;
+
+    const hasSelection = this.selectedColor !== null;
+    const hasResults = this.matchedDyes.length > 0;
+
+    // Show empty state when no color selected OR when selected but no results yet
+    this.emptyStateContainer.style.display = hasSelection && hasResults ? 'none' : 'flex';
+
+    // Hide match section header when showing empty state
+    const matchSection = this.matchResultsContainer.parentElement;
+    if (matchSection) {
+      const matchHeader = matchSection.querySelector('div:first-child') as HTMLElement;
+      if (matchHeader && matchHeader !== this.matchResultsContainer) {
+        matchHeader.style.display = hasSelection && hasResults ? 'flex' : 'none';
+      }
+    }
   }
 
   /**
@@ -727,18 +902,26 @@ export class SwatchTool extends BaseComponent {
     if (!this.colorGridContainer) return;
     clearContainer(this.colorGridContainer);
 
-    // Update the label
-    const label = this.colorGridContainer.previousElementSibling as HTMLElement;
-    if (label) {
-      label.textContent = this.getCategoryDisplayName(this.colorCategory);
+    // Update the header label with category name and color count
+    const gridHeader = this.colorGridContainer.previousElementSibling as HTMLElement;
+    if (gridHeader) {
+      const titleSpan = gridHeader.querySelector('.section-title');
+      if (titleSpan) {
+        titleSpan.textContent = `${this.getCategoryDisplayName(this.colorCategory)} (${this.colors.length})`;
+      }
     }
 
     for (const color of this.colors) {
       const swatch = this.createElement('button', {
-        className:
-          'aspect-square rounded-sm cursor-pointer transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1',
+        className: 'cursor-pointer transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1',
         attributes: {
-          style: `background-color: ${color.hex}; border: 1px solid var(--theme-border);`,
+          style: `
+            width: 44px;
+            height: 44px;
+            background-color: ${color.hex};
+            border: 1px solid var(--theme-border);
+            border-radius: 4px;
+          `,
           title: `${color.hex} (Index: ${color.index})`,
           'data-index': String(color.index),
           'aria-label': `Color ${color.index + 1}: ${color.hex}`,
@@ -754,63 +937,27 @@ export class SwatchTool extends BaseComponent {
   }
 
   /**
-   * Update selected color display
+   * Update selected color display (V4 style card)
    */
   private updateSelectedColorDisplay(): void {
     if (!this.selectedColorDisplay) return;
     clearContainer(this.selectedColorDisplay);
 
-    // Header for selected color section
-    const header = this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-2',
-      textContent: LanguageService.t('tools.character.selectedColor') || 'Selected Color',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    this.selectedColorDisplay.appendChild(header);
+    // Get parent section to show/hide header
+    const parentSection = this.selectedColorDisplay.parentElement;
 
     if (!this.selectedColor) {
-      // Empty state for left column
-      const emptyState = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: {
-          style: 'background: var(--theme-input-background); border: 1px dashed var(--theme-border);',
-        },
-      });
-      const placeholder = this.createElement('div', {
-        className: 'w-12 h-12 rounded-lg flex-shrink-0',
-        attributes: {
-          style: 'background: var(--theme-border); border: 1px dashed var(--theme-text-muted);',
-        },
-      });
-      emptyState.appendChild(placeholder);
-      const text = this.createElement('p', {
-        className: 'text-sm',
-        textContent: LanguageService.t('tools.character.clickToSelect') || 'Click a color below',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      emptyState.appendChild(text);
-      this.selectedColorDisplay.appendChild(emptyState);
+      // Hide the entire section when no color selected
+      if (parentSection) {
+        parentSection.style.display = 'none';
+      }
       return;
     }
 
-    const card = this.createElement('div', {
-      className: 'flex items-start gap-3 p-3 rounded-lg',
-      attributes: {
-        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
-      },
-    });
-
-    // Color swatch
-    const swatch = this.createElement('div', {
-      className: 'w-12 h-12 rounded-lg flex-shrink-0',
-      attributes: {
-        style: `background-color: ${this.selectedColor.hex}; border: 2px solid var(--theme-border);`,
-      },
-    });
-    card.appendChild(swatch);
-
-    // Color info (compact)
-    const info = this.createElement('div', { className: 'flex-1 min-w-0' });
+    // Show section when color is selected
+    if (parentSection) {
+      parentSection.style.display = 'flex';
+    }
 
     // Calculate grid position (8 columns per row, 1-indexed)
     const gridRow = Math.floor(this.selectedColor.index / 8) + 1;
@@ -823,91 +970,130 @@ export class SwatchTool extends BaseComponent {
       this.selectedColor.rgb.b
     );
 
-    // Index and Grid Position
-    const indexLabel = LanguageService.t('tools.character.colorIndex') || 'Index';
-    const indexRow = this.createElement('p', {
-      className: 'text-sm font-medium',
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-    indexRow.appendChild(document.createTextNode(`${indexLabel}: `));
-    const indexValue = this.createElement('span', {
-      className: 'number',
-      textContent: String(this.selectedColor.index),
-    });
-    indexRow.appendChild(indexValue);
-    indexRow.appendChild(document.createTextNode(` (R`));
-    const rowValue = this.createElement('span', {
-      className: 'number',
-      textContent: String(gridRow),
-    });
-    indexRow.appendChild(rowValue);
-    indexRow.appendChild(document.createTextNode(`, C`));
-    const colValue = this.createElement('span', {
-      className: 'number',
-      textContent: String(gridCol),
-    });
-    indexRow.appendChild(colValue);
-    indexRow.appendChild(document.createTextNode(`)`));
-    info.appendChild(indexRow);
+    // Calculate LAB values
+    const lab = ColorService.rgbToLab(
+      this.selectedColor.rgb.r,
+      this.selectedColor.rgb.g,
+      this.selectedColor.rgb.b
+    );
 
-    // Hex value
-    const hex = this.createElement('p', {
-      className: 'text-sm font-mono number',
-      textContent: this.selectedColor.hex.toUpperCase(),
-      attributes: { style: 'color: var(--theme-text-muted);' },
+    // Card title (grid position)
+    const titleBar = this.createElement('div', {
+      attributes: {
+        style: `
+          padding: 12px 16px;
+          background: var(--theme-card-header, rgba(0, 0, 0, 0.2));
+          border-bottom: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+          text-align: center;
+        `,
+      },
     });
-    info.appendChild(hex);
-
-    // RGB values
-    const rgb = this.createElement('p', {
-      className: 'text-xs',
-      attributes: { style: 'color: var(--theme-text-muted);' },
+    const title = this.createElement('span', {
+      textContent: `Row ${gridRow}, Column ${gridCol}`,
+      attributes: {
+        style: `
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--theme-text, #e0e0e0);
+        `,
+      },
     });
-    rgb.appendChild(document.createTextNode('RGB('));
-    const rValue = this.createElement('span', { className: 'number', textContent: String(this.selectedColor.rgb.r) });
-    rgb.appendChild(rValue);
-    rgb.appendChild(document.createTextNode(', '));
-    const gValue = this.createElement('span', { className: 'number', textContent: String(this.selectedColor.rgb.g) });
-    rgb.appendChild(gValue);
-    rgb.appendChild(document.createTextNode(', '));
-    const bValue = this.createElement('span', { className: 'number', textContent: String(this.selectedColor.rgb.b) });
-    rgb.appendChild(bValue);
-    rgb.appendChild(document.createTextNode(')'));
-    info.appendChild(rgb);
+    titleBar.appendChild(title);
+    this.selectedColorDisplay.appendChild(titleBar);
 
-    // HSV values
-    const hsvRow = this.createElement('p', {
-      className: 'text-xs',
-      attributes: { style: 'color: var(--theme-text-muted);' },
+    // Large color swatch preview
+    const swatchPreview = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 100%;
+          height: 80px;
+          background-color: ${this.selectedColor.hex};
+        `,
+      },
     });
-    hsvRow.appendChild(document.createTextNode('HSV('));
-    const hValue = this.createElement('span', { className: 'number', textContent: String(Math.round(hsv.h)) });
-    hsvRow.appendChild(hValue);
-    hsvRow.appendChild(document.createTextNode('°, '));
-    const sValue = this.createElement('span', { className: 'number', textContent: String(Math.round(hsv.s)) });
-    hsvRow.appendChild(sValue);
-    hsvRow.appendChild(document.createTextNode('%, '));
-    const vValue = this.createElement('span', { className: 'number', textContent: String(Math.round(hsv.v)) });
-    hsvRow.appendChild(vValue);
-    hsvRow.appendChild(document.createTextNode('%)'));
-    info.appendChild(hsvRow);
+    this.selectedColorDisplay.appendChild(swatchPreview);
 
-    card.appendChild(info);
+    // Technical data section
+    const dataSection = this.createElement('div', {
+      attributes: {
+        style: `
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        `,
+      },
+    });
+
+    // Two-column layout for technical data
+    const dataGrid = this.createElement('div', {
+      attributes: {
+        style: `
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px 16px;
+          font-size: 12px;
+        `,
+      },
+    });
+
+    // Helper to create data rows
+    const createDataRow = (label: string, value: string): HTMLElement => {
+      const row = this.createElement('div', {
+        attributes: {
+          style: `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          `,
+        },
+      });
+      const labelEl = this.createElement('span', {
+        textContent: label,
+        attributes: { style: 'color: var(--theme-text-muted, #a0a0a0);' },
+      });
+      const valueEl = this.createElement('span', {
+        className: 'number',
+        textContent: value,
+        attributes: { style: 'color: var(--theme-text, #e0e0e0); font-weight: 500;' },
+      });
+      row.appendChild(labelEl);
+      row.appendChild(valueEl);
+      return row;
+    };
+
+    // Add data rows
+    dataGrid.appendChild(createDataRow('HEX', this.selectedColor.hex.toUpperCase()));
+    dataGrid.appendChild(createDataRow('Index', String(this.selectedColor.index)));
+    dataGrid.appendChild(createDataRow('RGB', `${this.selectedColor.rgb.r},${this.selectedColor.rgb.g},${this.selectedColor.rgb.b}`));
+    dataGrid.appendChild(createDataRow('HSV', `${Math.round(hsv.h)},${Math.round(hsv.s)},${Math.round(hsv.v)}`));
+    dataGrid.appendChild(createDataRow('LAB', `${Math.round(lab.L)},${Math.round(lab.a)},${Math.round(lab.b)}`));
+
+    dataSection.appendChild(dataGrid);
+    this.selectedColorDisplay.appendChild(dataSection);
 
     // Copy button
     const copyBtn = this.createElement('button', {
-      className: 'p-1.5 rounded hover:opacity-80 transition-opacity flex-shrink-0',
       attributes: {
-        style: 'background: var(--theme-input-background); color: var(--theme-text-muted);',
-        title: LanguageService.t('actions.copyToClipboard') || 'Copy to clipboard',
-        'aria-label': LanguageService.t('actions.copyToClipboard') || 'Copy to clipboard',
+        style: `
+          width: 100%;
+          padding: 10px 16px;
+          background: var(--theme-primary, #d4a857);
+          color: var(--theme-primary-text, #1a1a1a);
+          border: none;
+          border-radius: 0 0 11px 11px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: opacity 0.2s;
+        `,
       },
+      textContent: 'Copy Color Info',
     });
-    copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    copyBtn.addEventListener('mouseenter', () => { copyBtn.style.opacity = '0.9'; });
+    copyBtn.addEventListener('mouseleave', () => { copyBtn.style.opacity = '1'; });
     copyBtn.addEventListener('click', () => this.copySelectedColorInfo());
-    card.appendChild(copyBtn);
-
-    this.selectedColorDisplay.appendChild(card);
+    this.selectedColorDisplay.appendChild(copyBtn);
   }
 
   /**
@@ -923,12 +1109,19 @@ export class SwatchTool extends BaseComponent {
       this.selectedColor.rgb.g,
       this.selectedColor.rgb.b
     );
+    const lab = ColorService.rgbToLab(
+      this.selectedColor.rgb.r,
+      this.selectedColor.rgb.g,
+      this.selectedColor.rgb.b
+    );
 
     const info = [
-      `Index: ${this.selectedColor.index} (R${gridRow}, C${gridCol})`,
-      `Hex: ${this.selectedColor.hex.toUpperCase()}`,
+      `Grid Position: Row ${gridRow}, Column ${gridCol}`,
+      `Index: ${this.selectedColor.index}`,
+      `HEX: ${this.selectedColor.hex.toUpperCase()}`,
       `RGB: ${this.selectedColor.rgb.r}, ${this.selectedColor.rgb.g}, ${this.selectedColor.rgb.b}`,
-      `HSV: ${Math.round(hsv.h)}°, ${Math.round(hsv.s)}%, ${Math.round(hsv.v)}%`,
+      `HSV: ${Math.round(hsv.h)}, ${Math.round(hsv.s)}, ${Math.round(hsv.v)}`,
+      `LAB: ${Math.round(lab.L)}, ${Math.round(lab.a)}, ${Math.round(lab.b)}`,
     ].join('\n');
 
     navigator.clipboard.writeText(info).then(() => {
@@ -939,89 +1132,104 @@ export class SwatchTool extends BaseComponent {
   }
 
   /**
-   * Update match results display
+   * Update match results display using v4-result-card components
    */
   private updateMatchResults(): void {
     if (!this.matchResultsContainer) return;
     clearContainer(this.matchResultsContainer);
 
+    // Update empty state visibility
+    this.updateEmptyState();
+
     if (this.matchedDyes.length === 0) {
-      this.matchResultsContainer.appendChild(this.emptyStateContainer!);
       return;
     }
 
     for (const match of this.matchedDyes) {
-      const card = this.renderDyeMatchCard(match);
+      // Create v4-result-card element
+      const card = document.createElement('v4-result-card') as HTMLElement;
+      card.setAttribute('show-actions', 'true');
+      // Make primary button open context menu (same as the ... button)
+      card.setAttribute('primary-opens-menu', 'true');
+      card.setAttribute('primary-action-label', 'Explore Dye');
+
+      // Get price data for this dye
+      const priceDataForDye = this.priceData.get(match.dye.itemID);
+
+      // Set data property (ResultCardData interface)
+      const cardData: ResultCardData = {
+        dye: match.dye,
+        originalColor: this.selectedColor?.hex || match.dye.hex,
+        matchedColor: match.dye.hex,
+        deltaE: match.distance,
+        // Resolve worldId to actual world name
+        marketServer: this.marketBoardService.getWorldNameForPrice(priceDataForDye),
+        price: priceDataForDye?.currentMinPrice,
+      };
+      (card as unknown as { data: ResultCardData }).data = cardData;
+
+      // Set display options from tool state
+      (card as unknown as { showHex: boolean }).showHex = this.displayOptions.showHex;
+      (card as unknown as { showRgb: boolean }).showRgb = this.displayOptions.showRgb;
+      (card as unknown as { showHsv: boolean }).showHsv = this.displayOptions.showHsv;
+      (card as unknown as { showLab: boolean }).showLab = this.displayOptions.showLab;
+      (card as unknown as { showDeltaE: boolean }).showDeltaE = this.displayOptions.showDeltaE;
+      (card as unknown as { showPrice: boolean }).showPrice = this.displayOptions.showPrice;
+      (card as unknown as { showAcquisition: boolean }).showAcquisition = this.displayOptions.showAcquisition;
+
+      // Listen for context actions (both primary button and context menu trigger this)
+      card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+        this.handleContextAction(e.detail.action, e.detail.dye);
+      }) as EventListener);
+
       this.matchResultsContainer.appendChild(card);
     }
   }
 
   /**
-   * Render a dye match card (compact version for two-column layout)
+   * Handle context menu actions from result cards
    */
-  private renderDyeMatchCard(match: CharacterColorMatch): HTMLElement {
-    const card = this.createElement('div', {
-      className: 'flex items-center gap-2 p-2 rounded-lg hover:opacity-90 transition-opacity',
-      attributes: {
-        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
-      },
-    });
+  private handleContextAction(action: ContextAction, dye: Dye): void {
+    switch (action) {
+      case 'add-comparison':
+        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
+          detail: { toolId: 'comparison', dye },
+        }));
+        ToastService.success(LanguageService.t('toast.addedToComparison') || 'Added to comparison');
+        break;
 
-    // Dye color swatch (smaller)
-    const swatch = this.createElement('div', {
-      className: 'w-8 h-8 rounded flex-shrink-0',
-      attributes: {
-        style: `background-color: ${match.dye.hex}; border: 1px solid var(--theme-border);`,
-      },
-    });
-    card.appendChild(swatch);
+      case 'add-mixer':
+        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
+          detail: { toolId: 'mixer', dye },
+        }));
+        ToastService.success(LanguageService.t('toast.addedToMixer') || 'Added to mixer');
+        break;
 
-    // Dye info (compact)
-    const info = this.createElement('div', { className: 'flex-1 min-w-0' });
-    const name = this.createElement('p', {
-      className: 'text-sm font-medium truncate',
-      textContent: LanguageService.getDyeName(match.dye.itemID) || match.dye.name,
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-    info.appendChild(name);
+      case 'add-accessibility':
+        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
+          detail: { toolId: 'accessibility', dye },
+        }));
+        ToastService.success(LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check');
+        break;
 
-    // Category and distance with Habibi font for numbers
-    const details = this.createElement('p', {
-      className: 'text-xs truncate',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    details.appendChild(document.createTextNode(`${match.dye.category} • Δ`));
-    const distanceValue = this.createElement('span', {
-      className: 'number',
-      textContent: match.distance.toFixed(1),
-    });
-    details.appendChild(distanceValue);
-    info.appendChild(details);
+      case 'see-harmonies':
+        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
+          detail: { toolId: 'harmony', dye },
+        }));
+        break;
 
-    // Price display (if available)
-    const priceData = this.priceData.get(match.dye.itemID);
-    if (this.showPrices && priceData && priceData.currentMinPrice > 0) {
-      const priceRow = this.createElement('p', {
-        className: 'text-xs',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      const priceValue = this.createElement('span', {
-        className: 'number',
-        textContent: `${MarketBoard.formatPrice(priceData.currentMinPrice)} gil`,
-      });
-      priceRow.appendChild(priceValue);
-      info.appendChild(priceRow);
+      case 'budget':
+        window.dispatchEvent(new CustomEvent('navigate-to-tool', {
+          detail: { toolId: 'budget', dye },
+        }));
+        break;
+
+      case 'copy-hex':
+        void navigator.clipboard.writeText(dye.hex).then(() => {
+          ToastService.success(LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard');
+        });
+        break;
     }
-
-    card.appendChild(info);
-
-    // Action dropdown
-    const actions = this.createElement('div', { className: 'flex-shrink-0' });
-    const dropdown = createDyeActionDropdown(match.dye);
-    actions.appendChild(dropdown);
-    card.appendChild(actions);
-
-    return card;
   }
 
   // ============================================================================

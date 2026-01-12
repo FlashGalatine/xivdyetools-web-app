@@ -122,10 +122,11 @@ export class ConfigSidebar extends BaseLitComponent {
     maxDeltaE: 75,
   };
   @state() private swatchConfig: SwatchConfig = {
-    colorSheet: 'EyeColors.csv',
-    race: 'Hyur (Midlander)',
+    colorSheet: 'eyeColors',
+    race: 'Midlander',
     gender: 'Male',
     maxResults: 3,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
 
   @state() private marketConfig: MarketConfig = {
@@ -493,7 +494,7 @@ export class ConfigSidebar extends BaseLitComponent {
    * Handle display options change from v4-display-options component
    */
   private handleDisplayOptionsChange(
-    tool: 'harmony' | 'mixer' | 'gradient',
+    tool: 'harmony' | 'mixer' | 'gradient' | 'swatch',
     e: CustomEvent<DisplayOptionsChangeDetail>
   ): void {
     const { option, value, allOptions } = e.detail;
@@ -515,6 +516,12 @@ export class ConfigSidebar extends BaseLitComponent {
       case 'gradient':
         this.gradientConfig = {
           ...this.gradientConfig,
+          displayOptions: allOptions,
+        };
+        break;
+      case 'swatch':
+        this.swatchConfig = {
+          ...this.swatchConfig,
           displayOptions: allOptions,
         };
         break;
@@ -930,9 +937,19 @@ export class ConfigSidebar extends BaseLitComponent {
   }
 
   /**
+   * Check if current color sheet requires race/gender selection
+   */
+  private isRaceSpecificColorSheet(): boolean {
+    return this.swatchConfig.colorSheet === 'hairColors' ||
+           this.swatchConfig.colorSheet === 'skinColors';
+  }
+
+  /**
    * Render Swatch Matcher config
    */
   private renderSwatchConfig(): TemplateResult {
+    const showCharacterSection = this.isRaceSpecificColorSheet();
+
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'swatch'}>
         <div class="config-group">
@@ -945,13 +962,19 @@ export class ConfigSidebar extends BaseLitComponent {
         this.handleConfigChange('swatch', 'colorSheet', value);
       }}
           >
-            <option value="EyeColors.csv">Eye Colors</option>
-            <option value="HairColors.csv" disabled>Hair Colors (N/A)</option>
-            <option value="SkinColors.csv" disabled>Skin Colors (N/A)</option>
+            <option value="eyeColors">Eye Colors</option>
+            <option value="hairColors">Hair Colors</option>
+            <option value="skinColors">Skin Colors</option>
+            <option value="highlightColors">Highlight Colors</option>
+            <option value="lipColorsDark">Lip Colors (Dark)</option>
+            <option value="lipColorsLight">Lip Colors (Light)</option>
+            <option value="tattooColors">Tattoo/Limbal Colors</option>
+            <option value="facePaintColorsDark">Face Paint (Dark)</option>
+            <option value="facePaintColorsLight">Face Paint (Light)</option>
           </select>
         </div>
 
-        <div class="config-group">
+        <div class="config-group" ?hidden=${!showCharacterSection}>
           <div class="config-label">Character</div>
           <select
             class="config-select"
@@ -961,15 +984,38 @@ export class ConfigSidebar extends BaseLitComponent {
         this.handleConfigChange('swatch', 'race', value);
       }}
           >
-            <option value="Hyur (Midlander)">Hyur (Midlander)</option>
-            <option value="Hyur (Highlander)">Hyur (Highlander)</option>
-            <option value="Elezen">Elezen</option>
-            <option value="Lalafell">Lalafell</option>
-            <option value="Miqo'te">Miqo'te</option>
-            <option value="Roegadyn">Roegadyn</option>
-            <option value="Au Ra">Au Ra</option>
-            <option value="Hrothgar">Hrothgar</option>
-            <option value="Viera">Viera</option>
+            <optgroup label="Hyur">
+              <option value="Midlander">Midlander</option>
+              <option value="Highlander">Highlander</option>
+            </optgroup>
+            <optgroup label="Elezen">
+              <option value="Wildwood">Wildwood</option>
+              <option value="Duskwight">Duskwight</option>
+            </optgroup>
+            <optgroup label="Lalafell">
+              <option value="Plainsfolk">Plainsfolk</option>
+              <option value="Dunesfolk">Dunesfolk</option>
+            </optgroup>
+            <optgroup label="Miqo'te">
+              <option value="SeekerOfTheSun">Seeker of the Sun</option>
+              <option value="KeeperOfTheMoon">Keeper of the Moon</option>
+            </optgroup>
+            <optgroup label="Roegadyn">
+              <option value="SeaWolf">Sea Wolf</option>
+              <option value="Hellsguard">Hellsguard</option>
+            </optgroup>
+            <optgroup label="Au Ra">
+              <option value="Raen">Raen</option>
+              <option value="Xaela">Xaela</option>
+            </optgroup>
+            <optgroup label="Hrothgar">
+              <option value="Helion">Helion</option>
+              <option value="TheLost">The Lost</option>
+            </optgroup>
+            <optgroup label="Viera">
+              <option value="Rava">Rava</option>
+              <option value="Veena">Veena</option>
+            </optgroup>
           </select>
           <select
             class="config-select"
@@ -991,11 +1037,27 @@ export class ConfigSidebar extends BaseLitComponent {
               label="Max Results"
               .value=${this.swatchConfig.maxResults}
               .min=${1}
-              .max=${8}
+              .max=${6}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
         this.handleConfigChange('swatch', 'maxResults', e.detail.value)}
             ></v4-range-slider>
           </div>
+        </div>
+
+        <div class="config-group">
+          <div class="config-label">Display Options</div>
+          <v4-display-options
+            .showHex=${this.swatchConfig.displayOptions.showHex}
+            .showRgb=${this.swatchConfig.displayOptions.showRgb}
+            .showHsv=${this.swatchConfig.displayOptions.showHsv}
+            .showLab=${this.swatchConfig.displayOptions.showLab}
+            .showPrice=${this.swatchConfig.displayOptions.showPrice}
+            .showDeltaE=${this.swatchConfig.displayOptions.showDeltaE}
+            .showAcquisition=${this.swatchConfig.displayOptions.showAcquisition}
+            .visibleGroups=${['colorFormats', 'resultMetadata']}
+            @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
+        this.handleDisplayOptionsChange('swatch', e)}
+          ></v4-display-options>
         </div>
       </div>
     `;
@@ -1005,7 +1067,7 @@ export class ConfigSidebar extends BaseLitComponent {
    * Check if current tool supports market data
    */
   private toolSupportsMarket(): boolean {
-    return ['harmony', 'comparison', 'budget', 'mixer', 'extractor'].includes(this.activeTool);
+    return ['harmony', 'comparison', 'budget', 'mixer', 'extractor', 'gradient'].includes(this.activeTool);
   }
 
   /**
