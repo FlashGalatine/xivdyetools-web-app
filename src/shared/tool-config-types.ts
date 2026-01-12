@@ -76,6 +76,8 @@ export interface AccessibilityConfig {
   showHexValues: boolean;
   /** Enable high contrast mode */
   highContrastMode: boolean;
+  /** Display options for result cards */
+  displayOptions: DisplayOptionsConfig;
 }
 
 /**
@@ -280,6 +282,12 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     showLabels: true,
     showHexValues: false,
     highContrastMode: false,
+    displayOptions: {
+      ...DEFAULT_DISPLAY_OPTIONS,
+      showPrice: false, // Accessibility tool doesn't show prices by default
+      showDeltaE: false, // Not applicable for accessibility
+      showAcquisition: false, // Keep focus on colors
+    },
   },
   comparison: {
     showDeltaE: true,

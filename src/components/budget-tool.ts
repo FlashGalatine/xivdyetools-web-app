@@ -15,7 +15,9 @@ import { CollapsiblePanel } from '@components/collapsible-panel';
 import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
-import { ColorService, ConfigController, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
+import '@components/v4/result-card';
+import type { ResultCardData, ContextAction } from '@components/v4/result-card';
+import { ColorService, ConfigController, dyeService, LanguageService, MarketBoardService, StorageService, ToastService } from '@services/index';
 import { RouterService } from '@services/router-service';
 import { ICON_TOOL_BUDGET } from '@shared/tool-icons';
 import {
@@ -115,6 +117,7 @@ export class BudgetTool extends BaseComponent {
   private dyeSelector: DyeSelector | null = null;
   private dyeFilters: DyeFilters | null = null;
   private marketBoard: MarketBoard | null = null;
+  private marketBoardService: MarketBoardService;
   private filtersPanel: CollapsiblePanel | null = null;
   private marketPanel: CollapsiblePanel | null = null;
   private targetDyePanel: CollapsiblePanel | null = null;
@@ -158,6 +161,9 @@ export class BudgetTool extends BaseComponent {
   constructor(container: HTMLElement, options: BudgetToolOptions) {
     super(container);
     this.options = options;
+
+    // Initialize MarketBoardService (shared price cache)
+    this.marketBoardService = MarketBoardService.getInstance();
 
     // Load persisted settings
     this.budgetLimit = StorageService.getItem<number>(STORAGE_KEYS.budgetLimit) ?? DEFAULTS.budgetLimit;
@@ -957,22 +963,41 @@ export class BudgetTool extends BaseComponent {
     const right = this.options.rightPanel;
     clearContainer(right);
 
-    // Empty state
-    this.emptyStateContainer = this.createElement('div');
+    // Determine initial visibility based on whether target dye is already set
+    // This ensures correct state after re-renders (e.g., language change)
+    const hasTargetDye = this.targetDye !== null;
+
+    // Empty state - hidden when we have a target dye
+    this.emptyStateContainer = this.createElement('div', {
+      className: hasTargetDye ? 'hidden' : '',
+    });
     this.renderEmptyState();
     right.appendChild(this.emptyStateContainer);
 
-    // Target Overview Card
-    this.targetOverviewContainer = this.createElement('div', { className: 'mb-6 hidden' });
+    // Target Overview Card - visible when we have a target dye
+    this.targetOverviewContainer = this.createElement('div', {
+      className: hasTargetDye ? 'mb-6' : 'mb-6 hidden',
+    });
     right.appendChild(this.targetOverviewContainer);
 
-    // Alternatives Header
-    this.alternativesHeaderContainer = this.createElement('div', { className: 'mb-4 hidden' });
+    // Alternatives Header - visible when we have a target dye
+    this.alternativesHeaderContainer = this.createElement('div', {
+      className: hasTargetDye ? 'mb-4' : 'mb-4 hidden',
+    });
     right.appendChild(this.alternativesHeaderContainer);
 
-    // Alternatives List
-    this.alternativesListContainer = this.createElement('div', { className: 'hidden' });
+    // Alternatives List - visible when we have a target dye
+    this.alternativesListContainer = this.createElement('div', {
+      className: hasTargetDye ? 'w-full' : 'hidden',
+    });
     right.appendChild(this.alternativesListContainer);
+
+    // If we have a target dye, render the results content
+    if (hasTargetDye) {
+      this.renderTargetOverview();
+      this.renderAlternativesHeader();
+      this.renderAlternativesList();
+    }
   }
 
   /**
@@ -1002,76 +1027,78 @@ export class BudgetTool extends BaseComponent {
    */
   private showEmptyState(show: boolean): void {
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.classList.toggle('hidden', !show);
+      this.emptyStateContainer.style.display = show ? 'block' : 'none';
     }
     if (this.targetOverviewContainer) {
-      this.targetOverviewContainer.classList.toggle('hidden', show);
+      this.targetOverviewContainer.style.display = show ? 'none' : 'block';
     }
     if (this.alternativesHeaderContainer) {
-      this.alternativesHeaderContainer.classList.toggle('hidden', show);
+      this.alternativesHeaderContainer.style.display = show ? 'none' : 'block';
     }
     if (this.alternativesListContainer) {
-      this.alternativesListContainer.classList.toggle('hidden', show);
+      this.alternativesListContainer.style.display = show ? 'none' : 'block';
     }
   }
 
   /**
-   * Render target overview card
+   * Render target overview card using v4-result-card
    */
   private renderTargetOverview(): void {
     if (!this.targetOverviewContainer || !this.targetDye) return;
+
+    // Ensure empty state is hidden when rendering target overview
+    this.showEmptyState(false);
+
     clearContainer(this.targetOverviewContainer);
 
-    const card = this.createElement('div', {
-      className: 'p-4 rounded-lg',
+    // Section label
+    const sectionLabel = this.createElement('div', {
+      textContent: LanguageService.t('budget.selectedDye') || 'Selected Dye',
       attributes: {
-        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        style: 'font-size: 14px; margin-bottom: 12px; text-align: center; color: var(--theme-text-muted);',
+      },
+    });
+    this.targetOverviewContainer.appendChild(sectionLabel);
+
+    // Wrapper for centering the card
+    const cardWrapper = this.createElement('div', {
+      attributes: {
+        style: 'display: flex; justify-content: center; margin-bottom: 24px;',
       },
     });
 
-    const content = this.createElement('div', { className: 'flex items-center gap-4' });
+    // Create v4-result-card for the target dye
+    const card = document.createElement('v4-result-card') as HTMLElement;
 
-    // Color swatch
-    const swatch = this.createElement('div', {
-      className: 'w-16 h-16 rounded-lg flex-shrink-0',
-      attributes: { style: `background: ${this.targetDye.hex}; border: 2px solid var(--theme-border);` },
-    });
+    // Get market server name
+    const priceInfo = this.priceData.get(this.targetDye.itemID);
+    const marketServer = this.marketBoardService.getWorldNameForPrice(priceInfo);
 
-    // Dye info
-    const info = this.createElement('div', { className: 'flex-1' });
-    const name = this.createElement('h3', {
-      className: 'font-semibold text-lg',
-      textContent: LanguageService.getDyeName(this.targetDye.itemID) || this.targetDye.name,
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-    const hex = this.createElement('p', {
-      className: 'text-sm number',
-      textContent: this.targetDye.hex,
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    info.appendChild(name);
-    info.appendChild(hex);
+    // Build ResultCardData - use same color for both to show solid preview
+    const cardData: ResultCardData = {
+      dye: this.targetDye,
+      originalColor: this.targetDye.hex,
+      matchedColor: this.targetDye.hex,
+      marketServer: marketServer,
+      price: this.targetPrice > 0 ? this.targetPrice : priceInfo?.currentMinPrice,
+      vendorCost: this.targetDye.cost,
+    };
 
-    // Price info
-    const priceInfo = this.createElement('div', { className: 'text-right' });
-    const priceLabel = this.createElement('p', {
-      className: 'text-sm',
-      textContent: LanguageService.t('budget.marketPrice') || 'Market Price',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    const priceValue = this.createElement('p', {
-      className: 'font-semibold text-lg number',
-      textContent: this.targetPrice > 0 ? `~${this.targetPrice.toLocaleString()} gil` : '---',
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-    priceInfo.appendChild(priceLabel);
-    priceInfo.appendChild(priceValue);
+    (card as unknown as { data: ResultCardData }).data = cardData;
+    card.setAttribute('show-actions', 'true');
+    card.setAttribute('primary-action-label', LanguageService.t('budget.currentlySelected') || 'Currently Selected');
+    card.setAttribute('show-delta-e', 'false');  // Hide delta-E for target card
 
-    content.appendChild(swatch);
-    content.appendChild(info);
-    content.appendChild(priceInfo);
-    card.appendChild(content);
-    this.targetOverviewContainer.appendChild(card);
+    // Disable the primary button visually
+    card.style.setProperty('--v4-result-card-width', '320px');
+
+    // Event handlers - clicking the card opens context menu
+    card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+      this.handleContextAction(e.detail.action, e.detail.dye);
+    }) as EventListener);
+
+    cardWrapper.appendChild(card);
+    this.targetOverviewContainer.appendChild(cardWrapper);
   }
 
   /**
@@ -1092,8 +1119,8 @@ export class BudgetTool extends BaseComponent {
     // Show "Showing X of Y" when results are limited, otherwise show total count
     const countLabel = isLimited
       ? `${LanguageService.t('budget.showingXOfY') || 'Showing {showing} of {total}'}`
-          .replace('{showing}', String(displayCount))
-          .replace('{total}', String(totalCount))
+        .replace('{showing}', String(displayCount))
+        .replace('{total}', String(totalCount))
       : `${totalCount} ${LanguageService.t('budget.alternativesWithinBudget') || 'alternatives within budget'}`;
 
     const countText = this.createElement('h3', {
@@ -1124,18 +1151,24 @@ export class BudgetTool extends BaseComponent {
    */
   private renderAlternativesList(): void {
     if (!this.alternativesListContainer || !this.targetDye) return;
+
+    // Ensure empty state is hidden when rendering alternatives
+    if (this.emptyStateContainer) {
+      this.emptyStateContainer.classList.add('hidden');
+    }
+
     clearContainer(this.alternativesListContainer);
 
     if (this.isLoading) {
       const loading = this.createElement('div', {
-        className: 'text-center py-8 flex flex-col items-center gap-4',
+        className: 'w-full flex flex-col items-center justify-center py-8 gap-4 text-center',
       });
 
       const { current, total } = this.fetchProgress;
       const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
 
       loading.innerHTML = `
-        <svg class="animate-spin h-8 w-8" style="color: var(--theme-primary);" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <svg class="animate-spin h-8 w-8" width="32" height="32" style="color: var(--theme-primary); width: 32px; height: 32px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
@@ -1165,106 +1198,68 @@ export class BudgetTool extends BaseComponent {
       return;
     }
 
-    const container = this.createElement('div', { className: 'space-y-3' });
-
-    this.alternatives.forEach((alt, index) => {
-      const card = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg transition-colors',
-        attributes: {
-          style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
-        },
-      });
-
-      // Rank badge
-      const rankBadge = this.createElement('div', {
-        className: 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 number',
-        textContent: String(index + 1),
-        attributes: {
-          style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);',
-        },
-      });
-
-      // Color comparison
-      const colorCompare = this.createElement('div', {
-        className: 'flex gap-1 flex-shrink-0',
-      });
-      const targetSwatch = this.createElement('div', {
-        className: 'w-8 h-8 rounded',
-        attributes: {
-          style: `background: ${this.targetDye!.hex}; border: 1px solid var(--theme-border);`,
-          title: LanguageService.t('budget.target') || 'Target',
-        },
-      });
-      const altSwatch = this.createElement('div', {
-        className: 'w-8 h-8 rounded',
-        attributes: {
-          style: `background: ${alt.dye.hex}; border: 1px solid var(--theme-border);`,
-          title: LanguageService.getDyeName(alt.dye.itemID) || alt.dye.name,
-        },
-      });
-      colorCompare.appendChild(targetSwatch);
-      colorCompare.appendChild(altSwatch);
-
-      // Dye info
-      const info = this.createElement('div', {
-        className: 'flex-1 min-w-0',
-      });
-      const dyeName = this.createElement('p', {
-        className: 'font-medium truncate',
-        textContent: LanguageService.getDyeName(alt.dye.itemID) || alt.dye.name,
-        attributes: { style: 'color: var(--theme-text);' },
-      });
-      const dyeDetails = this.createElement('p', {
-        className: 'text-xs',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      dyeDetails.innerHTML = `<span class="number">${alt.dye.hex}</span> · <span class="number">Δ${alt.distance.toFixed(1)}</span>`;
-      info.appendChild(dyeName);
-      info.appendChild(dyeDetails);
-
-      // Distance bar (hidden on mobile)
-      const distanceBar = this.createElement('div', {
-        className: 'w-20 flex-shrink-0 hidden sm:block',
-      });
-      const barWidth = Math.min(100, (alt.distance / this.colorDistance) * 100);
-      const barOuter = this.createElement('div', {
-        className: 'h-2 rounded-full',
-        attributes: { style: 'background: var(--theme-background-secondary);' },
-      });
-      const barInner = this.createElement('div', {
-        className: 'h-full rounded-full',
-        attributes: { style: `background: var(--theme-primary); width: ${barWidth}%;` },
-      });
-      barOuter.appendChild(barInner);
-      distanceBar.appendChild(barOuter);
-
-      // Price & Savings
-      const priceInfo = this.createElement('div', {
-        className: 'text-right flex-shrink-0',
-      });
-      const priceText = this.createElement('p', {
-        className: 'font-semibold number',
-        textContent: `${alt.price.toLocaleString()} gil`,
-        attributes: { style: 'color: var(--theme-text);' },
-      });
-      const savingsText = this.createElement('p', {
-        className: 'text-xs font-bold number',
-        textContent: alt.savings > 0 ? `${LanguageService.t('budget.save') || 'Save'} ${alt.savings.toLocaleString()}` : '',
-        attributes: { style: 'color: #22C55E;' },
-      });
-      priceInfo.appendChild(priceText);
-      priceInfo.appendChild(savingsText);
-
-      card.appendChild(rankBadge);
-      card.appendChild(colorCompare);
-      card.appendChild(info);
-      card.appendChild(distanceBar);
-      card.appendChild(priceInfo);
-
-      container.appendChild(card);
+    // Grid container for v4 result cards
+    const grid = this.createElement('div', {
+      attributes: {
+        style: 'display: flex; flex-wrap: wrap; gap: 24px; justify-content: center;',
+      },
     });
 
-    this.alternativesListContainer.appendChild(container);
+    this.alternatives.forEach((alt) => {
+      // Create card wrapper with savings display
+      const wrapper = this.createElement('div', {
+        attributes: {
+          style: 'display: flex; flex-direction: column; gap: 8px;',
+        },
+      });
+
+      // Create v4-result-card
+      const card = document.createElement('v4-result-card') as HTMLElement;
+
+      // Get market server name (use MarketBoardService like other tools)
+      const priceInfo = this.priceData.get(alt.dye.itemID);
+      const marketServer = this.marketBoardService.getWorldNameForPrice(priceInfo);
+
+      // Build ResultCardData
+      const cardData: ResultCardData = {
+        dye: alt.dye,
+        originalColor: this.targetDye!.hex,  // Target dye (original)
+        matchedColor: alt.dye.hex,           // Alternative dye (match)
+        deltaE: alt.distance,
+        marketServer: marketServer,
+        price: priceInfo?.currentMinPrice,
+        vendorCost: alt.dye.cost,
+      };
+
+      (card as unknown as { data: ResultCardData }).data = cardData;
+      card.setAttribute('show-actions', 'true');
+
+      // Event handlers
+      card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {
+        this.handleCardSelect(e.detail.dye);
+      }) as EventListener);
+
+      card.addEventListener('context-action', ((e: CustomEvent<{ action: ContextAction; dye: Dye }>) => {
+        this.handleContextAction(e.detail.action, e.detail.dye);
+      }) as EventListener);
+
+      wrapper.appendChild(card);
+
+      // Add savings badge below card (if savings > 0)
+      if (alt.savings > 0) {
+        const savingsBadge = this.createElement('div', {
+          textContent: `${LanguageService.t('budget.save') || 'Save'} ${alt.savings.toLocaleString()} gil`,
+          attributes: {
+            style: 'background: rgba(34, 197, 94, 0.15); color: #22C55E; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-align: center;',
+          },
+        });
+        wrapper.appendChild(savingsBadge);
+      }
+
+      grid.appendChild(wrapper);
+    });
+
+    this.alternativesListContainer.appendChild(grid);
   }
 
   // ============================================================================
@@ -1985,6 +1980,40 @@ export class BudgetTool extends BaseComponent {
   // ============================================================================
 
   /**
+   * Handle card selection - set as new target dye
+   */
+  private handleCardSelect(dye: Dye): void {
+    this.selectDye(dye);
+  }
+
+  /**
+   * Handle context menu actions from result cards
+   */
+  private handleContextAction(action: ContextAction, dye: Dye): void {
+    switch (action) {
+      case 'add-comparison':
+        RouterService.navigateTo('comparison', { dye: dye.name });
+        break;
+      case 'add-mixer':
+        RouterService.navigateTo('mixer', { dye: dye.name });
+        break;
+      case 'add-accessibility':
+        RouterService.navigateTo('accessibility', { dye: dye.name });
+        break;
+      case 'see-harmonies':
+        RouterService.navigateTo('harmony', { dye: dye.name });
+        break;
+      case 'budget':
+        this.selectDye(dye);
+        break;
+      case 'copy-hex':
+        navigator.clipboard.writeText(dye.hex);
+        ToastService.success(LanguageService.t('common.copiedToClipboard') || 'Copied!');
+        break;
+    }
+  }
+
+  /**
    * Check if a color is light (for text contrast)
    */
   private isLightColor(hex: string): boolean {
@@ -2015,9 +2044,10 @@ export class BudgetTool extends BaseComponent {
       this.dyeSelector.setSelectedDyes([dye]);
     }
 
-    // Update UI
-    this.filterAndSortAlternatives();
+    // Call findAlternatives() instead of filterAndSortAlternatives()
+    // This properly hides empty state and fetches data
+    this.findAlternatives();
     this.updateTargetDyeDisplay();
-    this.update();
+    this.updateDrawerContent();
   }
 }

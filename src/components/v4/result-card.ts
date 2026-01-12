@@ -662,7 +662,9 @@ export class ResultCard extends BaseLitComponent {
         : nothing}
           </div>
 
-          <!-- Acquisition Column -->
+          <!-- Acquisition Column - only show if acquisition or price enabled -->
+          ${this.showAcquisition || this.showPrice
+        ? html`
           <div class="detail-column">
             <div class="column-header">Acquisition</div>
             ${this.showAcquisition
@@ -689,6 +691,8 @@ export class ResultCard extends BaseLitComponent {
                 `
         : nothing}
           </div>
+            `
+        : nothing}
         </div>
 
         <!-- Action Bar at Bottom -->

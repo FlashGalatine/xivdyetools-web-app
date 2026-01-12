@@ -95,6 +95,12 @@ export class ConfigSidebar extends BaseLitComponent {
     showLabels: true,
     showHexValues: false,
     highContrastMode: false,
+    displayOptions: {
+      ...DEFAULT_DISPLAY_OPTIONS,
+      showPrice: false,
+      showDeltaE: false,
+      showAcquisition: false,
+    },
   };
   @state() private comparisonConfig: ComparisonConfig = {
     showDeltaE: true,
@@ -494,7 +500,7 @@ export class ConfigSidebar extends BaseLitComponent {
    * Handle display options change from v4-display-options component
    */
   private handleDisplayOptionsChange(
-    tool: 'harmony' | 'mixer' | 'gradient' | 'swatch',
+    tool: 'harmony' | 'mixer' | 'gradient' | 'swatch' | 'accessibility',
     e: CustomEvent<DisplayOptionsChangeDetail>
   ): void {
     const { option, value, allOptions } = e.detail;
@@ -522,6 +528,12 @@ export class ConfigSidebar extends BaseLitComponent {
       case 'swatch':
         this.swatchConfig = {
           ...this.swatchConfig,
+          displayOptions: allOptions,
+        };
+        break;
+      case 'accessibility':
+        this.accessibilityConfig = {
+          ...this.accessibilityConfig,
           displayOptions: allOptions,
         };
         break;
@@ -679,7 +691,7 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">Display Options</div>
+          <div class="config-label">Simulation Display</div>
           <div class="config-row">
             <v4-toggle-switch
               label="Show Labels"
@@ -705,6 +717,19 @@ export class ConfigSidebar extends BaseLitComponent {
             ></v4-toggle-switch>
           </div>
         </div>
+
+        <v4-display-options
+          .showHex=${this.accessibilityConfig.displayOptions.showHex}
+          .showRgb=${this.accessibilityConfig.displayOptions.showRgb}
+          .showHsv=${this.accessibilityConfig.displayOptions.showHsv}
+          .showLab=${this.accessibilityConfig.displayOptions.showLab}
+          .showPrice=${this.accessibilityConfig.displayOptions.showPrice}
+          .showDeltaE=${this.accessibilityConfig.displayOptions.showDeltaE}
+          .showAcquisition=${this.accessibilityConfig.displayOptions.showAcquisition}
+          .visibleGroups=${['colorFormats']}
+          @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
+        this.handleDisplayOptionsChange('accessibility', e)}
+        ></v4-display-options>
       </div>
     `;
   }
