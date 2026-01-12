@@ -747,18 +747,16 @@ export class SwatchTool extends BaseComponent {
       },
     });
 
-    const selectedHeader = this.createElement('span', {
-      textContent: LanguageService.t('tools.character.selectedColor') || 'Selected Color',
-      attributes: {
-        style: `
-          font-size: 14px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: var(--theme-text-muted, #a0a0a0);
-        `,
-      },
+    // Section header (using consistent section-header/section-title pattern)
+    const selectedHeader = this.createElement('div', {
+      className: 'section-header',
+      attributes: { style: 'width: 100%;' },
     });
+    const selectedTitle = this.createElement('span', {
+      className: 'section-title',
+      textContent: LanguageService.t('tools.character.selectedColor') || 'Selected Color',
+    });
+    selectedHeader.appendChild(selectedTitle);
     selectedSection.appendChild(selectedHeader);
 
     // Selected Color Card (V4 style matching result cards)
@@ -788,25 +786,14 @@ export class SwatchTool extends BaseComponent {
       },
     });
 
+    // Section header (using consistent section-header/section-title pattern)
     const matchHeader = this.createElement('div', {
-      attributes: {
-        style: `
-          display: flex;
-          align-items: center;
-        `,
-      },
+      className: 'section-header',
+      attributes: { style: 'width: 100%;' },
     });
     const matchTitle = this.createElement('span', {
+      className: 'section-title',
       textContent: LanguageService.t('tools.character.matchingDyes') || 'Matching Dyes',
-      attributes: {
-        style: `
-          font-size: 14px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: var(--theme-text-muted, #a0a0a0);
-        `,
-      },
     });
     matchHeader.appendChild(matchTitle);
     matchSection.appendChild(matchHeader);
