@@ -257,3 +257,340 @@ body.theme-high-contrast-dark v4-config-sidebar {
 .harmony-results-container {
   --v4-result-card-width: 290px;
 }
+
+/* ==========================================================================
+   Accessibility Tool Styles
+   ========================================================================== */
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--theme-border);
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--theme-text-muted);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.contrast-table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--theme-card-background);
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  /* Constrain width */
+  margin: 0 auto;
+  /* Center */
+}
+
+.contrast-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.contrast-table thead {
+  background: var(--theme-background-secondary);
+}
+
+.contrast-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--theme-text-muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.contrast-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.contrast-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pairwise-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 800px;
+  /* Constrain width */
+  margin: 0 auto;
+  /* Center */
+  background: var(--theme-card-background);
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.pairwise-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+/* Vision Simulation Cards - Grid container */
+.vision-simulations-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* Vision Simulation Cards */
+.vision-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--theme-card-background);
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex: 1 1 200px;
+  min-width: 200px;
+  max-width: 280px;
+}
+
+.vision-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--theme-text-muted);
+}
+
+.vision-card-header {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.vision-type-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+
+.vision-prevalence {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vision-swatches {
+  display: flex;
+  gap: 10px;
+  padding: 16px;
+  justify-content: center;
+  flex-grow: 1;
+  align-items: flex-start;
+}
+
+.vision-swatch-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.vision-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.vision-swatch-label {
+  font-size: 9px;
+  color: var(--theme-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  max-width: 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.vision-swatch-hex {
+  font-size: 9px;
+  font-family: monospace;
+  color: var(--theme-text-muted);
+}
+
+/* ==========================================================================
+   Utility Classes (Tailwind Compat)
+   ========================================================================== */
+
+/* Layout & Flexbox */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
+}
+
+.shrink-0 {
+  flex-shrink: 0;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+/* 8px */
+.gap-3 {
+  gap: 0.75rem;
+}
+
+/* 12px */
+.gap-4 {
+  gap: 1rem;
+}
+
+/* 16px */
+.gap-8 {
+  gap: 2rem;
+}
+
+/* 32px */
+
+/* Spacing */
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+/* 24px */
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+/* 32px */
+.p-2 {
+  padding: 0.5rem;
+}
+
+.p-3 {
+  padding: 0.75rem;
+}
+
+.space-y-2> :not([hidden])~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
+}
+
+.space-y-3> :not([hidden])~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
+}
+
+/* Sizing */
+.w-4 {
+  width: 1rem;
+}
+
+.h-4 {
+  height: 1rem;
+}
+
+.w-8 {
+  width: 2rem;
+}
+
+.h-8 {
+  height: 2rem;
+}
+
+/* Typography */
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Borders & Effects */
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.border {
+  border-width: 1px;
+}
+
+.border-2 {
+  border-width: 2px;
+}
+
+.border-dashed {
+  border-style: dashed;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

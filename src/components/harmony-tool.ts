@@ -864,18 +864,15 @@ export class HarmonyTool extends BaseComponent {
 
     // Results Header
     const resultsHeader = this.createElement('div', {
-      className: 'flex items-center justify-between',
+      className: 'section-header', // Uses new global class in V4LayoutShell
       attributes: {
-        style: 'width: 100%; padding: 0 16px 16px 16px; border-bottom: 1px solid var(--theme-border); margin-bottom: 16px;',
+        style: 'width: 100%;', // Keep width: 100% just in case flex behavior needs it, but section-header handles the rest
       },
     });
 
     const resultsTitle = this.createElement('span', {
-      className: 'text-sm font-semibold uppercase tracking-wider',
+      className: 'section-title', // Uses new global class in V4LayoutShell
       textContent: LanguageService.t('harmony.results'),
-      attributes: {
-        style: 'font-size: 14px; text-transform: uppercase; color: var(--theme-text-muted); font-weight: 600; letter-spacing: 1px;',
-      },
     });
 
     resultsHeader.appendChild(resultsTitle);

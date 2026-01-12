@@ -1411,15 +1411,17 @@ export class ComparisonTool extends BaseComponent {
     container.appendChild(svgContainer);
 
     // Plot area for nodes (overlay on SVG)
+    // Use percentage-based positioning to match SVG viewBox (380x280) coordinates
+    // Plot rect in SVG: x=50, y=20, width=300, height=200
+    // As percentages: left=50/380=13.16%, top=20/280=7.14%, width=300/380=78.95%, height=200/280=71.43%
     const plotArea = this.createElement('div', {
       attributes: {
         style: `
           position: absolute;
-          top: 20px;
-          left: 50px;
-          width: calc(100% - 80px);
-          max-width: 300px;
-          height: 200px;
+          top: 7.14%;
+          left: 13.16%;
+          width: 78.95%;
+          height: 71.43%;
         `.replace(/\s+/g, ' ').trim(),
       },
     });
@@ -2102,6 +2104,7 @@ export class ComparisonTool extends BaseComponent {
     // Persist and update UI
     const dyeIds = this.selectedDyes.map((d) => d.id);
     StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+    this.calculateHSVValues();
     this.updateSelectedDyesDisplay();
     this.updateResults();
   }
