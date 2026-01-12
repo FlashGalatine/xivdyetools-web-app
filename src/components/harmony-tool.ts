@@ -880,6 +880,13 @@ export class HarmonyTool extends BaseComponent {
     const right = this.options.rightPanel;
     clearContainer(right);
 
+    // Content wrapper with max-width to prevent over-expansion on ultrawide monitors
+    const contentWrapper = this.createElement('div', {
+      attributes: {
+        style: 'max-width: 1200px; margin: 0 auto; width: 100%;',
+      },
+    });
+
     // Color Wheel Section - centered with inline styles for reliability
     this.colorWheelContainer = this.createElement('div', {
       className: 'color-wheel-container',
@@ -888,23 +895,25 @@ export class HarmonyTool extends BaseComponent {
           'display: flex; justify-content: center; align-items: center; width: 100%; margin-bottom: 1.5rem;',
       },
     });
-    right.appendChild(this.colorWheelContainer);
+    contentWrapper.appendChild(this.colorWheelContainer);
+
+    // Results Section - wraps header + grid to keep them visually grouped
+    const resultsSection = this.createElement('div', {
+      className: 'harmony-results-section',
+    });
 
     // Results Header
     const resultsHeader = this.createElement('div', {
-      className: 'section-header', // Uses new global class in V4LayoutShell
-      attributes: {
-        style: 'width: 100%;', // Keep width: 100% just in case flex behavior needs it, but section-header handles the rest
-      },
+      className: 'section-header',
     });
 
     const resultsTitle = this.createElement('span', {
-      className: 'section-title', // Uses new global class in V4LayoutShell
+      className: 'section-title',
       textContent: LanguageService.t('harmony.results'),
     });
 
     resultsHeader.appendChild(resultsTitle);
-    right.appendChild(resultsHeader);
+    resultsSection.appendChild(resultsHeader);
 
     // Harmony Results - horizontal row layout with inline styles for reliability
     this.harmonyGridContainer = this.createElement('div', {
@@ -914,13 +923,17 @@ export class HarmonyTool extends BaseComponent {
           'display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; --v4-result-card-width: 290px;',
       },
     });
-    right.appendChild(this.harmonyGridContainer);
+    resultsSection.appendChild(this.harmonyGridContainer);
+
+    contentWrapper.appendChild(resultsSection);
 
     // Empty state (shown when no dye selected)
     this.emptyStateContainer = this.createElement('div', {
       className: 'hidden',
     });
-    right.appendChild(this.emptyStateContainer);
+    contentWrapper.appendChild(this.emptyStateContainer);
+
+    right.appendChild(contentWrapper);
 
     // Initial render
     this.renderColorWheel();

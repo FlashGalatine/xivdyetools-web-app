@@ -157,6 +157,7 @@ export class BudgetTool extends BaseComponent {
   private resultLimitValueDisplay: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
   private targetOverviewContainer: HTMLElement | null = null;
+  private alternativesSection: HTMLElement | null = null;
   private alternativesHeaderContainer: HTMLElement | null = null;
   private alternativesListContainer: HTMLElement | null = null;
   private quickPickButtons: HTMLButtonElement[] = [];
@@ -1136,30 +1137,46 @@ export class BudgetTool extends BaseComponent {
     // This ensures correct state after re-renders (e.g., language change)
     const hasTargetDye = this.targetDye !== null;
 
+    // Content wrapper with max-width to prevent over-expansion on ultrawide monitors
+    const contentWrapper = this.createElement('div', {
+      attributes: {
+        style: 'max-width: 1200px; margin: 0 auto; width: 100%;',
+      },
+    });
+
     // Empty state - hidden when we have a target dye
     this.emptyStateContainer = this.createElement('div', {
       className: hasTargetDye ? 'hidden' : '',
     });
     this.renderEmptyState();
-    right.appendChild(this.emptyStateContainer);
+    contentWrapper.appendChild(this.emptyStateContainer);
 
     // Target Overview Card - visible when we have a target dye
     this.targetOverviewContainer = this.createElement('div', {
       className: hasTargetDye ? 'mb-6' : 'mb-6 hidden',
     });
-    right.appendChild(this.targetOverviewContainer);
+    contentWrapper.appendChild(this.targetOverviewContainer);
 
-    // Alternatives Header - visible when we have a target dye
+    // Alternatives Section - wraps header + list to keep them visually grouped
+    this.alternativesSection = this.createElement('div', {
+      className: hasTargetDye ? '' : 'hidden',
+    });
+
+    // Alternatives Header
     this.alternativesHeaderContainer = this.createElement('div', {
-      className: hasTargetDye ? 'mb-4' : 'mb-4 hidden',
+      className: 'mb-4',
     });
-    right.appendChild(this.alternativesHeaderContainer);
+    this.alternativesSection.appendChild(this.alternativesHeaderContainer);
 
-    // Alternatives List - visible when we have a target dye
+    // Alternatives List
     this.alternativesListContainer = this.createElement('div', {
-      className: hasTargetDye ? 'w-full' : 'hidden',
+      className: 'w-full',
     });
-    right.appendChild(this.alternativesListContainer);
+    this.alternativesSection.appendChild(this.alternativesListContainer);
+
+    contentWrapper.appendChild(this.alternativesSection);
+
+    right.appendChild(contentWrapper);
 
     // If we have a target dye, render the results content
     if (hasTargetDye) {
@@ -1201,11 +1218,8 @@ export class BudgetTool extends BaseComponent {
     if (this.targetOverviewContainer) {
       this.targetOverviewContainer.style.display = show ? 'none' : 'block';
     }
-    if (this.alternativesHeaderContainer) {
-      this.alternativesHeaderContainer.style.display = show ? 'none' : 'block';
-    }
-    if (this.alternativesListContainer) {
-      this.alternativesListContainer.style.display = show ? 'none' : 'block';
+    if (this.alternativesSection) {
+      this.alternativesSection.style.display = show ? 'none' : 'block';
     }
   }
 
@@ -1223,7 +1237,7 @@ export class BudgetTool extends BaseComponent {
     // Section header (using consistent section-header/section-title pattern from other tools)
     const sectionHeader = this.createElement('div', {
       className: 'section-header',
-      attributes: { style: 'width: 100%; margin-bottom: 12px;' },
+      attributes: { style: 'width: 100%; margin-bottom: 16px;' },
     });
     const sectionTitle = this.createElement('span', {
       className: 'section-title',

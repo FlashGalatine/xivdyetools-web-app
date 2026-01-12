@@ -895,12 +895,19 @@ export class MixerTool extends BaseComponent {
     `
     );
 
+    // Content wrapper with max-width to prevent over-expansion on ultrawide monitors
+    const contentWrapper = this.createElement('div', {
+      attributes: {
+        style: 'max-width: 1200px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 32px;',
+      },
+    });
+
     // Empty state (shown when dyes not selected)
     this.emptyStateContainer = this.createElement('div', {
       attributes: { style: 'display: flex; width: 100%; justify-content: center;' },
     });
     this.renderEmptyState();
-    right.appendChild(this.emptyStateContainer);
+    contentWrapper.appendChild(this.emptyStateContainer);
 
     // Crafting UI section (hidden initially)
     this.craftingContainer = this.createElement('div', {
@@ -908,16 +915,15 @@ export class MixerTool extends BaseComponent {
       attributes: { style: 'display: none; width: 100%;' },
     });
     this.renderCraftingUI();
-    right.appendChild(this.craftingContainer);
+    contentWrapper.appendChild(this.craftingContainer);
 
     // Results grid section (hidden initially)
     this.resultsSection = this.createElement('div', {
-      attributes: { style: 'display: none; width: 100%; max-width: 1400px;' },
+      attributes: { style: 'display: none; width: 100%;' },
     });
     // Results header (using consistent section-header/section-title pattern from other tools)
     const resultsHeader = this.createElement('div', {
       className: 'section-header',
-      attributes: { style: 'width: 100%;' },
     });
     const resultsTitle = this.createElement('span', {
       className: 'section-title',
@@ -936,7 +942,9 @@ export class MixerTool extends BaseComponent {
       },
     });
     this.resultsSection.appendChild(this.resultsGridContainer);
-    right.appendChild(this.resultsSection);
+    contentWrapper.appendChild(this.resultsSection);
+
+    right.appendChild(contentWrapper);
   }
 
   /**

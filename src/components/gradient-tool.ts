@@ -867,6 +867,7 @@ export class GradientTool extends BaseComponent {
       `
       display: flex;
       flex-direction: column;
+      align-items: center;
       width: 100%;
       height: 100%;
       padding: 32px;
@@ -875,6 +876,13 @@ export class GradientTool extends BaseComponent {
       overflow-y: auto;
     `
     );
+
+    // Content wrapper with max-width to prevent over-expansion on ultrawide monitors
+    const contentWrapper = this.createElement('div', {
+      attributes: {
+        style: 'max-width: 1200px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 32px; flex: 1;',
+      },
+    });
 
     // Gradient Builder UI section (Start node -> Path -> End node)
     const gradientBuilderUI = this.createElement('div', {
@@ -1029,7 +1037,7 @@ export class GradientTool extends BaseComponent {
     endNode.appendChild(endLabel);
     gradientBuilderUI.appendChild(endNode);
 
-    right.appendChild(gradientBuilderUI);
+    contentWrapper.appendChild(gradientBuilderUI);
 
     // Results section container
     const resultsSection = this.createElement('div', {
@@ -1102,11 +1110,13 @@ export class GradientTool extends BaseComponent {
 
     resultsSection.appendChild(this.emptyStateContainer);
     resultsSection.appendChild(this.matchesContainer);
-    right.appendChild(resultsSection);
+    contentWrapper.appendChild(resultsSection);
 
     // Export container (hidden by default)
     this.exportContainer = this.createElement('div', { attributes: { style: 'display: none;' } });
-    right.appendChild(this.exportContainer);
+    contentWrapper.appendChild(this.exportContainer);
+
+    right.appendChild(contentWrapper);
 
     // Store references to update dynamically
     this.startCircleElement = startCircle;

@@ -819,9 +819,12 @@ export class AccessibilityTool extends BaseComponent {
     this.renderEmptyState();
     right.appendChild(this.emptyStateContainer);
 
-    // Right Panel Content Wrapper (flex column with gap-8 for consistent spacing)
+    // Right Panel Content Wrapper (flex column with gap-8 for consistent spacing, max-width for ultrawide)
     const contentWrapper = this.createElement('div', {
       className: 'flex flex-col gap-8',
+      attributes: {
+        style: 'max-width: 1200px; margin: 0 auto; width: 100%;',
+      },
     });
 
     // Selected Dyes Section with v4-result-cards (hidden initially)
@@ -839,7 +842,6 @@ export class AccessibilityTool extends BaseComponent {
           flex-wrap: wrap;
           gap: 16px;
           justify-content: center;
-          margin-top: 16px;
         `
           .replace(/\s+/g, ' ')
           .trim(),
@@ -857,7 +859,6 @@ export class AccessibilityTool extends BaseComponent {
     );
     this.visionSimulationsContainer = this.createElement('div', {
       className: 'grid gap-4 md:grid-cols-2 lg:grid-cols-3',
-      attributes: { style: 'margin-top: 16px;' },
     });
     this.visionSimSection.appendChild(this.visionSimulationsContainer);
     contentWrapper.appendChild(this.visionSimSection);
@@ -869,9 +870,7 @@ export class AccessibilityTool extends BaseComponent {
     this.contrastSection.appendChild(
       this.createHeader(LanguageService.t('accessibility.contrastRatios') || 'Contrast Analysis')
     );
-    this.contrastTableContainer = this.createElement('div', {
-      attributes: { style: 'margin-top: 16px;' },
-    });
+    this.contrastTableContainer = this.createElement('div');
     this.contrastSection.appendChild(this.contrastTableContainer);
     contentWrapper.appendChild(this.contrastSection);
 
@@ -884,9 +883,7 @@ export class AccessibilityTool extends BaseComponent {
         LanguageService.t('accessibility.pairComparisons') || 'Pairwise Distinguishability'
       )
     );
-    this.matrixContainer = this.createElement('div', {
-      attributes: { style: 'margin-top: 16px;' },
-    });
+    this.matrixContainer = this.createElement('div');
     this.matrixSection.appendChild(this.matrixContainer);
     contentWrapper.appendChild(this.matrixSection);
 
