@@ -19,6 +19,8 @@ import type { ToolId } from '@services/router-service';
 export interface GlobalConfig {
   /** Selected theme name */
   theme: string;
+  /** Global display options shared across all tools */
+  displayOptions: DisplayOptionsConfig;
 }
 
 // ============================================================================
@@ -140,6 +142,8 @@ export interface BudgetConfig {
   maxResults: number;
   /** Maximum Delta-E color distance (0-100) */
   maxDeltaE: number;
+  /** Display options for result cards */
+  displayOptions: DisplayOptionsConfig;
 }
 
 /**
@@ -261,6 +265,7 @@ export type ConfigKey = ToolId | 'global' | 'market';
 export const DEFAULT_CONFIGS: ToolConfigMap = {
   global: {
     theme: '',
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   market: {
     selectedServer: 'Crystal',
@@ -316,6 +321,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     maxPrice: 200000,
     maxResults: 8,
     maxDeltaE: 75,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   swatch: {
     colorSheet: 'eyeColors',

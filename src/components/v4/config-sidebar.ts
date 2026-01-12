@@ -107,6 +107,7 @@ export class ConfigSidebar extends BaseLitComponent {
     showRgb: true,
     showHsv: false,
     showMarketPrices: true,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private gradientConfig: GradientConfig = {
     stepCount: 8,
@@ -126,6 +127,7 @@ export class ConfigSidebar extends BaseLitComponent {
     maxPrice: 200000,
     maxResults: 8,
     maxDeltaE: 75,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private swatchConfig: SwatchConfig = {
     colorSheet: 'eyeColors',
@@ -134,6 +136,9 @@ export class ConfigSidebar extends BaseLitComponent {
     maxResults: 3,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
+
+  // Global display options shared across all tools
+  @state() private globalDisplayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
 
   @state() private marketConfig: MarketConfig = {
     selectedServer: 'Crystal',
@@ -427,6 +432,10 @@ export class ConfigSidebar extends BaseLitComponent {
   private loadConfigsFromController(): void {
     this.configController = ConfigController.getInstance();
 
+    // Load global display options first
+    const globalConfig = this.configController.getConfig('global');
+    this.globalDisplayOptions = globalConfig.displayOptions || { ...DEFAULT_DISPLAY_OPTIONS };
+
     this.harmonyConfig = this.configController.getConfig('harmony');
     this.extractorConfig = this.configController.getConfig('extractor');
     this.accessibilityConfig = this.configController.getConfig('accessibility');
@@ -503,61 +512,39 @@ export class ConfigSidebar extends BaseLitComponent {
   }
 
   /**
-   * Handle display options change from v4-display-options component
+   * Handle display options change from v4-display-options component.
+   * Updates global display options that are shared across all tools.
    */
   private handleDisplayOptionsChange(
-    tool: 'harmony' | 'mixer' | 'gradient' | 'swatch' | 'accessibility' | 'comparison',
+    _tool: 'harmony' | 'mixer' | 'gradient' | 'swatch' | 'accessibility' | 'comparison' | 'budget',
     e: CustomEvent<DisplayOptionsChangeDetail>
   ): void {
     const { option, value, allOptions } = e.detail;
 
-    // Update local state with the full displayOptions object
-    switch (tool) {
-      case 'harmony':
-        this.harmonyConfig = {
-          ...this.harmonyConfig,
-          displayOptions: allOptions,
-        };
-        break;
-      case 'mixer':
-        this.mixerConfig = {
-          ...this.mixerConfig,
-          displayOptions: allOptions,
-        };
-        break;
-      case 'gradient':
-        this.gradientConfig = {
-          ...this.gradientConfig,
-          displayOptions: allOptions,
-        };
-        break;
-      case 'swatch':
-        this.swatchConfig = {
-          ...this.swatchConfig,
-          displayOptions: allOptions,
-        };
-        break;
-      case 'accessibility':
-        this.accessibilityConfig = {
-          ...this.accessibilityConfig,
-          displayOptions: allOptions,
-        };
-        break;
-      case 'comparison':
-        this.comparisonConfig = {
-          ...this.comparisonConfig,
-          displayOptions: allOptions,
-        };
-        break;
-    }
+    // Update global display options (shared across all tools)
+    this.globalDisplayOptions = allOptions;
 
-    // Update ConfigController with nested displayOptions
+    // Save to global config via ConfigController
     if (this.configController) {
-      (this.configController as any).setConfig(tool, { displayOptions: allOptions });
+      (this.configController as ConfigController).setConfig('global', { displayOptions: allOptions });
+
+      // Broadcast to all tools so they pick up the new display options
+      const toolsWithDisplayOptions = [
+        'harmony',
+        'mixer',
+        'gradient',
+        'swatch',
+        'accessibility',
+        'comparison',
+        'budget',
+      ] as const;
+      for (const tool of toolsWithDisplayOptions) {
+        (this.configController as ConfigController).setConfig(tool, { displayOptions: allOptions });
+      }
     }
 
     // Emit event for parent components
-    this.emit('config-change', { tool, key: `displayOptions.${option}`, value });
+    this.emit('config-change', { tool: 'global', key: `displayOptions.${option}`, value });
   }
 
   /**
@@ -606,13 +593,13 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <v4-display-options
-          .showHex=${this.harmonyConfig.displayOptions.showHex}
-          .showRgb=${this.harmonyConfig.displayOptions.showRgb}
-          .showHsv=${this.harmonyConfig.displayOptions.showHsv}
-          .showLab=${this.harmonyConfig.displayOptions.showLab}
-          .showPrice=${this.harmonyConfig.displayOptions.showPrice}
-          .showDeltaE=${this.harmonyConfig.displayOptions.showDeltaE}
-          .showAcquisition=${this.harmonyConfig.displayOptions.showAcquisition}
+          .showHex=${this.globalDisplayOptions.showHex}
+          .showRgb=${this.globalDisplayOptions.showRgb}
+          .showHsv=${this.globalDisplayOptions.showHsv}
+          .showLab=${this.globalDisplayOptions.showLab}
+          .showPrice=${this.globalDisplayOptions.showPrice}
+          .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+          .showAcquisition=${this.globalDisplayOptions.showAcquisition}
           .visibleGroups=${['colorFormats', 'resultMetadata']}
           @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
             this.handleDisplayOptionsChange('harmony', e)}
@@ -723,13 +710,13 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <v4-display-options
-          .showHex=${this.accessibilityConfig.displayOptions.showHex}
-          .showRgb=${this.accessibilityConfig.displayOptions.showRgb}
-          .showHsv=${this.accessibilityConfig.displayOptions.showHsv}
-          .showLab=${this.accessibilityConfig.displayOptions.showLab}
-          .showPrice=${this.accessibilityConfig.displayOptions.showPrice}
-          .showDeltaE=${this.accessibilityConfig.displayOptions.showDeltaE}
-          .showAcquisition=${this.accessibilityConfig.displayOptions.showAcquisition}
+          .showHex=${this.globalDisplayOptions.showHex}
+          .showRgb=${this.globalDisplayOptions.showRgb}
+          .showHsv=${this.globalDisplayOptions.showHsv}
+          .showLab=${this.globalDisplayOptions.showLab}
+          .showPrice=${this.globalDisplayOptions.showPrice}
+          .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+          .showAcquisition=${this.globalDisplayOptions.showAcquisition}
           .visibleGroups=${['colorFormats']}
           @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
             this.handleDisplayOptionsChange('accessibility', e)}
@@ -765,13 +752,13 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <v4-display-options
-          .showHex=${this.comparisonConfig.displayOptions.showHex}
-          .showRgb=${this.comparisonConfig.displayOptions.showRgb}
-          .showHsv=${this.comparisonConfig.displayOptions.showHsv}
-          .showLab=${this.comparisonConfig.displayOptions.showLab}
-          .showPrice=${this.comparisonConfig.displayOptions.showPrice}
-          .showDeltaE=${this.comparisonConfig.displayOptions.showDeltaE}
-          .showAcquisition=${this.comparisonConfig.displayOptions.showAcquisition}
+          .showHex=${this.globalDisplayOptions.showHex}
+          .showRgb=${this.globalDisplayOptions.showRgb}
+          .showHsv=${this.globalDisplayOptions.showHsv}
+          .showLab=${this.globalDisplayOptions.showLab}
+          .showPrice=${this.globalDisplayOptions.showPrice}
+          .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+          .showAcquisition=${this.globalDisplayOptions.showAcquisition}
           .visibleGroups=${['colorFormats']}
           @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
             this.handleDisplayOptionsChange('comparison', e)}
@@ -816,13 +803,13 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <v4-display-options
-          .showHex=${this.gradientConfig.displayOptions.showHex}
-          .showRgb=${this.gradientConfig.displayOptions.showRgb}
-          .showHsv=${this.gradientConfig.displayOptions.showHsv}
-          .showLab=${this.gradientConfig.displayOptions.showLab}
-          .showPrice=${this.gradientConfig.displayOptions.showPrice}
-          .showDeltaE=${this.gradientConfig.displayOptions.showDeltaE}
-          .showAcquisition=${this.gradientConfig.displayOptions.showAcquisition}
+          .showHex=${this.globalDisplayOptions.showHex}
+          .showRgb=${this.globalDisplayOptions.showRgb}
+          .showHsv=${this.globalDisplayOptions.showHsv}
+          .showLab=${this.globalDisplayOptions.showLab}
+          .showPrice=${this.globalDisplayOptions.showPrice}
+          .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+          .showAcquisition=${this.globalDisplayOptions.showAcquisition}
           .visibleGroups=${['colorFormats', 'resultMetadata']}
           @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
             this.handleDisplayOptionsChange('gradient', e)}
@@ -852,13 +839,13 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <v4-display-options
-          .showHex=${this.mixerConfig.displayOptions.showHex}
-          .showRgb=${this.mixerConfig.displayOptions.showRgb}
-          .showHsv=${this.mixerConfig.displayOptions.showHsv}
-          .showLab=${this.mixerConfig.displayOptions.showLab}
-          .showPrice=${this.mixerConfig.displayOptions.showPrice}
-          .showDeltaE=${this.mixerConfig.displayOptions.showDeltaE}
-          .showAcquisition=${this.mixerConfig.displayOptions.showAcquisition}
+          .showHex=${this.globalDisplayOptions.showHex}
+          .showRgb=${this.globalDisplayOptions.showRgb}
+          .showHsv=${this.globalDisplayOptions.showHsv}
+          .showLab=${this.globalDisplayOptions.showLab}
+          .showPrice=${this.globalDisplayOptions.showPrice}
+          .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+          .showAcquisition=${this.globalDisplayOptions.showAcquisition}
           .visibleGroups=${['colorFormats', 'resultMetadata']}
           @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
             this.handleDisplayOptionsChange('mixer', e)}
@@ -958,6 +945,18 @@ export class ConfigSidebar extends BaseLitComponent {
             ></v4-range-slider>
           </div>
         </div>
+
+        <v4-display-options
+          .showHex=${this.globalDisplayOptions.showHex}
+          .showRgb=${this.globalDisplayOptions.showRgb}
+          .showHsv=${this.globalDisplayOptions.showHsv}
+          .showLab=${this.globalDisplayOptions.showLab}
+          .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+          .showAcquisition=${this.globalDisplayOptions.showAcquisition}
+          .visibleGroups=${['colorFormats']}
+          @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
+            this.handleDisplayOptionsChange('budget', e)}
+        ></v4-display-options>
       </div>
     `;
   }
@@ -1074,13 +1073,13 @@ export class ConfigSidebar extends BaseLitComponent {
         <div class="config-group">
           <div class="config-label">Display Options</div>
           <v4-display-options
-            .showHex=${this.swatchConfig.displayOptions.showHex}
-            .showRgb=${this.swatchConfig.displayOptions.showRgb}
-            .showHsv=${this.swatchConfig.displayOptions.showHsv}
-            .showLab=${this.swatchConfig.displayOptions.showLab}
-            .showPrice=${this.swatchConfig.displayOptions.showPrice}
-            .showDeltaE=${this.swatchConfig.displayOptions.showDeltaE}
-            .showAcquisition=${this.swatchConfig.displayOptions.showAcquisition}
+            .showHex=${this.globalDisplayOptions.showHex}
+            .showRgb=${this.globalDisplayOptions.showRgb}
+            .showHsv=${this.globalDisplayOptions.showHsv}
+            .showLab=${this.globalDisplayOptions.showLab}
+            .showPrice=${this.globalDisplayOptions.showPrice}
+            .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+            .showAcquisition=${this.globalDisplayOptions.showAcquisition}
             .visibleGroups=${['colorFormats', 'resultMetadata']}
             @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
               this.handleDisplayOptionsChange('swatch', e)}
