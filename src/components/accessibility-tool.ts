@@ -975,12 +975,14 @@ export class AccessibilityTool extends BaseComponent {
     if (!this.visionSimulationsContainer) return;
     clearContainer(this.visionSimulationsContainer);
 
-    // Update container to use horizontal flex layout for compact cards
+    // Update container to use horizontal flex layout for compact cards, centered
     this.visionSimulationsContainer.style.display = 'flex';
     this.visionSimulationsContainer.style.flexWrap = 'wrap';
     this.visionSimulationsContainer.style.gap = '12px';
+    this.visionSimulationsContainer.style.justifyContent = 'center';
 
-    const enabledTypes = VISION_TYPES.filter((t) => this.enabledVisionTypes.has(t.id));
+    // Filter out 'normal' vision type - Selected Dyes section already shows original colors
+    const enabledTypes = VISION_TYPES.filter((t) => this.enabledVisionTypes.has(t.id) && t.id !== 'normal');
 
     for (const type of enabledTypes) {
       // Vision card container - compact size
@@ -1045,7 +1047,7 @@ export class AccessibilityTool extends BaseComponent {
 
       card.appendChild(header);
 
-      // Color swatches row - compact horizontal layout
+      // Color swatches row - compact horizontal layout, centered
       const swatchContainer = this.createElement('div', {
         className: 'vision-swatches',
         attributes: {
@@ -1054,6 +1056,7 @@ export class AccessibilityTool extends BaseComponent {
             gap: 8px;
             flex-wrap: nowrap;
             overflow-x: auto;
+            justify-content: center;
           `.replace(/\s+/g, ' ').trim(),
         },
       });

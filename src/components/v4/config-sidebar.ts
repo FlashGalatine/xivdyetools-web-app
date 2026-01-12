@@ -650,14 +650,6 @@ export class ConfigSidebar extends BaseLitComponent {
           <div class="config-label">Vision Types</div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Normal Vision"
-              .checked=${this.accessibilityConfig.normalVision}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-        this.handleConfigChange('accessibility', 'normalVision', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-          <div class="config-row">
-            <v4-toggle-switch
               label="Deuteranopia"
               .checked=${this.accessibilityConfig.deuteranopia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
