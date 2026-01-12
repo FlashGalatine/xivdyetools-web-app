@@ -1039,16 +1039,17 @@ export class GradientTool extends BaseComponent {
       },
     });
 
-    // Results header
-    this.resultsHeader = this.createElement('div', {
-      className: 'instruction-label',
-      textContent: `${LanguageService.t('gradient.gradientResults') || 'Gradient Results'} (${this.stepCount} Steps)`,
-      attributes: {
-        style:
-          'font-size: 11px; text-transform: uppercase; color: var(--theme-text-muted); margin-bottom: 10px;',
-      },
+    // Results header (using consistent section-header/section-title pattern from other tools)
+    const resultsHeader = this.createElement('div', {
+      className: 'section-header',
+      attributes: { style: 'width: 100%;' },
     });
-    resultsSection.appendChild(this.resultsHeader);
+    this.resultsHeader = this.createElement('span', {
+      className: 'section-title',
+      textContent: `${LanguageService.t('gradient.gradientResults') || 'Gradient Results'} (${this.stepCount} Steps)`,
+    });
+    resultsHeader.appendChild(this.resultsHeader);
+    resultsSection.appendChild(resultsHeader);
 
     // Matches container (for harmony-cards)
     this.matchesContainer = this.createElement('div', {
