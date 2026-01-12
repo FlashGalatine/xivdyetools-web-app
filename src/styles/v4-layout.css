@@ -83,7 +83,7 @@ body.theme-high-contrast-dark v4-config-sidebar {
  */
 .v4-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--v4-result-card-width, 320px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--v4-result-card-width, 280px), 1fr));
   gap: 16px;
   padding: 0;
 }

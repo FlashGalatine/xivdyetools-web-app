@@ -1,7 +1,7 @@
 /**
  * XIV Dye Tools v4.0 - Result Card Component
  *
- * Unified 320px result card for displaying dye match results.
+ * Unified 280px result card for displaying dye match results.
  * Used across Harmony, Gradient, Budget, Swatch, Extractor, and other tools.
  *
  * V4 Design Updates:
@@ -61,7 +61,7 @@ export type ContextAction =
  * V4 Result Card - Unified dye result display
  *
  * Features:
- * - Fixed 320px width for consistent grid layouts
+ * - Fixed 280px width for consistent grid layouts
  * - Split color preview (Original vs Match) - 100px tall
  * - Two-column details grid (Technical + Acquisition)
  * - Delta-E and Hue Deviance color coding for match quality
@@ -176,7 +176,7 @@ export class ResultCard extends BaseLitComponent {
     css`
       :host {
         display: block;
-        width: var(--v4-result-card-width, 320px);
+        width: var(--v4-result-card-width, 280px);
       }
 
       .result-card {
@@ -615,7 +615,7 @@ export class ResultCard extends BaseLitComponent {
           <div class="detail-column">
             <div class="column-header">Technical</div>
             ${this.showDeltaE
-              ? html`
+        ? html`
                   <div class="detail-row">
                     <span class="detail-label">ΔE</span>
                     <span class="detail-value ${this.getDeltaEClass(deltaE)}">
@@ -623,33 +623,33 @@ export class ResultCard extends BaseLitComponent {
                     </span>
                   </div>
                 `
-              : nothing}
+        : nothing}
             ${this.showDeltaE && hueDeviance !== undefined
-              ? html`
+        ? html`
                   <div class="detail-row">
                     <span class="detail-label">Hue°</span>
                     <span class="detail-value">${hueDeviance.toFixed(1)}°</span>
                   </div>
                 `
-              : nothing}
+        : nothing}
             ${this.showHex
-              ? html`
+        ? html`
                   <div class="detail-row">
                     <span class="detail-label">HEX</span>
                     <span class="detail-value">${matchedColor.toUpperCase()}</span>
                   </div>
                 `
-              : nothing}
+        : nothing}
             ${this.showRgb
-              ? html`
+        ? html`
                   <div class="detail-row">
                     <span class="detail-label">RGB</span>
                     <span class="detail-value"> ${dye.rgb.r},${dye.rgb.g},${dye.rgb.b} </span>
                   </div>
                 `
-              : nothing}
+        : nothing}
             ${this.showHsv && hsv
-              ? html`
+        ? html`
                   <div class="detail-row">
                     <span class="detail-label">HSV</span>
                     <span class="detail-value">
@@ -657,24 +657,24 @@ export class ResultCard extends BaseLitComponent {
                     </span>
                   </div>
                 `
-              : nothing}
+        : nothing}
             ${this.showLab
-              ? html`
+        ? html`
                   <div class="detail-row">
                     <span class="detail-label">LAB</span>
                     <span class="detail-value">${this.formatLabValues()}</span>
                   </div>
                 `
-              : nothing}
+        : nothing}
           </div>
 
           <!-- Acquisition Column - only show if acquisition or price enabled -->
           ${this.showAcquisition || this.showPrice
-            ? html`
+        ? html`
                 <div class="detail-column">
                   <div class="column-header">Acquisition</div>
                   ${this.showAcquisition
-                    ? html`
+            ? html`
                         <div class="detail-row">
                           <span class="detail-label">Source</span>
                           <span class="detail-value">${dye.acquisition ?? 'Unknown'}</span>
@@ -684,9 +684,9 @@ export class ResultCard extends BaseLitComponent {
                           <span class="detail-value">${this.formatVendorCost(vendorCost)}</span>
                         </div>
                       `
-                    : nothing}
+            : nothing}
                   ${this.showPrice
-                    ? html`
+            ? html`
                         <div class="detail-row">
                           <span class="detail-label">Market</span>
                           <span class="detail-value">${marketServer ?? 'N/A'}</span>
@@ -695,15 +695,15 @@ export class ResultCard extends BaseLitComponent {
                           <span class="detail-value large">${this.formatPrice(price)}</span>
                         </div>
                       `
-                    : nothing}
+            : nothing}
                 </div>
               `
-            : nothing}
+        : nothing}
         </div>
 
         <!-- Action Bar at Bottom -->
         ${this.showActions
-          ? html`
+        ? html`
               <div class="card-actions">
                 <div class="action-row">
                   <button class="primary-action-btn" type="button" @click=${this.handleSelectClick}>
@@ -773,7 +773,7 @@ export class ResultCard extends BaseLitComponent {
                 </div>
               </div>
             `
-          : nothing}
+        : nothing}
       </article>
     `;
   }

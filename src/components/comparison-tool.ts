@@ -144,9 +144,14 @@ export class ComparisonTool extends BaseComponent {
   private chartsSection: HTMLElement | null = null;
   private matrixSection: HTMLElement | null = null;
 
+  // Market Board UI references
+  private serverDescriptionElement: HTMLElement | null = null;
+  private serverSelectElement: HTMLSelectElement | null = null;
+
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
   private configUnsubscribe: (() => void) | null = null;
+  private marketBoardEventCleanup: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: ComparisonToolOptions) {
     super(container);
@@ -200,10 +205,80 @@ export class ComparisonTool extends BaseComponent {
       this.setConfig(config);
     });
 
+    // Subscribe to MarketBoardService events for price updates
+    this.subscribeToMarketBoardEvents();
+
     // Load persisted dyes after DyeSelector is initialized
     this.loadPersistedDyes();
 
     logger.info('[ComparisonTool] Mounted');
+  }
+
+  /**
+   * Subscribe to MarketBoardService events for reactive price updates
+   */
+  private subscribeToMarketBoardEvents(): void {
+    const marketBoardService = MarketBoardService.getInstance();
+
+    // Handler for server changes
+    const handleServerChanged = () => {
+      // Update the server description text
+      if (this.serverDescriptionElement) {
+        this.serverDescriptionElement.textContent = `Prices fetched from Universalis for ${marketBoardService.getSelectedServer()}`;
+      }
+      // Update dropdown selection if it exists
+      if (this.serverSelectElement) {
+        this.serverSelectElement.value = marketBoardService.getSelectedServer();
+      }
+      // Re-fetch prices if Market Board is enabled and we have dyes
+      if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+        this.fetchAndUpdatePrices();
+      }
+    };
+
+    // Handler for price updates
+    const handlePricesUpdated = () => {
+      // Re-render cards to show updated prices
+      if (this.selectedDyes.length > 0) {
+        this.renderSelectedDyesCards();
+      }
+    };
+
+    // Handler for settings changes (showPrices toggle from elsewhere)
+    const handleSettingsChanged = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { showPrices } = customEvent.detail;
+      if (showPrices !== this.comparisonOptions.showMarketPrices) {
+        this.comparisonOptions.showMarketPrices = showPrices;
+        StorageService.setItem(STORAGE_KEYS.showMarketPrices, showPrices);
+        this.renderSelectedDyesCards();
+      }
+    };
+
+    // Add event listeners
+    marketBoardService.addEventListener('server-changed', handleServerChanged);
+    marketBoardService.addEventListener('prices-updated', handlePricesUpdated);
+    marketBoardService.addEventListener('settings-changed', handleSettingsChanged);
+
+    // Store cleanup function
+    this.marketBoardEventCleanup = () => {
+      marketBoardService.removeEventListener('server-changed', handleServerChanged);
+      marketBoardService.removeEventListener('prices-updated', handlePricesUpdated);
+      marketBoardService.removeEventListener('settings-changed', handleSettingsChanged);
+    };
+  }
+
+  /**
+   * Fetch prices for selected dyes and update display
+   */
+  private async fetchAndUpdatePrices(): Promise<void> {
+    if (!this.comparisonOptions.showMarketPrices || this.selectedDyes.length === 0) {
+      return;
+    }
+
+    const marketBoardService = MarketBoardService.getInstance();
+    await marketBoardService.fetchPricesForDyes(this.selectedDyes);
+    // The 'prices-updated' event will trigger renderSelectedDyesCards()
   }
 
   /**
@@ -224,6 +299,10 @@ export class ComparisonTool extends BaseComponent {
         this.updateSelectedDyesDisplay();
         this.updateResults();
         this.updateDrawerSelectedDyesDisplay();
+        // Fetch prices for loaded dyes if Market Board is enabled
+        if (this.comparisonOptions.showMarketPrices) {
+          this.fetchAndUpdatePrices();
+        }
         logger.info(`[ComparisonTool] Loaded ${dyes.length} persisted dyes`);
       }
     }
@@ -240,6 +319,7 @@ export class ComparisonTool extends BaseComponent {
   destroy(): void {
     this.languageUnsubscribe?.();
     this.configUnsubscribe?.();
+    this.marketBoardEventCleanup?.();
     this.dyeSelector?.destroy();
     this.dyeSelectorPanel?.destroy();
     this.optionsPanel?.destroy();
@@ -248,6 +328,10 @@ export class ComparisonTool extends BaseComponent {
     this.drawerDyeSelector?.destroy();
     this.drawerDyeSelectorPanel?.destroy();
     this.drawerOptionsPanel?.destroy();
+
+    // Clear Market Board UI references
+    this.serverDescriptionElement = null;
+    this.serverSelectElement = null;
 
     this.selectedDyes = [];
     this.dyesWithHSV = [];
@@ -446,6 +530,10 @@ export class ComparisonTool extends BaseComponent {
         this.updateResults();
         this.updateDrawerSelectedDyesDisplay();
         this.saveSelectedDyes();
+        // Fetch prices for newly selected dyes if Market Board is enabled
+        if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+          this.fetchAndUpdatePrices();
+        }
       }
     });
 
@@ -591,12 +679,23 @@ export class ComparisonTool extends BaseComponent {
       },
     }) as HTMLSelectElement;
 
+    // Store reference for external updates
+    this.serverSelectElement = select;
+
     // Populate with data centers and worlds
     this.populateServerDropdown(select);
 
     this.on(select, 'change', () => {
       const marketBoardService = MarketBoardService.getInstance();
       marketBoardService.setServer(select.value);
+      // Update description text immediately
+      if (this.serverDescriptionElement) {
+        this.serverDescriptionElement.textContent = `Prices fetched from Universalis for ${select.value}`;
+      }
+      // Fetch prices for the new server if Market Board is enabled
+      if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+        this.fetchAndUpdatePrices();
+      }
       this.updateResults();
     });
 
@@ -609,6 +708,8 @@ export class ComparisonTool extends BaseComponent {
     });
     const marketBoardService = MarketBoardService.getInstance();
     description.textContent = `Prices fetched from Universalis for ${marketBoardService.getSelectedServer()}`;
+    // Store reference for external updates
+    this.serverDescriptionElement = description;
     selectContainer.appendChild(description);
 
     marketBoardSection.content.appendChild(selectContainer);
@@ -743,6 +844,16 @@ export class ComparisonTool extends BaseComponent {
         ? 'var(--theme-primary)'
         : 'rgba(255, 255, 255, 0.2)';
       knob.style.left = checkbox.checked ? '23px' : '3px';
+
+      // Special handling for Market Board toggle
+      if (key === 'showMarketPrices') {
+        const marketBoardService = MarketBoardService.getInstance();
+        marketBoardService.setShowPrices(checkbox.checked);
+        // Fetch prices if enabling and we have dyes selected
+        if (checkbox.checked && this.selectedDyes.length > 0) {
+          this.fetchAndUpdatePrices();
+        }
+      }
 
       this.renderSelectedDyesCards();
       this.updateResults();
@@ -1112,16 +1223,17 @@ export class ComparisonTool extends BaseComponent {
         vendorCost: dye.cost,
       };
 
-      // Try to get market price if available
-      const marketBoardService = MarketBoardService.getInstance();
-      if (marketBoardService.getShowPrices()) {
-        const server = marketBoardService.getSelectedServer();
-        if (server) {
-          cardData.marketServer = server;
-          const priceData = marketBoardService.getPriceForDye(dye.itemID);
-          if (priceData) {
-            cardData.price = priceData.currentMinPrice;
-          }
+      // Try to get market price if Market Board is enabled
+      if (this.comparisonOptions.showMarketPrices) {
+        const marketBoardService = MarketBoardService.getInstance();
+        const priceData = marketBoardService.getPriceForDye(dye.itemID);
+        if (priceData) {
+          cardData.price = priceData.currentMinPrice;
+          // Use the actual world name from price data, not just the selected server/DC
+          cardData.marketServer = marketBoardService.getWorldNameForPrice(priceData);
+        } else {
+          // No price data yet, show the selected server as placeholder
+          cardData.marketServer = marketBoardService.getSelectedServer();
         }
       }
 
@@ -1480,14 +1592,13 @@ export class ComparisonTool extends BaseComponent {
    * Create Hue-Saturation Plot - V4 plot-node design with hover tooltips
    */
   private createHueSatPlot(): HTMLElement {
-    // V4 Container - narrower fixed dimensions to reduce extra space
+    // V4 Container - responsive width with aspect ratio maintained
     const container = this.createElement('div', {
       attributes: {
         style: `
           position: relative;
           width: 100%;
-          max-width: 304px;
-          height: 280px;
+          aspect-ratio: 380 / 280;
           margin: 0 auto;
         `
           .replace(/\s+/g, ' ')
@@ -1631,15 +1742,14 @@ export class ComparisonTool extends BaseComponent {
    * Create Brightness Distribution bar chart - V4 bar-chart design
    */
   private createBrightnessChart(): HTMLElement {
-    // V4 Container with fixed height - increased to accommodate bottom labels
+    // V4 Container - responsive width, matching aspect ratio to Hue-Sat plot
     const container = this.createElement('div', {
       attributes: {
         style: `
           display: flex;
           flex-direction: column;
-          height: 320px;
           width: 100%;
-          max-width: 304px;
+          aspect-ratio: 380 / 280;
           margin: 0 auto;
         `
           .replace(/\s+/g, ' ')
@@ -1706,9 +1816,9 @@ export class ComparisonTool extends BaseComponent {
             align-items: center;
             justify-content: flex-end;
             flex: 1;
-            max-width: 80px;
+            min-width: 60px;
             position: relative;
-            height: 208px;
+            height: 100%;
           `
             .replace(/\s+/g, ' ')
             .trim(),
@@ -1738,7 +1848,8 @@ export class ComparisonTool extends BaseComponent {
       const bar = this.createElement('div', {
         attributes: {
           style: `
-            width: 50px;
+            width: 70%;
+            max-width: 80px;
             height: ${d.v}%;
             border-radius: 6px 6px 0 0;
             transition: filter 0.2s, box-shadow 0.2s;
@@ -1776,12 +1887,12 @@ export class ComparisonTool extends BaseComponent {
             bottom: -24px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 9px;
+            font-size: 10px;
             color: var(--theme-text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             text-align: center;
-            max-width: 70px;
+            max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -2107,6 +2218,10 @@ export class ComparisonTool extends BaseComponent {
         this.updateDrawerSelectedDyesDisplay();
         this.updateResults();
         this.saveSelectedDyes();
+        // Fetch prices for newly selected dyes if Market Board is enabled
+        if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+          this.fetchAndUpdatePrices();
+        }
       }
     });
 

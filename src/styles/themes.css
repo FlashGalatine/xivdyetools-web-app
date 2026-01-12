@@ -29,7 +29,7 @@
   --v4-tool-bar-height: 64px;
   --v4-sidebar-width: 320px;
   --v4-content-padding: 24px;
-  --v4-result-card-width: 320px;
+  --v4-result-card-width: 280px;
 
   /* ===== V4 GLASSMORPHISM (defaults - updated by ThemeService) ===== */
   --v4-glass-bg: rgba(30, 30, 30, 0.7);
@@ -38,7 +38,8 @@
   --v4-glass-opacity: 0.8;
 
   /* ===== V4 ACCENT & SHADOWS (defaults - updated by ThemeService) ===== */
-  --v4-accent-rgb: 79, 70, 229; /* Default indigo RGB triplet */
+  --v4-accent-rgb: 79, 70, 229;
+  /* Default indigo RGB triplet */
   --v4-shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.1);
   --v4-shadow-glow: 0 0 20px rgba(var(--v4-accent-rgb), 0.3);
   --v4-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -397,6 +398,7 @@ html.theme-high-contrast-dark .border-gray-200 {
    Respects user's system-level high contrast settings
    ===================================================== */
 @media (forced-colors: active) {
+
   /* Let the system control colors in forced-colors mode */
   :root {
     --theme-primary: CanvasText;
