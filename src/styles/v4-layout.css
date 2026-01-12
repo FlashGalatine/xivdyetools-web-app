@@ -200,6 +200,7 @@ body.theme-high-contrast-dark v4-config-sidebar {
    ========================================================================== */
 
 @media print {
+
   /* Hide non-essential elements */
   v4-app-header,
   v4-tool-banner,
@@ -246,4 +247,13 @@ body.theme-high-contrast-dark v4-config-sidebar {
   .v4-card-grid {
     grid-template-columns: repeat(auto-fill, minmax(320px, 340px));
   }
+}
+
+/* ==========================================================================
+   Tool-Specific Overrides
+   ========================================================================== */
+
+/* Harmony Explorer: Fit 4 cards on 1080p screens (290px matched to mock-up) */
+.harmony-results-container {
+  --v4-result-card-width: 290px;
 }

@@ -864,13 +864,18 @@ export class HarmonyTool extends BaseComponent {
 
     // Results Header
     const resultsHeader = this.createElement('div', {
-      className: 'flex items-center justify-between mb-4',
+      className: 'flex items-center justify-between',
+      attributes: {
+        style: 'width: 100%; padding: 0 16px 16px 16px; border-bottom: 1px solid var(--theme-border); margin-bottom: 16px;',
+      },
     });
 
-    const resultsTitle = this.createElement('h3', {
+    const resultsTitle = this.createElement('span', {
       className: 'text-sm font-semibold uppercase tracking-wider',
       textContent: LanguageService.t('harmony.results'),
-      attributes: { style: 'color: var(--theme-text-muted);' },
+      attributes: {
+        style: 'font-size: 14px; text-transform: uppercase; color: var(--theme-text-muted); font-weight: 600; letter-spacing: 1px;',
+      },
     });
 
     resultsHeader.appendChild(resultsTitle);
@@ -880,7 +885,7 @@ export class HarmonyTool extends BaseComponent {
     this.harmonyGridContainer = this.createElement('div', {
       className: 'harmony-results-container',
       attributes: {
-        style: 'display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;',
+        style: 'display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; --v4-result-card-width: 290px;',
       },
     });
     right.appendChild(this.harmonyGridContainer);
