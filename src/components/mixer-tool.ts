@@ -917,7 +917,7 @@ export class MixerTool extends BaseComponent {
     // Results header (using consistent section-header/section-title pattern from other tools)
     const resultsHeader = this.createElement('div', {
       className: 'section-header',
-      attributes: { style: 'width: 100%; justify-content: center;' },
+      attributes: { style: 'width: 100%;' },
     });
     const resultsTitle = this.createElement('span', {
       className: 'section-title',
