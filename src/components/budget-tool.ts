@@ -76,6 +76,7 @@ const STORAGE_KEYS = {
   showHex: 'v3_budget_show_hex',
   showRgb: 'v3_budget_show_rgb',
   showHsv: 'v3_budget_show_hsv',
+  showLab: 'v3_budget_show_lab',
   showPrice: 'v3_budget_show_price',
   showDeltaE: 'v3_budget_show_delta_e',
   showAcquisition: 'v3_budget_show_acquisition',
@@ -132,6 +133,7 @@ export class BudgetTool extends BaseComponent {
   private showHex: boolean = true;
   private showRgb: boolean = false;
   private showHsv: boolean = false;
+  private showLab: boolean = false;
   private showPrice: boolean = true;
   private showDeltaE: boolean = true;
   private showAcquisition: boolean = true;
@@ -205,6 +207,7 @@ export class BudgetTool extends BaseComponent {
     this.showHex = StorageService.getItem<boolean>(STORAGE_KEYS.showHex) ?? true;
     this.showRgb = StorageService.getItem<boolean>(STORAGE_KEYS.showRgb) ?? false;
     this.showHsv = StorageService.getItem<boolean>(STORAGE_KEYS.showHsv) ?? false;
+    this.showLab = StorageService.getItem<boolean>(STORAGE_KEYS.showLab) ?? false;
     this.showPrice = StorageService.getItem<boolean>(STORAGE_KEYS.showPrice) ?? true;
     this.showDeltaE = StorageService.getItem<boolean>(STORAGE_KEYS.showDeltaE) ?? true;
     this.showAcquisition = StorageService.getItem<boolean>(STORAGE_KEYS.showAcquisition) ?? true;
@@ -245,6 +248,9 @@ export class BudgetTool extends BaseComponent {
     this.configUnsubscribe = ConfigController.getInstance().subscribe('budget', (config) => {
       this.setConfig(config);
     });
+
+    // Enable market board by default for Budget Tool (prices are core to this tool)
+    this.marketBoardService.setShowPrices(true);
 
     logger.info('[BudgetTool] Mounted');
 
@@ -379,6 +385,12 @@ export class BudgetTool extends BaseComponent {
         StorageService.setItem(STORAGE_KEYS.showHsv, opts.showHsv);
         needsRerender = true;
         logger.info(`[BudgetTool] setConfig: displayOptions.showHsv -> ${opts.showHsv}`);
+      }
+      if (opts.showLab !== undefined && opts.showLab !== this.showLab) {
+        this.showLab = opts.showLab;
+        StorageService.setItem(STORAGE_KEYS.showLab, opts.showLab);
+        needsRerender = true;
+        logger.info(`[BudgetTool] setConfig: displayOptions.showLab -> ${opts.showLab}`);
       }
       if (opts.showPrice !== undefined && opts.showPrice !== this.showPrice) {
         this.showPrice = opts.showPrice;
@@ -608,6 +620,7 @@ export class BudgetTool extends BaseComponent {
       { key: 'showHex' as const, label: LanguageService.t('common.hexCodes') || 'Hex Codes' },
       { key: 'showRgb' as const, label: LanguageService.t('common.rgbValues') || 'RGB Values' },
       { key: 'showHsv' as const, label: LanguageService.t('common.hsvValues') || 'HSV Values' },
+      { key: 'showLab' as const, label: LanguageService.t('common.labValues') || 'LAB Values' },
     ];
 
     for (const option of options) {
@@ -1201,8 +1214,8 @@ export class BudgetTool extends BaseComponent {
     });
 
     empty.innerHTML = `
-      <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_BUDGET}</span>
-      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('budget.selectTargetToStart') || 'Select a target dye to find affordable alternatives'}</p>
+      <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_BUDGET}</span>
+      <p style="color: var(--theme-text); font-size: 1.125rem; text-align: center;">${LanguageService.t('budget.selectTargetToStart') || 'Select a target dye to find affordable alternatives'}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);
@@ -1213,7 +1226,8 @@ export class BudgetTool extends BaseComponent {
    */
   private showEmptyState(show: boolean): void {
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.style.display = show ? 'block' : 'none';
+      this.emptyStateContainer.style.display = show ? 'flex' : 'none';
+      this.emptyStateContainer.style.justifyContent = 'center';
     }
     if (this.targetOverviewContainer) {
       this.targetOverviewContainer.style.display = show ? 'none' : 'block';
@@ -1280,6 +1294,7 @@ export class BudgetTool extends BaseComponent {
     card.showHex = this.showHex;
     card.showRgb = this.showRgb;
     card.showHsv = this.showHsv;
+    card.showLab = this.showLab;
     card.showPrice = this.showPrice;
     card.showAcquisition = this.showAcquisition;
 
@@ -1422,6 +1437,7 @@ export class BudgetTool extends BaseComponent {
       card.showHex = this.showHex;
       card.showRgb = this.showRgb;
       card.showHsv = this.showHsv;
+      card.showLab = this.showLab;
       card.showDeltaE = this.showDeltaE;
       card.showPrice = this.showPrice;
       card.showAcquisition = this.showAcquisition;
@@ -2260,6 +2276,31 @@ export class BudgetTool extends BaseComponent {
     const b = parseInt(hex.slice(5, 7), 16);
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     return luminance > 0.5;
+  }
+
+  /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.targetDye = null;
+    this.alternatives = [];
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.targetDyeId);
+    logger.info('[BudgetTool] All dyes cleared');
+
+    // Update dye selector
+    this.dyeSelector?.setSelectedDyes([]);
+
+    // Clear results
+    if (this.alternativesListContainer) {
+      clearContainer(this.alternativesListContainer);
+    }
+
+    // Show empty state
+    this.showEmptyState(true);
+    this.updateDrawerContent();
   }
 
   /**

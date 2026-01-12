@@ -854,7 +854,7 @@ export class PresetTool extends BaseComponent {
       `;
     } else {
       empty.innerHTML = `
-        <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_PRESETS}</span>
+        <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_PRESETS}</span>
         <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('preset.noPresets') || 'No presets found'}</p>
         <p class="text-sm mt-2" style="color: var(--theme-text-muted);">${LanguageService.t('preset.tryDifferentFilters') || 'Try adjusting your filters'}</p>
       `;

@@ -312,6 +312,31 @@ export class AccessibilityTool extends BaseComponent {
   // ============================================================================
 
   /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.selectedDyes = [];
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.selectedDyes);
+    logger.info('[AccessibilityTool] All dyes cleared');
+
+    // Update dye selectors
+    this.dyeSelector?.setSelectedDyes([]);
+    this.drawerDyeSelector?.setSelectedDyes([]);
+
+    // Clear UI containers
+    if (this.selectedDyesContainer) {
+      clearContainer(this.selectedDyesContainer);
+    }
+
+    // Show empty state and hide other sections
+    this.showEmptyState(true);
+    this.updateDrawerContent();
+  }
+
+  /**
    * Select a dye from the Color Palette drawer
    * Adds to the selection if there's room (max 4 dyes)
    */
@@ -891,25 +916,175 @@ export class AccessibilityTool extends BaseComponent {
   }
 
   /**
-   * Render empty state
+   * Render empty state with 4 placeholder "Add Dye" cards (matching Compare Tool pattern)
    */
   private renderEmptyState(): void {
     if (!this.emptyStateContainer) return;
     clearContainer(this.emptyStateContainer);
 
-    const empty = this.createElement('div', {
-      className: 'flex flex-col items-center justify-center text-center',
+    const container = this.createElement('div', {
       attributes: {
-        style: 'min-height: 400px; padding: 3rem 2rem;',
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 2rem;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
-    empty.innerHTML = `
-      <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_ACCESSIBILITY}</span>
-      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('accessibility.selectDyesToSeeAnalysis')}</p>
-    `;
+    // Placeholder slots section
+    const slotsContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          gap: 16px;
+          flex-wrap: wrap;
+          padding: 20px;
+          justify-content: center;
+          margin-bottom: 2rem;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
 
-    this.emptyStateContainer.appendChild(empty);
+    // Create 4 placeholder slots
+    for (let i = 0; i < 4; i++) {
+      const slot = this.createElement('div', {
+        attributes: {
+          style: `
+            width: 200px;
+            height: 280px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // Hover effect
+      this.on(slot, 'mouseenter', () => {
+        slot.style.borderColor = 'rgba(255, 255, 255, 0.35)';
+        slot.style.background = 'rgba(255, 255, 255, 0.05)';
+      });
+      this.on(slot, 'mouseleave', () => {
+        slot.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        slot.style.background = 'rgba(0, 0, 0, 0.1)';
+      });
+
+      // Plus icon in a dashed circle
+      const iconContainer = this.createElement('div', {
+        attributes: {
+          style: `
+            width: 48px;
+            height: 48px;
+            border: 2px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      iconContainer.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="var(--theme-text-muted)" style="width: 24px; height: 24px; opacity: 0.4;">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+      `;
+
+      // "Add Dye" text
+      const text = this.createElement('span', {
+        textContent: LanguageService.t('accessibility.addDye') || 'Add Dye',
+        attributes: {
+          style: `
+            font-size: 0.85rem;
+            color: var(--theme-text-muted);
+            opacity: 0.6;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      slot.appendChild(iconContainer);
+      slot.appendChild(text);
+      slotsContainer.appendChild(slot);
+    }
+
+    container.appendChild(slotsContainer);
+
+    // Empty state message
+    const messageContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 40px;
+          text-align: center;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 12px;
+          border: 1px dashed rgba(255, 255, 255, 0.15);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    // Tool icon
+    const iconEl = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 150px;
+          height: 150px;
+          margin-bottom: 20px;
+          opacity: 0.4;
+          color: var(--theme-text-muted);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+    iconEl.innerHTML = ICON_TOOL_ACCESSIBILITY;
+
+    // Message text
+    const message = this.createElement('p', {
+      textContent:
+        LanguageService.t('accessibility.selectDyesToSeeAnalysis') ||
+        'Select dyes to see accessibility analysis',
+      attributes: {
+        style: `
+          font-size: 1.1rem;
+          color: var(--theme-text-muted);
+          max-width: 400px;
+          line-height: 1.5;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    messageContainer.appendChild(iconEl);
+    messageContainer.appendChild(message);
+    container.appendChild(messageContainer);
+
+    this.emptyStateContainer.appendChild(container);
   }
 
   /**

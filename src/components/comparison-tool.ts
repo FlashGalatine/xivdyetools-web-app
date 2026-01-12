@@ -950,7 +950,11 @@ export class ComparisonTool extends BaseComponent {
     contentWrapper.appendChild(this.emptyStateContainer);
 
     // Selected Dyes Cards Section (V4 result-cards in a horizontal row, centered)
-    this.selectedDyesSection = this.createElement('div', { className: 'mb-6 hidden' });
+    // Hidden by default via inline style - shown when dyes are selected
+    this.selectedDyesSection = this.createElement('div', {
+      className: 'mb-6',
+      attributes: { style: 'display: none;' },
+    });
     this.selectedDyesSection.appendChild(
       this.createHeader(LanguageService.t('comparison.selectedDyes') || 'Selected Dyes')
     );
@@ -965,7 +969,11 @@ export class ComparisonTool extends BaseComponent {
     contentWrapper.appendChild(this.selectedDyesSection);
 
     // Statistics Summary
-    this.statsSection = this.createElement('div', { className: 'mb-8 hidden' });
+    // Hidden by default via inline style - shown when 2+ dyes are selected
+    this.statsSection = this.createElement('div', {
+      className: 'mb-8',
+      attributes: { style: 'display: none;' },
+    });
     this.statsSection.appendChild(
       this.createHeader(LanguageService.t('comparison.statistics') || 'Statistics')
     );
@@ -974,9 +982,10 @@ export class ComparisonTool extends BaseComponent {
     contentWrapper.appendChild(this.statsSection);
 
     // Charts Grid - side by side on medium+ screens (with margin-top for spacing after Statistics)
+    // Hidden by default via inline style - shown when 2+ dyes are selected
     this.chartsSection = this.createElement('div', {
-      className: 'mb-8 hidden',
-      attributes: { style: 'margin-top: 1.5rem;' },
+      className: 'mb-8',
+      attributes: { style: 'display: none; margin-top: 1.5rem;' },
     });
     this.chartsContainer = this.createElement('div', {
       className: 'grid gap-4 md:grid-cols-2',
@@ -989,7 +998,10 @@ export class ComparisonTool extends BaseComponent {
     contentWrapper.appendChild(this.chartsSection);
 
     // Distance Matrix
-    this.matrixSection = this.createElement('div', { className: 'hidden' });
+    // Hidden by default via inline style - shown when 2+ dyes are selected
+    this.matrixSection = this.createElement('div', {
+      attributes: { style: 'display: none;' },
+    });
     this.matrixSection.appendChild(
       this.createHeader(
         LanguageService.t('comparison.colorDistanceMatrix') || 'Color Distance Matrix'
@@ -1139,8 +1151,8 @@ export class ComparisonTool extends BaseComponent {
     const iconEl = this.createElement('div', {
       attributes: {
         style: `
-          width: 64px;
-          height: 64px;
+          width: 150px;
+          height: 150px;
           margin-bottom: 20px;
           opacity: 0.4;
           color: var(--theme-text-muted);
@@ -1300,7 +1312,7 @@ export class ComparisonTool extends BaseComponent {
 
     for (const section of analysisSections) {
       if (section) {
-        section.classList.toggle('hidden', !show);
+        section.style.display = show ? 'block' : 'none';
       }
     }
   }
@@ -2359,6 +2371,43 @@ export class ComparisonTool extends BaseComponent {
     }
 
     container.appendChild(optionsContainer);
+  }
+
+  /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.selectedDyes = [];
+    this.dyesWithHSV = [];
+    this.stats = null;
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.selectedDyes);
+    logger.info('[ComparisonTool] All dyes cleared');
+
+    // Update dye selectors
+    this.dyeSelector?.setSelectedDyes([]);
+    this.drawerDyeSelector?.setSelectedDyes([]);
+
+    // Clear UI containers
+    if (this.selectedDyesCardsContainer) {
+      clearContainer(this.selectedDyesCardsContainer);
+    }
+    if (this.statsContainer) {
+      clearContainer(this.statsContainer);
+    }
+    if (this.chartsContainer) {
+      clearContainer(this.chartsContainer);
+    }
+    if (this.matrixContainer) {
+      clearContainer(this.matrixContainer);
+    }
+
+    // Show empty state and hide analysis sections
+    this.showEmptyState(true);
+    this.showAnalysisSections(false);
+    this.updateDrawerSelectedDyesDisplay();
   }
 
   /**

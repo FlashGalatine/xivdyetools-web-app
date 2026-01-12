@@ -193,6 +193,7 @@ export class HarmonyTool extends BaseComponent {
   private colorWheelContainer: HTMLElement | null = null;
   private harmonyGridContainer: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
+  private resultsSection: HTMLElement | null = null;
 
   // Subscriptions
   private subs = new SubscriptionManager();
@@ -898,7 +899,7 @@ export class HarmonyTool extends BaseComponent {
     contentWrapper.appendChild(this.colorWheelContainer);
 
     // Results Section - wraps header + grid to keep them visually grouped
-    const resultsSection = this.createElement('div', {
+    this.resultsSection = this.createElement('div', {
       className: 'harmony-results-section',
     });
 
@@ -913,19 +914,19 @@ export class HarmonyTool extends BaseComponent {
     });
 
     resultsHeader.appendChild(resultsTitle);
-    resultsSection.appendChild(resultsHeader);
+    this.resultsSection.appendChild(resultsHeader);
 
     // Harmony Results - horizontal row layout with inline styles for reliability
     this.harmonyGridContainer = this.createElement('div', {
       className: 'harmony-results-container',
       attributes: {
         style:
-          'display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; --v4-result-card-width: 290px;',
+          'display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; --v4-result-card-width: 280px;',
       },
     });
-    resultsSection.appendChild(this.harmonyGridContainer);
+    this.resultsSection.appendChild(this.harmonyGridContainer);
 
-    contentWrapper.appendChild(resultsSection);
+    contentWrapper.appendChild(this.resultsSection);
 
     // Empty state (shown when no dye selected)
     this.emptyStateContainer = this.createElement('div', {
@@ -992,7 +993,7 @@ export class HarmonyTool extends BaseComponent {
 
     // Harmony tool icon (triangles/wheel)
     empty.innerHTML = `
-      <svg style="width: 80px; height: 80px; margin-bottom: 24px; opacity: 0.4;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg style="width: 150px; height: 150px; margin-bottom: 24px; opacity: 0.4;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10" opacity="0.3" />
         <circle cx="12" cy="3" r="2" fill="currentColor" stroke="none" opacity="0.5" />
         <circle cx="20.66" cy="16.5" r="2" fill="currentColor" stroke="none" opacity="0.5" />
@@ -1779,8 +1780,8 @@ export class HarmonyTool extends BaseComponent {
     if (this.emptyStateContainer) {
       this.emptyStateContainer.style.display = show ? 'flex' : 'none';
     }
-    if (this.harmonyGridContainer) {
-      this.harmonyGridContainer.style.display = show ? 'none' : 'flex';
+    if (this.resultsSection) {
+      this.resultsSection.style.display = show ? 'none' : 'block';
     }
   }
 
@@ -1984,6 +1985,32 @@ export class HarmonyTool extends BaseComponent {
         });
       }
     }
+  }
+
+  /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.selectedDye = null;
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.selectedDyeId);
+    logger.info('[HarmonyTool] All dyes cleared');
+
+    // Update dye selectors
+    this.dyeSelector?.setSelectedDyes([]);
+    this.drawerDyeSelector?.setSelectedDyes([]);
+
+    // Clear harmony results grid
+    if (this.harmonyGridContainer) {
+      clearContainer(this.harmonyGridContainer);
+    }
+
+    // Show empty state
+    this.showEmptyState(true);
+    this.renderColorWheel();
+    this.updateDrawerContent();
   }
 
   /**

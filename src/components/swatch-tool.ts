@@ -832,15 +832,15 @@ export class SwatchTool extends BaseComponent {
     const emptyIcon = this.createElement('div', {
       attributes: {
         style: `
-          width: 64px;
-          height: 64px;
+          width: 150px;
+          height: 150px;
           opacity: 0.3;
           margin-bottom: 16px;
           color: var(--theme-text-muted, #888888);
         `,
       },
     });
-    emptyIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="64" height="64">
+    emptyIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="150" height="150">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" opacity="0.3"/>
       <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.5"/>
     </svg>`;
@@ -1655,6 +1655,16 @@ export class SwatchTool extends BaseComponent {
     this.matchedDyes = [];
     this.updateSelectedColorDisplay();
     this.updateMatchResults();
+  }
+
+  /**
+   * Clear all selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   * Public wrapper for clearSelection() to match other tools' interface.
+   */
+  public clearDyes(): void {
+    this.clearSelection();
+    logger.info('[SwatchTool] All selections cleared');
   }
 
   // ============================================================================

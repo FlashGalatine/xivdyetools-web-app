@@ -867,7 +867,6 @@ export class GradientTool extends BaseComponent {
       `
       display: flex;
       flex-direction: column;
-      align-items: center;
       width: 100%;
       height: 100%;
       padding: 32px;
@@ -1048,9 +1047,10 @@ export class GradientTool extends BaseComponent {
     });
 
     // Results header (using consistent section-header/section-title pattern from other tools)
+    // Hidden by default - shown when dyes are selected via showEmptyState(false)
     const resultsHeader = this.createElement('div', {
       className: 'section-header',
-      attributes: { style: 'width: 100%;' },
+      attributes: { style: 'width: 100%; display: none;' },
     });
     this.resultsHeader = this.createElement('span', {
       className: 'section-title',
@@ -1071,14 +1071,13 @@ export class GradientTool extends BaseComponent {
           gap: 16px;
           overflow-y: auto;
           width: 100%;
-          max-width: 1400px;
-          align-self: center;
           padding: 20px 0;
+          --v4-result-card-width: 280px;
         `,
       },
     });
 
-    // Empty state message (inside results area)
+    // Empty state message (inside results area, positioned near the gradient nodes)
     this.emptyStateContainer = this.createElement('div', {
       className: 'empty-state-message',
       attributes: {
@@ -1086,17 +1085,17 @@ export class GradientTool extends BaseComponent {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
+          justify-content: flex-start;
           height: 100%;
           min-height: 200px;
           color: var(--theme-text-muted);
           text-align: center;
-          padding: 40px;
+          padding: 60px 40px 40px 40px;
         `,
       },
     });
     this.emptyStateContainer.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width: 64px; height: 64px; opacity: 0.3; margin-bottom: 16px;">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width: 150px; height: 150px; opacity: 0.3; margin-bottom: 16px;">
         <path d="M 4 8 C 4 6 5 5 7 5 L 17 5 C 19 5 20 6 20 8 L 20 16 C 20 18 19 19 17 19 L 7 19 C 5 19 4 18 4 16 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
         <circle cx="8" cy="10" r="2" opacity="0.5" />
         <circle cx="12" cy="10" r="2" opacity="0.5" />
@@ -1224,6 +1223,10 @@ export class GradientTool extends BaseComponent {
     }
     if (this.matchesContainer) {
       this.matchesContainer.style.display = show ? 'none' : 'flex';
+    }
+    // Hide results header when showing empty state
+    if (this.resultsHeader?.parentElement) {
+      this.resultsHeader.parentElement.style.display = show ? 'none' : 'block';
     }
   }
 
@@ -2550,6 +2553,34 @@ export class GradientTool extends BaseComponent {
     if (!price) return null;
 
     return MarketBoard.formatPrice(price.currentMinPrice);
+  }
+
+  /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.selectedDyes = [];
+    this.currentSteps = [];
+
+    // Clear from storage (main key used for persistence)
+    StorageService.removeItem(STORAGE_KEYS.selectedDyes);
+    logger.info('[GradientTool] All dyes cleared');
+
+    // Update dye selectors
+    this.dyeSelector?.setSelectedDyes([]);
+    this.mobileDyeSelector?.setSelectedDyes([]);
+
+    // Clear UI containers
+    if (this.matchesContainer) {
+      clearContainer(this.matchesContainer);
+    }
+
+    // Show empty state
+    this.showEmptyState(true);
+    this.updateSelectedDyesDisplay();
+    this.updateMobileSelectedDyesDisplay();
+    this.updateDrawerContent();
   }
 
   /**

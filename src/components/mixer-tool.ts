@@ -140,6 +140,8 @@ export class MixerTool extends BaseComponent {
   private slot1Element: HTMLElement | null = null;
   private slot2Element: HTMLElement | null = null;
   private resultSlotElement: HTMLElement | null = null;
+  private emptyStateMessage: HTMLElement | null = null;
+  private emptyStateIcon: HTMLElement | null = null;
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
@@ -333,6 +335,34 @@ export class MixerTool extends BaseComponent {
   // ============================================================================
   // V4 Integration
   // ============================================================================
+
+  /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.selectedDyes = [null, null];
+    this.blendedColor = null;
+    this.matchedResults = [];
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.selectedDyes);
+    logger.info('[MixerTool] All dyes cleared');
+
+    // Update dye selectors
+    this.dyeSelector?.setSelectedDyes([]);
+    this.mobileDyeSelector?.setSelectedDyes([]);
+
+    // Clear results grid
+    if (this.resultsGridContainer) {
+      clearContainer(this.resultsGridContainer);
+    }
+
+    // Update UI to show empty slots with plus signs
+    this.showEmptyState(true);
+    this.updateCraftingUI();
+    this.updateDrawerContent();
+  }
 
   /**
    * Select a dye from the Color Palette drawer
@@ -885,7 +915,6 @@ export class MixerTool extends BaseComponent {
       `
       display: flex;
       flex-direction: column;
-      align-items: center;
       width: 100%;
       height: 100%;
       padding: 32px;
@@ -902,17 +931,17 @@ export class MixerTool extends BaseComponent {
       },
     });
 
-    // Empty state (shown when dyes not selected)
+    // Empty state (hidden - replaced by crafting UI with empty slots)
     this.emptyStateContainer = this.createElement('div', {
-      attributes: { style: 'display: flex; width: 100%; justify-content: center;' },
+      attributes: { style: 'display: none; width: 100%; justify-content: center;' },
     });
     this.renderEmptyState();
     contentWrapper.appendChild(this.emptyStateContainer);
 
-    // Crafting UI section (hidden initially)
+    // Crafting UI section (shown by default with empty slots)
     this.craftingContainer = this.createElement('div', {
       className: 'mb-6',
-      attributes: { style: 'display: none; width: 100%;' },
+      attributes: { style: 'display: block; width: 100%;' },
     });
     this.renderCraftingUI();
     contentWrapper.appendChild(this.craftingContainer);
@@ -938,6 +967,7 @@ export class MixerTool extends BaseComponent {
           flex-wrap: wrap;
           justify-content: center;
           gap: 16px;
+          --v4-result-card-width: 280px;
         `,
       },
     });
@@ -962,7 +992,7 @@ export class MixerTool extends BaseComponent {
     });
 
     empty.innerHTML = `
-      <span style="display: block; width: 180px; height: 180px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
+      <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
       <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors'}</p>
     `;
 
@@ -1035,6 +1065,39 @@ export class MixerTool extends BaseComponent {
     equationRow.appendChild(this.resultSlotElement);
 
     craftingArea.appendChild(equationRow);
+
+    // Tool icon (shown when no dyes selected, between equation and message)
+    const hasDyes = this.selectedDyes[0] !== null || this.selectedDyes[1] !== null;
+    this.emptyStateIcon = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 150px;
+          height: 150px;
+          margin-top: 24px;
+          opacity: 0.25;
+          color: var(--theme-text);
+          display: ${hasDyes ? 'none' : 'block'};
+        `,
+      },
+    });
+    this.emptyStateIcon.innerHTML = ICON_TOOL_MIXER;
+    craftingArea.appendChild(this.emptyStateIcon);
+
+    // Empty state message (shown when no dyes selected)
+    this.emptyStateMessage = this.createElement('p', {
+      textContent: LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors',
+      attributes: {
+        style: `
+          color: var(--theme-text-muted);
+          font-size: 1rem;
+          margin-top: 16px;
+          text-align: center;
+          display: ${hasDyes ? 'none' : 'block'};
+        `,
+      },
+    });
+    craftingArea.appendChild(this.emptyStateMessage);
+
     this.craftingContainer.appendChild(craftingArea);
   }
 
@@ -1118,19 +1181,18 @@ export class MixerTool extends BaseComponent {
       });
       slot.appendChild(slotNumber);
     } else {
-      // Empty slot placeholder
-      const slotNumber = this.createElement('span', {
-        textContent: String(index + 1),
+      // Empty slot placeholder with plus sign (matching Gradient Tool style)
+      const plusSign = this.createElement('span', {
+        textContent: '+',
         attributes: {
           style: `
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--theme-text-muted);
-            opacity: 0.5;
+            font-size: 32px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.4);
           `,
         },
       });
-      slot.appendChild(slotNumber);
+      slot.appendChild(plusSign);
     }
 
     // Hover effect
@@ -1214,15 +1276,14 @@ export class MixerTool extends BaseComponent {
       });
       slot.appendChild(hexLabel);
     } else {
-      // Empty state
+      // Empty state with question mark (indicates result will appear here)
       const placeholder = this.createElement('span', {
         textContent: '?',
         attributes: {
           style: `
             font-size: 36px;
-            font-weight: bold;
-            color: var(--theme-text-muted);
-            opacity: 0.5;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.4);
           `,
         },
       });
@@ -1246,15 +1307,27 @@ export class MixerTool extends BaseComponent {
    * Show/hide empty state
    */
   private showEmptyState(show: boolean): void {
-    // Toggle empty state visibility (show when empty, hide when dyes selected)
+    // Hide old icon+text empty state (replaced by slots with plus signs)
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.style.display = show ? 'flex' : 'none';
+      this.emptyStateContainer.style.display = 'none';
     }
 
-    // Toggle crafting UI and results (hide when empty, show when dyes selected)
+    // Always show crafting UI (slots visible with "+" when empty)
     if (this.craftingContainer) {
-      this.craftingContainer.style.display = show ? 'none' : 'block';
+      this.craftingContainer.style.display = 'block';
     }
+
+    // Show/hide the empty state icon above the slots
+    if (this.emptyStateIcon) {
+      this.emptyStateIcon.style.display = show ? 'block' : 'none';
+    }
+
+    // Show/hide the empty state message below the slots
+    if (this.emptyStateMessage) {
+      this.emptyStateMessage.style.display = show ? 'block' : 'none';
+    }
+
+    // Only show results section when we have matching dyes
     if (this.resultsSection) {
       this.resultsSection.style.display = show ? 'none' : 'block';
     }
