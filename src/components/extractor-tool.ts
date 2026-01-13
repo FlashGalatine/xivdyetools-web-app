@@ -40,8 +40,11 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, DyeWithDistance, PriceData } from '@shared/types';
-import type { ExtractorConfig } from '@shared/tool-config-types';
+import type { ExtractorConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
+import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import { PaletteService, type PaletteMatch } from '@xivdyetools/core';
+import type { ResultCardData } from '@components/v4/result-card';
+import '@components/v4/result-card';
 
 // ============================================================================
 // Types and Constants
@@ -96,6 +99,7 @@ export class ExtractorTool extends BaseComponent {
   private filterConfig: DyeFilterConfig | null = null;
   private currentImage: HTMLImageElement | null = null;
   private currentImageDataUrl: string | null = null;
+  private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
 
   // Child components
   private imageUpload: ImageUploadDisplay | null = null;
@@ -124,6 +128,9 @@ export class ExtractorTool extends BaseComponent {
   private resultsContainer: HTMLElement | null = null;
   private canvasContainer: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
+  private resultsTitleElement: HTMLElement | null = null;
+  private dropZone: HTMLElement | null = null;
+  private dropContent: HTMLElement | null = null;
 
   // Mobile-specific DOM References (separate from desktop to avoid conflicts)
   private mobileSampleSlider: HTMLInputElement | null = null;
@@ -156,7 +163,7 @@ export class ExtractorTool extends BaseComponent {
 
     // Load persisted state
     this.sampleSize = StorageService.getItem<number>(STORAGE_KEYS.sampleSize) ?? 5;
-    this.paletteMode = StorageService.getItem<boolean>(STORAGE_KEYS.paletteMode) ?? false;
+    this.paletteMode = StorageService.getItem<boolean>(STORAGE_KEYS.paletteMode) ?? true; // v4: Default to palette mode
     this.paletteColorCount = StorageService.getItem<number>(STORAGE_KEYS.paletteColorCount) ?? 4;
     this.vibrancyBoost = StorageService.getItem<boolean>(STORAGE_KEYS.vibrancyBoost) ?? true;
 
@@ -202,12 +209,27 @@ export class ExtractorTool extends BaseComponent {
 
       ToastService.success(LanguageService.t('matcher.imageLoaded') || 'Image loaded');
 
+      // Hide drop zone content and show canvas
+      if (this.dropContent) {
+        this.dropContent.style.display = 'none';
+      }
+      if (this.dropZone) {
+        this.dropZone.classList.add('has-image');
+      }
+      if (this.canvasContainer) {
+        this.canvasContainer.classList.remove('hidden');
+        this.canvasContainer.style.display = 'block';
+      }
+
       if (this.imageZoom) {
         this.imageZoom.setImage(image);
       }
 
       this.showEmptyState(false);
       this.updateDrawerContent();
+
+      // V4: Auto-extract palette on image load
+      void this.extractPalette();
     });
 
     this.onPanelEvent(leftPanel, 'error', (event: CustomEvent) => {
@@ -328,6 +350,18 @@ export class ExtractorTool extends BaseComponent {
       this.currentImage = img;
       this.currentImageDataUrl = dataUrl;
 
+      // Hide drop content, show canvas
+      if (this.dropContent) {
+        this.dropContent.style.display = 'none';
+      }
+      if (this.dropZone) {
+        this.dropZone.classList.add('has-image');
+      }
+      if (this.canvasContainer) {
+        this.canvasContainer.classList.remove('hidden');
+        this.canvasContainer.style.display = 'block';
+      }
+
       if (this.imageZoom) {
         this.imageZoom.setImage(img);
       }
@@ -392,6 +426,7 @@ export class ExtractorTool extends BaseComponent {
    */
   public setConfig(config: Partial<ExtractorConfig>): void {
     let needsReextract = false;
+    let needsRerender = false;
 
     // Handle vibrancyBoost
     if (config.vibrancyBoost !== undefined && config.vibrancyBoost !== this.vibrancyBoost) {
@@ -424,9 +459,19 @@ export class ExtractorTool extends BaseComponent {
       }
     }
 
+    // Handle displayOptions (Color Formats and Result Details)
+    if (config.displayOptions) {
+      this.displayOptions = { ...this.displayOptions, ...config.displayOptions };
+      needsRerender = true;
+      logger.info(`[ExtractorTool] setConfig: displayOptions updated`, config.displayOptions);
+    }
+
     // Re-extract palette if config changed and we're in palette mode with an image
     if (needsReextract && this.paletteMode && this.currentImage) {
       void this.extractPalette();
+    } else if (needsRerender && this.lastPaletteResults.length > 0) {
+      // Just re-render if display options changed but no re-extraction needed
+      this.renderPaletteResults(this.lastPaletteResults);
     }
   }
 
@@ -720,31 +765,390 @@ export class ExtractorTool extends BaseComponent {
     const right = this.options.rightPanel;
     clearContainer(right);
 
-    // Image Canvas Section
-    this.canvasContainer = this.createElement('div', { className: 'mb-6' });
-    this.renderImageCanvas();
-    right.appendChild(this.canvasContainer);
-
-    // Results Section
-    this.resultsContainer = this.createElement('div', { className: 'mb-6' });
-    const resultsHeader = this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
-      textContent: LanguageService.t('matcher.matchedDyes') || 'Matched Dyes',
-      attributes: { style: 'color: var(--theme-text-muted);' },
+    // Create main extractor layout container with inline styles
+    const extractorLayout = this.createElement('div', {
+      className: 'extractor-layout',
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+          height: 100%;
+          width: 100%;
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 32px;
+          box-sizing: border-box;
+        `.replace(/\s+/g, ' ').trim(),
+      },
     });
-    this.resultsContainer.appendChild(resultsHeader);
-    right.appendChild(this.resultsContainer);
 
-    // Empty state
-    this.emptyStateContainer = this.createElement('div');
+    // === Top Section: Image Input ===
+    const imageSection = this.createElement('div', {
+      className: 'image-input-section',
+      attributes: {
+        style: `
+          width: 100%;
+          height: 300px;
+          flex-shrink: 0;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+
+    // Image drop zone
+    // overflow: hidden clips the image content; zoom controls remain visible via inline styles
+    this.dropZone = this.createElement('div', {
+      className: 'image-drop-zone',
+      attributes: {
+        id: 'extractor-drop-zone',
+        style: `
+          width: 100%;
+          height: 100%;
+          border-radius: 12px;
+          border: 2px dashed var(--theme-border, rgba(255, 255, 255, 0.1));
+          background: rgba(255, 255, 255, 0.02);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+          cursor: pointer;
+          transition: all 0.2s;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+
+    // Drop content (shown when no image)
+    this.dropContent = this.createElement('div', {
+      className: 'drop-content',
+      attributes: {
+        style: `
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 12px;
+          pointer-events: none;
+          z-index: 2;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+
+    const dropIcon = this.createElement('div', {
+      className: 'drop-icon',
+      attributes: {
+        style: `
+          width: 150px;
+          height: 150px;
+          color: var(--theme-text-muted, #a0a0a0);
+          opacity: 0.5;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+    dropIcon.innerHTML = ICON_IMAGE;
+
+    const dropText = this.createElement('span', {
+      className: 'drop-text',
+      textContent: LanguageService.t('matcher.dropImageHere') || 'Drop image here or click to upload',
+      attributes: {
+        style: `
+          font-size: 16px;
+          color: var(--theme-text, #e0e0e0);
+          font-weight: 500;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+
+    const dropSubtext = this.createElement('span', {
+      className: 'drop-subtext',
+      textContent: LanguageService.t('matcher.supportedFormats') || 'Supports PNG, JPG, WebP',
+      attributes: {
+        style: `
+          font-size: 13px;
+          color: var(--theme-text-muted, #a0a0a0);
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+
+    this.dropContent.appendChild(dropIcon);
+    this.dropContent.appendChild(dropText);
+    this.dropContent.appendChild(dropSubtext);
+    this.dropZone.appendChild(this.dropContent);
+
+    // Image canvas container (hidden until image loaded)
+    // overflow: visible ensures zoom controls aren't clipped by ancestor's overflow: hidden
+    this.canvasContainer = this.createElement('div', {
+      className: 'image-canvas-container hidden',
+      attributes: {
+        style: `
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: visible;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+    this.renderImageCanvas();
+    this.dropZone.appendChild(this.canvasContainer);
+
+    imageSection.appendChild(this.dropZone);
+    extractorLayout.appendChild(imageSection);
+
+    // === Right Section: Results ===
+    const resultsSection = this.createElement('div', {
+      className: 'extractor-results-section',
+      attributes: {
+        style: `
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          overflow: hidden;
+          min-width: 0;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+
+    // Section header with title and actions
+    const sectionHeader = this.createElement('div', {
+      className: 'extractor-section-header',
+      attributes: {
+        style: `
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-bottom: 8px;
+          border-bottom: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+
+    const sectionTitle = this.createElement('span', {
+      className: 'extractor-section-title',
+      textContent: LanguageService.t('matcher.extractedPalette') || 'Extracted Palette',
+      attributes: {
+        style: `
+          font-size: 14px;
+          text-transform: uppercase;
+          color: var(--theme-text-muted, #a0a0a0);
+          font-weight: 600;
+          letter-spacing: 1px;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+    this.resultsTitleElement = sectionTitle;
+    sectionHeader.appendChild(sectionTitle);
+
+    // Action buttons
+    const actions = this.createElement('div', {
+      className: 'palette-actions',
+      attributes: { style: 'display: flex; gap: 16px;' },
+    });
+
+    const actionBtnStyle = `
+      background: none;
+      border: none;
+      color: var(--theme-primary, #d4af37);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.5;
+    `.replace(/\s+/g, ' ').trim();
+
+    const exportBtn = this.createElement('button', {
+      className: 'action-btn-text',
+      textContent: LanguageService.t('matcher.exportAll') || 'Export All',
+      attributes: { disabled: 'true', style: actionBtnStyle },
+    });
+
+    const saveBtn = this.createElement('button', {
+      className: 'action-btn-text',
+      textContent: LanguageService.t('matcher.savePreset') || 'Save Preset',
+      attributes: { disabled: 'true', style: actionBtnStyle },
+    });
+
+    actions.appendChild(exportBtn);
+    actions.appendChild(saveBtn);
+    sectionHeader.appendChild(actions);
+
+    resultsSection.appendChild(sectionHeader);
+
+    // Results grid container
+    this.resultsContainer = this.createElement('div', {
+      className: 'extractor-results-grid',
+      attributes: {
+        style: `
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          overflow-y: auto;
+          padding-bottom: 16px;
+          align-content: flex-start;
+          flex: 1;
+          min-height: 0;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+    resultsSection.appendChild(this.resultsContainer);
+
+    // Empty state for results (shown until results available)
+    this.emptyStateContainer = this.createElement('div', {
+      className: 'extractor-empty-results',
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+          flex: 1;
+          text-align: center;
+          color: var(--theme-text-muted, #a0a0a0);
+          padding-top: 60px;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
     this.renderEmptyState();
-    right.appendChild(this.emptyStateContainer);
+    resultsSection.appendChild(this.emptyStateContainer);
 
-    // Recent Colors Section
-    const recentContainer = this.createElement('div', { className: 'mt-6' });
-    this.renderRecentColors(recentContainer);
-    right.appendChild(recentContainer);
+    extractorLayout.appendChild(resultsSection);
+    right.appendChild(extractorLayout);
+
+    // Setup drop zone interactions
+    this.setupDropZoneInteractions();
+
+    // If we already have an image loaded, hide the drop content immediately
+    if (this.currentImage) {
+      if (this.dropContent) {
+        this.dropContent.style.display = 'none';
+      }
+      if (this.dropZone) {
+        this.dropZone.classList.add('has-image');
+      }
+      if (this.canvasContainer) {
+        this.canvasContainer.classList.remove('hidden');
+        this.canvasContainer.style.display = 'block';
+      }
+      if (this.emptyStateContainer) {
+        this.emptyStateContainer.style.display = 'none';
+      }
+    }
   }
+
+  /**
+   * Setup drop zone click and drag interactions
+   */
+  private setupDropZoneInteractions(): void {
+    if (!this.dropZone || !this.dropContent) return;
+
+    // Click to trigger file upload - create hidden file input in drop zone
+    const fileInput = this.createElement('input', {
+      attributes: {
+        type: 'file',
+        accept: 'image/*',
+        style: 'display: none;',
+      },
+    }) as HTMLInputElement;
+    this.dropZone.appendChild(fileInput);
+
+    this.on(fileInput, 'change', () => {
+      const file = fileInput.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        this.handleDroppedFile(file);
+      }
+      // Reset input so same file can be selected again
+      fileInput.value = '';
+    });
+
+    this.on(this.dropZone, 'click', () => {
+      fileInput.click();
+    });
+
+    // Drag and drop handling
+    this.on(this.dropZone, 'dragover', (e: Event) => {
+      e.preventDefault();
+      this.dropZone?.classList.add('drag-over');
+    });
+
+    this.on(this.dropZone, 'dragleave', () => {
+      this.dropZone?.classList.remove('drag-over');
+    });
+
+    this.on(this.dropZone, 'drop', (e: Event) => {
+      e.preventDefault();
+      this.dropZone?.classList.remove('drag-over');
+      const dragEvent = e as DragEvent;
+      const files = dragEvent.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+          this.handleDroppedFile(file);
+        }
+      }
+    });
+  }
+
+  /**
+   * Handle a dropped image file
+   */
+  private handleDroppedFile(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        this.currentImage = img;
+        this.currentImageDataUrl = dataUrl;
+
+        // Persist image to storage if it's small enough
+        if (dataUrl && dataUrl.length < MAX_IMAGE_STORAGE_SIZE) {
+          StorageService.setItem(STORAGE_KEYS.imageDataUrl, dataUrl);
+          logger.info('[ExtractorTool] Image saved to storage (drop zone)');
+        } else if (dataUrl) {
+          // Clear any previously stored image if new one is too large
+          StorageService.removeItem(STORAGE_KEYS.imageDataUrl);
+          logger.info('[ExtractorTool] Image too large to persist, cleared storage');
+        }
+
+        // Hide drop content, show canvas
+        if (this.dropContent) {
+          this.dropContent.style.display = 'none';
+        }
+        if (this.dropZone) {
+          this.dropZone.classList.add('has-image');
+        }
+        if (this.canvasContainer) {
+          this.canvasContainer.classList.remove('hidden');
+          this.canvasContainer.style.display = 'block';
+        }
+
+        // Set image in zoom controller
+        if (this.imageZoom) {
+          this.imageZoom.setImage(img);
+        }
+
+        // Emit image loaded event
+        this.emit('image-loaded', { image: img, dataUrl });
+
+        // Hide empty state and update drawer
+        this.showEmptyState(false);
+        this.updateDrawerContent();
+
+        ToastService.success(LanguageService.t('matcher.imageLoaded') || 'Image loaded');
+
+        // Auto-extract palette (v4 default behavior)
+        void this.extractPalette();
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
 
   /**
    * Render image canvas with zoom controller
@@ -753,13 +1157,18 @@ export class ExtractorTool extends BaseComponent {
     if (!this.canvasContainer) return;
     clearContainer(this.canvasContainer);
 
-    const canvasWrapper = this.createElement('div');
+    // overflow: visible ensures zoom controls aren't clipped by ancestor's overflow: hidden
+    const canvasWrapper = this.createElement('div', {
+      className: 'w-full h-full relative',
+      attributes: {
+        style: 'overflow: visible;',
+      },
+    });
     this.canvasContainer.appendChild(canvasWrapper);
 
+    // NOTE: Pixel color sampling disabled for v4 extractor - focus on palette extraction only
     this.imageZoom = new ImageZoomController(canvasWrapper, {
-      onColorSampled: (hex, x, y) => {
-        this.matchColor(hex);
-      },
+      // No onColorSampled callback - palette extraction is triggered via config instead
     });
     this.imageZoom.init();
 
@@ -776,20 +1185,22 @@ export class ExtractorTool extends BaseComponent {
     if (!this.emptyStateContainer) return;
     clearContainer(this.emptyStateContainer);
 
-    const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+    // Icon with inline sizing
+    const iconSpan = this.createElement('span', {
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: 'width: 150px; height: 150px; display: block; margin-bottom: 16px; opacity: 0.4;',
       },
     });
+    iconSpan.innerHTML = ICON_IMAGE;
 
-    empty.innerHTML = `
-      <span class="w-16 h-16 mx-auto mb-3 block opacity-30" style="color: var(--theme-text);">${ICON_UPLOAD}</span>
-      <p style="color: var(--theme-text);">${LanguageService.t('matcher.uploadPrompt') || 'Upload an image to start matching'}</p>
-      <p class="text-sm mt-2" style="color: var(--theme-text-muted);">${LanguageService.t('matcher.orEnterHex') || 'Or enter a hex color manually'}</p>
-    `;
+    // Text
+    const text = this.createElement('p', {
+      textContent: LanguageService.t('matcher.uploadPrompt') || 'Upload an image to extract its color palette',
+      attributes: { style: 'font-size: 16px; margin: 0;' },
+    });
 
-    this.emptyStateContainer.appendChild(empty);
+    this.emptyStateContainer.appendChild(iconSpan);
+    this.emptyStateContainer.appendChild(text);
   }
 
   /**
@@ -807,11 +1218,26 @@ export class ExtractorTool extends BaseComponent {
   }
 
   /**
-   * Show/hide empty state
+   * Show/hide empty state and drop zone content
    */
   private showEmptyState(show: boolean): void {
     if (this.emptyStateContainer) {
       this.emptyStateContainer.classList.toggle('hidden', !show);
+      this.emptyStateContainer.style.display = show ? 'flex' : 'none';
+    }
+
+    // When hiding empty state (showing results), also hide drop content if we have an image
+    if (!show && this.currentImage) {
+      if (this.dropContent) {
+        this.dropContent.style.display = 'none';
+      }
+      if (this.dropZone) {
+        this.dropZone.classList.add('has-image');
+      }
+      if (this.canvasContainer) {
+        this.canvasContainer.classList.remove('hidden');
+        this.canvasContainer.style.display = 'block';
+      }
     }
   }
 
@@ -1531,10 +1957,10 @@ export class ExtractorTool extends BaseComponent {
         closestDye =
           filteredDyes.length > 0
             ? filteredDyes.reduce((best, dye) => {
-                const bestDist = ColorService.getColorDistance(hex, best.hex);
-                const dyeDist = ColorService.getColorDistance(hex, dye.hex);
-                return dyeDist < bestDist ? dye : best;
-              })
+              const bestDist = ColorService.getColorDistance(hex, best.hex);
+              const dyeDist = ColorService.getColorDistance(hex, dye.hex);
+              return dyeDist < bestDist ? dye : best;
+            })
             : null;
       }
 
@@ -1902,129 +2328,77 @@ export class ExtractorTool extends BaseComponent {
   }
 
   /**
-   * Render extracted palette results
+   * Render extracted palette results using v4-result-card components
    */
   private renderPaletteResults(matches: PaletteMatch[]): void {
     if (!this.resultsContainer) return;
 
-    // Clear existing results (keep header)
-    const header = this.resultsContainer.querySelector('h3');
+    // Clear existing results
     clearContainer(this.resultsContainer);
 
-    // Update header text
-    const newHeader = this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
-      textContent: LanguageService.t('matcher.paletteResults') || 'Extracted Palette',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    this.resultsContainer.appendChild(newHeader);
+    // Hide empty state
+    this.showEmptyState(false);
+
+    // Update section title with color count
+    if (this.resultsTitleElement) {
+      this.resultsTitleElement.textContent = `${LanguageService.t('matcher.extractedPalette') || 'Extracted Palette'} (${matches.length} ${matches.length === 1 ? 'color' : 'colors'})`;
+    }
 
     if (matches.length === 0) {
       return;
     }
 
-    // Color bar (visual overview) showing dominance
-    const colorBar = this.createElement('div', {
-      className: 'flex h-10 rounded-lg overflow-hidden mb-4',
-      attributes: { style: 'border: 1px solid var(--theme-border);' },
+    // Create grid container for cards with 280px card width
+    const cardsGrid = this.createElement('div', {
+      className: 'extractor-results-grid',
+      attributes: {
+        style: `
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          justify-content: center;
+          --v4-result-card-width: 280px;
+        `.replace(/\s+/g, ' ').trim(),
+      },
     });
 
+    // Create a v4-result-card for each extracted color
     for (const match of matches) {
-      const colorSegment = this.createElement('div', {
-        className: 'transition-all hover:opacity-80 cursor-pointer',
-        attributes: {
-          style: `flex: ${match.dominance}; background-color: rgb(${match.extracted.r}, ${match.extracted.g}, ${match.extracted.b});`,
-          title: `${match.matchedDye.name} (${match.dominance}%)`,
-        },
-      });
-      colorBar.appendChild(colorSegment);
-    }
-    this.resultsContainer.appendChild(colorBar);
+      // Convert RGB to hex for original color
+      const originalHex = `#${match.extracted.r.toString(16).padStart(2, '0')}${match.extracted.g.toString(16).padStart(2, '0')}${match.extracted.b.toString(16).padStart(2, '0')}`;
 
-    // Individual palette entries
-    const entriesContainer = this.createElement('div', { className: 'space-y-3' });
+      // Create result card data
+      const cardData: ResultCardData = {
+        dye: match.matchedDye,
+        originalColor: originalHex,
+        matchedColor: match.matchedDye.hex,
+        deltaE: match.distance,
+        vendorCost: match.matchedDye.cost,
+      };
 
-    matches.forEach((match, index) => {
-      const entry = this.renderPaletteEntry(match, index);
-      entriesContainer.appendChild(entry);
-    });
+      // Add market price if available
+      if (this.showPrices && this.priceData.has(match.matchedDye.itemID)) {
+        const price = this.priceData.get(match.matchedDye.itemID)!;
+        cardData.price = price.currentMinPrice;
+        cardData.marketServer = price.worldName || 'Market';
+      }
 
-    this.resultsContainer.appendChild(entriesContainer);
-  }
+      // Create the v4-result-card element
+      const card = document.createElement('v4-result-card');
+      (card as any).data = cardData;
 
-  /**
-   * Render a single palette entry showing extracted color → matched dye
-   */
-  private renderPaletteEntry(match: PaletteMatch, index: number): HTMLElement {
-    const entry = this.createElement('div', {
-      className: 'flex items-center gap-3 p-3 rounded-lg',
-      attributes: {
-        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
-      },
-    });
+      // Apply display options from config
+      (card as any).showHex = this.displayOptions.showHex;
+      (card as any).showRgb = this.displayOptions.showRgb;
+      (card as any).showHsv = this.displayOptions.showHsv;
+      (card as any).showLab = this.displayOptions.showLab;
+      (card as any).showDeltaE = this.displayOptions.showDeltaE;
+      (card as any).showPrice = this.displayOptions.showPrice && this.showPrices;
+      (card as any).showAcquisition = this.displayOptions.showAcquisition;
 
-    // Index badge
-    const badge = this.createElement('span', {
-      className:
-        'w-6 h-6 flex items-center justify-center text-xs font-bold rounded-full flex-shrink-0',
-      textContent: String(index + 1),
-      attributes: {
-        style: 'background: var(--theme-primary); color: white;',
-      },
-    });
-    entry.appendChild(badge);
-
-    // Extracted color swatch
-    const extractedSwatch = this.createElement('div', {
-      className: 'w-8 h-8 rounded border-2 flex-shrink-0',
-      attributes: {
-        style: `background-color: rgb(${match.extracted.r}, ${match.extracted.g}, ${match.extracted.b}); border-color: var(--theme-border);`,
-        title: LanguageService.t('matcher.extractedColor') || 'Extracted Color',
-      },
-    });
-    entry.appendChild(extractedSwatch);
-
-    // Arrow
-    const arrow = this.createElement('span', {
-      className: 'text-lg flex-shrink-0',
-      textContent: '→',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    entry.appendChild(arrow);
-
-    // Matched dye swatch
-    const matchedSwatch = this.createElement('div', {
-      className: 'w-8 h-8 rounded border-2 flex-shrink-0',
-      attributes: {
-        style: `background-color: ${match.matchedDye.hex}; border-color: var(--theme-border);`,
-        title: match.matchedDye.name,
-      },
-    });
-    entry.appendChild(matchedSwatch);
-
-    // Dye info
-    const dyeName = LanguageService.getDyeName(match.matchedDye.itemID) ?? match.matchedDye.name;
-    const info = this.createElement('div', { className: 'flex-1 min-w-0' });
-
-    // Build info text with optional price
-    let detailsText = `${match.dominance}% · Δ${match.distance.toFixed(1)} · ${match.matchedDye.hex.toUpperCase()}`;
-    if (this.showPrices && this.priceData.has(match.matchedDye.itemID)) {
-      const price = this.priceData.get(match.matchedDye.itemID)!;
-      detailsText += ` · ${price.currentMinPrice.toLocaleString()} gil`;
+      cardsGrid.appendChild(card);
     }
 
-    info.innerHTML = `
-      <p class="text-sm font-medium truncate" style="color: var(--theme-text);">${dyeName}</p>
-      <p class="text-xs number" style="color: var(--theme-text-muted);">
-        ${detailsText}
-      </p>
-    `;
-    entry.appendChild(info);
-
-    // Action dropdown (replaces individual Copy and Find Cheaper buttons)
-    const actionDropdown = createDyeActionDropdown(match.matchedDye);
-    entry.appendChild(actionDropdown);
-
-    return entry;
+    this.resultsContainer.appendChild(cardsGrid);
   }
 }

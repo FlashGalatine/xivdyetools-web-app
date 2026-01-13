@@ -264,8 +264,290 @@ body.theme-high-contrast-dark v4-config-sidebar {
 }
 
 /* ==========================================================================
+   Palette Extractor Layout
+   ========================================================================== */
+
+/**
+ * Extractor main layout - side by side structure
+ */
+.extractor-layout {
+  display: flex;
+  gap: 32px;
+  height: 100%;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+/**
+ * Image input section - left side
+ */
+.image-input-section {
+  width: 400px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/**
+ * Image drop zone styling
+ */
+.image-drop-zone {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 12px;
+  border: 2px dashed var(--theme-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.image-drop-zone:hover {
+  border-color: var(--theme-primary, #d4af37);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.image-drop-zone.has-image {
+  border-style: solid;
+  border-color: var(--theme-border, rgba(255, 255, 255, 0.1));
+}
+
+/**
+ * Drop content (icon + text)
+ */
+.drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.drop-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--theme-text-muted, #a0a0a0);
+  opacity: 0.5;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.drop-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.image-drop-zone:hover .drop-icon {
+  opacity: 0.8;
+  color: var(--theme-primary, #d4af37);
+}
+
+.drop-text {
+  font-size: 16px;
+  color: var(--theme-text, #e0e0e0);
+  font-weight: 500;
+}
+
+.drop-subtext {
+  font-size: 13px;
+  color: var(--theme-text-muted, #a0a0a0);
+}
+
+/**
+ * Results section - right side
+ */
+.extractor-results-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/**
+ * Results grid
+ */
+.extractor-results-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  overflow-y: auto;
+  padding-bottom: 16px;
+  align-content: flex-start;
+  flex: 1;
+  min-height: 0;
+}
+
+.extractor-results-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.extractor-results-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.extractor-results-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+/**
+ * Section header with actions
+ */
+.extractor-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+}
+
+.extractor-section-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  color: var(--theme-text-muted, #a0a0a0);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.palette-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.action-btn-text {
+  background: none;
+  border: none;
+  color: var(--theme-primary, #d4af37);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: color 0.2s;
+}
+
+.action-btn-text:hover {
+  color: var(--theme-primary-hover, #f0c040);
+}
+
+.action-btn-text:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/**
+ * Image with zoom controls overlay
+ */
+.image-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.zoom-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  gap: 4px;
+  z-index: 10;
+}
+
+.zoom-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--theme-text-muted, #a0a0a0);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 12px;
+}
+
+.zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--theme-text, #e0e0e0);
+}
+
+.zoom-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.zoom-separator {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/**
+ * Empty state for results section
+ */
+.extractor-empty-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  color: var(--theme-text-muted, #a0a0a0);
+  padding: 40px;
+}
+
+.extractor-empty-results svg {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.extractor-empty-results p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Responsive: Stack on smaller screens */
+@media (max-width: 1024px) {
+  .extractor-layout {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .image-input-section {
+    width: 100%;
+    max-height: 300px;
+  }
+
+  .image-drop-zone {
+    aspect-ratio: 16/9;
+  }
+}
+
+/* ==========================================================================
    Accessibility Tool Styles
    ========================================================================== */
+
 
 .section-header {
   display: flex;

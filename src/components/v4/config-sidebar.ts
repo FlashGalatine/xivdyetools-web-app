@@ -85,6 +85,7 @@ export class ConfigSidebar extends BaseLitComponent {
   @state() private extractorConfig: ExtractorConfig = {
     vibrancyBoost: true,
     maxColors: 8,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private accessibilityConfig: AccessibilityConfig = {
     normalVision: true,
@@ -516,7 +517,7 @@ export class ConfigSidebar extends BaseLitComponent {
    * Updates global display options that are shared across all tools.
    */
   private handleDisplayOptionsChange(
-    _tool: 'harmony' | 'mixer' | 'gradient' | 'swatch' | 'accessibility' | 'comparison' | 'budget',
+    _tool: 'harmony' | 'mixer' | 'gradient' | 'swatch' | 'accessibility' | 'comparison' | 'budget' | 'extractor',
     e: CustomEvent<DisplayOptionsChangeDetail>
   ): void {
     const { option, value, allOptions } = e.detail;
@@ -537,6 +538,7 @@ export class ConfigSidebar extends BaseLitComponent {
         'accessibility',
         'comparison',
         'budget',
+        'extractor',
       ] as const;
       for (const tool of toolsWithDisplayOptions) {
         (this.configController as ConfigController).setConfig(tool, { displayOptions: allOptions });
@@ -635,6 +637,19 @@ export class ConfigSidebar extends BaseLitComponent {
             ></v4-range-slider>
           </div>
         </div>
+
+        <v4-display-options
+          .showHex=${this.globalDisplayOptions.showHex}
+          .showRgb=${this.globalDisplayOptions.showRgb}
+          .showHsv=${this.globalDisplayOptions.showHsv}
+          .showLab=${this.globalDisplayOptions.showLab}
+          .showPrice=${this.globalDisplayOptions.showPrice}
+          .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+          .showAcquisition=${this.globalDisplayOptions.showAcquisition}
+          .visibleGroups=${['colorFormats', 'resultMetadata']}
+          @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
+            this.handleDisplayOptionsChange('extractor', e)}
+        ></v4-display-options>
       </div>
     `;
   }

@@ -56,6 +56,8 @@ export interface ExtractorConfig {
   vibrancyBoost: boolean;
   /** Maximum number of colors to extract (3-10) */
   maxColors: number;
+  /** Display options for result cards */
+  displayOptions: DisplayOptionsConfig;
 }
 
 /**
@@ -279,6 +281,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   extractor: {
     vibrancyBoost: true,
     maxColors: 8,
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   accessibility: {
     normalVision: true,

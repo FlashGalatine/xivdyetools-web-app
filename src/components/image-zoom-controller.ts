@@ -28,6 +28,9 @@ export class ImageZoomController extends BaseComponent {
   private zoomOutBtn: HTMLButtonElement | null = null;
   private zoomInBtn: HTMLButtonElement | null = null;
 
+  // Track whether image should be centered (set by fit-to-screen)
+  private isCentered: boolean = false;
+
   constructor(container: HTMLElement, options: ImageZoomControllerOptions = {}) {
     super(container);
     this.onColorSampled = options.onColorSampled;
@@ -52,93 +55,14 @@ export class ImageZoomController extends BaseComponent {
 
     clearContainer(this.container);
 
-    // Create zoom controls container
-    const zoomControls = this.createElement('div', {
-      className: 'flex flex-wrap gap-2 mb-4',
-    });
-
-    // Fit button
-    const fitBtn = this.createElement('button', {
-      className:
-        'px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 ' +
-        'bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors',
-      innerHTML: `<span class="inline-block w-4 h-4 mr-1" aria-hidden="true">${ICON_ZOOM_FIT}</span> ${LanguageService.t('matcher.zoomFit')}`,
-      attributes: {
-        title: LanguageService.t('matcher.zoomFit'),
-        type: 'button',
-      },
-    });
-    zoomControls.appendChild(fitBtn);
-
-    // Width button
-    const widthBtn = this.createElement('button', {
-      className:
-        'px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 ' +
-        'bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors',
-      innerHTML: `<span class="inline-block w-4 h-4 mr-1" aria-hidden="true">${ICON_ZOOM_WIDTH}</span> ${LanguageService.t('matcher.zoomWidth')}`,
-      attributes: {
-        title: LanguageService.t('matcher.zoomWidth'),
-        type: 'button',
-      },
-    });
-    zoomControls.appendChild(widthBtn);
-
-    // Zoom out button
-    this.zoomOutBtn = this.createElement('button', {
-      className:
-        'px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 ' +
-        'bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors',
-      textContent: '−',
-      attributes: {
-        title: 'Zoom out (10%)',
-        type: 'button',
-      },
-    });
-    zoomControls.appendChild(this.zoomOutBtn);
-
-    // Zoom level display
-    this.zoomDisplay = this.createElement('div', {
-      className:
-        'px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 ' +
-        'bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white min-w-20 text-center',
-      textContent: '100%',
-    });
-    zoomControls.appendChild(this.zoomDisplay);
-
-    // Zoom in button
-    this.zoomInBtn = this.createElement('button', {
-      className:
-        'px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 ' +
-        'bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors',
-      textContent: '+',
-      attributes: {
-        title: 'Zoom in (10%)',
-        type: 'button',
-      },
-    });
-    zoomControls.appendChild(this.zoomInBtn);
-
-    // Reset button
-    const resetBtn = this.createElement('button', {
-      className:
-        'px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 ' +
-        'bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors',
-      textContent: `↺ ${LanguageService.t('matcher.zoomReset')}`,
-      attributes: {
-        title: LanguageService.t('matcher.zoomReset'),
-        type: 'button',
-      },
-    });
-    zoomControls.appendChild(resetBtn);
-
-    this.container.appendChild(zoomControls);
-
     // Create canvas container for scrolling
+    // overflow: hidden ensures zoomed image is clipped within this container
     this.canvasContainerRef = this.createElement('div', {
       className:
-        'w-full max-h-96 overflow-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900',
+        'w-full h-full overflow-hidden bg-gray-50 dark:bg-gray-900',
       attributes: {
         id: 'canvas-container',
+        style: 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden;',
       },
     });
 
@@ -158,6 +82,142 @@ export class ImageZoomController extends BaseComponent {
 
     this.canvasContainerRef.appendChild(this.canvasRef);
     this.container.appendChild(this.canvasContainerRef);
+
+    // Create zoom controls container (Overlay)
+    // Inline styles ensure visibility even if CSS class isn't applied
+    const zoomControls = this.createElement('div', {
+      className: 'zoom-controls',
+      attributes: {
+        style: `
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          padding: 4px;
+          gap: 4px;
+          z-index: 100;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    });
+
+    // Common button styles
+    const btnStyle = `
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      color: #a0a0a0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `.replace(/\s+/g, ' ').trim();
+
+    const svgStyle = 'width: 16px; height: 16px; fill: currentColor;';
+
+    // Fit to Screen button
+    const fitBtn = this.createElement('button', {
+      className: 'zoom-btn',
+      innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>`,
+      attributes: {
+        title: LanguageService.t('matcher.zoomFit') || 'Fit to Screen',
+        type: 'button',
+        style: btnStyle,
+      },
+    });
+    zoomControls.appendChild(fitBtn);
+
+    // Fit Width button
+    const widthBtn = this.createElement('button', {
+      className: 'zoom-btn',
+      innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M21 4H3v16h18V4zm-2 14H5V6h14v12z" /><path d="M12 7l-3 3h2v4H9l3 3 3-3h-2V10h2l-3-3z" /></svg>`,
+      attributes: {
+        title: LanguageService.t('matcher.zoomWidth') || 'Fit Width',
+        type: 'button',
+        style: btnStyle,
+      },
+    });
+    zoomControls.appendChild(widthBtn);
+
+    // Separator
+    const separatorStyle = 'width: 1px; height: 20px; background: rgba(255, 255, 255, 0.2);';
+    zoomControls.appendChild(this.createElement('div', {
+      className: 'zoom-separator',
+      attributes: { style: separatorStyle },
+    }));
+
+    // Zoom out button
+    this.zoomOutBtn = this.createElement('button', {
+      className: 'zoom-btn',
+      innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M19 13H5v-2h14v2z" /></svg>`,
+      attributes: {
+        title: 'Zoom Out',
+        type: 'button',
+        style: btnStyle,
+      },
+    });
+    zoomControls.appendChild(this.zoomOutBtn);
+
+    // Zoom level display - Wrapper button for styling consistency
+    const zoomDisplayBtn = this.createElement('button', {
+      className: 'zoom-btn',
+      attributes: {
+        title: 'Current Zoom',
+        style: `${btnStyle} width: auto; padding: 0 8px; cursor: default;`,
+      },
+    });
+    this.zoomDisplay = this.createElement('span', {
+      className: 'zoom-level',
+      textContent: '100.00%',
+      attributes: {
+        style: 'font-size: 12px; color: #e0e0e0;',
+      },
+    });
+    zoomDisplayBtn.appendChild(this.zoomDisplay);
+    zoomControls.appendChild(zoomDisplayBtn);
+
+    // Zoom in button
+    this.zoomInBtn = this.createElement('button', {
+      className: 'zoom-btn',
+      innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" /></svg>`,
+      attributes: {
+        title: 'Zoom In',
+        type: 'button',
+        style: btnStyle,
+      },
+    });
+    zoomControls.appendChild(this.zoomInBtn);
+
+    // Separator
+    zoomControls.appendChild(this.createElement('div', {
+      className: 'zoom-separator',
+      attributes: { style: separatorStyle },
+    }));
+
+    // Reset button
+    const resetBtn = this.createElement('button', {
+      className: 'zoom-btn',
+      innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-8 3.58-8 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" /></svg>`,
+      attributes: {
+        title: LanguageService.t('matcher.zoomReset') || 'Reset Zoom',
+        type: 'button',
+        style: btnStyle,
+      },
+    });
+    zoomControls.appendChild(resetBtn);
+
+    this.container.appendChild(zoomControls);
+
+    // Prevent clicks on zoom controls from bubbling to parent (e.g., file input trigger)
+    this.on(zoomControls, 'click', (e: Event) => {
+      e.stopPropagation();
+    });
 
     // Setup interactions
     this.setupZoomControls(fitBtn, widthBtn, resetBtn);
@@ -186,8 +246,24 @@ export class ImageZoomController extends BaseComponent {
     const getContainerDimensions = (): { width: number; height: number } => {
       if (!this.canvasContainerRef) return { width: 0, height: 0 };
 
-      let width = this.canvasContainerRef.clientWidth;
-      let height = this.canvasContainerRef.clientHeight;
+      // Try to get dimensions from parent container first (the drop zone)
+      const parent = this.canvasContainerRef.parentElement;
+
+      let width = 0;
+      let height = 0;
+
+      // First try parent's bounding rect (most reliable for absolute positioned container)
+      if (parent) {
+        const parentRect = parent.getBoundingClientRect();
+        width = parentRect.width;
+        height = parentRect.height;
+      }
+
+      // Fallback to canvas container dimensions
+      if (width <= 0 || height <= 0) {
+        width = this.canvasContainerRef.clientWidth;
+        height = this.canvasContainerRef.clientHeight;
+      }
 
       if (width <= 0 || height <= 0) {
         width = this.canvasContainerRef.offsetWidth;
@@ -200,6 +276,7 @@ export class ImageZoomController extends BaseComponent {
         height = rect.height;
       }
 
+      // Final fallback
       if (width <= 0 || height <= 0) {
         width = window.innerWidth - 32;
         height = window.innerHeight * 0.4;
@@ -208,23 +285,40 @@ export class ImageZoomController extends BaseComponent {
       width = Math.max(width, MIN_CONTAINER_DIMENSION);
       height = Math.max(height, MIN_CONTAINER_DIMENSION);
 
-      return {
-        width: Math.max(width - 16, MIN_CONTAINER_DIMENSION),
-        height: Math.max(height - 16, MIN_CONTAINER_DIMENSION),
-      };
+      return { width, height };
     };
 
-    const updateZoom = (newZoom: number): void => {
+    const updateZoom = (newZoom: number, setCenter?: boolean): void => {
       if (!this.canvasRef || !this.zoomDisplay || !this.zoomOutBtn || !this.zoomInBtn) return;
 
       this.zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
       const scale = this.zoomLevel / 100;
 
+      // If setCenter is explicitly provided, update the centering state
+      if (setCenter !== undefined) {
+        this.isCentered = setCenter;
+      }
+
       this.canvasRef.style.transform = `scale(${scale})`;
       this.canvasRef.style.transformOrigin = 'top left';
       this.canvasRef.style.cursor = this.zoomLevel > 100 ? 'move' : 'crosshair';
 
-      this.zoomDisplay.textContent = `${this.zoomLevel}%`;
+      // Center the canvas if centering is enabled
+      if (this.isCentered && this.currentImage && this.canvasContainerRef) {
+        const container = getContainerDimensions();
+        const scaledWidth = this.currentImage.width * scale;
+        const scaledHeight = this.currentImage.height * scale;
+        const marginLeft = Math.max(0, (container.width - scaledWidth) / 2);
+        const marginTop = Math.max(0, (container.height - scaledHeight) / 2);
+        this.canvasRef.style.marginLeft = `${marginLeft}px`;
+        this.canvasRef.style.marginTop = `${marginTop}px`;
+      } else {
+        // Reset margins when not centering
+        this.canvasRef.style.marginLeft = '0';
+        this.canvasRef.style.marginTop = '0';
+      }
+
+      this.zoomDisplay.textContent = `${this.zoomLevel.toFixed(2)}%`;
 
       this.zoomOutBtn.disabled = this.zoomLevel <= MIN_ZOOM;
       this.zoomInBtn.disabled = this.zoomLevel >= MAX_ZOOM;
@@ -247,9 +341,11 @@ export class ImageZoomController extends BaseComponent {
 
         const zoomX = (container.width / imageWidth) * 100;
         const zoomY = (container.height / imageHeight) * 100;
-        const newZoom = Math.min(zoomX, zoomY, 100);
+        // Allow zoom > 100% if image is smaller than container
+        const newZoom = Math.min(zoomX, zoomY);
 
-        updateZoom(Math.max(newZoom, MIN_ZOOM));
+        // Enable centering for fit-to-screen
+        updateZoom(Math.max(newZoom, MIN_ZOOM), true);
       });
     };
 
@@ -262,7 +358,8 @@ export class ImageZoomController extends BaseComponent {
         if (imageWidth <= 0) return;
 
         const newZoom = (container.width / imageWidth) * 100;
-        updateZoom(Math.max(Math.min(newZoom, MAX_ZOOM), MIN_ZOOM));
+        // Enable centering for fit-to-width
+        updateZoom(Math.max(Math.min(newZoom, MAX_ZOOM), MIN_ZOOM), true);
       });
     };
 
@@ -282,7 +379,8 @@ export class ImageZoomController extends BaseComponent {
       });
     }
 
-    this.on(resetBtn, 'click', () => updateZoom(100));
+    // Reset disables centering and goes back to 100%
+    this.on(resetBtn, 'click', () => updateZoom(100, false));
 
     this.on(this.canvasContainerRef, 'wheel', (e: Event) => {
       const wheelEvent = e as WheelEvent;
