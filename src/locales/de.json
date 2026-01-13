@@ -60,11 +60,17 @@
       "description": "Bis zu 4 Farbstoffe vergleichen",
       "subtitle": "Vergleiche Farbstoffe nebeneinander, um Farbunterschiede zu sehen und das perfekte Match zu finden."
     },
+    "gradient": {
+      "title": "Verlauf-Ersteller",
+      "shortName": "Verlauf",
+      "description": "Farbübergänge erstellen",
+      "subtitle": "Baue sanfte Farbübergänge zwischen Farbstoffen und finde Zwischenoptionen entlang des Verlaufs."
+    },
     "mixer": {
       "title": "Farbstoffmixer",
       "shortName": "Mixer",
-      "description": "Zwischenfarben finden",
-      "subtitle": "Erstelle sanfte Farbverläufe zwischen zwei Farbstoffen und entdecke Zwischenoptionen."
+      "description": "Farben mischen",
+      "subtitle": "Mische zwei Farbstoffe und finde FFXIV-Farbstoffe, die der Mischfarbe entsprechen."
     },
     "presets": {
       "title": "Voreingestellte Paletten",

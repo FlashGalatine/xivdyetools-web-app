@@ -60,11 +60,17 @@
       "description": "比较最多4种染剂",
       "subtitle": "并排比较染剂，查看颜色差异并找到完美匹配。"
     },
+    "gradient": {
+      "title": "渐变生成器",
+      "shortName": "渐变",
+      "description": "创建颜色过渡",
+      "subtitle": "在染剂之间构建平滑的颜色过渡，并沿渐变找到中间选项。"
+    },
     "mixer": {
       "title": "染剂混合器",
       "shortName": "混合",
-      "description": "寻找中间染剂",
-      "subtitle": "在两种染剂之间创建平滑的颜色渐变，发现中间选项。"
+      "description": "混合颜色",
+      "subtitle": "混合两种染剂，找到与混合色匹配的FFXIV染剂。"
     },
     "presets": {
       "title": "预设调色板",

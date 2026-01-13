@@ -60,11 +60,17 @@
       "description": "최대 4개 염료 비교",
       "subtitle": "염료를 나란히 비교하여 색상 차이를 확인하고 완벽한 매치를 찾으세요."
     },
+    "gradient": {
+      "title": "그라데이션 빌더",
+      "shortName": "그라데",
+      "description": "색상 전환 만들기",
+      "subtitle": "염료 간의 부드러운 색상 전환을 만들고 그라데이션을 따라 중간 옵션을 찾습니다."
+    },
     "mixer": {
       "title": "염료 믹서",
       "shortName": "믹서",
-      "description": "중간 염료 찾기",
-      "subtitle": "두 염료 사이의 부드러운 색상 그라데이션을 만들고 중간 옵션을 발견하세요."
+      "description": "색상 블렌딩",
+      "subtitle": "두 염료를 블렌딩하여 혼합 색상과 일치하는 FFXIV 염료를 찾습니다."
     },
     "presets": {
       "title": "프리셋 팔레트",

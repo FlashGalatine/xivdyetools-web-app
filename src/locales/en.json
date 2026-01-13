@@ -60,11 +60,17 @@
       "description": "Compare up to 4 dyes",
       "subtitle": "Compare dyes side-by-side to see color differences and find the perfect match."
     },
+    "gradient": {
+      "title": "Gradient Builder",
+      "shortName": "Gradient",
+      "description": "Create color transitions",
+      "subtitle": "Build smooth color gradients between dyes and find intermediate options."
+    },
     "mixer": {
       "title": "Dye Mixer",
       "shortName": "Mixer",
-      "description": "Find intermediate dyes",
-      "subtitle": "Create smooth color gradients between two dyes and discover intermediate options."
+      "description": "Blend colors together",
+      "subtitle": "Blend two dyes together to find FFXIV dyes that match the mixed color."
     },
     "presets": {
       "title": "Preset Palettes",

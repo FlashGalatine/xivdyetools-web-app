@@ -60,11 +60,17 @@
       "description": "Comparer jusqu'à 4 teintures",
       "subtitle": "Comparez les teintures côte à côte pour voir les différences de couleur et trouver la correspondance parfaite."
     },
+    "gradient": {
+      "title": "Constructeur de Dégradé",
+      "shortName": "Dégradé",
+      "description": "Créer des transitions de couleur",
+      "subtitle": "Construisez des transitions de couleur douces entre les teintures et trouvez des options intermédiaires."
+    },
     "mixer": {
       "title": "Mélangeur de Teintures",
       "shortName": "Mélangeur",
-      "description": "Trouver des teintures intermédiaires",
-      "subtitle": "Créez des dégradés de couleurs fluides entre deux teintures et découvrez des options intermédiaires."
+      "description": "Mélanger les couleurs",
+      "subtitle": "Mélangez deux teintures pour trouver les teintures FFXIV correspondant à la couleur mélangée."
     },
     "presets": {
       "title": "Palettes Prédéfinies",
