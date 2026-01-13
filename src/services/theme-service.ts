@@ -125,7 +125,7 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
     text: '#E0E0E0',
     isDark: true,
     overrides: {
-      textHeader: '#E0E0E0',
+      textHeader: '#1A1A1A', // Dark text for contrast on gold header
       border: 'rgba(255, 255, 255, 0.15)',
       backgroundSecondary: '#1A1A1A',
       cardBackground: '#1E1E1E',
@@ -133,7 +133,7 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       textMuted: '#A0A0A0',
       // V4 properties
       bgGlass: 'rgba(30, 30, 30, 0.85)',
-      textHeaderMuted: 'rgba(224, 224, 224, 0.7)',
+      textHeaderMuted: 'rgba(26, 26, 26, 0.7)', // Dark muted text for gold header
       accentHover: '#F0C040',
       accentRgb: '212, 175, 55',
       shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.4)',

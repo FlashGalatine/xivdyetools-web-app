@@ -35,7 +35,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
   { id: 'extractor', translationKey: 'tools.matcher' }, // v4 renamed: matcher → extractor
   { id: 'accessibility', translationKey: 'tools.accessibility' },
   { id: 'comparison', translationKey: 'tools.comparison' },
-  { id: 'gradient', translationKey: 'tools.mixer' }, // gradient uses mixer translations
+  { id: 'gradient', translationKey: 'tools.gradient' }, // Gradient Builder tool
   { id: 'mixer', translationKey: 'tools.mixer' },
   { id: 'presets', translationKey: 'tools.presets' },
   { id: 'budget', translationKey: 'tools.budget' },

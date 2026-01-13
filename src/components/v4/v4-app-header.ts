@@ -10,7 +10,8 @@
 import { html, css, CSSResultGroup, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
-import { ICON_LOGO, ICON_GLOBE, ICON_INFO, ICON_THEME } from '@shared/ui-icons';
+import { ICON_GLOBE, ICON_ABOUT, ICON_THEME } from '@shared/ui-icons';
+import { LOGO_SPARKLES } from '@shared/app-logo';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { LanguageService } from '@services/index';
 
@@ -73,8 +74,6 @@ export class V4AppHeader extends BaseLitComponent {
       .v4-header-logo-icon svg {
         width: 100%;
         height: 100%;
-        fill: currentColor;
-        stroke: currentColor;
       }
 
       .v4-header-logo-text {
@@ -124,7 +123,6 @@ export class V4AppHeader extends BaseLitComponent {
       .v4-header-nav-btn svg {
         width: 20px;
         height: 20px;
-        fill: currentColor;
         stroke: currentColor;
       }
 
@@ -166,7 +164,7 @@ export class V4AppHeader extends BaseLitComponent {
       <header class="v4-app-header" role="banner">
         <!-- Logo Section -->
         <div class="v4-header-logo">
-          <span class="v4-header-logo-icon" aria-hidden="true"> ${unsafeHTML(ICON_LOGO)} </span>
+          <span class="v4-header-logo-icon" aria-hidden="true"> ${unsafeHTML(LOGO_SPARKLES)} </span>
           <span class="v4-header-logo-text">XIV Dye Tools</span>
         </div>
 
@@ -179,7 +177,7 @@ export class V4AppHeader extends BaseLitComponent {
             aria-label="${LanguageService.t('header.about')}"
             @click=${this.handleAboutClick}
           >
-            ${unsafeHTML(ICON_INFO)}
+            ${unsafeHTML(ICON_ABOUT)}
           </button>
 
           <button
