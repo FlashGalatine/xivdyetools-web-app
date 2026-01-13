@@ -191,6 +191,48 @@ export class V4LayoutShell extends BaseLitComponent {
         transform: scale(0.95);
       }
 
+      /* Left Sidebar Toggle FAB (shown when sidebar is closed) */
+      .v4-sidebar-toggle {
+        position: fixed;
+        bottom: 24px;
+        left: 24px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 1px solid var(--v4-glass-border, rgba(255, 255, 255, 0.1));
+        background: var(--v4-glass-bg, rgba(30, 30, 30, 0.9));
+        backdrop-filter: var(--v4-glass-blur, blur(12px));
+        -webkit-backdrop-filter: var(--v4-glass-blur, blur(12px));
+        color: var(--theme-primary, #d4af37);
+        cursor: pointer;
+        box-shadow: var(--v4-shadow-soft, 0 4px 6px rgba(0, 0, 0, 0.3));
+        z-index: 100;
+        transition:
+          transform var(--v4-transition-fast, 150ms),
+          opacity 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .v4-sidebar-toggle:hover {
+        transform: scale(1.05);
+      }
+
+      .v4-sidebar-toggle:active {
+        transform: scale(0.95);
+      }
+
+      .v4-sidebar-toggle svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      /* Hide toggle when sidebar is open */
+      .v4-sidebar-toggle.sidebar-open {
+        display: none;
+      }
+
       /* Right Drawer Toggle FAB */
       .v4-palette-toggle {
         position: fixed;
@@ -266,6 +308,11 @@ export class V4LayoutShell extends BaseLitComponent {
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        /* Hide desktop sidebar toggle on mobile - use mobile FAB instead */
+        .v4-sidebar-toggle {
+          display: none;
         }
       }
 
@@ -832,6 +879,21 @@ export class V4LayoutShell extends BaseLitComponent {
         @click=${this.toggleSidebar}
       >
         ☰
+      </button>
+
+      <!-- Desktop Sidebar Toggle FAB (shown when sidebar is closed) -->
+      <button
+        class="v4-sidebar-toggle ${!this.sidebarCollapsed ? 'sidebar-open' : ''}"
+        type="button"
+        title="${LanguageService.t('aria.toggleConfigSidebar')}"
+        aria-label="${LanguageService.t('aria.toggleConfigSidebar')}"
+        aria-expanded=${!this.sidebarCollapsed}
+        @click=${this.toggleSidebar}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
       </button>
 
       <!-- Palette Drawer Toggle FAB (hidden when drawer is open or tool doesn't use palette) -->

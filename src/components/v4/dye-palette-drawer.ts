@@ -141,23 +141,36 @@ export class DyePaletteDrawer extends BaseLitComponent {
       }
 
       .close-btn {
-        background: none;
-        border: none;
-        color: var(--v4-text-secondary, #a0a0a0);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--v4-border-subtle, rgba(255, 255, 255, 0.15));
+        color: var(--theme-text, #e0e0e0);
         cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
+        padding: 6px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
         transition:
           color 0.2s,
-          background 0.2s;
+          background 0.2s,
+          border-color 0.2s,
+          transform 0.15s;
+      }
+
+      .close-btn svg {
+        width: 16px;
+        height: 16px;
       }
 
       .close-btn:hover {
-        color: var(--theme-text, #e0e0e0);
-        background: rgba(255, 255, 255, 0.1);
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.15);
+        border-color: rgba(255, 107, 107, 0.3);
+        transform: scale(1.05);
+      }
+
+      .close-btn:active {
+        transform: scale(0.95);
       }
 
       /* Header Actions Container */

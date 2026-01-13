@@ -19,7 +19,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ConfigController } from '@services/config-controller';
 import { hybridPresetService } from '@services/hybrid-preset-service';
-import { dyeService } from '@services/index';
+import { dyeService, LanguageService } from '@services/index';
 import { RouterService } from '@services/router-service';
 import { logger } from '@shared/logger';
 import type { UnifiedPreset } from '@services/hybrid-preset-service';
@@ -553,9 +553,9 @@ export class PresetTool extends BaseLitComponent {
     return html`
       <div class="preset-tool">
         <header class="tool-header">
-          <h1 class="tool-title">Community Presets</h1>
+          <h1 class="tool-title">${LanguageService.t('tools.presets.communityTitle')}</h1>
           <p class="tool-description">
-            Discover and share color palettes created by the FFXIV community
+            ${LanguageService.t('tools.presets.communityDescription')}
           </p>
         </header>
 
@@ -563,7 +563,7 @@ export class PresetTool extends BaseLitComponent {
           <input
             type="text"
             class="search-input"
-            placeholder="Search presets..."
+            placeholder="${LanguageService.t('tools.presets.searchPlaceholder')}"
             .value=${this.searchQuery}
             @input=${this.handleSearchInput}
           />

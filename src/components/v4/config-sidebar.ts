@@ -199,22 +199,35 @@ export class ConfigSidebar extends BaseLitComponent {
       }
 
       .v4-sidebar-collapse {
-        display: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 28px;
         height: 28px;
         padding: 0;
-        border: none;
-        border-radius: 4px;
-        background: transparent;
-        color: var(--theme-text-muted, #a0a0a0);
+        border: 1px solid var(--v4-border-subtle, rgba(255, 255, 255, 0.15));
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--theme-text, #e0e0e0);
         cursor: pointer;
         font-size: 18px;
         line-height: 1;
+        transition:
+          color 0.2s,
+          background 0.2s,
+          border-color 0.2s,
+          transform 0.15s;
       }
 
       .v4-sidebar-collapse:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--theme-text, #e0e0e0);
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.15);
+        border-color: rgba(255, 107, 107, 0.3);
+        transform: scale(1.05);
+      }
+
+      .v4-sidebar-collapse:active {
+        transform: scale(0.95);
       }
 
       /* Sidebar Content */
@@ -375,11 +388,7 @@ export class ConfigSidebar extends BaseLitComponent {
           transform: translateX(-100%);
         }
 
-        .v4-sidebar-collapse {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
+        /* Close button styles are now set in base styles */
       }
 
       /* Auth section styles */
