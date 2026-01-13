@@ -1340,6 +1340,7 @@ export class MixerTool extends BaseComponent {
       // Create v4-result-card
       const card = document.createElement('v4-result-card') as HTMLElement;
       card.setAttribute('show-actions', 'true');
+      card.setAttribute('show-slot-picker', 'true');
 
       // Set data property (ResultCardData interface)
       // Get price data to resolve both price and world name
@@ -1412,6 +1413,24 @@ export class MixerTool extends BaseComponent {
           this.selectedDyes[1] = dye;
         }
         this.handleDyeSelection(this.selectedDyes.filter((d): d is Dye => d !== null));
+        break;
+
+      case 'add-mixer-slot-1':
+        // Explicitly replace Slot 1
+        this.selectedDyes[0] = dye;
+        this.handleDyeSelection(this.selectedDyes.filter((d): d is Dye => d !== null));
+        ToastService.success(
+          LanguageService.t('mixer.replacedSlot1') || 'Replaced Slot 1'
+        );
+        break;
+
+      case 'add-mixer-slot-2':
+        // Explicitly replace Slot 2
+        this.selectedDyes[1] = dye;
+        this.handleDyeSelection(this.selectedDyes.filter((d): d is Dye => d !== null));
+        ToastService.success(
+          LanguageService.t('mixer.replacedSlot2') || 'Replaced Slot 2'
+        );
         break;
 
       case 'add-accessibility':

@@ -52,6 +52,8 @@ export interface ResultCardData {
 export type ContextAction =
   | 'add-comparison'
   | 'add-mixer'
+  | 'add-mixer-slot-1'
+  | 'add-mixer-slot-2'
   | 'add-accessibility'
   | 'see-harmonies'
   | 'budget'
@@ -118,6 +120,13 @@ export class ResultCard extends BaseLitComponent {
   primaryOpensMenu: boolean = false;
 
   /**
+   * When true, clicking the primary button opens a slot picker menu
+   * allowing user to choose which mixer slot to replace
+   */
+  @property({ type: Boolean, attribute: 'show-slot-picker' })
+  showSlotPicker: boolean = false;
+
+  /**
    * Selected state styling
    */
   @property({ type: Boolean, reflect: true })
@@ -170,6 +179,12 @@ export class ResultCard extends BaseLitComponent {
    */
   @state()
   private menuOpen: boolean = false;
+
+  /**
+   * Slot picker menu open state
+   */
+  @state()
+  private slotMenuOpen: boolean = false;
 
   static override styles: CSSResultGroup = [
     BaseLitComponent.baseStyles,
@@ -456,11 +471,76 @@ export class ResultCard extends BaseLitComponent {
         outline-offset: -2px;
       }
 
+      /* Slot Picker Menu - Pops UP from primary button */
+      .slot-picker-container {
+        position: relative;
+        flex: 1;
+        display: flex;
+      }
+
+      .slot-picker-container .primary-action-btn {
+        flex: 1;
+      }
+
+      .slot-picker-menu {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background: var(--theme-card-background, #2a2a2a);
+        border: 1px solid var(--theme-border, #3a3a3a);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        padding: 6px 0;
+        z-index: 100;
+        margin-bottom: 8px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(8px);
+        transition:
+          opacity 0.15s,
+          transform 0.15s,
+          visibility 0.15s;
+      }
+
+      .slot-picker-menu.open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+      }
+
+      .slot-picker-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 10px 16px;
+        border: none;
+        background: transparent;
+        color: var(--theme-text-muted, #888888);
+        text-align: center;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.1s;
+      }
+
+      .slot-picker-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--theme-text, #e0e0e0);
+      }
+
+      .slot-picker-item:focus-visible {
+        outline: 2px solid var(--theme-primary, #d4af37);
+        outline-offset: -2px;
+      }
+
       /* Reduced motion */
       @media (prefers-reduced-motion: reduce) {
         .result-card,
         .menu-btn,
         .context-menu,
+        .slot-picker-menu,
         .primary-action-btn {
           transition: none;
         }
@@ -510,16 +590,36 @@ export class ResultCard extends BaseLitComponent {
 
   /**
    * Handle primary action (Select Dye) click
-   * If primaryOpensMenu is true, opens context menu instead of emitting card-select
+   * - If showSlotPicker is true, opens slot picker menu
+   * - Else if primaryOpensMenu is true, opens context menu
+   * - Otherwise emits card-select event
    */
   private handleSelectClick(e: Event): void {
     e.stopPropagation();
-    if (this.primaryOpensMenu) {
+    if (this.showSlotPicker) {
+      // Open slot picker menu
+      this.slotMenuOpen = !this.slotMenuOpen;
+      this.menuOpen = false; // Close context menu if open
+    } else if (this.primaryOpensMenu) {
       // Open context menu instead of emitting card-select
       this.menuOpen = !this.menuOpen;
     } else if (this.data) {
       this.emit<{ dye: Dye }>('card-select', { dye: this.data.dye });
     }
+  }
+
+  /**
+   * Handle slot picker action
+   */
+  private handleSlotAction(slotIndex: 1 | 2): void {
+    if (this.data) {
+      const action: ContextAction = slotIndex === 1 ? 'add-mixer-slot-1' : 'add-mixer-slot-2';
+      this.emit<{ action: ContextAction; dye: Dye }>('context-action', {
+        action,
+        dye: this.data.dye,
+      });
+    }
+    this.slotMenuOpen = false;
   }
 
   /**
@@ -544,20 +644,28 @@ export class ResultCard extends BaseLitComponent {
   }
 
   /**
-   * Close menu on click outside
+   * Close menus on click outside
    */
   private handleDocumentClick = (): void => {
     if (this.menuOpen) {
       this.menuOpen = false;
     }
+    if (this.slotMenuOpen) {
+      this.slotMenuOpen = false;
+    }
   };
 
   /**
-   * Close menu on Escape
+   * Close menus on Escape
    */
   private handleKeyDown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && this.menuOpen) {
-      this.menuOpen = false;
+    if (e.key === 'Escape') {
+      if (this.menuOpen) {
+        this.menuOpen = false;
+      }
+      if (this.slotMenuOpen) {
+        this.slotMenuOpen = false;
+      }
     }
   };
 
@@ -706,9 +814,46 @@ export class ResultCard extends BaseLitComponent {
         ? html`
               <div class="card-actions">
                 <div class="action-row">
-                  <button class="primary-action-btn" type="button" @click=${this.handleSelectClick}>
-                    ${this.primaryActionLabel}
-                  </button>
+                  ${this.showSlotPicker
+                    ? html`
+                        <div class="slot-picker-container">
+                          <button
+                            class="primary-action-btn"
+                            type="button"
+                            aria-haspopup="true"
+                            aria-expanded=${this.slotMenuOpen}
+                            @click=${this.handleSelectClick}
+                          >
+                            ${this.primaryActionLabel}
+                          </button>
+                          <!-- Slot Picker Menu - Pops UP -->
+                          <div
+                            class="slot-picker-menu ${this.slotMenuOpen ? 'open' : ''}"
+                            role="menu"
+                            aria-hidden=${!this.slotMenuOpen}
+                          >
+                            <button
+                              class="slot-picker-item"
+                              role="menuitem"
+                              @click=${() => this.handleSlotAction(1)}
+                            >
+                              Replace Slot 1
+                            </button>
+                            <button
+                              class="slot-picker-item"
+                              role="menuitem"
+                              @click=${() => this.handleSlotAction(2)}
+                            >
+                              Replace Slot 2
+                            </button>
+                          </div>
+                        </div>
+                      `
+                    : html`
+                        <button class="primary-action-btn" type="button" @click=${this.handleSelectClick}>
+                          ${this.primaryActionLabel}
+                        </button>
+                      `}
                   <div class="context-menu-container">
                     <button
                       class="menu-btn ${this.menuOpen ? 'active' : ''}"
