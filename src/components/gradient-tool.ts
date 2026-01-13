@@ -26,6 +26,7 @@ import {
   ToastService,
   WorldService,
 } from '@services/index';
+import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
 import {
   ICON_FILTER,
@@ -499,38 +500,27 @@ export class GradientTool extends BaseComponent {
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
-    // Listen for price toggle changes (service manages state, we just react)
-    marketContent.addEventListener('showPricesChanged', ((_event: Event) => {
-      if (this.showPrices) {
-        // Fetch prices - this will update displays after fetching
-        void this.fetchPricesForDisplayedDyes();
-      } else {
-        // Prices disabled - update displays to remove price indicators
-        this.updateSelectedDyesDisplay();
-        this.renderIntermediateMatches();
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      marketContent,
+      () => this.showPrices,
+      () => this.fetchPricesForDisplayedDyes(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          } else {
+            this.updateSelectedDyesDisplay();
+            this.renderIntermediateMatches();
+          }
+        },
+        onServerChanged: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          }
+        },
       }
-    }) as EventListener);
-
-    // Listen for server changes
-    marketContent.addEventListener('server-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for category changes
-    marketContent.addEventListener('categories-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for refresh requests
-    marketContent.addEventListener('refresh-requested', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
+    );
 
     this.marketPanel.setContent(marketContent);
   }
@@ -2132,38 +2122,28 @@ export class GradientTool extends BaseComponent {
     this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
     this.mobileMarketBoard.init();
 
-    // Listen for price toggle changes (mobile - service manages state, we just react)
-    mobileMarketContent.addEventListener('showPricesChanged', ((_event: Event) => {
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      } else {
-        // Prices disabled - update displays to remove price indicators
-        this.updateSelectedDyesDisplay();
-        this.updateMobileSelectedDyesDisplay();
-        this.renderIntermediateMatches();
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      mobileMarketContent,
+      () => this.showPrices,
+      () => this.fetchPricesForDisplayedDyes(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          } else {
+            this.updateSelectedDyesDisplay();
+            this.updateMobileSelectedDyesDisplay();
+            this.renderIntermediateMatches();
+          }
+        },
+        onServerChanged: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          }
+        },
       }
-    }) as EventListener);
-
-    // Listen for server changes (mobile)
-    mobileMarketContent.addEventListener('server-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for category changes (mobile)
-    mobileMarketContent.addEventListener('categories-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for refresh requests (mobile)
-    mobileMarketContent.addEventListener('refresh-requested', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
+    );
 
     this.mobileMarketPanel.setContent(mobileMarketContent);
   }

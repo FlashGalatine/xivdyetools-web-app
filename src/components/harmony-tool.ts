@@ -29,6 +29,7 @@ import {
   MarketBoardService,
 } from '@services/index';
 import { ConfigController } from '@services/config-controller';
+import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
@@ -838,37 +839,17 @@ export class HarmonyTool extends BaseComponent {
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
-    // Listen for price toggle changes - regenerate harmonies
-    marketContent.addEventListener('showPricesChanged', (() => {
-      this.generateHarmonies();
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for server changes - regenerate to show new server name and refetch prices
-    marketContent.addEventListener('server-changed', (() => {
-      if (this.selectedDye) {
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForDisplayedDyes(), {
+      onPricesToggled: () => {
         this.generateHarmonies();
-      }
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for category changes - refetch prices when price categories change
-    marketContent.addEventListener('categories-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for refresh requests - refetch prices when user clicks refresh
-    marketContent.addEventListener('refresh-requested', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
+        if (this.showPrices) this.fetchPricesForDisplayedDyes();
+      },
+      onServerChanged: () => {
+        if (this.selectedDye) this.generateHarmonies();
+        if (this.showPrices) this.fetchPricesForDisplayedDyes();
+      },
+    });
 
     this.marketPanel.setContent(marketContent);
   }
@@ -1373,35 +1354,17 @@ export class HarmonyTool extends BaseComponent {
     this.drawerMarketBoard = new MarketBoard(marketContent);
     this.drawerMarketBoard.init();
 
-    // Listen for price toggle changes - regenerate harmonies
-    marketContent.addEventListener('showPricesChanged', (() => {
-      this.generateHarmonies();
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    marketContent.addEventListener('server-changed', (() => {
-      // Regenerate harmonies to update cards with new server name
-      if (this.selectedDye) {
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForDisplayedDyes(), {
+      onPricesToggled: () => {
         this.generateHarmonies();
-      }
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    marketContent.addEventListener('categories-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    marketContent.addEventListener('refresh-requested', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
+        if (this.showPrices) this.fetchPricesForDisplayedDyes();
+      },
+      onServerChanged: () => {
+        if (this.selectedDye) this.generateHarmonies();
+        if (this.showPrices) this.fetchPricesForDisplayedDyes();
+      },
+    });
 
     this.drawerMarketPanel.setContent(marketContent);
   }

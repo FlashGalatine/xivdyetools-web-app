@@ -29,6 +29,8 @@ import {
   StorageService,
   ToastService,
 } from '@services/index';
+import { WorldService } from '@services/world-service';
+import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import {
   ICON_FILTER,
   ICON_MARKET,
@@ -245,43 +247,8 @@ export class ExtractorTool extends BaseComponent {
       this.matchColor(color);
     });
 
-    // Market board events
-    this.onPanelEvent(leftPanel, 'showPricesChanged', (event: CustomEvent) => {
-      this.showPrices = event.detail.showPrices;
-      if (this.showPrices) {
-        // Fetch prices when enabled
-        void this.fetchPricesForMatches();
-      } else {
-        // Clear prices when disabled and re-render
-        this.priceData.clear();
-        if (this.lastPaletteResults.length > 0) {
-          this.renderPaletteResults(this.lastPaletteResults);
-        } else {
-          this.renderMatchedResults();
-        }
-      }
-    });
-
-    // Re-fetch prices when server changes
-    this.onPanelEvent(leftPanel, 'server-changed', () => {
-      if (this.showPrices) {
-        void this.fetchPricesForMatches();
-      }
-    });
-
-    // Re-fetch prices when category filters change
-    this.onPanelEvent(leftPanel, 'categories-changed', () => {
-      if (this.showPrices) {
-        void this.fetchPricesForMatches();
-      }
-    });
-
-    // Re-fetch prices when refresh button is clicked
-    this.onPanelEvent(leftPanel, 'refresh-requested', () => {
-      if (this.showPrices) {
-        void this.fetchPricesForMatches();
-      }
-    });
+    // Market board events are handled directly on marketContent in renderMarketPanel()
+    // Events don't bubble reliably through CollapsiblePanel, so we use direct listeners there
   }
 
   /**
@@ -757,6 +724,32 @@ export class ExtractorTool extends BaseComponent {
     // Load server data for the dropdown and get initial showPrices state
     void this.marketBoard.loadServerData();
     this.showPrices = this.marketBoard.getShowPrices();
+
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      marketContent,
+      () => this.showPrices,
+      () => this.fetchPricesForMatches(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForMatches();
+          } else {
+            this.priceData.clear();
+            if (this.lastPaletteResults.length > 0) {
+              this.renderPaletteResults(this.lastPaletteResults);
+            } else {
+              this.renderMatchedResults();
+            }
+          }
+        },
+        onServerChanged: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForMatches();
+          }
+        },
+      }
+    );
 
     this.marketPanel.setContent(marketContent);
   }
@@ -1936,38 +1929,31 @@ export class ExtractorTool extends BaseComponent {
     // Load server data for the dropdown
     void this.mobileMarketBoard.loadServerData();
 
-    // Listen for market board events
-    this.onPanelEvent(marketContainer, 'showPricesChanged', (event: CustomEvent) => {
-      this.showPrices = event.detail.showPrices;
-      if (this.showPrices) {
-        void this.fetchPricesForMatches();
-      } else {
-        this.priceData.clear();
-        if (this.lastPaletteResults.length > 0) {
-          this.renderPaletteResults(this.lastPaletteResults);
-        } else {
-          this.renderMatchedResults();
-        }
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      marketContainer,
+      () => this.showPrices,
+      () => this.fetchPricesForMatches(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForMatches();
+          } else {
+            this.priceData.clear();
+            if (this.lastPaletteResults.length > 0) {
+              this.renderPaletteResults(this.lastPaletteResults);
+            } else {
+              this.renderMatchedResults();
+            }
+          }
+        },
+        onServerChanged: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForMatches();
+          }
+        },
       }
-    });
-
-    this.onPanelEvent(marketContainer, 'server-changed', () => {
-      if (this.showPrices) {
-        void this.fetchPricesForMatches();
-      }
-    });
-
-    this.onPanelEvent(marketContainer, 'categories-changed', () => {
-      if (this.showPrices) {
-        void this.fetchPricesForMatches();
-      }
-    });
-
-    this.onPanelEvent(marketContainer, 'refresh-requested', () => {
-      if (this.showPrices) {
-        void this.fetchPricesForMatches();
-      }
-    });
+    );
 
     contentWrapper.appendChild(contentInner);
     section.appendChild(contentWrapper);
@@ -2174,10 +2160,22 @@ export class ExtractorTool extends BaseComponent {
    * Fetch prices for matched dyes
    */
   private async fetchPricesForMatches(): Promise<void> {
-    if (!this.marketBoard || this.matchedDyes.length === 0) return;
+    if (!this.marketBoard) return;
+
+    // Collect dyes to fetch prices for - either from palette results or matched dyes
+    let dyesToFetch: Dye[] = [];
+
+    if (this.lastPaletteResults.length > 0) {
+      // Extract dyes from palette results
+      dyesToFetch = this.lastPaletteResults.map((match) => match.matchedDye);
+    } else if (this.matchedDyes.length > 0) {
+      dyesToFetch = this.matchedDyes;
+    }
+
+    if (dyesToFetch.length === 0) return;
 
     try {
-      const prices = await this.marketBoard.fetchPricesForDyes(this.matchedDyes);
+      const prices = await this.marketBoard.fetchPricesForDyes(dyesToFetch);
       this.priceData.clear();
       for (const [id, price] of prices.entries()) {
         this.priceData.set(id, price);
@@ -2189,7 +2187,7 @@ export class ExtractorTool extends BaseComponent {
         this.renderMatchedResults();
       }
     } catch (error) {
-      logger.error('[MatcherTool] Failed to fetch prices:', error);
+      logger.error('[ExtractorTool] Failed to fetch prices:', error);
     }
   }
 
@@ -2450,7 +2448,12 @@ export class ExtractorTool extends BaseComponent {
       if (this.showPrices && this.priceData.has(match.matchedDye.itemID)) {
         const price = this.priceData.get(match.matchedDye.itemID)!;
         cardData.price = price.currentMinPrice;
-        cardData.marketServer = price.worldName || 'Market';
+        // Resolve worldId to actual world name (e.g., 34 -> "Brynhildr")
+        // Fall back to selected server/DC if worldId not available or can't be resolved
+        cardData.marketServer =
+          WorldService.getWorldName(price.worldId) ||
+          this.marketBoard?.getSelectedServer() ||
+          'Market';
       }
 
       // Create the v4-result-card element

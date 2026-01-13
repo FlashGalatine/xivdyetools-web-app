@@ -24,6 +24,7 @@ import {
   StorageService,
   ToastService,
 } from '@services/index';
+import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { CharacterColorService } from '@xivdyetools/core';
 import type { CharacterColor, CharacterColorMatch, SubRace, Gender } from '@xivdyetools/types';
 import { ICON_TOOL_CHARACTER } from '@shared/tool-icons';
@@ -386,34 +387,32 @@ export class SwatchTool extends BaseComponent {
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
-    // Listen to market board events
-    marketContent.addEventListener('server-changed', () => {
-      if (this.selectedColor) {
-        this.findMatchingDyes();
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      marketContent,
+      () => this.showPrices && this.matchedDyes.length > 0,
+      () => this.fetchPrices(this.matchedDyes.map((m) => m.dye)),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices && this.matchedDyes.length > 0) {
+            this.fetchPrices(this.matchedDyes.map((m) => m.dye));
+          } else {
+            this.updateMatchResults();
+          }
+        },
+        onServerChanged: () => {
+          if (this.selectedColor) {
+            this.findMatchingDyes();
+          }
+        },
+        onRefreshRequested: () => {
+          if (this.showPrices && this.matchedDyes.length > 0) {
+            this.priceData.clear();
+            this.fetchPrices(this.matchedDyes.map((m) => m.dye));
+          }
+        },
       }
-    });
-
-    marketContent.addEventListener('showPricesChanged', ((e: CustomEvent) => {
-      this.showPrices = e.detail?.showPrices ?? false;
-      if (this.showPrices && this.matchedDyes.length > 0) {
-        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
-      } else {
-        this.updateMatchResults();
-      }
-    }) as EventListener);
-
-    marketContent.addEventListener('categories-changed', () => {
-      if (this.showPrices && this.matchedDyes.length > 0) {
-        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
-      }
-    });
-
-    marketContent.addEventListener('refresh-requested', () => {
-      if (this.showPrices && this.matchedDyes.length > 0) {
-        this.priceData.clear();
-        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
-      }
-    });
+    );
 
     // Initialize showPrices from MarketBoard state
     this.showPrices = this.marketBoard.getShowPrices();
@@ -1319,34 +1318,32 @@ export class SwatchTool extends BaseComponent {
     this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
     this.mobileMarketBoard.init();
 
-    // Listen to mobile market board events
-    mobileMarketContent.addEventListener('server-changed', () => {
-      if (this.selectedColor) {
-        this.findMatchingDyes();
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      mobileMarketContent,
+      () => this.showPrices && this.matchedDyes.length > 0,
+      () => this.fetchPrices(this.matchedDyes.map((m) => m.dye)),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices && this.matchedDyes.length > 0) {
+            this.fetchPrices(this.matchedDyes.map((m) => m.dye));
+          } else {
+            this.updateMatchResults();
+          }
+        },
+        onServerChanged: () => {
+          if (this.selectedColor) {
+            this.findMatchingDyes();
+          }
+        },
+        onRefreshRequested: () => {
+          if (this.showPrices && this.matchedDyes.length > 0) {
+            this.priceData.clear();
+            this.fetchPrices(this.matchedDyes.map((m) => m.dye));
+          }
+        },
       }
-    });
-
-    mobileMarketContent.addEventListener('showPricesChanged', ((e: CustomEvent) => {
-      this.showPrices = e.detail?.showPrices ?? false;
-      if (this.showPrices && this.matchedDyes.length > 0) {
-        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
-      } else {
-        this.updateMatchResults();
-      }
-    }) as EventListener);
-
-    mobileMarketContent.addEventListener('categories-changed', () => {
-      if (this.showPrices && this.matchedDyes.length > 0) {
-        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
-      }
-    });
-
-    mobileMarketContent.addEventListener('refresh-requested', () => {
-      if (this.showPrices && this.matchedDyes.length > 0) {
-        this.priceData.clear();
-        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
-      }
-    });
+    );
 
     this.mobileMarketPanel.setContent(mobileMarketContent);
   }

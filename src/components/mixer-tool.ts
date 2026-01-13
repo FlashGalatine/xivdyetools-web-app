@@ -31,6 +31,7 @@ import {
   MarketBoardService,
 } from '@services/index';
 import { ConfigController } from '@services/config-controller';
+import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
 import {
   ICON_FILTER,
@@ -581,36 +582,27 @@ export class MixerTool extends BaseComponent {
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
-    // Listen for price toggle changes - re-render with prices
-    marketContent.addEventListener('showPricesChanged', (() => {
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      } else {
-        this.renderResultsGrid();
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      marketContent,
+      () => this.showPrices,
+      () => this.fetchPricesForDisplayedDyes(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          } else {
+            this.renderResultsGrid();
+          }
+        },
+        onServerChanged: () => {
+          this.renderResultsGrid();
+          if (this.showPrices && this.matchedResults.length > 0) {
+            void this.fetchPricesForDisplayedDyes();
+          }
+        },
       }
-    }) as EventListener);
-
-    // Listen for server changes - service handles cache clearing
-    marketContent.addEventListener('server-changed', (() => {
-      this.renderResultsGrid();
-      if (this.showPrices && this.matchedResults.length > 0) {
-        void this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for category changes
-    marketContent.addEventListener('categories-changed', (() => {
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for refresh requests
-    marketContent.addEventListener('refresh-requested', (() => {
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
+    );
 
     this.marketPanel.setContent(marketContent);
   }
@@ -1549,27 +1541,27 @@ export class MixerTool extends BaseComponent {
     this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
     this.mobileMarketBoard.init();
 
-    // Mirror desktop market events - re-render with prices
-    mobileMarketContent.addEventListener('showPricesChanged', (() => {
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      } else {
-        this.renderResultsGrid();
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      mobileMarketContent,
+      () => this.showPrices,
+      () => this.fetchPricesForDisplayedDyes(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          } else {
+            this.renderResultsGrid();
+          }
+        },
+        onServerChanged: () => {
+          this.renderResultsGrid();
+          if (this.showPrices && this.matchedResults.length > 0) {
+            void this.fetchPricesForDisplayedDyes();
+          }
+        },
       }
-    }) as EventListener);
-
-    mobileMarketContent.addEventListener('server-changed', (() => {
-      this.renderResultsGrid();
-      if (this.showPrices && this.matchedResults.length > 0) {
-        void this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    mobileMarketContent.addEventListener('refresh-requested', (() => {
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
+    );
 
     this.mobileMarketPanel.setContent(mobileMarketContent);
   }

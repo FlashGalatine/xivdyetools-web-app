@@ -27,6 +27,7 @@ import {
   ToastService,
 } from '@services/index';
 import { RouterService } from '@services/router-service';
+import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { ICON_TOOL_BUDGET } from '@shared/tool-icons';
 import {
   ICON_FILTER,
@@ -587,9 +588,11 @@ export class BudgetTool extends BaseComponent {
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
-    // Listen for server changes to refresh prices
-    marketContent.addEventListener('server-changed', () => {
-      this.findAlternatives();
+    // Set up market board event listeners - budget tool always needs prices
+    setupMarketBoardListeners(marketContent, () => true, () => this.findAlternatives(), {
+      onServerChanged: () => {
+        this.findAlternatives();
+      },
     });
 
     this.marketPanel.setContent(marketContent);
@@ -1736,9 +1739,11 @@ export class BudgetTool extends BaseComponent {
     this.mobileMarketBoard = new MarketBoard(marketContent);
     this.mobileMarketBoard.init();
 
-    // Listen for server changes to refresh prices
-    marketContent.addEventListener('server-changed', () => {
-      this.findAlternatives();
+    // Set up market board event listeners - budget tool always needs prices
+    setupMarketBoardListeners(marketContent, () => true, () => this.findAlternatives(), {
+      onServerChanged: () => {
+        this.findAlternatives();
+      },
     });
 
     this.mobileMarketPanel.setContent(marketContent);
