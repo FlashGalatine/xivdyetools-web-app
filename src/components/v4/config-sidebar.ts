@@ -104,10 +104,6 @@ export class ConfigSidebar extends BaseLitComponent {
     },
   };
   @state() private comparisonConfig: ComparisonConfig = {
-    showDeltaE: true,
-    showRgb: true,
-    showHsv: false,
-    showMarketPrices: true,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private gradientConfig: GradientConfig = {
@@ -746,26 +742,6 @@ export class ConfigSidebar extends BaseLitComponent {
   private renderComparisonConfig(): TemplateResult {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'comparison'}>
-        <div class="config-group">
-          <div class="config-label">Display Options</div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="Show Delta-E"
-              .checked=${this.comparisonConfig.showDeltaE}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('comparison', 'showDeltaE', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="Show Market Prices"
-              .checked=${this.comparisonConfig.showMarketPrices}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('comparison', 'showMarketPrices', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-        </div>
-
         <v4-display-options
           .showHex=${this.globalDisplayOptions.showHex}
           .showRgb=${this.globalDisplayOptions.showRgb}
@@ -774,7 +750,7 @@ export class ConfigSidebar extends BaseLitComponent {
           .showPrice=${this.globalDisplayOptions.showPrice}
           .showDeltaE=${this.globalDisplayOptions.showDeltaE}
           .showAcquisition=${this.globalDisplayOptions.showAcquisition}
-          .visibleGroups=${['colorFormats']}
+          .visibleGroups=${['colorFormats', 'resultMetadata']}
           @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
             this.handleDisplayOptionsChange('comparison', e)}
         ></v4-display-options>

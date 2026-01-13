@@ -346,51 +346,15 @@ export class ComparisonTool extends BaseComponent {
 
   /**
    * Update tool configuration from external source (V4 ConfigSidebar)
+   * Now reads all settings from displayOptions (refactored from individual fields)
    */
   public setConfig(config: Partial<ComparisonConfig>): void {
     let needsRerender = false;
 
-    // Handle showDeltaE (maps to showDistanceValues)
-    if (
-      config.showDeltaE !== undefined &&
-      config.showDeltaE !== this.comparisonOptions.showDistanceValues
-    ) {
-      this.comparisonOptions.showDistanceValues = config.showDeltaE;
-      StorageService.setItem(STORAGE_KEYS.showDistanceValues, config.showDeltaE);
-      needsRerender = true;
-      logger.info(`[ComparisonTool] setConfig: showDeltaE -> ${config.showDeltaE}`);
-    }
-
-    // Handle showRgb
-    if (config.showRgb !== undefined && config.showRgb !== this.comparisonOptions.showRgb) {
-      this.comparisonOptions.showRgb = config.showRgb;
-      StorageService.setItem(STORAGE_KEYS.showRgb, config.showRgb);
-      needsRerender = true;
-      logger.info(`[ComparisonTool] setConfig: showRgb -> ${config.showRgb}`);
-    }
-
-    // Handle showHsv
-    if (config.showHsv !== undefined && config.showHsv !== this.comparisonOptions.showHsv) {
-      this.comparisonOptions.showHsv = config.showHsv;
-      StorageService.setItem(STORAGE_KEYS.showHsv, config.showHsv);
-      needsRerender = true;
-      logger.info(`[ComparisonTool] setConfig: showHsv -> ${config.showHsv}`);
-    }
-
-    // Handle showMarketPrices
-    if (
-      config.showMarketPrices !== undefined &&
-      config.showMarketPrices !== this.comparisonOptions.showMarketPrices
-    ) {
-      this.comparisonOptions.showMarketPrices = config.showMarketPrices;
-      StorageService.setItem(STORAGE_KEYS.showMarketPrices, config.showMarketPrices);
-      needsRerender = true;
-      logger.info(`[ComparisonTool] setConfig: showMarketPrices -> ${config.showMarketPrices}`);
-    }
-
     // Handle displayOptions from v4-display-options component
     if (config.displayOptions) {
       const opts = config.displayOptions;
+
       // Map displayOptions to internal comparisonOptions
       if (opts.showHex !== undefined && opts.showHex !== this.comparisonOptions.showHex) {
         this.comparisonOptions.showHex = opts.showHex;
@@ -416,6 +380,30 @@ export class ComparisonTool extends BaseComponent {
         needsRerender = true;
         logger.info(`[ComparisonTool] setConfig: displayOptions.showLab -> ${opts.showLab}`);
       }
+
+      // Map showDeltaE to internal showDistanceValues
+      if (
+        opts.showDeltaE !== undefined &&
+        opts.showDeltaE !== this.comparisonOptions.showDistanceValues
+      ) {
+        this.comparisonOptions.showDistanceValues = opts.showDeltaE;
+        StorageService.setItem(STORAGE_KEYS.showDistanceValues, opts.showDeltaE);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showDeltaE -> ${opts.showDeltaE}`);
+      }
+
+      // Map showPrice to internal showMarketPrices
+      if (
+        opts.showPrice !== undefined &&
+        opts.showPrice !== this.comparisonOptions.showMarketPrices
+      ) {
+        this.comparisonOptions.showMarketPrices = opts.showPrice;
+        StorageService.setItem(STORAGE_KEYS.showMarketPrices, opts.showPrice);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showPrice -> ${opts.showPrice}`);
+      }
+
+      // Note: showAcquisition is not used by comparison tool (has its own acquisition display)
     }
 
     // Re-render if config changed and we have dyes selected

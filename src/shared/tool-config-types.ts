@@ -86,16 +86,9 @@ export interface AccessibilityConfig {
 
 /**
  * Dye Comparison configuration
+ * Uses shared displayOptions for all color format and metadata visibility settings.
  */
 export interface ComparisonConfig {
-  /** Show Delta-E values */
-  showDeltaE: boolean;
-  /** Show RGB values */
-  showRgb: boolean;
-  /** Show HSV values */
-  showHsv: boolean;
-  /** Show market prices */
-  showMarketPrices: boolean;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
 }
@@ -218,10 +211,10 @@ export interface DisplayOptionsConfig {
  */
 export const DEFAULT_DISPLAY_OPTIONS: DisplayOptionsConfig = {
   showHex: true,
-  showRgb: false,
+  showRgb: true,
   showHsv: true,
-  showLab: false,
-  showPrice: false,
+  showLab: true,
+  showPrice: true,
   showDeltaE: true,
   showAcquisition: true,
 };
@@ -270,17 +263,17 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   market: {
-    selectedServer: 'Crystal',
-    showPrices: false,
+    selectedServer: 'Balmung',
+    showPrices: true,
   },
   harmony: {
-    harmonyType: 'tetradic',
-    strictMatching: false,
+    harmonyType: 'complementary',
+    strictMatching: true,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   extractor: {
     vibrancyBoost: true,
-    maxColors: 8,
+    maxColors: 4,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   accessibility: {
@@ -300,19 +293,15 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     },
   },
   comparison: {
-    showDeltaE: true,
-    showRgb: true,
-    showHsv: false,
-    showMarketPrices: true,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   gradient: {
-    stepCount: 8,
+    stepCount: 4,
     interpolation: 'hsv',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   mixer: {
-    maxResults: 5, // Design spec: default 5, range 3-8
+    maxResults: 4,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   presets: {
@@ -321,15 +310,15 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     sortBy: 'newest',
   },
   budget: {
-    maxPrice: 200000,
+    maxPrice: 100000,
     maxResults: 8,
-    maxDeltaE: 75,
+    maxDeltaE: 50,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   swatch: {
-    colorSheet: 'eyeColors',
-    race: 'Midlander',
-    gender: 'Male',
+    colorSheet: 'hairColors',
+    race: 'SeekerOfTheSun',
+    gender: 'Female',
     maxResults: 3,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
