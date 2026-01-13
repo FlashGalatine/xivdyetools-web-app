@@ -212,6 +212,27 @@ export class ImageZoomController extends BaseComponent {
     });
     zoomControls.appendChild(resetBtn);
 
+    // Separator before clear
+    zoomControls.appendChild(this.createElement('div', {
+      className: 'zoom-separator',
+      attributes: { style: separatorStyle },
+    }));
+
+    // Clear/trash button
+    const clearBtn = this.createElement('button', {
+      className: 'zoom-btn',
+      innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>`,
+      attributes: {
+        title: LanguageService.t('matcher.clearImage') || 'Clear Image',
+        type: 'button',
+        style: btnStyle,
+      },
+    });
+    this.on(clearBtn, 'click', () => {
+      this.emit('image-clear-requested');
+    });
+    zoomControls.appendChild(clearBtn);
+
     this.container.appendChild(zoomControls);
 
     // Prevent clicks on zoom controls from bubbling to parent (e.g., file input trigger)

@@ -125,6 +125,7 @@ export class ExtractorTool extends BaseComponent {
   private colorCountSlider: HTMLInputElement | null = null;
   private colorCountDisplay: HTMLElement | null = null;
   private extractPaletteBtn: HTMLButtonElement | null = null;
+  private exportCssBtn: HTMLButtonElement | null = null;
   private resultsContainer: HTMLElement | null = null;
   private canvasContainer: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
@@ -369,11 +370,14 @@ export class ExtractorTool extends BaseComponent {
       this.showEmptyState(false);
       this.updateDrawerContent();
 
-      logger.info('[MatcherTool] Restored saved image from storage');
+      logger.info('[ExtractorTool] Restored saved image from storage');
 
       // Clear handlers
       img.onload = null;
       img.onerror = null;
+
+      // Auto-extract palette to restore results
+      void this.extractPalette();
     };
 
     img.onerror = () => {
@@ -958,23 +962,21 @@ export class ExtractorTool extends BaseComponent {
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      opacity: 0.5;
     `.replace(/\s+/g, ' ').trim();
 
-    const exportBtn = this.createElement('button', {
+    const disabledBtnStyle = `${actionBtnStyle} opacity: 0.5; cursor: not-allowed;`;
+
+    this.exportCssBtn = this.createElement('button', {
       className: 'action-btn-text',
-      textContent: LanguageService.t('matcher.exportAll') || 'Export All',
-      attributes: { disabled: 'true', style: actionBtnStyle },
+      textContent: LanguageService.t('matcher.exportCss') || 'Export CSS',
+      attributes: { disabled: 'true', style: disabledBtnStyle },
+    }) as HTMLButtonElement;
+
+    this.on(this.exportCssBtn, 'click', () => {
+      this.exportPaletteAsCss();
     });
 
-    const saveBtn = this.createElement('button', {
-      className: 'action-btn-text',
-      textContent: LanguageService.t('matcher.savePreset') || 'Save Preset',
-      attributes: { disabled: 'true', style: actionBtnStyle },
-    });
-
-    actions.appendChild(exportBtn);
-    actions.appendChild(saveBtn);
+    actions.appendChild(this.exportCssBtn);
     sectionHeader.appendChild(actions);
 
     resultsSection.appendChild(sectionHeader);
@@ -1149,6 +1151,61 @@ export class ExtractorTool extends BaseComponent {
     reader.readAsDataURL(file);
   }
 
+  /**
+   * Clear the current image and reset to empty state
+   */
+  private clearImage(): void {
+    // Clear image state
+    this.currentImage = null;
+    this.currentImageDataUrl = null;
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.imageDataUrl);
+
+    // Clear palette results
+    this.lastPaletteResults = [];
+    this.matchedDyes = [];
+    this.priceData.clear();
+
+    // Show drop zone content, hide canvas
+    if (this.dropContent) {
+      this.dropContent.style.display = 'flex';
+    }
+    if (this.dropZone) {
+      this.dropZone.classList.remove('has-image');
+    }
+    if (this.canvasContainer) {
+      this.canvasContainer.classList.add('hidden');
+      this.canvasContainer.style.display = 'none';
+    }
+
+    // Clear results container
+    if (this.resultsContainer) {
+      clearContainer(this.resultsContainer);
+    }
+
+    // Reset section title
+    if (this.resultsTitleElement) {
+      this.resultsTitleElement.textContent = LanguageService.t('matcher.extractedPalette') || 'Extracted Palette';
+    }
+
+    // Disable export button
+    if (this.exportCssBtn) {
+      this.exportCssBtn.disabled = true;
+      this.exportCssBtn.style.opacity = '0.5';
+      this.exportCssBtn.style.cursor = 'not-allowed';
+    }
+
+    // Show empty state
+    this.showEmptyState(true);
+    this.updateDrawerContent();
+
+    // Re-render the canvas area to clear zoom controller
+    this.renderImageCanvas();
+
+    ToastService.info(LanguageService.t('matcher.imageCleared') || 'Image cleared');
+    logger.info('[ExtractorTool] Image cleared');
+  }
 
   /**
    * Render image canvas with zoom controller
@@ -1171,6 +1228,11 @@ export class ExtractorTool extends BaseComponent {
       // No onColorSampled callback - palette extraction is triggered via config instead
     });
     this.imageZoom.init();
+
+    // Listen for clear image request from zoom controls
+    this.onPanelEvent(canvasWrapper, 'image-clear-requested', () => {
+      this.clearImage();
+    });
 
     // If we already have an image, set it
     if (this.currentImage) {
@@ -2344,6 +2406,14 @@ export class ExtractorTool extends BaseComponent {
       this.resultsTitleElement.textContent = `${LanguageService.t('matcher.extractedPalette') || 'Extracted Palette'} (${matches.length} ${matches.length === 1 ? 'color' : 'colors'})`;
     }
 
+    // Enable/disable export button based on results
+    if (this.exportCssBtn) {
+      const hasResults = matches.length > 0;
+      this.exportCssBtn.disabled = !hasResults;
+      this.exportCssBtn.style.opacity = hasResults ? '1' : '0.5';
+      this.exportCssBtn.style.cursor = hasResults ? 'pointer' : 'not-allowed';
+    }
+
     if (matches.length === 0) {
       return;
     }
@@ -2400,5 +2470,71 @@ export class ExtractorTool extends BaseComponent {
     }
 
     this.resultsContainer.appendChild(cardsGrid);
+  }
+
+  /**
+   * Export the extracted palette as a CSS file with custom properties
+   */
+  private exportPaletteAsCss(): void {
+    if (this.lastPaletteResults.length === 0) {
+      ToastService.error(LanguageService.t('matcher.noPaletteToExport') || 'No palette to export');
+      return;
+    }
+
+    // Generate CSS content
+    const timestamp = new Date().toISOString().split('T')[0];
+    let cssContent = `/**
+ * XIV Dye Tools - Extracted Palette
+ * Generated: ${timestamp}
+ * Colors: ${this.lastPaletteResults.length}
+ */
+
+:root {
+  /* Extracted Colors (Original from image) */
+`;
+
+    // Add extracted colors
+    this.lastPaletteResults.forEach((match, index) => {
+      const { r, g, b } = match.extracted;
+      const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+      cssContent += `  --extracted-color-${index + 1}: ${hex.toUpperCase()};\n`;
+    });
+
+    cssContent += `\n  /* Matched FFXIV Dyes */\n`;
+
+    // Add matched dye colors
+    this.lastPaletteResults.forEach((match, index) => {
+      const dyeName = match.matchedDye.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      cssContent += `  --dye-${index + 1}-${dyeName}: ${match.matchedDye.hex.toUpperCase()};\n`;
+    });
+
+    cssContent += `}\n\n/* Utility Classes */\n`;
+
+    // Add utility classes for each color
+    this.lastPaletteResults.forEach((match, index) => {
+      const dyeName = match.matchedDye.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      cssContent += `
+.bg-extracted-${index + 1} { background-color: var(--extracted-color-${index + 1}); }
+.text-extracted-${index + 1} { color: var(--extracted-color-${index + 1}); }
+.bg-dye-${index + 1} { background-color: var(--dye-${index + 1}-${dyeName}); }
+.text-dye-${index + 1} { color: var(--dye-${index + 1}-${dyeName}); }
+`;
+    });
+
+    // Create and trigger download
+    const blob = new Blob([cssContent], { type: 'text/css' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `xiv-palette-${timestamp}.css`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    ToastService.success(
+      LanguageService.t('matcher.paletteExported') || 'Palette exported as CSS'
+    );
+    logger.info('[ExtractorTool] Palette exported as CSS');
   }
 }
