@@ -14,41 +14,32 @@ import { BaseLitComponent } from './base-lit-component';
 import { TOOL_ICONS } from '@shared/tool-icons';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import type { ToolId } from '@services/router-service';
+import { LanguageService } from '@services/index';
 
 /**
  * Tool definition for banner display
  */
 interface ToolDefinition {
   id: ToolId;
-  label: string;
-  description: string;
+  /** Translation key prefix - maps v4 tool IDs to translation keys (some renamed in v4) */
+  translationKey: string;
 }
 
 /**
- * Tool definitions in display order
+ * Tool definitions in display order.
+ * Maps v4 tool IDs to their translation key prefixes.
+ * Some tools were renamed in v4: matcher→extractor, character→swatch
  */
-const TOOLS: ToolDefinition[] = [
-  {
-    id: 'harmony',
-    label: 'Harmony',
-    description: 'Explore color harmonies and find complementary dyes',
-  },
-  { id: 'extractor', label: 'Extractor', description: 'Extract color palettes from images' },
-  {
-    id: 'accessibility',
-    label: 'Access',
-    description: 'Simulate colorblindness and check WCAG contrast',
-  },
-  { id: 'comparison', label: 'Compare', description: 'Compare multiple dyes side by side' },
-  {
-    id: 'gradient',
-    label: 'Gradient',
-    description: 'Create smooth color transitions between dyes',
-  },
-  { id: 'mixer', label: 'Mixer', description: 'Mix two dyes to find blended color matches' },
-  { id: 'presets', label: 'Presets', description: 'Browse and share community dye palettes' },
-  { id: 'budget', label: 'Budget', description: 'Find affordable alternatives to expensive dyes' },
-  { id: 'swatch', label: 'Swatch', description: 'Match dyes to character customization colors' },
+const TOOL_DEFINITIONS: ToolDefinition[] = [
+  { id: 'harmony', translationKey: 'tools.harmony' },
+  { id: 'extractor', translationKey: 'tools.matcher' }, // v4 renamed: matcher → extractor
+  { id: 'accessibility', translationKey: 'tools.accessibility' },
+  { id: 'comparison', translationKey: 'tools.comparison' },
+  { id: 'gradient', translationKey: 'tools.mixer' }, // gradient uses mixer translations
+  { id: 'mixer', translationKey: 'tools.mixer' },
+  { id: 'presets', translationKey: 'tools.presets' },
+  { id: 'budget', translationKey: 'tools.budget' },
+  { id: 'swatch', translationKey: 'tools.character' }, // v4 renamed: character → swatch
 ];
 
 /**
@@ -71,6 +62,22 @@ export class ToolBanner extends BaseLitComponent {
    */
   @property({ type: String, attribute: 'active-tool' })
   activeTool: ToolId = 'harmony';
+
+  private languageUnsubscribe: (() => void) | null = null;
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    // Subscribe to language changes to update translated text
+    this.languageUnsubscribe = LanguageService.subscribe(() => {
+      this.requestUpdate();
+    });
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.languageUnsubscribe?.();
+    this.languageUnsubscribe = null;
+  }
 
   static override styles: CSSResultGroup = [
     BaseLitComponent.baseStyles,
@@ -269,6 +276,9 @@ export class ToolBanner extends BaseLitComponent {
   private renderToolButton(tool: ToolDefinition): TemplateResult {
     const isActive = tool.id === this.activeTool;
     const icon = TOOL_ICONS[tool.id];
+    // Get translated label and description using the translation key prefix
+    const label = LanguageService.t(`${tool.translationKey}.shortName`);
+    const description = LanguageService.t(`${tool.translationKey}.description`);
 
     const classes = {
       'v4-tool-btn': true,
@@ -279,14 +289,14 @@ export class ToolBanner extends BaseLitComponent {
       <button
         class=${classMap(classes)}
         type="button"
-        title=${tool.description}
-        aria-label=${tool.description}
+        title=${description}
+        aria-label=${description}
         aria-current=${isActive ? 'page' : nothing}
         data-tool=${tool.id}
         @click=${() => this.handleToolClick(tool.id)}
       >
         <span class="v4-tool-icon" aria-hidden="true"> ${icon ? unsafeHTML(icon) : nothing} </span>
-        <span class="v4-tool-label">${tool.label}</span>
+        <span class="v4-tool-label">${label}</span>
       </button>
     `;
   }
@@ -296,10 +306,10 @@ export class ToolBanner extends BaseLitComponent {
       <nav
         class="v4-tool-banner"
         role="navigation"
-        aria-label="Tool selection"
+        aria-label="${LanguageService.t('aria.toolSelection') || 'Tool selection'}"
         @keydown=${this.handleKeyDown}
       >
-        ${TOOLS.map((tool) => this.renderToolButton(tool))}
+        ${TOOL_DEFINITIONS.map((tool) => this.renderToolButton(tool))}
       </nav>
     `;
   }

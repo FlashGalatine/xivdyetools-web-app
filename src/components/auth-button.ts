@@ -91,7 +91,7 @@ export class AuthButton extends BaseComponent {
         'flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90',
       attributes: {
         style: `background-color: ${DISCORD_BLURPLE};`,
-        'aria-label': 'Login with Discord',
+        'aria-label': LanguageService.t('auth.loginWithDiscord'),
       },
     });
     discordBtn.innerHTML = `${ICON_DISCORD}<span class="hidden sm:inline">Discord</span><span class="sm:hidden">Discord</span>`;
@@ -103,7 +103,7 @@ export class AuthButton extends BaseComponent {
         'flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-white transition-all hover:opacity-90',
       attributes: {
         style: `background-color: ${XIVAUTH_BLUE};`,
-        'aria-label': 'Login with XIVAuth',
+        'aria-label': LanguageService.t('auth.loginWithXIVAuth'),
       },
     });
     xivauthBtn.innerHTML = `${ICON_XIVAUTH}<span class="hidden sm:inline">XIVAuth</span><span class="sm:hidden">XIVAuth</span>`;
@@ -128,7 +128,7 @@ export class AuthButton extends BaseComponent {
       className: 'flex items-center gap-2 px-2 py-1 rounded-lg transition-colors border',
       attributes: {
         style: 'border-color: var(--theme-border); color: var(--theme-text);',
-        'aria-label': 'User menu',
+        'aria-label': LanguageService.t('auth.userMenu'),
         'aria-haspopup': 'true',
         'aria-expanded': String(this.isDropdownOpen),
       },
@@ -219,7 +219,7 @@ export class AuthButton extends BaseComponent {
           style: 'color: var(--theme-text); opacity: 0.7;',
         },
       });
-      characterInfo.innerHTML = `<span>${user.primary_character.name}</span><span class="opacity-50">@</span><span>${user.primary_character.server}</span>${user.primary_character.verified ? '<span class="text-green-500 ml-1" title="Verified">✓</span>' : ''}`;
+      characterInfo.innerHTML = `<span>${user.primary_character.name}</span><span class="opacity-50">@</span><span>${user.primary_character.server}</span>${user.primary_character.verified ? `<span class="text-green-500 ml-1" title="${LanguageService.t('auth.verified')}">✓</span>` : ''}`;
       header.appendChild(characterInfo);
     }
 
@@ -236,7 +236,7 @@ export class AuthButton extends BaseComponent {
         style: 'color: var(--theme-text);',
       },
     });
-    logoutBtn.innerHTML = `<span class="text-red-500">↩</span> Logout`;
+    logoutBtn.innerHTML = `<span class="text-red-500">↩</span> ${LanguageService.t('auth.logout')}`;
 
     // Add hover effect
     logoutBtn.addEventListener('mouseenter', () => {

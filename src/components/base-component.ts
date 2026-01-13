@@ -10,6 +10,7 @@
 import { ErrorHandler } from '@shared/error-handler';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
+import { LanguageService } from '@services/index';
 
 /**
  * Options for creating HTML elements within components
@@ -330,14 +331,14 @@ export abstract class BaseComponent implements ComponentLifecycle {
     // Error message
     const title = this.createElement('h3', {
       className: 'component-error-title',
-      textContent: 'Something went wrong',
+      textContent: LanguageService.t('errors.somethingWentWrong'),
     });
     errorWrapper.appendChild(title);
 
     // Error details
     const details = this.createElement('p', {
       className: 'component-error-details',
-      textContent: this.errorState.error?.message || 'An unexpected error occurred',
+      textContent: this.errorState.error?.message || LanguageService.t('errors.unexpectedError'),
     });
     errorWrapper.appendChild(details);
 
@@ -350,7 +351,7 @@ export abstract class BaseComponent implements ComponentLifecycle {
     if (this.errorState.retryCount < BaseComponent.MAX_RETRY_COUNT) {
       const retryBtn = this.createElement('button', {
         className: 'component-error-btn component-error-btn-primary',
-        textContent: 'Try Again',
+        textContent: LanguageService.t('errors.tryAgain'),
         attributes: { type: 'button' },
         dataAttributes: { action: 'retry' },
       });
@@ -361,7 +362,7 @@ export abstract class BaseComponent implements ComponentLifecycle {
     // Reset button (always available)
     const resetBtn = this.createElement('button', {
       className: 'component-error-btn component-error-btn-secondary',
-      textContent: 'Reset Component',
+      textContent: LanguageService.t('errors.resetComponent'),
       attributes: { type: 'button' },
       dataAttributes: { action: 'reset' },
     });
@@ -374,7 +375,9 @@ export abstract class BaseComponent implements ComponentLifecycle {
     if (this.errorState.retryCount > 0) {
       const retryInfo = this.createElement('p', {
         className: 'component-error-retry-info',
-        textContent: `Retry attempts: ${this.errorState.retryCount}/${BaseComponent.MAX_RETRY_COUNT}`,
+        textContent: LanguageService.t('errors.retryAttempts')
+          .replace('{count}', String(this.errorState.retryCount))
+          .replace('{max}', String(BaseComponent.MAX_RETRY_COUNT)),
       });
       errorWrapper.appendChild(retryInfo);
     }

@@ -10,6 +10,7 @@
 import { html, css, CSSResultGroup, TemplateResult, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
+import { LanguageService } from '@services/index';
 
 /**
  * V4 Range Slider - Enhanced slider with value display
@@ -323,7 +324,7 @@ export class RangeSliderV4 extends BaseLitComponent {
             step=${this.step}
             ?disabled=${this.disabled}
             name=${this.name || nothing}
-            aria-label=${this.label || 'Slider'}
+            aria-label=${this.label || LanguageService.t('aria.slider')}
             aria-valuemin=${this.min}
             aria-valuemax=${this.max}
             aria-valuenow=${this.value}

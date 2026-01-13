@@ -19,6 +19,7 @@
 import { html, css, CSSResultGroup, TemplateResult, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
+import { LanguageService } from '@services/index';
 import type { Dye } from '@shared/types';
 
 /**
@@ -319,18 +320,11 @@ export class V4ColorWheel extends BaseLitComponent {
   }
 
   /**
-   * Get display name for harmony type
+   * Get display name for harmony type (localized)
    */
   private getHarmonyDisplayName(): string {
-    const names: Record<HarmonyType, string> = {
-      complementary: 'Complementary',
-      analogous: 'Analogous',
-      triadic: 'Triadic',
-      'split-complementary': 'Split-Comp',
-      tetradic: 'Tetradic',
-      square: 'Square',
-    };
-    return names[this.harmonyType] || this.harmonyType;
+    // Use core library localization for harmony types
+    return LanguageService.getHarmonyType(this.harmonyType);
   }
 
   /**
@@ -445,14 +439,14 @@ export class V4ColorWheel extends BaseLitComponent {
         <div
           class="main-swatch-display ${this.empty ? 'empty' : ''}"
           style="${swatchStyle}"
-          title="${this.empty ? 'Select a base color' : `Base: ${this.baseColor}`}"
+          title="${this.empty ? LanguageService.t('harmony.selectColorPrompt') : `Base: ${this.baseColor}`}"
         >
           ${this.empty ? html`<span class="empty-placeholder">?</span>` : nothing}
         </div>
 
         <!-- Harmony type label -->
         <span class="harmony-label ${this.empty ? 'empty' : ''}">
-          ${this.empty ? 'Select Color' : this.getHarmonyDisplayName()}
+          ${this.empty ? LanguageService.t('harmony.selectColorPrompt') : this.getHarmonyDisplayName()}
         </span>
       </div>
     `;

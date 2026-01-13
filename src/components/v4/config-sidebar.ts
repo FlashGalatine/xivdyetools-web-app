@@ -15,6 +15,7 @@ import { html, css, CSSResultGroup, TemplateResult, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ConfigController } from '@services/config-controller';
+import { authService, LanguageService } from '@services/index';
 import type { ToolId } from '@services/router-service';
 import type {
   HarmonyConfig,
@@ -29,8 +30,10 @@ import type {
   MarketConfig,
   ConfigKey,
   DisplayOptionsConfig,
+  PresetCategoryFilter,
 } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
+import { showPresetSubmissionForm } from '@components/preset-submission-form';
 import type { DataCenter, World } from '@shared/types';
 import { logger } from '@shared/logger';
 
@@ -118,7 +121,9 @@ export class ConfigSidebar extends BaseLitComponent {
   @state() private presetsConfig: PresetsConfig = {
     showMyPresetsOnly: false,
     showFavorites: false,
-    sortBy: 'newest',
+    sortBy: 'popular',
+    category: 'all',
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private budgetConfig: BudgetConfig = {
     maxPrice: 200000,
@@ -150,6 +155,7 @@ export class ConfigSidebar extends BaseLitComponent {
   @state() private marketBoardCollapsed: boolean = false;
 
   private configController: ConfigController | null = null;
+  private languageUnsubscribe: (() => void) | null = null;
 
   static override styles: CSSResultGroup = [
     BaseLitComponent.baseStyles,
@@ -376,9 +382,136 @@ export class ConfigSidebar extends BaseLitComponent {
         }
       }
 
+      /* Auth section styles */
+      .auth-section {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
+      }
+
+      .auth-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .auth-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: opacity var(--v4-transition-fast, 150ms);
+      }
+
+      .auth-btn:hover {
+        opacity: 0.9;
+      }
+
+      .auth-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .auth-btn-discord {
+        background-color: #5865F2;
+        color: white;
+      }
+
+      .auth-btn-xivauth {
+        background-color: #3b82f6;
+        color: white;
+      }
+
+      .user-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        margin-bottom: 12px;
+      }
+
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .user-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .user-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--theme-text, #e0e0e0);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .user-provider {
+        font-size: 11px;
+        color: var(--theme-text-muted, #888888);
+      }
+
+      .submit-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: var(--theme-primary, #d4af37);
+        color: var(--theme-background, #1a1a1a);
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity var(--v4-transition-fast, 150ms);
+      }
+
+      .submit-btn:hover {
+        opacity: 0.9;
+      }
+
+      .logout-btn {
+        display: block;
+        width: 100%;
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: transparent;
+        border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.2));
+        border-radius: 6px;
+        color: var(--theme-text-muted, #888888);
+        font-size: 12px;
+        cursor: pointer;
+        transition: all var(--v4-transition-fast, 150ms);
+      }
+
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--theme-text-muted, #888888);
+      }
+
       /* Reduced motion */
       @media (prefers-reduced-motion: reduce) {
         :host {
+          transition: none;
+        }
+        .auth-btn,
+        .submit-btn,
+        .logout-btn {
           transition: none;
         }
       }
@@ -389,6 +522,16 @@ export class ConfigSidebar extends BaseLitComponent {
     super.connectedCallback();
     this.loadConfigsFromController();
     this.loadServerData();
+    // Subscribe to language changes to update translated text
+    this.languageUnsubscribe = LanguageService.subscribe(() => {
+      this.requestUpdate();
+    });
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.languageUnsubscribe?.();
+    this.languageUnsubscribe = null;
   }
 
   /**
@@ -552,7 +695,7 @@ export class ConfigSidebar extends BaseLitComponent {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'harmony'}>
         <div class="config-group">
-          <div class="config-label">Harmony Type</div>
+          <div class="config-label">${LanguageService.t('config.harmonyType')}</div>
           <select
             class="config-select"
             .value=${this.harmonyConfig.harmonyType}
@@ -561,23 +704,23 @@ export class ConfigSidebar extends BaseLitComponent {
               this.handleConfigChange('harmony', 'harmonyType', value);
             }}
           >
-            <option value="complementary">Complementary</option>
-            <option value="analogous">Analogous</option>
-            <option value="triadic">Triadic</option>
-            <option value="split-complementary">Split-Complementary</option>
-            <option value="tetradic">Tetradic</option>
-            <option value="square">Square</option>
-            <option value="monochromatic">Monochromatic</option>
-            <option value="compound">Compound</option>
-            <option value="shades">Shades</option>
+            <option value="complementary">${LanguageService.t('config.complementary')}</option>
+            <option value="analogous">${LanguageService.t('config.analogous')}</option>
+            <option value="triadic">${LanguageService.t('config.triadic')}</option>
+            <option value="split-complementary">${LanguageService.t('config.splitComplementary')}</option>
+            <option value="tetradic">${LanguageService.t('config.tetradic')}</option>
+            <option value="square">${LanguageService.t('config.square')}</option>
+            <option value="monochromatic">${LanguageService.t('config.monochromatic')}</option>
+            <option value="compound">${LanguageService.t('config.compound')}</option>
+            <option value="shades">${LanguageService.t('config.shades')}</option>
           </select>
         </div>
 
         <div class="config-group">
-          <div class="config-label">Matching Algorithm</div>
+          <div class="config-label">${LanguageService.t('config.matchingAlgorithm')}</div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Perceptual Matching"
+              label=${LanguageService.t('config.perceptualMatching')}
               .checked=${this.harmonyConfig.strictMatching}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('harmony', 'strictMatching', e.detail.checked)}
@@ -585,8 +728,8 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
           <div class="config-description">
             ${this.harmonyConfig.strictMatching
-              ? 'Uses DeltaE for perceptually accurate color matching'
-              : 'Uses hue angles for artistic color harmony'}
+              ? LanguageService.t('config.perceptualMatchingDesc')
+              : LanguageService.t('config.hueMatchingDesc')}
           </div>
         </div>
 
@@ -613,10 +756,10 @@ export class ConfigSidebar extends BaseLitComponent {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'extractor'}>
         <div class="config-group">
-          <div class="config-label">Extraction Settings</div>
+          <div class="config-label">${LanguageService.t('config.extractionSettings')}</div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Vibrancy Boost"
+              label=${LanguageService.t('config.vibrancyBoost')}
               .checked=${this.extractorConfig.vibrancyBoost}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('extractor', 'vibrancyBoost', e.detail.checked)}
@@ -624,7 +767,7 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
           <div class="slider-wrapper">
             <v4-range-slider
-              label="Max Colors"
+              label=${LanguageService.t('config.maxColors')}
               .value=${this.extractorConfig.maxColors}
               .min=${3}
               .max=${10}
@@ -657,10 +800,10 @@ export class ConfigSidebar extends BaseLitComponent {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'accessibility'}>
         <div class="config-group">
-          <div class="config-label">Vision Types</div>
+          <div class="config-label">${LanguageService.t('config.visionTypes')}</div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Deuteranopia"
+              label=${LanguageService.t('config.deuteranopia')}
               .checked=${this.accessibilityConfig.deuteranopia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('accessibility', 'deuteranopia', e.detail.checked)}
@@ -668,7 +811,7 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Protanopia"
+              label=${LanguageService.t('config.protanopia')}
               .checked=${this.accessibilityConfig.protanopia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('accessibility', 'protanopia', e.detail.checked)}
@@ -676,7 +819,7 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Tritanopia"
+              label=${LanguageService.t('config.tritanopia')}
               .checked=${this.accessibilityConfig.tritanopia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('accessibility', 'tritanopia', e.detail.checked)}
@@ -684,7 +827,7 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Achromatopsia"
+              label=${LanguageService.t('config.achromatopsia')}
               .checked=${this.accessibilityConfig.achromatopsia}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('accessibility', 'achromatopsia', e.detail.checked)}
@@ -693,10 +836,10 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">Simulation Display</div>
+          <div class="config-label">${LanguageService.t('config.simulationDisplay')}</div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Show Labels"
+              label=${LanguageService.t('config.showLabels')}
               .checked=${this.accessibilityConfig.showLabels}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('accessibility', 'showLabels', e.detail.checked)}
@@ -704,7 +847,7 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
           <div class="config-row">
             <v4-toggle-switch
-              label="Show Hex Values"
+              label=${LanguageService.t('config.showHexValues')}
               .checked=${this.accessibilityConfig.showHexValues}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('accessibility', 'showHexValues', e.detail.checked)}
@@ -712,7 +855,7 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
           <div class="config-row">
             <v4-toggle-switch
-              label="High Contrast Mode"
+              label=${LanguageService.t('config.highContrastMode')}
               .checked=${this.accessibilityConfig.highContrastMode}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleConfigChange('accessibility', 'highContrastMode', e.detail.checked)}
@@ -765,10 +908,10 @@ export class ConfigSidebar extends BaseLitComponent {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'gradient'}>
         <div class="config-group">
-          <div class="config-label">Gradient Steps</div>
+          <div class="config-label">${LanguageService.t('config.gradientSteps')}</div>
           <div class="slider-wrapper">
             <v4-range-slider
-              label="Count"
+              label=${LanguageService.t('config.count')}
               .value=${this.gradientConfig.stepCount}
               .min=${3}
               .max=${12}
@@ -779,7 +922,7 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">Color Space</div>
+          <div class="config-label">${LanguageService.t('config.colorSpace')}</div>
           <select
             class="config-select"
             .value=${this.gradientConfig.interpolation}
@@ -788,8 +931,8 @@ export class ConfigSidebar extends BaseLitComponent {
               this.handleConfigChange('gradient', 'interpolation', value);
             }}
           >
-            <option value="hsv">HSV (Hue-based)</option>
-            <option value="rgb">RGB (Direct)</option>
+            <option value="hsv">${LanguageService.t('config.hsvHueBased')}</option>
+            <option value="rgb">${LanguageService.t('config.rgbDirect')}</option>
           </select>
         </div>
 
@@ -816,10 +959,10 @@ export class ConfigSidebar extends BaseLitComponent {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'mixer'}>
         <div class="config-group">
-          <div class="config-label">Result Settings</div>
+          <div class="config-label">${LanguageService.t('config.resultSettings')}</div>
           <div class="slider-wrapper">
             <v4-range-slider
-              label="Max Results"
+              label=${LanguageService.t('config.maxResults')}
               .value=${this.mixerConfig.maxResults}
               .min=${3}
               .max=${8}
@@ -851,28 +994,30 @@ export class ConfigSidebar extends BaseLitComponent {
   private renderPresetsConfig(): TemplateResult {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'presets'}>
+        ${this.renderPresetsAuthSection()}
+
         <div class="config-group">
-          <div class="config-label">Display Options</div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="Show My Presets Only"
-              .checked=${this.presetsConfig.showMyPresetsOnly}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('presets', 'showMyPresetsOnly', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
-          <div class="config-row">
-            <v4-toggle-switch
-              label="Show Favorites"
-              .checked=${this.presetsConfig.showFavorites}
-              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
-                this.handleConfigChange('presets', 'showFavorites', e.detail.checked)}
-            ></v4-toggle-switch>
-          </div>
+          <div class="config-label">${LanguageService.t('config.category')}</div>
+          <select
+            class="config-select"
+            .value=${this.presetsConfig.category}
+            @change=${(e: Event) => {
+              const value = (e.target as HTMLSelectElement).value as PresetCategoryFilter;
+              this.handleConfigChange('presets', 'category', value);
+            }}
+          >
+            <option value="all">${LanguageService.t('config.allCategories')}</option>
+            <option value="jobs">${LanguageService.t('config.jobs')}</option>
+            <option value="grand-companies">${LanguageService.t('config.grandCompanies')}</option>
+            <option value="seasons">${LanguageService.t('config.seasons')}</option>
+            <option value="events">${LanguageService.t('config.events')}</option>
+            <option value="aesthetics">${LanguageService.t('config.aesthetics')}</option>
+            <option value="community">${LanguageService.t('config.community')}</option>
+          </select>
         </div>
 
         <div class="config-group">
-          <div class="config-label">Sort By</div>
+          <div class="config-label">${LanguageService.t('config.sortBy')}</div>
           <select
             class="config-select"
             .value=${this.presetsConfig.sortBy}
@@ -881,14 +1026,128 @@ export class ConfigSidebar extends BaseLitComponent {
               this.handleConfigChange('presets', 'sortBy', value);
             }}
           >
-            <option value="newest">Newest First</option>
-            <option value="popular">Most Popular</option>
-            <option value="votes">Most Votes</option>
-            <option value="alphabetical">Alphabetical</option>
+            <option value="popular">${LanguageService.t('config.mostPopular')}</option>
+            <option value="recent">${LanguageService.t('config.mostRecent')}</option>
+            <option value="name">${LanguageService.t('config.alphabetical')}</option>
           </select>
+        </div>
+
+        <div class="config-group">
+          <div class="config-label">${LanguageService.t('config.filters')}</div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label=${LanguageService.t('config.showMyPresetsOnly')}
+              .checked=${this.presetsConfig.showMyPresetsOnly}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('presets', 'showMyPresetsOnly', e.detail.checked)}
+            ></v4-toggle-switch>
+          </div>
+          <div class="config-row">
+            <v4-toggle-switch
+              label=${LanguageService.t('config.showFavorites')}
+              .checked=${this.presetsConfig.showFavorites}
+              @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
+                this.handleConfigChange('presets', 'showFavorites', e.detail.checked)}
+            ></v4-toggle-switch>
+          </div>
+        </div>
+
+        <v4-display-options
+          .showHex=${this.globalDisplayOptions.showHex}
+          .showRgb=${this.globalDisplayOptions.showRgb}
+          .showHsv=${this.globalDisplayOptions.showHsv}
+          .showLab=${this.globalDisplayOptions.showLab}
+          .showPrice=${this.globalDisplayOptions.showPrice}
+          .showDeltaE=${this.globalDisplayOptions.showDeltaE}
+          .showAcquisition=${this.globalDisplayOptions.showAcquisition}
+          .visibleGroups=${['colorFormats', 'resultMetadata']}
+          @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
+            this.handleDisplayOptionsChange('harmony', e)}
+        ></v4-display-options>
+      </div>
+    `;
+  }
+
+  /**
+   * Render auth section for presets
+   */
+  private renderPresetsAuthSection(): TemplateResult {
+    const isAuthenticated = authService.isAuthenticated();
+    const user = authService.getUser();
+
+    if (isAuthenticated && user) {
+      // Logged in - show user card and submit button
+      const avatarUrl = user.avatar_url || `https://cdn.discordapp.com/embed/avatars/${parseInt(user.id || '0') % 5}.png`;
+      const displayName = user.global_name || user.username || 'User';
+      const providerLabel = user.auth_provider === 'xivauth' ? 'XIVAuth' : 'Discord';
+
+      return html`
+        <div class="auth-section">
+          <div class="config-label">${LanguageService.t('config.account')}</div>
+          <div class="user-card">
+            <img class="user-avatar" src="${avatarUrl}" alt="${displayName}" />
+            <div class="user-info">
+              <div class="user-name">${displayName}</div>
+              <div class="user-provider">${LanguageService.tInterpolate('config.via', { provider: providerLabel })}</div>
+            </div>
+          </div>
+          <button class="submit-btn" @click=${this.handleSubmitPreset}>
+            + ${LanguageService.t('config.submitPreset')}
+          </button>
+          <button class="logout-btn" @click=${this.handleLogout}>
+            ${LanguageService.t('config.logout')}
+          </button>
+        </div>
+      `;
+    }
+
+    // Logged out - show login buttons
+    return html`
+      <div class="auth-section">
+        <div class="config-label">${LanguageService.t('config.loginToSubmit')}</div>
+        <div class="auth-buttons">
+          <button class="auth-btn auth-btn-discord" @click=${() => this.handleLogin('discord')}>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+            ${LanguageService.t('config.loginWithDiscord')}
+          </button>
+          <button class="auth-btn auth-btn-xivauth" @click=${() => this.handleLogin('xivauth')}>
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+            ${LanguageService.t('config.loginWithXIVAuth')}
+          </button>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Handle login button click
+   */
+  private handleLogin(provider: 'discord' | 'xivauth'): void {
+    authService.login(provider, 'presets');
+  }
+
+  /**
+   * Handle logout button click
+   */
+  private handleLogout(): void {
+    authService.logout();
+    this.requestUpdate();
+  }
+
+  /**
+   * Handle submit preset button click
+   */
+  private handleSubmitPreset(): void {
+    showPresetSubmissionForm((result) => {
+      if (result.success) {
+        logger.info('[ConfigSidebar] Preset submitted successfully');
+        // The preset tool will handle refreshing the list
+      }
+    });
   }
 
   /**
@@ -898,10 +1157,10 @@ export class ConfigSidebar extends BaseLitComponent {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'budget'}>
         <div class="config-group">
-          <div class="config-label">Budget Limit</div>
+          <div class="config-label">${LanguageService.t('config.budgetLimit')}</div>
           <div class="slider-wrapper">
             <v4-range-slider
-              label="Max Price"
+              label=${LanguageService.t('config.maxPrice')}
               .value=${this.budgetConfig.maxPrice}
               .min=${0}
               .max=${200000}
@@ -913,7 +1172,7 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
           <div class="slider-wrapper">
             <v4-range-slider
-              label="Max Results"
+              label=${LanguageService.t('config.maxResults')}
               .value=${this.budgetConfig.maxResults}
               .min=${1}
               .max=${20}
@@ -924,10 +1183,10 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">Color Distance</div>
+          <div class="config-label">${LanguageService.t('config.colorDistance')}</div>
           <div class="slider-wrapper">
             <v4-range-slider
-              label="Max Delta-E"
+              label=${LanguageService.t('config.maxDeltaE')}
               .value=${this.budgetConfig.maxDeltaE}
               .min=${0}
               .max=${100}
@@ -971,7 +1230,7 @@ export class ConfigSidebar extends BaseLitComponent {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'swatch'}>
         <div class="config-group">
-          <div class="config-label">Color Sheet</div>
+          <div class="config-label">${LanguageService.t('config.colorSheet')}</div>
           <select
             class="config-select"
             .value=${this.swatchConfig.colorSheet}
@@ -980,20 +1239,20 @@ export class ConfigSidebar extends BaseLitComponent {
               this.handleConfigChange('swatch', 'colorSheet', value);
             }}
           >
-            <option value="eyeColors">Eye Colors</option>
-            <option value="hairColors">Hair Colors</option>
-            <option value="skinColors">Skin Colors</option>
-            <option value="highlightColors">Highlight Colors</option>
-            <option value="lipColorsDark">Lip Colors (Dark)</option>
-            <option value="lipColorsLight">Lip Colors (Light)</option>
-            <option value="tattooColors">Tattoo/Limbal Colors</option>
-            <option value="facePaintColorsDark">Face Paint (Dark)</option>
-            <option value="facePaintColorsLight">Face Paint (Light)</option>
+            <option value="eyeColors">${LanguageService.t('config.eyeColors')}</option>
+            <option value="hairColors">${LanguageService.t('config.hairColors')}</option>
+            <option value="skinColors">${LanguageService.t('config.skinColors')}</option>
+            <option value="highlightColors">${LanguageService.t('config.highlightColors')}</option>
+            <option value="lipColorsDark">${LanguageService.t('config.lipColorsDark')}</option>
+            <option value="lipColorsLight">${LanguageService.t('config.lipColorsLight')}</option>
+            <option value="tattooColors">${LanguageService.t('config.tattooColors')}</option>
+            <option value="facePaintColorsDark">${LanguageService.t('config.facePaintDark')}</option>
+            <option value="facePaintColorsLight">${LanguageService.t('config.facePaintLight')}</option>
           </select>
         </div>
 
         <div class="config-group" ?hidden=${!showCharacterSection}>
-          <div class="config-label">Character</div>
+          <div class="config-label">${LanguageService.t('config.character')}</div>
           <select
             class="config-select"
             .value=${this.swatchConfig.race}
@@ -1049,10 +1308,10 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">Search Settings</div>
+          <div class="config-label">${LanguageService.t('config.searchSettings')}</div>
           <div class="slider-wrapper">
             <v4-range-slider
-              label="Max Results"
+              label=${LanguageService.t('config.maxResults')}
               .value=${this.swatchConfig.maxResults}
               .min=${1}
               .max=${6}
@@ -1063,7 +1322,7 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">Display Options</div>
+          <div class="config-label">${LanguageService.t('config.displayOptions')}</div>
           <v4-display-options
             .showHex=${this.globalDisplayOptions.showHex}
             .showRgb=${this.globalDisplayOptions.showRgb}
@@ -1085,7 +1344,7 @@ export class ConfigSidebar extends BaseLitComponent {
    * Check if current tool supports market data
    */
   private toolSupportsMarket(): boolean {
-    return ['harmony', 'comparison', 'budget', 'mixer', 'extractor', 'gradient'].includes(
+    return ['harmony', 'comparison', 'budget', 'mixer', 'extractor', 'gradient', 'presets'].includes(
       this.activeTool
     );
   }
@@ -1118,7 +1377,7 @@ export class ConfigSidebar extends BaseLitComponent {
               }
             }}
           >
-            <div class="config-label">Market Board</div>
+            <div class="config-label">${LanguageService.t('config.marketBoard')}</div>
             <span class="collapse-icon ${this.marketBoardCollapsed ? 'collapsed' : ''}"
               >${this.marketBoardCollapsed ? '▼' : '▲'}</span
             >
@@ -1126,7 +1385,7 @@ export class ConfigSidebar extends BaseLitComponent {
           <div class="config-group-content ${this.marketBoardCollapsed ? 'collapsed' : ''}">
             <div class="config-row">
               <v4-toggle-switch
-                label="Enable Market Board"
+                label=${LanguageService.t('config.enableMarketBoard')}
                 .checked=${this.marketConfig.showPrices}
                 @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                   this.handleConfigChange('market', 'showPrices', e.detail.checked)}
@@ -1142,7 +1401,7 @@ export class ConfigSidebar extends BaseLitComponent {
               }}
             >
               ${this.dataCenters.length === 0
-                ? html`<option value="Crystal">Loading servers...</option>`
+                ? html`<option value="Crystal">${LanguageService.t('config.loadingServers')}</option>`
                 : sortedDataCenters.map(
                     (dc) => html`
                       <optgroup label="${dc.name} (${dc.region})">
@@ -1150,7 +1409,7 @@ export class ConfigSidebar extends BaseLitComponent {
                           value="${dc.name}"
                           ?selected=${this.marketConfig.selectedServer === dc.name}
                         >
-                          ${dc.name} - All Worlds
+                          ${dc.name} - ${LanguageService.t('config.allWorlds')}
                         </option>
                         ${this.worlds
                           .filter((w) => dc.worlds.includes(w.id))
@@ -1170,7 +1429,7 @@ export class ConfigSidebar extends BaseLitComponent {
                   )}
             </select>
             <div class="config-description">
-              Prices fetched from Universalis for ${this.marketConfig.selectedServer}
+              ${LanguageService.tInterpolate('config.pricesFetchedFrom', { server: this.marketConfig.selectedServer })}
             </div>
           </div>
         </div>
@@ -1180,15 +1439,15 @@ export class ConfigSidebar extends BaseLitComponent {
 
   protected override render(): TemplateResult {
     return html`
-      <aside class="v4-config-sidebar" role="complementary" aria-label="Tool configuration">
+      <aside class="v4-config-sidebar" role="complementary" aria-label="${LanguageService.t('aria.toggleConfigSidebar')}">
         <!-- Sidebar Header -->
         <header class="v4-sidebar-header">
-          <span class="v4-sidebar-title">Configuration</span>
+          <span class="v4-sidebar-title">${LanguageService.t('common.options')}</span>
           <button
             class="v4-sidebar-collapse"
             type="button"
-            title="Close sidebar"
-            aria-label="Close sidebar"
+            title="${LanguageService.t('aria.closeSidebar')}"
+            aria-label="${LanguageService.t('aria.closeSidebar')}"
             @click=${this.handleCollapseClick}
           >
             ×

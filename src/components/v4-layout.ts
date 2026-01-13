@@ -21,6 +21,7 @@ import type { BaseComponent } from './base-component';
 import type { V4LayoutShell } from './v4/v4-layout-shell';
 import { ModalContainer } from './modal-container';
 import { showThemeModal } from './v4/theme-modal';
+import { showLanguageModal } from './v4/language-modal';
 import { showAboutModal } from './about-modal';
 
 // Import V4 layout shell (registers custom element)
@@ -122,6 +123,12 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
   layoutElement.addEventListener('about-click', (() => {
     logger.debug('[V4 Layout] About button clicked');
     showAboutModal();
+  }) as EventListener);
+
+  // Listen for language button click from header
+  layoutElement.addEventListener('language-click', (() => {
+    logger.debug('[V4 Layout] Language button clicked');
+    showLanguageModal();
   }) as EventListener);
 
   // Initialize modal container for v4 layout
@@ -292,15 +299,13 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
         break;
       }
       case 'presets': {
-        const { PresetTool } = await import('@components/preset-tool');
-        activeTool = new PresetTool(toolContainer, {
-          leftPanel: mainPanel,
-          rightPanel: mainPanel,
-          drawerContent: null,
-        });
-        activeTool.init();
-        logger.info('[V4 Layout] Presets tool loaded');
-        break;
+        // Load v4 Lit-based preset tool
+        await import('./v4/preset-tool');
+        clearContainer(contentContainer);
+        const presetTool = document.createElement('v4-preset-tool');
+        contentContainer.appendChild(presetTool);
+        logger.info('[V4 Layout] Presets tool loaded (v4)');
+        return; // Early return since we handled the container directly
       }
       case 'budget': {
         const { BudgetTool } = await import('@components/budget-tool');

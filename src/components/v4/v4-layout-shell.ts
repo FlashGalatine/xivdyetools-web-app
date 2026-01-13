@@ -18,6 +18,7 @@ import { html, css, CSSResultGroup, TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import type { ToolId } from '@services/router-service';
+import { LanguageService } from '@services/index';
 
 // Import child components to ensure registration
 import './v4-app-header';
@@ -798,7 +799,7 @@ export class V4LayoutShell extends BaseLitComponent {
           @click=${this.handleOverlayClick}
           role="button"
           tabindex="-1"
-          aria-label="Close sidebar"
+          aria-label="${LanguageService.t('aria.closeSidebar')}"
         ></div>
 
         <!-- Content Area -->
@@ -825,8 +826,8 @@ export class V4LayoutShell extends BaseLitComponent {
       <button
         class="v4-mobile-sidebar-toggle"
         type="button"
-        title="Toggle configuration sidebar"
-        aria-label="Toggle configuration sidebar"
+        title="${LanguageService.t('aria.toggleConfigSidebar')}"
+        aria-label="${LanguageService.t('aria.toggleConfigSidebar')}"
         aria-expanded=${!this.sidebarCollapsed}
         @click=${this.toggleSidebar}
       >
@@ -840,8 +841,8 @@ export class V4LayoutShell extends BaseLitComponent {
           ? 'no-palette'
           : ''}"
         type="button"
-        title="Show color palette"
-        aria-label="Show color palette"
+        title="${LanguageService.t('aria.showColorPalette')}"
+        aria-label="${LanguageService.t('aria.showColorPalette')}"
         aria-expanded=${this.paletteDrawerOpen}
         @click=${this.togglePaletteDrawer}
       >

@@ -12,6 +12,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import type { DisplayOptionsConfig } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
+import { LanguageService } from '../../services/language-service';
 
 // Import toggle switch for internal use
 import './toggle-switch-v4';
@@ -347,13 +348,13 @@ export class DisplayOptionsV4 extends BaseLitComponent {
   private renderColorFormatsGroup(): TemplateResult {
     return html`
       <div class="option-group">
-        ${this.renderSectionHeader('Color Formats', this.colorFormatsCollapsed, () =>
+        ${this.renderSectionHeader(LanguageService.t('config.colorFormats'), this.colorFormatsCollapsed, () =>
           this.toggleSection('colorFormats')
         )}
         <div class="option-group-content ${this.colorFormatsCollapsed ? 'collapsed' : ''}">
           <div class="option-row">
             <v4-toggle-switch
-              label="Hex Codes"
+              label=${LanguageService.t('config.hexCodes')}
               .checked=${this.showHex}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleOptionChange('showHex', e.detail.checked)}
@@ -361,7 +362,7 @@ export class DisplayOptionsV4 extends BaseLitComponent {
           </div>
           <div class="option-row">
             <v4-toggle-switch
-              label="RGB Values"
+              label=${LanguageService.t('config.rgbValues')}
               .checked=${this.showRgb}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleOptionChange('showRgb', e.detail.checked)}
@@ -369,7 +370,7 @@ export class DisplayOptionsV4 extends BaseLitComponent {
           </div>
           <div class="option-row">
             <v4-toggle-switch
-              label="HSV Values"
+              label=${LanguageService.t('config.hsvValues')}
               .checked=${this.showHsv}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleOptionChange('showHsv', e.detail.checked)}
@@ -377,7 +378,7 @@ export class DisplayOptionsV4 extends BaseLitComponent {
           </div>
           <div class="option-row">
             <v4-toggle-switch
-              label="LAB Values"
+              label=${LanguageService.t('config.labValues')}
               .checked=${this.showLab}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleOptionChange('showLab', e.detail.checked)}
@@ -394,13 +395,13 @@ export class DisplayOptionsV4 extends BaseLitComponent {
   private renderResultMetadataGroup(): TemplateResult {
     return html`
       <div class="option-group">
-        ${this.renderSectionHeader('Result Details', this.resultMetadataCollapsed, () =>
+        ${this.renderSectionHeader(LanguageService.t('config.resultDetails'), this.resultMetadataCollapsed, () =>
           this.toggleSection('resultMetadata')
         )}
         <div class="option-group-content ${this.resultMetadataCollapsed ? 'collapsed' : ''}">
           <div class="option-row">
             <v4-toggle-switch
-              label="Show Prices"
+              label=${LanguageService.t('config.showPrices')}
               .checked=${this.showPrice}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleOptionChange('showPrice', e.detail.checked)}
@@ -408,7 +409,7 @@ export class DisplayOptionsV4 extends BaseLitComponent {
           </div>
           <div class="option-row">
             <v4-toggle-switch
-              label="Show Delta-E"
+              label=${LanguageService.t('config.showDeltaE')}
               .checked=${this.showDeltaE}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleOptionChange('showDeltaE', e.detail.checked)}
@@ -416,7 +417,7 @@ export class DisplayOptionsV4 extends BaseLitComponent {
           </div>
           <div class="option-row">
             <v4-toggle-switch
-              label="Show Acquisition"
+              label=${LanguageService.t('config.showAcquisition')}
               .checked=${this.showAcquisition}
               @toggle-change=${(e: CustomEvent<{ checked: boolean }>) =>
                 this.handleOptionChange('showAcquisition', e.detail.checked)}

@@ -10,6 +10,7 @@
 import { html, css, CSSResultGroup, TemplateResult, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
+import { LanguageService } from '@services/index';
 
 /**
  * V4 Toggle Switch - Animated boolean toggle
@@ -193,7 +194,7 @@ export class ToggleSwitchV4 extends BaseLitComponent {
           role="switch"
           aria-checked=${this.checked}
           aria-disabled=${this.disabled}
-          aria-label=${this.label || 'Toggle'}
+          aria-label=${this.label || LanguageService.t('aria.toggle')}
           tabindex=${this.disabled ? -1 : 0}
           @keydown=${this.handleKeyDown}
         >

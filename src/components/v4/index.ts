@@ -27,3 +27,9 @@ export { V4ColorWheel } from './v4-color-wheel';
 export type { HarmonyType } from './v4-color-wheel';
 export { DisplayOptionsV4 } from './display-options-v4';
 export type { OptionGroup, DisplayOptionsChangeDetail } from './display-options-v4';
+
+// Community Presets components (Phase 6)
+export { PresetCard } from './preset-card';
+export type { PresetCardData } from './preset-card';
+export { PresetDetail } from './preset-detail';
+export { PresetTool } from './preset-tool';

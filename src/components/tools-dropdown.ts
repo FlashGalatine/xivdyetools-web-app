@@ -32,6 +32,7 @@ export class ToolsDropdown extends BaseComponent {
   private tools: ToolDef[] = [];
   private isDropdownOpen: boolean = false;
   private closeOtherDropdownsHandler: EventListener | null = null;
+  private languageUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, tools: ToolDef[]) {
     super(container);
@@ -282,23 +283,29 @@ export class ToolsDropdown extends BaseComponent {
   }
 
   /**
-   * Initialize component - subscribe to theme changes
+   * Initialize component - subscribe to theme and language changes
    */
   onMount(): void {
     // Subscribe to theme changes to update button text colors
     ThemeService.subscribe(() => {
       this.update();
     });
+    // Subscribe to language changes to update translated text
+    this.languageUnsubscribe = LanguageService.subscribe(() => {
+      this.update();
+    });
   }
 
   /**
-   * Cleanup event listeners
+   * Cleanup event listeners and subscriptions
    */
   onUnmount(): void {
     if (this.closeOtherDropdownsHandler) {
       document.removeEventListener('close-other-dropdowns', this.closeOtherDropdownsHandler);
       this.closeOtherDropdownsHandler = null;
     }
+    this.languageUnsubscribe?.();
+    this.languageUnsubscribe = null;
   }
 
   /**

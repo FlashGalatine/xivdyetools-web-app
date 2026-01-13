@@ -116,6 +116,23 @@ export interface MixerConfig {
 }
 
 /**
+ * Preset category types (matches backend categories)
+ */
+export type PresetCategoryFilter =
+  | 'all'
+  | 'jobs'
+  | 'grand-companies'
+  | 'seasons'
+  | 'events'
+  | 'aesthetics'
+  | 'community';
+
+/**
+ * Preset sort options
+ */
+export type PresetSortOption = 'popular' | 'recent' | 'name';
+
+/**
  * Community Presets configuration
  */
 export interface PresetsConfig {
@@ -123,8 +140,12 @@ export interface PresetsConfig {
   showMyPresetsOnly: boolean;
   /** Show only favorited presets */
   showFavorites: boolean;
-  /** Sort order (newest, popular, etc.) */
-  sortBy: string;
+  /** Sort order */
+  sortBy: PresetSortOption;
+  /** Category filter */
+  category: PresetCategoryFilter;
+  /** Display options for dye cards in preset details */
+  displayOptions: DisplayOptionsConfig;
 }
 
 /**
@@ -307,7 +328,9 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   presets: {
     showMyPresetsOnly: false,
     showFavorites: false,
-    sortBy: 'newest',
+    sortBy: 'popular',
+    category: 'all',
+    displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   budget: {
     maxPrice: 100000,

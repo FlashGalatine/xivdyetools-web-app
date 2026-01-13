@@ -17,6 +17,7 @@ import { CollectionService } from '@services/collection-service';
 import { ToastService } from '@services/toast-service';
 import { logger } from '@shared/logger';
 import { ICON_DICE, ICON_BROOM, ICON_CLOSE } from '@shared/ui-icons';
+import { LanguageService } from '@services/index';
 
 /**
  * Filter types for dye categories
@@ -39,6 +40,23 @@ const DYE_CATEGORY_ORDER = [
   'Purple',
   'Pink',
 ] as const;
+
+/**
+ * Mapping from dye category names to translation keys
+ */
+const CATEGORY_TRANSLATION_KEYS: Record<string, string> = {
+  White: 'colorPalette.whites',
+  Grey: 'colorPalette.grays',
+  Black: 'colorPalette.blacks',
+  Brown: 'colorPalette.browns',
+  Red: 'colorPalette.reds',
+  Orange: 'colorPalette.oranges',
+  Yellow: 'colorPalette.yellows',
+  Green: 'colorPalette.greens',
+  Blue: 'colorPalette.blues',
+  Purple: 'colorPalette.purples',
+  Pink: 'colorPalette.pinks',
+};
 
 /**
  * V4 Dye Palette Drawer - Right-side color selection panel
@@ -79,6 +97,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
   @state() private favoritesExpanded = true;
 
   private unsubscribeFavorites: (() => void) | null = null;
+  private languageUnsubscribe: (() => void) | null = null;
 
   static override styles: CSSResultGroup = [
     BaseLitComponent.baseStyles,
@@ -501,6 +520,10 @@ export class DyePaletteDrawer extends BaseLitComponent {
     super.connectedCallback();
     this.loadDyes();
     this.subscribeToFavorites();
+    // Subscribe to language changes to update translated text
+    this.languageUnsubscribe = LanguageService.subscribe(() => {
+      this.requestUpdate();
+    });
   }
 
   disconnectedCallback(): void {
@@ -509,6 +532,8 @@ export class DyePaletteDrawer extends BaseLitComponent {
       this.unsubscribeFavorites();
       this.unsubscribeFavorites = null;
     }
+    this.languageUnsubscribe?.();
+    this.languageUnsubscribe = null;
   }
 
   // =========================================================================
@@ -700,25 +725,25 @@ export class DyePaletteDrawer extends BaseLitComponent {
     return html`
       <aside class="drawer">
         <div class="drawer-header">
-          <span class="drawer-title">Color Palette</span>
+          <span class="drawer-title">${LanguageService.t('colorPalette.title')}</span>
           <div class="header-actions">
             <button
               class="action-btn random-btn"
               @click=${this.handleRandomDye}
-              title="Select random dye"
-              aria-label="Select random dye"
+              title="${LanguageService.t('aria.selectRandomDye')}"
+              aria-label="${LanguageService.t('aria.selectRandomDye')}"
             >
               ${unsafeHTML(ICON_DICE)}
             </button>
             <button
               class="action-btn clear-btn"
               @click=${this.handleClearDyes}
-              title="Clear all dyes"
-              aria-label="Clear all dyes"
+              title="${LanguageService.t('aria.clearAllDyes')}"
+              aria-label="${LanguageService.t('aria.clearAllDyes')}"
             >
               ${unsafeHTML(ICON_BROOM)}
             </button>
-            <button class="close-btn" @click=${this.handleClose} title="Close palette" aria-label="Close palette">
+            <button class="close-btn" @click=${this.handleClose} title="${LanguageService.t('aria.closePalette')}" aria-label="${LanguageService.t('aria.closePalette')}">
               ${unsafeHTML(ICON_CLOSE)}
             </button>
           </div>
@@ -748,7 +773,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
         <input
           type="text"
           class="search-input"
-          placeholder="Search dyes..."
+          placeholder=${LanguageService.t('colorPalette.searchPlaceholder')}
           .value=${this.searchQuery}
           @input=${this.handleSearchInput}
         />
@@ -757,12 +782,12 @@ export class DyePaletteDrawer extends BaseLitComponent {
   }
 
   private renderFilters(): TemplateResult {
-    const filters: { id: DyeFilter; label: string }[] = [
-      { id: 'all', label: 'All' },
-      { id: 'metallic', label: 'Metallic' },
-      { id: 'pastel', label: 'Pastel' },
-      { id: 'dark', label: 'Dark' },
-      { id: 'vibrant', label: 'Vibrant' },
+    const filters: { id: DyeFilter; labelKey: string }[] = [
+      { id: 'all', labelKey: 'colorPalette.all' },
+      { id: 'metallic', labelKey: 'colorPalette.metallic' },
+      { id: 'pastel', labelKey: 'colorPalette.pastel' },
+      { id: 'dark', labelKey: 'colorPalette.dark' },
+      { id: 'vibrant', labelKey: 'colorPalette.vibrant' },
     ];
 
     return html`
@@ -773,7 +798,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
               class="filter-chip ${this.activeFilter === f.id ? 'active' : ''}"
               @click=${() => this.handleFilterClick(f.id)}
             >
-              ${f.label}
+              ${LanguageService.t(f.labelKey)}
             </button>
           `
         )}
@@ -782,25 +807,33 @@ export class DyePaletteDrawer extends BaseLitComponent {
   }
 
   /**
+   * Get localized dye name, falling back to English name
+   */
+  private getLocalizedDyeName(dye: Dye): string {
+    return LanguageService.getDyeName(dye.id) || dye.name;
+  }
+
+  /**
    * Render a single dye swatch with favorite star button
    */
   private renderSwatch(dye: Dye): TemplateResult {
     const isFav = this.isFavorite(dye.id);
+    const localizedName = this.getLocalizedDyeName(dye);
 
     return html`
       <div
         class="swatch"
         style="background-color: ${dye.hex}"
-        title="${dye.name}"
+        title="${localizedName}"
         @click=${() => this.handleDyeClick(dye)}
       >
         <button
           class="swatch-favorite-btn ${isFav ? 'is-favorite' : ''}"
           type="button"
-          title="${isFav ? 'Remove from favorites' : 'Add to favorites'}"
+          title="${isFav ? LanguageService.t('aria.removeFromFavorites') : LanguageService.t('aria.addToFavorites')}"
           aria-label="${isFav
-            ? `Remove ${dye.name} from favorites`
-            : `Add ${dye.name} to favorites`}"
+            ? `${LanguageService.t('aria.removeFromFavorites')}: ${localizedName}`
+            : `${LanguageService.t('aria.addToFavorites')}: ${localizedName}`}"
           @click=${(e: Event) => this.handleFavoriteToggle(e, dye)}
         >
           ${isFav
@@ -829,7 +862,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
                 d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
               />
             </svg>
-            Favorites (${this.favoriteDyes.length})
+            ${LanguageService.t('colorPalette.favorites')} (${this.favoriteDyes.length})
           </span>
           <svg
             class="chevron ${this.favoritesExpanded ? '' : 'collapsed'}"
@@ -848,7 +881,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
                   ${this.favoriteDyes.map((dye) => this.renderSwatch(dye))}
                 </div>
               `
-            : html` <div class="favorites-empty">Click the ★ on any dye to add favorites</div> `}
+            : html` <div class="favorites-empty">${LanguageService.t('collections.favoritesEmptyHint')}</div> `}
         </div>
       </div>
     `;
@@ -869,7 +902,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
             <path d="M21 21l-4.35-4.35" />
             <path d="M8 8l6 6M14 8l-6 6" />
           </svg>
-          <p>No dyes found</p>
+          <p>${LanguageService.t('colorPalette.noDyesFound')}</p>
         </div>
       `;
     }
@@ -878,7 +911,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
       ${Array.from(groupedDyes.entries()).map(
         ([category, dyes]) => html`
           <div class="category-section">
-            <div class="category-label">${category}</div>
+            <div class="category-label">${LanguageService.t(CATEGORY_TRANSLATION_KEYS[category] || category)}</div>
             <div class="swatch-grid">${dyes.map((dye) => this.renderSwatch(dye))}</div>
           </div>
         `

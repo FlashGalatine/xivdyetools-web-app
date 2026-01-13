@@ -14,11 +14,16 @@
     "tools": "Werkzeuge",
     "theme": "Design",
     "language": "Sprache",
-    "about": "Über XIV Farbwerkzeuge"
+    "about": "Über XIV Farbwerkzeuge",
+    "languageSelector": "Sprache auswählen",
+    "languageOptions": "Verfügbare Sprachen",
+    "themeSelector": "Design auswählen",
+    "themeOptions": "Verfügbare Designs"
   },
   "about": {
     "title": "Über XIV Farbwerkzeuge",
-    "connect": "Verbinden"
+    "connect": "Verbinden",
+    "builtWith": "Erstellt mit TypeScript, Vite und Tailwind CSS"
   },
   "common": {
     "close": "Schließen"
@@ -145,7 +150,120 @@
     "original": "Original",
     "match": "Übereinstimmung",
     "cost": "Kosten",
-    "market": "Markt"
+    "market": "Markt",
+    "closeModal": "Modal schließen",
+    "full": "Voll"
+  },
+  "config": {
+    "harmonyType": "Harmonie-Typ",
+    "complementary": "Komplementär",
+    "analogous": "Analog",
+    "triadic": "Triadisch",
+    "splitComplementary": "Gespalten-Komplementär",
+    "tetradic": "Tetradisch",
+    "square": "Quadrat",
+    "monochromatic": "Monochromatisch",
+    "compound": "Verbund",
+    "shades": "Schattierungen",
+    "matchingAlgorithm": "Zuordnungsalgorithmus",
+    "perceptualMatching": "Wahrnehmungsbasierte Zuordnung",
+    "perceptualMatchingDesc": "Verwendet DeltaE für wahrnehmungsgetreue Farbzuordnung",
+    "hueMatchingDesc": "Verwendet Farbwinkel für künstlerische Farbharmonie",
+    "colorFormats": "Farbformate",
+    "hexCodes": "Hex-Codes",
+    "rgbValues": "RGB-Werte",
+    "hsvValues": "HSV-Werte",
+    "labValues": "LAB-Werte",
+    "resultDetails": "Ergebnisdetails",
+    "showPrices": "Preise anzeigen",
+    "showDeltaE": "Delta-E anzeigen",
+    "showAcquisition": "Beschaffung anzeigen",
+    "marketBoard": "Marktbrett",
+    "enableMarketBoard": "Marktbrett aktivieren",
+    "pricesFetchedFrom": "Preise von Universalis für {server} abgerufen",
+    "loadingServers": "Server werden geladen...",
+    "allWorlds": "Alle Welten",
+    "extractionSettings": "Extraktionseinstellungen",
+    "vibrancyBoost": "Leuchtkraft-Boost",
+    "maxColors": "Max. Farben",
+    "visionTypes": "Sichttypen",
+    "deuteranopia": "Deuteranopie",
+    "protanopia": "Protanopie",
+    "tritanopia": "Tritanopie",
+    "achromatopsia": "Achromatopsie",
+    "simulationDisplay": "Simulationsanzeige",
+    "showLabels": "Beschriftungen anzeigen",
+    "showHexValues": "Hex-Werte anzeigen",
+    "highContrastMode": "Hochkontrastmodus",
+    "gradientSteps": "Verlaufsschritte",
+    "count": "Anzahl",
+    "colorSpace": "Farbraum",
+    "hsvHueBased": "HSV (Farbton-basiert)",
+    "rgbDirect": "RGB (Direkt)",
+    "resultSettings": "Ergebniseinstellungen",
+    "maxResults": "Max. Ergebnisse",
+    "category": "Kategorie",
+    "allCategories": "Alle Kategorien",
+    "jobs": "Jobs",
+    "grandCompanies": "Staatliche Gesellschaften",
+    "seasons": "Jahreszeiten",
+    "events": "Events",
+    "aesthetics": "Ästhetik",
+    "community": "Community",
+    "sortBy": "Sortieren nach",
+    "mostPopular": "Beliebteste",
+    "mostRecent": "Neueste",
+    "alphabetical": "Alphabetisch",
+    "filters": "Filter",
+    "showMyPresetsOnly": "Nur meine Voreinstellungen anzeigen",
+    "showFavorites": "Favoriten anzeigen",
+    "budgetLimit": "Budgetlimit",
+    "maxPrice": "Max. Preis",
+    "colorDistance": "Farbabstand",
+    "maxDeltaE": "Max. Delta-E",
+    "colorSheet": "Farbblatt",
+    "eyeColors": "Augenfarben",
+    "hairColors": "Haarfarben",
+    "skinColors": "Hautfarben",
+    "highlightColors": "Highlight-Farben",
+    "lipColorsDark": "Lippenfarben (dunkel)",
+    "lipColorsLight": "Lippenfarben (hell)",
+    "tattooColors": "Tattoo-/Limbal-Farben",
+    "facePaintDark": "Gesichtsbemalung (dunkel)",
+    "facePaintLight": "Gesichtsbemalung (hell)",
+    "character": "Charakter",
+    "searchSettings": "Sucheinstellungen",
+    "displayOptions": "Anzeigeoptionen",
+    "account": "Konto",
+    "via": "über {provider}",
+    "loginToSubmit": "Zum Einreichen anmelden",
+    "loginWithDiscord": "Mit Discord anmelden",
+    "loginWithXIVAuth": "Mit XIVAuth anmelden",
+    "submitPreset": "Voreinstellung einreichen",
+    "logout": "Abmelden"
+  },
+  "colorPalette": {
+    "title": "Farbpalette",
+    "searchPlaceholder": "Farbstoffe suchen...",
+    "all": "Alle",
+    "metallic": "Metallisch",
+    "pastel": "Pastell",
+    "dark": "Dunkel",
+    "vibrant": "Lebhaft",
+    "favorites": "Favoriten",
+    "neutral": "Neutral",
+    "reds": "Rottöne",
+    "browns": "Brauntöne",
+    "yellows": "Gelbtöne",
+    "oranges": "Orangetöne",
+    "greens": "Grüntöne",
+    "blues": "Blautöne",
+    "purples": "Lilatöne",
+    "pinks": "Rosatöne",
+    "whites": "Weißtöne",
+    "blacks": "Schwarztöne",
+    "grays": "Grautöne",
+    "noDyesFound": "Keine Farbstoffe gefunden"
   },
   "harmony": {
     "suggestionMode": "Vorschlagsmodus",
@@ -161,6 +279,7 @@
     "selectDye": "Farbstoff auswählen",
     "selectDyePrompt": "Wähle einen Farbstoff um Farbharmonien zu generieren",
     "noDyeSelected": "Kein Farbstoff ausgewählt",
+    "noColorSelected": "Keine Farbe ausgewählt",
     "selectBaseColor": "Wähle eine Grundfarbe, um Harmonien zu generieren",
     "generatingHarmonies": "Harmonien werden generiert...",
     "noMatchingDyes": "Keine passenden Farbstoffe gefunden",
@@ -277,7 +396,10 @@
     "imageLoaded": "Bild erfolgreich geladen",
     "imageTooLarge": "Bild zu groß zum Speichern",
     "noColorSelected": "Keine Farbe ausgewählt",
-    "selectedColor": "Ausgewählte Farbe"
+    "selectedColor": "Ausgewählte Farbe",
+    "dropImageHere": "Bild hier ablegen oder klicken zum Hochladen",
+    "extractedPalette": "Extrahierte Palette",
+    "exportCss": "CSS exportieren"
   },
   "accessibility": {
     "inspectDyes": "Farbstoffe prüfen",
@@ -315,9 +437,11 @@
     "achromatopsiaWarning": "Für vollständige Farbenblindheit möglicherweise schwer sichtbar",
     "dyesSelected": "Farbstoffe ausgewählt",
     "visionTypesEnabled": "Sehtypen aktiviert",
-    "selectTwoDyes": "Wähle mindestens 2 Farbstoffe für Vergleiche"
+    "selectTwoDyes": "Wähle mindestens 2 Farbstoffe für Vergleiche",
+    "addDye": "Farbstoff hinzufügen"
   },
   "comparison": {
+    "selectedDyes": "Ausgewählte Farbstoffe",
     "selectDyes": "Farbstoffe zum Vergleichen auswählen",
     "selectUpTo": "Wähle bis zu {count} Farbstoffe",
     "selectToSeeAnalysis": "Wähle 2 oder mehr Farbstoffe, um die Analyse zu sehen",
@@ -423,10 +547,31 @@
     "interpolationPreview": "Interpolationsvorschau",
     "intermediateDyeMatches": "Zwischenfarbstoff-Übereinstimmungen",
     "selectDye": "Farbstoff auswählen",
+    "selectColor": "Farbe auswählen",
     "selectStartEndDyes": "Wähle Start- und Endfarbstoffe, um einen Farbübergang zu erstellen",
     "targetColor": "Zielfarbe",
     "bestMatch": "Beste Übereinstimmung",
-    "exportPalette": "Palette exportieren"
+    "exportPalette": "Palette exportieren",
+    "selectTwoDyesToMix": "Wähle zwei Farbstoffe zum Mischen und finde passende Farben",
+    "dye1": "Farbstoff 1",
+    "dye2": "Farbstoff 2",
+    "maxResults": "Max. Ergebnisse",
+    "matchingDyes": "Passende Farbstoffe",
+    "blend": "Mischen",
+    "mixSettings": "Mischeinstellungen",
+    "slotsFullReplacing": "Beide Slots voll. Ersetze ersten Farbstoff.",
+    "replacedSlot1": "Slot 1 ersetzt",
+    "replacedSlot2": "Slot 2 ersetzt"
+  },
+  "gradient": {
+    "selectColor": "Farbe auswählen",
+    "setStartAndEnd": "Lege Start- und Endfarbe fest, um Verlaufsschritte zu generieren",
+    "clickPlusButtons": "Wähle Farbstoffe aus der Farbpalette, um Verlaufsfarben festzulegen",
+    "clickToSelectStart": "Klicken, um Startfarbe auszuwählen",
+    "clickToSelectEnd": "Klicken, um Endfarbe auszuwählen",
+    "gradientResults": "Verlaufsergebnisse",
+    "noMatchesFound": "Keine passenden Farbstoffe gefunden",
+    "sameDyeWarning": "Start- und Endfarbstoff sind identisch. Wähle verschiedene Farbstoffe für einen Verlauf."
   },
   "dyeSelector": {
     "searchPlaceholder": "Farbstoffe nach Name suchen...",
@@ -526,7 +671,9 @@
     "distanceDesc": "Höhere Werte zeigen mehr Alternativen, niedrigere Werte zeigen ähnlichere Farben",
     "fetchingPrices": "Preise werden abgerufen",
     "maxResults": "Max Ergebnisse",
-    "showingXOfY": "Zeige {showing} von {total}"
+    "showingXOfY": "Zeige {showing} von {total}",
+    "selectedDye": "Ausgewählter Farbstoff",
+    "currentlySelected": "Aktuell ausgewählt"
   },
   "export": {
     "title": "Palette exportieren",
@@ -554,7 +701,12 @@
     "imageTooLarge": "Bilddatei ist zu groß. Maximale Größe ist 10MB.",
     "unsupportedFormat": "Nicht unterstütztes Dateiformat.",
     "clipboardFailed": "Kopieren in die Zwischenablage fehlgeschlagen.",
-    "storageFailed": "Einstellungen konnten nicht gespeichert werden. Der Speicher ist möglicherweise voll."
+    "storageFailed": "Einstellungen konnten nicht gespeichert werden. Der Speicher ist möglicherweise voll.",
+    "somethingWentWrong": "Etwas ist schiefgelaufen",
+    "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten",
+    "tryAgain": "Erneut versuchen",
+    "resetComponent": "Komponente zurücksetzen",
+    "retryAttempts": "Wiederholungsversuche: {count}/{max}"
   },
   "success": {
     "copiedToClipboard": "In Zwischenablage kopiert!",
@@ -565,6 +717,7 @@
   "themes": {
     "standardLight": "Standard (Hell)",
     "standardDark": "Standard (Dunkel)",
+    "premiumDark": "Premium Dunkel",
     "hydaelynLight": "Hydaelyn",
     "ogClassicDark": "OG Klassisch",
     "parchmentLight": "Pergament",
@@ -791,12 +944,19 @@
       "popular": "Beliebteste",
       "recent": "Neueste",
       "name": "Alphabetisch"
-    }
+    },
+    "editPreset": "Voreinstellung bearbeiten",
+    "saveChanges": "Änderungen speichern",
+    "loginToVote": "Melden Sie sich mit Discord oder XIVAuth an, um für diese Voreinstellung zu stimmen"
   },
   "auth": {
     "logout": "Abmelden",
     "loggedInAs": "Angemeldet als",
-    "notLoggedIn": "Nicht angemeldet"
+    "notLoggedIn": "Nicht angemeldet",
+    "loginWithDiscord": "Mit Discord anmelden",
+    "loginWithXIVAuth": "Mit XIVAuth anmelden",
+    "userMenu": "Benutzermenü",
+    "verified": "Verifiziert"
   },
   "collections": {
     "favorites": "Favoriten",
@@ -836,5 +996,49 @@
     "invalidFormat": "Ungültiges Dateiformat",
     "confirmDelete": "Diese Sammlung wirklich löschen?",
     "manageCollections": "Sammlungen verwalten"
+  },
+  "emptyStates": {
+    "noSearchResults": {
+      "title": "Keine Farbstoffe für \"{query}\" gefunden",
+      "description": "Überprüfen Sie die Schreibweise oder suchen Sie nach einer Kategorie wie \"lila\" oder \"rot\".",
+      "action": "Suche löschen"
+    },
+    "filteredOut": {
+      "title": "Alle Vorschläge wurden gefiltert",
+      "description": "Ihre aktuellen Filter verbergen alle passenden Farbstoffe. Passen Sie Ihre Filtereinstellungen an.",
+      "action": "Filter zurücksetzen"
+    },
+    "noPrice": {
+      "description": "Dieser Farbstoff ist möglicherweise nicht handelbar oder Universalis hat keine aktuellen Daten für diesen Server.",
+      "action": "Anderen Server versuchen"
+    },
+    "noHarmony": {
+      "title": "Keine Harmonievorschläge",
+      "description": "Wählen Sie einen Basisfarbstoff, um Harmonievorschläge zu generieren.",
+      "action": "Farbstoff auswählen"
+    },
+    "noImage": {
+      "title": "Kein Bild geladen",
+      "description": "Laden Sie ein Bild hoch, um mit dem Farbabgleich zu beginnen.",
+      "action": "Bild hochladen"
+    },
+    "loading": {
+      "title": "Wird geladen...",
+      "description": "Bitte warten Sie, während wir die Daten abrufen."
+    }
+  },
+  "aria": {
+    "headerNavigation": "Header-Navigation",
+    "closeSidebar": "Seitenleiste schließen",
+    "toggleConfigSidebar": "Konfigurations-Seitenleiste umschalten",
+    "showColorPalette": "Farbpalette anzeigen",
+    "selectRandomDye": "Zufälligen Farbstoff auswählen",
+    "clearAllDyes": "Alle Farbstoffe löschen",
+    "closePalette": "Palette schließen",
+    "addToFavorites": "Zu Favoriten hinzufügen",
+    "removeFromFavorites": "Aus Favoriten entfernen",
+    "moreActions": "Weitere Aktionen",
+    "slider": "Schieberegler",
+    "toggle": "Umschalten"
   }
 }

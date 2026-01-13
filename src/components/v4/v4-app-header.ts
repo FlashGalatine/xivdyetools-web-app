@@ -12,6 +12,7 @@ import { customElement } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ICON_LOGO, ICON_GLOBE, ICON_INFO, ICON_THEME } from '@shared/ui-icons';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { LanguageService } from '@services/index';
 
 /**
  * V4 App Header - Branded header with navigation controls
@@ -170,12 +171,12 @@ export class V4AppHeader extends BaseLitComponent {
         </div>
 
         <!-- Navigation Controls -->
-        <nav class="v4-header-nav" aria-label="Header navigation">
+        <nav class="v4-header-nav" aria-label="${LanguageService.t('aria.headerNavigation')}">
           <button
             class="v4-header-nav-btn"
             type="button"
-            title="About"
-            aria-label="About XIV Dye Tools"
+            title="${LanguageService.t('header.about')}"
+            aria-label="${LanguageService.t('header.about')}"
             @click=${this.handleAboutClick}
           >
             ${unsafeHTML(ICON_INFO)}
@@ -184,8 +185,8 @@ export class V4AppHeader extends BaseLitComponent {
           <button
             class="v4-header-nav-btn"
             type="button"
-            title="Language"
-            aria-label="Change language"
+            title="${LanguageService.t('header.language')}"
+            aria-label="${LanguageService.t('header.language')}"
             @click=${this.handleLanguageClick}
           >
             ${unsafeHTML(ICON_GLOBE)}
@@ -194,8 +195,8 @@ export class V4AppHeader extends BaseLitComponent {
           <button
             class="v4-header-nav-btn"
             type="button"
-            title="Theme"
-            aria-label="Change theme"
+            title="${LanguageService.t('header.theme')}"
+            aria-label="${LanguageService.t('header.theme')}"
             @click=${this.handleThemeClick}
           >
             ${unsafeHTML(ICON_THEME)}

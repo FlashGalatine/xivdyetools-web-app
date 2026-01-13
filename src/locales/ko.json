@@ -14,11 +14,16 @@
     "tools": "도구",
     "theme": "테마",
     "language": "언어",
-    "about": "XIV 염색 도구 정보"
+    "about": "XIV 염색 도구 정보",
+    "languageSelector": "언어 선택",
+    "languageOptions": "사용 가능한 언어",
+    "themeSelector": "테마 선택",
+    "themeOptions": "사용 가능한 테마"
   },
   "about": {
     "title": "XIV 염색 도구 정보",
-    "connect": "연결"
+    "connect": "연결",
+    "builtWith": "TypeScript, Vite, Tailwind CSS로 구축됨"
   },
   "common": {
     "close": "닫기"
@@ -145,7 +150,120 @@
     "original": "원본",
     "match": "매치",
     "cost": "비용",
-    "market": "시장"
+    "market": "시장",
+    "closeModal": "모달 닫기",
+    "full": "가득 참"
+  },
+  "config": {
+    "harmonyType": "조화 유형",
+    "complementary": "보색",
+    "analogous": "유사색",
+    "triadic": "삼원색",
+    "splitComplementary": "분할 보색",
+    "tetradic": "사원색",
+    "square": "정사각형",
+    "monochromatic": "단색",
+    "compound": "복합",
+    "shades": "명암",
+    "matchingAlgorithm": "매칭 알고리즘",
+    "perceptualMatching": "지각적 매칭",
+    "perceptualMatchingDesc": "지각적으로 정확한 색상 매칭을 위해 DeltaE 사용",
+    "hueMatchingDesc": "예술적인 색상 조화를 위해 색조 각도 사용",
+    "colorFormats": "색상 형식",
+    "hexCodes": "Hex 코드",
+    "rgbValues": "RGB 값",
+    "hsvValues": "HSV 값",
+    "labValues": "LAB 값",
+    "resultDetails": "결과 상세",
+    "showPrices": "가격 표시",
+    "showDeltaE": "Delta-E 표시",
+    "showAcquisition": "획득 방법 표시",
+    "marketBoard": "시장 게시판",
+    "enableMarketBoard": "시장 게시판 활성화",
+    "pricesFetchedFrom": "{server}의 Universalis에서 가격 가져옴",
+    "loadingServers": "서버 로딩 중...",
+    "allWorlds": "모든 월드",
+    "extractionSettings": "추출 설정",
+    "vibrancyBoost": "생동감 부스트",
+    "maxColors": "최대 색상 수",
+    "visionTypes": "시각 유형",
+    "deuteranopia": "녹색맹",
+    "protanopia": "적색맹",
+    "tritanopia": "청색맹",
+    "achromatopsia": "전색맹",
+    "simulationDisplay": "시뮬레이션 표시",
+    "showLabels": "레이블 표시",
+    "showHexValues": "Hex 값 표시",
+    "highContrastMode": "고대비 모드",
+    "gradientSteps": "그라데이션 단계",
+    "count": "수",
+    "colorSpace": "색 공간",
+    "hsvHueBased": "HSV (색조 기반)",
+    "rgbDirect": "RGB (직접)",
+    "resultSettings": "결과 설정",
+    "maxResults": "최대 결과 수",
+    "category": "카테고리",
+    "allCategories": "모든 카테고리",
+    "jobs": "직업",
+    "grandCompanies": "그랜드 컴퍼니",
+    "seasons": "계절",
+    "events": "이벤트",
+    "aesthetics": "미학",
+    "community": "커뮤니티",
+    "sortBy": "정렬 기준",
+    "mostPopular": "인기순",
+    "mostRecent": "최신순",
+    "alphabetical": "알파벳순",
+    "filters": "필터",
+    "showMyPresetsOnly": "내 프리셋만 표시",
+    "showFavorites": "즐겨찾기 표시",
+    "budgetLimit": "예산 한도",
+    "maxPrice": "최대 가격",
+    "colorDistance": "색상 거리",
+    "maxDeltaE": "최대 Delta-E",
+    "colorSheet": "색상 시트",
+    "eyeColors": "눈 색상",
+    "hairColors": "머리 색상",
+    "skinColors": "피부 색상",
+    "highlightColors": "하이라이트 색상",
+    "lipColorsDark": "립 색상 (다크)",
+    "lipColorsLight": "립 색상 (라이트)",
+    "tattooColors": "타투/림발 색상",
+    "facePaintDark": "페이스 페인트 (다크)",
+    "facePaintLight": "페이스 페인트 (라이트)",
+    "character": "캐릭터",
+    "searchSettings": "검색 설정",
+    "displayOptions": "표시 옵션",
+    "account": "계정",
+    "via": "{provider} 경유",
+    "loginToSubmit": "제출하려면 로그인",
+    "loginWithDiscord": "Discord로 로그인",
+    "loginWithXIVAuth": "XIVAuth로 로그인",
+    "submitPreset": "프리셋 제출",
+    "logout": "로그아웃"
+  },
+  "colorPalette": {
+    "title": "색상 팔레트",
+    "searchPlaceholder": "염료 검색...",
+    "all": "전체",
+    "metallic": "메탈릭",
+    "pastel": "파스텔",
+    "dark": "다크",
+    "vibrant": "비비드",
+    "favorites": "즐겨찾기",
+    "neutral": "뉴트럴",
+    "reds": "레드",
+    "browns": "브라운",
+    "yellows": "옐로우",
+    "oranges": "오렌지",
+    "greens": "그린",
+    "blues": "블루",
+    "purples": "퍼플",
+    "pinks": "핑크",
+    "whites": "화이트",
+    "blacks": "블랙",
+    "grays": "그레이",
+    "noDyesFound": "염료를 찾을 수 없습니다"
   },
   "harmony": {
     "suggestionMode": "제안 모드",
@@ -161,6 +279,7 @@
     "selectDye": "염료 선택",
     "selectDyePrompt": "색상 하모니를 생성할 기본 염료를 선택하세요",
     "noDyeSelected": "선택된 염료 없음",
+    "noColorSelected": "선택된 색상 없음",
     "selectBaseColor": "조화를 생성할 기본 색상을 선택하세요",
     "generatingHarmonies": "조화 생성 중...",
     "noMatchingDyes": "매칭되는 염료를 찾을 수 없습니다",
@@ -277,7 +396,10 @@
     "imageLoaded": "이미지가 성공적으로 로드되었습니다",
     "imageTooLarge": "이미지가 너무 커서 저장할 수 없습니다",
     "noColorSelected": "색상이 선택되지 않았습니다",
-    "selectedColor": "선택된 색상"
+    "selectedColor": "선택된 색상",
+    "dropImageHere": "이미지를 여기에 드롭하거나 클릭하여 업로드",
+    "extractedPalette": "추출된 팔레트",
+    "exportCss": "CSS 내보내기"
   },
   "accessibility": {
     "inspectDyes": "염료 검사",
@@ -315,9 +437,11 @@
     "achromatopsiaWarning": "전색맹인 경우 보기 어려울 수 있습니다",
     "dyesSelected": "개 염료 선택됨",
     "visionTypesEnabled": "개 색각 유형 활성화됨",
-    "selectTwoDyes": "비교를 보려면 2개 이상의 염료를 선택하세요"
+    "selectTwoDyes": "비교를 보려면 2개 이상의 염료를 선택하세요",
+    "addDye": "염료 추가"
   },
   "comparison": {
+    "selectedDyes": "선택된 염료",
     "selectDyes": "비교할 염료 선택",
     "selectUpTo": "최대 {count}개 염료 선택",
     "selectToSeeAnalysis": "분석을 보려면 2개 이상의 염료를 선택하세요",
@@ -423,10 +547,31 @@
     "interpolationPreview": "보간 미리보기",
     "intermediateDyeMatches": "중간 염료 일치",
     "selectDye": "염료 선택",
+    "selectColor": "색상 선택",
     "selectStartEndDyes": "색상 전환을 만들려면 시작 및 끝 염료를 선택하세요",
     "targetColor": "대상 색상",
     "bestMatch": "최적 매치",
-    "exportPalette": "팔레트 내보내기"
+    "exportPalette": "팔레트 내보내기",
+    "selectTwoDyesToMix": "두 가지 염료를 선택하여 블렌딩하고 일치하는 색상을 찾으세요",
+    "dye1": "염료 1",
+    "dye2": "염료 2",
+    "maxResults": "최대 결과",
+    "matchingDyes": "일치하는 염료",
+    "blend": "블렌드",
+    "mixSettings": "믹스 설정",
+    "slotsFullReplacing": "두 슬롯이 가득 찼습니다. 첫 번째 염료를 교체합니다.",
+    "replacedSlot1": "슬롯 1 교체됨",
+    "replacedSlot2": "슬롯 2 교체됨"
+  },
+  "gradient": {
+    "selectColor": "색상 선택",
+    "setStartAndEnd": "시작 및 끝 색상을 설정하여 그라데이션 단계를 생성",
+    "clickPlusButtons": "색상 팔레트에서 염료를 선택하여 그라데이션 색상 설정",
+    "clickToSelectStart": "클릭하여 시작 색상 선택",
+    "clickToSelectEnd": "클릭하여 끝 색상 선택",
+    "gradientResults": "그라데이션 결과",
+    "noMatchesFound": "일치하는 염료를 찾을 수 없습니다",
+    "sameDyeWarning": "시작과 끝 염료가 동일합니다. 그라데이션을 위해 다른 염료를 선택하세요."
   },
   "dyeSelector": {
     "searchPlaceholder": "염료 이름으로 검색...",
@@ -526,7 +671,9 @@
     "distanceDesc": "높은 값은 더 많은 대안을, 낮은 값은 더 유사한 색상을 표시합니다",
     "fetchingPrices": "가격 조회 중",
     "maxResults": "최대 결과 수",
-    "showingXOfY": "{total}개 중 {showing}개 표시"
+    "showingXOfY": "{total}개 중 {showing}개 표시",
+    "selectedDye": "선택된 염료",
+    "currentlySelected": "현재 선택됨"
   },
   "export": {
     "title": "팔레트 내보내기",
@@ -554,7 +701,12 @@
     "imageTooLarge": "이미지 파일이 너무 큽니다. 최대 크기는 10MB입니다.",
     "unsupportedFormat": "지원되지 않는 파일 형식입니다.",
     "clipboardFailed": "클립보드에 복사하지 못했습니다.",
-    "storageFailed": "설정을 저장하지 못했습니다. 저장 공간이 가득 찼을 수 있습니다."
+    "storageFailed": "설정을 저장하지 못했습니다. 저장 공간이 가득 찼을 수 있습니다.",
+    "somethingWentWrong": "문제가 발생했습니다",
+    "unexpectedError": "예기치 않은 오류가 발생했습니다",
+    "tryAgain": "다시 시도",
+    "resetComponent": "컴포넌트 초기화",
+    "retryAttempts": "재시도 횟수: {count}/{max}"
   },
   "success": {
     "copiedToClipboard": "클립보드에 복사되었습니다!",
@@ -565,6 +717,7 @@
   "themes": {
     "standardLight": "스탠다드 (라이트)",
     "standardDark": "스탠다드 (다크)",
+    "premiumDark": "프리미엄 다크",
     "hydaelynLight": "하이델린",
     "ogClassicDark": "OG 클래식",
     "parchmentLight": "파치먼트",
@@ -791,12 +944,19 @@
       "popular": "인기순",
       "recent": "최신순",
       "name": "이름순"
-    }
+    },
+    "editPreset": "프리셋 편집",
+    "saveChanges": "변경 사항 저장",
+    "loginToVote": "이 프리셋에 투표하려면 Discord 또는 XIVAuth로 로그인하세요"
   },
   "auth": {
     "logout": "로그아웃",
     "loggedInAs": "로그인됨:",
-    "notLoggedIn": "로그인되지 않음"
+    "notLoggedIn": "로그인되지 않음",
+    "loginWithDiscord": "Discord로 로그인",
+    "loginWithXIVAuth": "XIVAuth로 로그인",
+    "userMenu": "사용자 메뉴",
+    "verified": "인증됨"
   },
   "collections": {
     "favorites": "즐겨찾기",
@@ -836,5 +996,49 @@
     "invalidFormat": "잘못된 파일 형식",
     "confirmDelete": "이 컬렉션을 삭제하시겠습니까?",
     "manageCollections": "컬렉션 관리"
+  },
+  "emptyStates": {
+    "noSearchResults": {
+      "title": "\"{query}\"와 일치하는 염료가 없습니다",
+      "description": "철자를 확인하거나 \"보라색\" 또는 \"빨간색\"과 같은 카테고리로 검색해 보세요.",
+      "action": "검색 지우기"
+    },
+    "filteredOut": {
+      "title": "모든 제안이 필터링되었습니다",
+      "description": "현재 필터가 모든 일치하는 염료를 숨기고 있습니다. 필터 설정을 조정해 보세요.",
+      "action": "필터 초기화"
+    },
+    "noPrice": {
+      "description": "이 염료는 거래 불가이거나 Universalis에 이 서버의 최근 데이터가 없습니다.",
+      "action": "다른 서버 시도"
+    },
+    "noHarmony": {
+      "title": "조화 제안 없음",
+      "description": "기본 염료를 선택하여 색상 조화 제안을 생성하세요.",
+      "action": "염료 선택"
+    },
+    "noImage": {
+      "title": "이미지가 로드되지 않음",
+      "description": "이미지를 업로드하여 색상 매칭을 시작하세요.",
+      "action": "이미지 업로드"
+    },
+    "loading": {
+      "title": "로딩 중...",
+      "description": "데이터를 가져오는 동안 잠시 기다려 주세요."
+    }
+  },
+  "aria": {
+    "headerNavigation": "헤더 탐색",
+    "closeSidebar": "사이드바 닫기",
+    "toggleConfigSidebar": "설정 사이드바 전환",
+    "showColorPalette": "색상 팔레트 표시",
+    "selectRandomDye": "무작위 염료 선택",
+    "clearAllDyes": "모든 염료 지우기",
+    "closePalette": "팔레트 닫기",
+    "addToFavorites": "즐겨찾기에 추가",
+    "removeFromFavorites": "즐겨찾기에서 제거",
+    "moreActions": "추가 작업",
+    "slider": "슬라이더",
+    "toggle": "토글"
   }
 }

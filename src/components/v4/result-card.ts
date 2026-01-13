@@ -23,6 +23,7 @@ import { BaseLitComponent } from './base-lit-component';
 import { ICON_CONTEXT_MENU } from '@shared/ui-icons';
 import type { Dye, DyeWithDistance } from '@shared/types';
 import { ColorService } from '@xivdyetools/core';
+import { LanguageService } from '@services/index';
 
 /**
  * Data structure for the result card
@@ -701,19 +702,19 @@ export class ResultCard extends BaseLitComponent {
     const hsv = dye.hsv;
 
     return html`
-      <article class="result-card" role="article" aria-label="Dye result: ${dye.name}">
+      <article class="result-card" role="article" aria-label="Dye result: ${LanguageService.getDyeName(dye.id) || dye.name}">
         <!-- Header - Dark bg, centered name -->
         <header class="card-header">
-          <h3 class="dye-name">${dye.name}</h3>
+          <h3 class="dye-name">${LanguageService.getDyeName(dye.id) || dye.name}</h3>
         </header>
 
         <!-- Color Preview - 100px tall -->
         <div class="color-preview">
           <div class="preview-half" style="background-color: ${originalColor}">
-            <span class="preview-label">Original</span>
+            <span class="preview-label">${LanguageService.t('common.original')}</span>
           </div>
           <div class="preview-half" style="background-color: ${matchedColor}">
-            <span class="preview-label">Match</span>
+            <span class="preview-label">${LanguageService.t('common.match')}</span>
           </div>
         </div>
 
@@ -721,7 +722,7 @@ export class ResultCard extends BaseLitComponent {
         <div class="details-grid">
           <!-- Technical Column -->
           <div class="detail-column">
-            <div class="column-header">Technical</div>
+            <div class="column-header">${LanguageService.t('common.technical')}</div>
             ${this.showDeltaE
         ? html`
                   <div class="detail-row">
@@ -780,15 +781,15 @@ export class ResultCard extends BaseLitComponent {
           ${this.showAcquisition || this.showPrice
         ? html`
                 <div class="detail-column">
-                  <div class="column-header">Acquisition</div>
+                  <div class="column-header">${LanguageService.t('common.acquisition')}</div>
                   ${this.showAcquisition
             ? html`
                         <div class="detail-row">
-                          <span class="detail-label">Source</span>
-                          <span class="detail-value">${dye.acquisition ?? 'Unknown'}</span>
+                          <span class="detail-label">${LanguageService.t('common.source')}</span>
+                          <span class="detail-value">${dye.acquisition ? LanguageService.getAcquisition(dye.acquisition) : '—'}</span>
                         </div>
                         <div class="detail-row">
-                          <span class="detail-label">Cost</span>
+                          <span class="detail-label">${LanguageService.t('common.cost')}</span>
                           <span class="detail-value">${this.formatVendorCost(vendorCost)}</span>
                         </div>
                       `
@@ -796,7 +797,7 @@ export class ResultCard extends BaseLitComponent {
                   ${this.showPrice
             ? html`
                         <div class="detail-row">
-                          <span class="detail-label">Market</span>
+                          <span class="detail-label">${LanguageService.t('common.market')}</span>
                           <span class="detail-value">${marketServer ?? 'N/A'}</span>
                         </div>
                         <div class="detail-row">
@@ -837,14 +838,14 @@ export class ResultCard extends BaseLitComponent {
                               role="menuitem"
                               @click=${() => this.handleSlotAction(1)}
                             >
-                              Replace Slot 1
+                              ${LanguageService.t('common.replace')} ${LanguageService.t('common.slot')} 1
                             </button>
                             <button
                               class="slot-picker-item"
                               role="menuitem"
                               @click=${() => this.handleSlotAction(2)}
                             >
-                              Replace Slot 2
+                              ${LanguageService.t('common.replace')} ${LanguageService.t('common.slot')} 2
                             </button>
                           </div>
                         </div>
@@ -858,7 +859,7 @@ export class ResultCard extends BaseLitComponent {
                     <button
                       class="menu-btn ${this.menuOpen ? 'active' : ''}"
                       type="button"
-                      aria-label="More actions"
+                      aria-label="${LanguageService.t('aria.moreActions')}"
                       aria-haspopup="true"
                       aria-expanded=${this.menuOpen}
                       @click=${this.handleMenuClick}
@@ -876,42 +877,42 @@ export class ResultCard extends BaseLitComponent {
                         role="menuitem"
                         @click=${() => this.handleMenuAction('add-comparison')}
                       >
-                        Add to Comparison
+                        ${LanguageService.t('harmony.addToComparison')}
                       </button>
                       <button
                         class="menu-item"
                         role="menuitem"
                         @click=${() => this.handleMenuAction('add-mixer')}
                       >
-                        Add to Mixer
+                        ${LanguageService.t('harmony.addToMixer')}
                       </button>
                       <button
                         class="menu-item"
                         role="menuitem"
                         @click=${() => this.handleMenuAction('add-accessibility')}
                       >
-                        Add to Access. Check
+                        ${LanguageService.t('harmony.addToAccessibility')}
                       </button>
                       <button
                         class="menu-item"
                         role="menuitem"
                         @click=${() => this.handleMenuAction('see-harmonies')}
                       >
-                        See Color Harmonies
+                        ${LanguageService.t('harmony.seeHarmonies')}
                       </button>
                       <button
                         class="menu-item"
                         role="menuitem"
                         @click=${() => this.handleMenuAction('budget')}
                       >
-                        Budget Suggestions
+                        ${LanguageService.t('harmony.seeBudget')}
                       </button>
                       <button
                         class="menu-item"
                         role="menuitem"
                         @click=${() => this.handleMenuAction('copy-hex')}
                       >
-                        Copy Hex Code
+                        ${LanguageService.t('harmony.copyHex')}
                       </button>
                     </div>
                   </div>
