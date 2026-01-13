@@ -32,7 +32,7 @@ import {
 } from '@services/index';
 import { ConfigController } from '@services/config-controller';
 import { setupMarketBoardListeners } from '@services/pricing-mixin';
-import { ICON_TOOL_MIXER } from '@shared/tool-icons';
+import { ICON_TOOL_DYE_MIXER } from '@shared/tool-icons';
 import {
   ICON_FILTER,
   ICON_MARKET,
@@ -984,7 +984,7 @@ export class MixerTool extends BaseComponent {
     });
 
     empty.innerHTML = `
-      <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
+      <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_DYE_MIXER}</span>
       <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors'}</p>
     `;
 
@@ -1072,7 +1072,7 @@ export class MixerTool extends BaseComponent {
         `,
       },
     });
-    this.emptyStateIcon.innerHTML = ICON_TOOL_MIXER;
+    this.emptyStateIcon.innerHTML = ICON_TOOL_DYE_MIXER;
     craftingArea.appendChild(this.emptyStateIcon);
 
     // Empty state message (shown when no dyes selected)

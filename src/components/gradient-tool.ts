@@ -1085,14 +1085,9 @@ export class GradientTool extends BaseComponent {
       },
     });
     this.emptyStateContainer.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width: 150px; height: 150px; opacity: 0.3; margin-bottom: 16px;">
-        <path d="M 4 8 C 4 6 5 5 7 5 L 17 5 C 19 5 20 6 20 8 L 20 16 C 20 18 19 19 17 19 L 7 19 C 5 19 4 18 4 16 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-        <circle cx="8" cy="10" r="2" opacity="0.5" />
-        <circle cx="12" cy="10" r="2" opacity="0.5" />
-        <circle cx="16" cy="10" r="2" opacity="0.5" />
-        <line x1="6" y1="15" x2="10" y2="15" stroke="currentColor" stroke-width="2" />
-        <path d="M 10 15 L 12 13 L 12 17 Z" opacity="0.7" />
-      </svg>
+      <div style="width: 150px; height: 150px; opacity: 0.3; margin-bottom: 16px; color: currentColor;">
+        ${ICON_TOOL_MIXER}
+      </div>
       <div style="font-size: 16px; color: var(--theme-text); margin-bottom: 8px;">${LanguageService.t('gradient.setStartAndEnd') || 'Set a start and end color to generate gradient steps'}</div>
       <div style="font-size: 14px; opacity: 0.7;">${LanguageService.t('gradient.clickPlusButtons') || 'Select dyes from the Color Palette to set gradient colors'}</div>
     `;
@@ -1278,10 +1273,10 @@ export class GradientTool extends BaseComponent {
         matchedDye =
           filteredDyes.length > 0
             ? filteredDyes.reduce((best, dye) => {
-                const bestDist = ColorService.getColorDistance(theoreticalColor, best.hex);
-                const dyeDist = ColorService.getColorDistance(theoreticalColor, dye.hex);
-                return dyeDist < bestDist ? dye : best;
-              })
+              const bestDist = ColorService.getColorDistance(theoreticalColor, best.hex);
+              const dyeDist = ColorService.getColorDistance(theoreticalColor, dye.hex);
+              return dyeDist < bestDist ? dye : best;
+            })
             : null;
       }
 
@@ -1642,13 +1637,13 @@ export class GradientTool extends BaseComponent {
       // Create menu options (recommended option first)
       const options = isEarlyStep
         ? [
-            { label: `Set as ${startLabel}${recommendedLabel}`, slot: 'start' as const },
-            { label: `Set as ${endLabel}`, slot: 'end' as const },
-          ]
+          { label: `Set as ${startLabel}${recommendedLabel}`, slot: 'start' as const },
+          { label: `Set as ${endLabel}`, slot: 'end' as const },
+        ]
         : [
-            { label: `Set as ${endLabel}${recommendedLabel}`, slot: 'end' as const },
-            { label: `Set as ${startLabel}`, slot: 'start' as const },
-          ];
+          { label: `Set as ${endLabel}${recommendedLabel}`, slot: 'end' as const },
+          { label: `Set as ${startLabel}`, slot: 'start' as const },
+        ];
 
       options.forEach((option, optIndex) => {
         const menuItem = this.createElement('button', {
@@ -2025,10 +2020,10 @@ export class GradientTool extends BaseComponent {
         theoreticalColor: step.theoreticalColor,
         matchedDye: step.matchedDye
           ? {
-              name: step.matchedDye.name,
-              hex: step.matchedDye.hex,
-              id: step.matchedDye.id,
-            }
+            name: step.matchedDye.name,
+            hex: step.matchedDye.hex,
+            id: step.matchedDye.id,
+          }
           : null,
         distance: step.distance,
       })),
@@ -2581,7 +2576,7 @@ export class GradientTool extends BaseComponent {
       // Show a toast message to inform the user
       ToastService.warning(
         LanguageService.t('gradient.sameDyeWarning') ||
-          'This dye is already selected. Choose a different dye for the gradient.'
+        'This dye is already selected. Choose a different dye for the gradient.'
       );
       logger.info(`[GradientTool] Prevented duplicate dye selection: ${dye.name}`);
       return;

@@ -21,7 +21,7 @@ import {
 } from '@services/index';
 import { APP_VERSION } from '@shared/constants';
 import { clearContainer } from '@shared/utils';
-import { ICON_INFO } from '@shared/ui-icons';
+import { ICON_ABOUT } from '@shared/ui-icons';
 import { showAboutModal } from './about-modal';
 import { LOGO_SPARKLES } from '@shared/app-logo';
 
@@ -355,8 +355,8 @@ export class AppLayout extends BaseComponent {
       },
     });
 
-    // Add info icon
-    button.innerHTML = `<span class="inline-block w-5 h-5" aria-hidden="true">${ICON_INFO}</span>`;
+    // Add about icon (exclamation point)
+    button.innerHTML = `<span class="inline-block w-5 h-5" aria-hidden="true">${ICON_ABOUT}</span>`;
 
     // Add hover effect using theme colors
     button.addEventListener('mouseenter', () => {

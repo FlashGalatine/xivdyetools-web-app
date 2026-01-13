@@ -43,6 +43,7 @@ import {
   ICON_BEAKER,
   ICON_MUSIC,
 } from '@shared/ui-icons';
+import { ICON_TOOL_HARMONY } from '@shared/tool-icons';
 import { COMPANION_DYES_MIN, COMPANION_DYES_MAX, COMPANION_DYES_DEFAULT } from '@shared/constants';
 import { SubscriptionManager } from '@shared/subscription-manager';
 
@@ -972,15 +973,11 @@ export class HarmonyTool extends BaseComponent {
       },
     });
 
-    // Harmony tool icon (triangles/wheel)
+    // Harmony tool icon using official tool icon
     empty.innerHTML = `
-      <svg style="width: 150px; height: 150px; margin-bottom: 24px; opacity: 0.4;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10" opacity="0.3" />
-        <circle cx="12" cy="3" r="2" fill="currentColor" stroke="none" opacity="0.5" />
-        <circle cx="20.66" cy="16.5" r="2" fill="currentColor" stroke="none" opacity="0.5" />
-        <circle cx="3.34" cy="16.5" r="2" fill="currentColor" stroke="none" opacity="0.5" />
-        <polygon points="12,3 20.66,16.5 3.34,16.5" fill="none" opacity="0.3" />
-      </svg>
+      <div style="width: 150px; height: 150px; margin-bottom: 24px; opacity: 0.4; color: currentColor;">
+        ${ICON_TOOL_HARMONY}
+      </div>
       <div style="font-size: 18px; font-weight: 500; color: var(--theme-text, #e0e0e0); margin-bottom: 12px;">
         ${LanguageService.t('harmony.noColorSelected') || 'No Color Selected'}
       </div>
