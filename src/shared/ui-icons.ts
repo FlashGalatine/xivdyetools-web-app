@@ -28,10 +28,10 @@
  * Theme Switcher icon - Paint palette
  */
 export const ICON_THEME = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M 12 2 C 6.5 2 2 6.5 2 12 C 2 14.5 3 16.5 4.5 18 C 5 18.5 6 18.5 6.5 18 C 7 17.5 7 16.5 6.5 15.5 C 6 14.5 6 13 6 12 C 6 8.7 8.7 6 12 6 C 15.3 6 18 8.7 18 12 C 18 15.3 15.3 18 12 18 L 10 18 C 9 18 8 19 8 20 C 8 21 9 22 10 22 L 12 22 C 17.5 22 22 17.5 22 12 C 22 6.5 17.5 2 12 2 Z" />
-  <circle cx="8.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" opacity="0.6" />
-  <circle cx="12" cy="8" r="1.5" fill="currentColor" stroke="none" opacity="0.8" />
-  <circle cx="15.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" opacity="0.4" />
+  <path d="M 12 2 C 6.5 2 2 6.5 2 12 C 2 14.5 3 16.5 4.5 18 C 5 18.5 6 18.5 6.5 18 C 7 17.5 7 16.5 6.5 15.5 C 6 14.5 6 13 6 12 C 6 8.7 8.7 6 12 6 C 15.3 6 18 8.7 18 12 C 18 15.3 15.3 18 12 18 L 10 18 C 9 18 8 19 8 20 C 8 21 9 22 10 22 L 12 22 C 17.5 22 22 17.5 22 12 C 22 6.5 17.5 2 12 2 Z" fill="none"/>
+  <circle cx="8.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" opacity="0.6"/>
+  <circle cx="12" cy="8" r="1.5" fill="currentColor" stroke="none" opacity="0.8"/>
+  <circle cx="15.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" opacity="0.4"/>
 </svg>`;
 
 /**
@@ -359,12 +359,21 @@ export const ICON_IMAGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 </svg>`;
 
 /**
- * Info icon - Circle with "i" (for about/information)
+ * Info icon - Circle with "i" (for information)
  */
 export const ICON_INFO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="10"/>
   <line x1="12" y1="16" x2="12" y2="12"/>
   <circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/>
+</svg>`;
+
+/**
+ * About icon - Triangle warning sign with question mark (for about modals)
+ */
+export const ICON_ABOUT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 2L2 20h20L12 2Z" fill="none"/>
+  <path d="M12 9c-1 0-1.5 0.5-1.5 1.5s0.5 1 1 1.5c0.5 0.5 0.5 1 0.5 1.5" fill="none"/>
+  <circle cx="12" cy="16" r="0.5" fill="currentColor" stroke="none"/>
 </svg>`;
 
 /**
@@ -381,9 +390,9 @@ export const ICON_CONTEXT_MENU = `<svg viewBox="0 0 24 24" fill="currentColor">
  * Globe icon - Language/internationalization selector
  */
 export const ICON_GLOBE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="10"/>
+  <circle cx="12" cy="12" r="10" fill="none"/>
   <line x1="2" y1="12" x2="22" y2="12"/>
-  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" fill="none"/>
 </svg>`;
 
 /**
@@ -442,6 +451,7 @@ export const UI_ICONS: Record<string, string> = {
   trash: ICON_TRASH,
   image: ICON_IMAGE,
   info: ICON_INFO,
+  about: ICON_ABOUT,
   globe: ICON_GLOBE,
   logo: ICON_LOGO,
   'context-menu': ICON_CONTEXT_MENU,

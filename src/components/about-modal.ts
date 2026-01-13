@@ -20,6 +20,7 @@ import {
   ICON_KOFI,
 } from '@shared/social-icons';
 import { ICON_CRYSTAL } from '@shared/ui-icons';
+import { LOGO_SPARKLES } from '@shared/app-logo';
 
 // ============================================================================
 // Social Media Links
@@ -90,9 +91,19 @@ export class AboutModal {
     const container = document.createElement('div');
     container.className = 'about-modal-content';
 
-    // App info section
+    // App info section with logo
     const appInfo = document.createElement('div');
     appInfo.className = 'text-center mb-6';
+
+    // Large logo at the top
+    const logoContainer = document.createElement('div');
+    logoContainer.className = 'flex justify-center mb-4';
+    const logoWrapper = document.createElement('div');
+    logoWrapper.style.width = '120px';
+    logoWrapper.style.height = '120px';
+    logoWrapper.innerHTML = LOGO_SPARKLES;
+    logoContainer.appendChild(logoWrapper);
+    appInfo.appendChild(logoContainer);
 
     const appTitle = document.createElement('h2');
     appTitle.className = 'text-xl font-bold mb-1';
@@ -225,11 +236,26 @@ export class AboutModal {
   }
 }
 
+// Singleton instance to prevent multiple about modals
+let aboutModalInstance: AboutModal | null = null;
+
 /**
  * Show the about modal
- * Convenience function for one-off usage
+ * Uses singleton pattern to prevent multiple instances
  */
 export function showAboutModal(): void {
-  const modal = new AboutModal();
-  modal.show();
+  if (!aboutModalInstance) {
+    aboutModalInstance = new AboutModal();
+  }
+  aboutModalInstance.show();
+}
+
+/**
+ * Close the about modal if open
+ */
+export function closeAboutModal(): void {
+  if (aboutModalInstance) {
+    aboutModalInstance.close();
+    aboutModalInstance = null;
+  }
 }
