@@ -226,6 +226,8 @@ export class ExtractorTool extends BaseComponent {
 
       if (this.imageZoom) {
         this.imageZoom.setImage(image);
+        // Auto-fit image after loading
+        this.imageZoom.autoFit();
       }
 
       this.showEmptyState(false);
@@ -332,6 +334,8 @@ export class ExtractorTool extends BaseComponent {
 
       if (this.imageZoom) {
         this.imageZoom.setImage(img);
+        // Auto-fit image after restoring
+        this.imageZoom.autoFit();
       }
 
       this.showEmptyState(false);
@@ -985,6 +989,7 @@ export class ExtractorTool extends BaseComponent {
           overflow-y: auto;
           padding-bottom: 16px;
           align-content: flex-start;
+          justify-content: center;
           flex: 1;
           min-height: 0;
         `.replace(/\s+/g, ' ').trim(),
@@ -1125,6 +1130,8 @@ export class ExtractorTool extends BaseComponent {
         // Set image in zoom controller
         if (this.imageZoom) {
           this.imageZoom.setImage(img);
+          // Auto-fit image after loading from drop zone
+          this.imageZoom.autoFit();
         }
 
         // Emit image loaded event
@@ -1743,6 +1750,8 @@ export class ExtractorTool extends BaseComponent {
 
       if (this.imageZoom) {
         this.imageZoom.setImage(image);
+        // Auto-fit image after loading from mobile upload
+        this.imageZoom.autoFit();
       }
 
       this.showEmptyState(false);

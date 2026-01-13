@@ -164,6 +164,14 @@ export const ICON_BROOM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 </svg>`;
 
 /**
+ * Close icon - X shape for closing dialogs/panels
+ */
+export const ICON_CLOSE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M18 6L6 18" />
+  <path d="M6 6l12 12" />
+</svg>`;
+
+/**
  * Filter icon - Funnel shape
  */
 export const ICON_FILTER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -437,6 +445,7 @@ export const UI_ICONS: Record<string, string> = {
   globe: ICON_GLOBE,
   logo: ICON_LOGO,
   'context-menu': ICON_CONTEXT_MENU,
+  close: ICON_CLOSE,
 };
 
 /**

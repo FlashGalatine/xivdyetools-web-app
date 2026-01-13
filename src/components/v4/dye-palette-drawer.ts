@@ -16,7 +16,7 @@ import { DyeService, type Dye } from '@services/dye-service-wrapper';
 import { CollectionService } from '@services/collection-service';
 import { ToastService } from '@services/toast-service';
 import { logger } from '@shared/logger';
-import { ICON_DICE, ICON_BROOM } from '@shared/ui-icons';
+import { ICON_DICE, ICON_BROOM, ICON_CLOSE } from '@shared/ui-icons';
 
 /**
  * Filter types for dye categories
@@ -718,16 +718,8 @@ export class DyePaletteDrawer extends BaseLitComponent {
             >
               ${unsafeHTML(ICON_BROOM)}
             </button>
-            <button class="close-btn" @click=${this.handleClose} title="Close palette">
-              <svg
-                class="icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
+            <button class="close-btn" @click=${this.handleClose} title="Close palette" aria-label="Close palette">
+              ${unsafeHTML(ICON_CLOSE)}
             </button>
           </div>
         </div>

@@ -31,6 +31,10 @@ export class ImageZoomController extends BaseComponent {
   // Track whether image should be centered (set by fit-to-screen)
   private isCentered: boolean = false;
 
+  // Store zoom control functions for public access
+  private updateZoomFn: ((newZoom: number, setCenter?: boolean) => void) | null = null;
+  private getContainerDimensionsFn: (() => { width: number; height: number }) | null = null;
+
   constructor(container: HTMLElement, options: ImageZoomControllerOptions = {}) {
     super(container);
     this.onColorSampled = options.onColorSampled;
@@ -264,7 +268,8 @@ export class ImageZoomController extends BaseComponent {
     const MAX_ZOOM = 400;
     const MIN_CONTAINER_DIMENSION = 50;
 
-    const getContainerDimensions = (): { width: number; height: number } => {
+    // Store as instance method for public access
+    this.getContainerDimensionsFn = (): { width: number; height: number } => {
       if (!this.canvasContainerRef) return { width: 0, height: 0 };
 
       // Try to get dimensions from parent container first (the drop zone)
@@ -308,8 +313,10 @@ export class ImageZoomController extends BaseComponent {
 
       return { width, height };
     };
+    const getContainerDimensions = this.getContainerDimensionsFn;
 
-    const updateZoom = (newZoom: number, setCenter?: boolean): void => {
+    // Store as instance method for public access
+    this.updateZoomFn = (newZoom: number, setCenter?: boolean): void => {
       if (!this.canvasRef || !this.zoomDisplay || !this.zoomOutBtn || !this.zoomInBtn) return;
 
       this.zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
@@ -350,6 +357,7 @@ export class ImageZoomController extends BaseComponent {
       this.toggleClass(this.zoomInBtn, 'opacity-50', this.zoomLevel >= MAX_ZOOM);
       this.toggleClass(this.zoomInBtn, 'cursor-not-allowed', this.zoomLevel >= MAX_ZOOM);
     };
+    const updateZoom = this.updateZoomFn;
 
     const fitToContainer = (): void => {
       requestAnimationFrame(() => {
@@ -510,6 +518,71 @@ export class ImageZoomController extends BaseComponent {
         if (ctx) {
           ctx.drawImage(this.currentImage, 0, 0);
         }
+      }
+    });
+  }
+
+  /**
+   * Fit the entire image within the container (Fit to Screen)
+   */
+  public fitToScreen(): void {
+    if (!this.currentImage || !this.updateZoomFn || !this.getContainerDimensionsFn) return;
+
+    requestAnimationFrame(() => {
+      if (!this.currentImage || !this.updateZoomFn || !this.getContainerDimensionsFn) return;
+      const container = this.getContainerDimensionsFn();
+      const imageWidth = this.currentImage.naturalWidth || this.currentImage.width;
+      const imageHeight = this.currentImage.naturalHeight || this.currentImage.height;
+
+      if (imageWidth <= 0 || imageHeight <= 0) return;
+
+      const zoomX = (container.width / imageWidth) * 100;
+      const zoomY = (container.height / imageHeight) * 100;
+      const newZoom = Math.min(zoomX, zoomY);
+
+      this.updateZoomFn(Math.max(newZoom, 10), true);
+    });
+  }
+
+  /**
+   * Fit the image width to the container width (Fit to Width)
+   */
+  public fitToWidth(): void {
+    if (!this.currentImage || !this.updateZoomFn || !this.getContainerDimensionsFn) return;
+
+    requestAnimationFrame(() => {
+      if (!this.currentImage || !this.updateZoomFn || !this.getContainerDimensionsFn) return;
+      const container = this.getContainerDimensionsFn();
+      const imageWidth = this.currentImage.naturalWidth || this.currentImage.width;
+
+      if (imageWidth <= 0) return;
+
+      const newZoom = (container.width / imageWidth) * 100;
+      this.updateZoomFn(Math.max(Math.min(newZoom, 400), 10), true);
+    });
+  }
+
+  /**
+   * Automatically fit the image based on its dimensions relative to the container.
+   * - If image is wider than container: Fit to Width
+   * - If image fits within container: Fit to Screen (whole image)
+   */
+  public autoFit(): void {
+    if (!this.currentImage || !this.getContainerDimensionsFn) return;
+
+    requestAnimationFrame(() => {
+      if (!this.currentImage || !this.getContainerDimensionsFn) return;
+      const container = this.getContainerDimensionsFn();
+      const imageWidth = this.currentImage.naturalWidth || this.currentImage.width;
+
+      if (imageWidth <= 0 || container.width <= 0) return;
+
+      if (imageWidth > container.width) {
+        // Image is wider than container - fit to width
+        this.fitToWidth();
+      } else {
+        // Image fits within container - fit whole image
+        this.fitToScreen();
       }
     });
   }
