@@ -19,7 +19,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ConfigController } from '@services/config-controller';
 import { hybridPresetService } from '@services/hybrid-preset-service';
-import { dyeService, LanguageService, authService, presetSubmissionService, ToastService } from '@services/index';
+import { dyeService, LanguageService, authService, presetSubmissionService, ToastService, ModalService } from '@services/index';
 import { RouterService } from '@services/router-service';
 import { logger } from '@shared/logger';
 import type { UnifiedPreset } from '@services/hybrid-preset-service';
@@ -574,31 +574,39 @@ export class PresetTool extends BaseLitComponent {
       return;
     }
 
-    // Show confirmation dialog
+    // Show confirmation modal
     const confirmMessage =
-      LanguageService.t('preset.confirmDelete') || 'Are you sure you want to delete this preset?';
+      LanguageService.t('preset.confirmDelete') ||
+      'Are you sure you want to delete this preset? This action cannot be undone.';
 
-    if (!window.confirm(confirmMessage)) {
-      logger.info('[v4-preset-tool] User cancelled delete');
-      return;
-    }
+    // Use ModalService for a custom confirmation dialog
+    ModalService.showConfirm({
+      title: LanguageService.t('preset.deleteTitle') || 'Delete Preset',
+      content: confirmMessage,
+      confirmText: LanguageService.t('common.delete') || 'Delete',
+      cancelText: LanguageService.t('common.cancel') || 'Cancel',
+      onConfirm: async () => {
+        try {
+          ToastService.info('Deleting preset...');
+          await presetSubmissionService.deletePreset(preset.apiPresetId!);
+          logger.info('[v4-preset-tool] Preset deleted successfully');
+          ToastService.success('Preset deleted successfully');
 
-    try {
-      ToastService.info('Deleting preset...');
-      await presetSubmissionService.deletePreset(preset.apiPresetId);
-      logger.info('[v4-preset-tool] Preset deleted successfully');
-      ToastService.success('Preset deleted successfully');
-
-      // Refresh the lists
-      void this.loadPresets();
-      void this.loadUserSubmissions();
-      // Go back to the list view
-      this.selectedPreset = null;
-      window.history.pushState({}, '', '/presets');
-    } catch (error) {
-      logger.error('[v4-preset-tool] Failed to delete preset:', error);
-      ToastService.error('Failed to delete preset. Please try again.');
-    }
+          // Refresh the lists
+          void this.loadPresets();
+          void this.loadUserSubmissions();
+          // Go back to the list view
+          this.selectedPreset = null;
+          window.history.pushState({}, '', '/presets');
+        } catch (error) {
+          logger.error('[v4-preset-tool] Failed to delete preset:', error);
+          ToastService.error('Failed to delete preset. Please try again.');
+        }
+      },
+      onClose: () => {
+        logger.info('[v4-preset-tool] User cancelled delete');
+      },
+    });
   }
 
   /**
