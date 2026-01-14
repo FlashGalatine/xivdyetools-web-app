@@ -156,6 +156,7 @@ export class ConfigSidebar extends BaseLitComponent {
 
   private configController: ConfigController | null = null;
   private languageUnsubscribe: (() => void) | null = null;
+  private authUnsubscribe: (() => void) | null = null;
 
   static override styles: CSSResultGroup = [
     BaseLitComponent.baseStyles,
@@ -535,12 +536,19 @@ export class ConfigSidebar extends BaseLitComponent {
     this.languageUnsubscribe = LanguageService.subscribe(() => {
       this.requestUpdate();
     });
+
+    // Subscribe to auth changes to update UI on login/logout
+    this.authUnsubscribe = authService.subscribe(() => {
+      this.requestUpdate();
+    });
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this.languageUnsubscribe?.();
     this.languageUnsubscribe = null;
+    this.authUnsubscribe?.();
+    this.authUnsubscribe = null;
   }
 
   /**
@@ -1146,9 +1154,8 @@ export class ConfigSidebar extends BaseLitComponent {
   /**
    * Handle logout button click
    */
-  private handleLogout(): void {
-    authService.logout();
-    this.requestUpdate();
+  private async handleLogout(): Promise<void> {
+    await authService.logout();
   }
 
   /**
