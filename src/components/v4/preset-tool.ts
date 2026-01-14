@@ -319,16 +319,31 @@ export class PresetTool extends BaseLitComponent {
     // Subscribe to auth changes
     this.isAuthenticated = authService.isAuthenticated();
     this.authUnsubscribe = authService.subscribe((state) => {
+      const wasAuthenticated = this.isAuthenticated;
       this.isAuthenticated = state.isAuthenticated;
+
       // Reload presets when auth state changes (e.g., to load user submissions)
       if (this.config.showMyPresetsOnly) {
         void this.loadPresets();
+      }
+
+      // Load user submissions when logging in (for ownership check)
+      if (!wasAuthenticated && this.isAuthenticated) {
+        void this.loadUserSubmissions();
+      } else if (!this.isAuthenticated) {
+        // Clear user submissions on logout
+        this.userSubmissions = [];
       }
     });
 
     // Initialize service and load presets
     await hybridPresetService.initialize();
     await this.loadPresets();
+
+    // Load user submissions if authenticated (for ownership check)
+    if (this.isAuthenticated) {
+      await this.loadUserSubmissions();
+    }
 
     // Handle deep links (e.g., /presets/community-xxx)
     await this.handleDeepLink();
@@ -417,6 +432,27 @@ export class PresetTool extends BaseLitComponent {
       this._presetError = 'Failed to load presets. Please try again.';
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  /**
+   * Load user submissions for ownership checking
+   * This is called separately from loadPresets to keep track of user's presets
+   * regardless of the current filter/view mode
+   */
+  private async loadUserSubmissions(): Promise<void> {
+    if (!this.isAuthenticated) {
+      this.userSubmissions = [];
+      return;
+    }
+
+    try {
+      const response = await presetSubmissionService.getMySubmissions();
+      this.userSubmissions = response.presets;
+      logger.info('[v4-preset-tool] Loaded', this.userSubmissions.length, 'user submissions for ownership check');
+    } catch (error) {
+      logger.warn('[v4-preset-tool] Failed to load user submissions:', error);
+      // Don't clear existing - could be transient error
     }
   }
 
@@ -696,8 +732,12 @@ export class PresetTool extends BaseLitComponent {
   protected override render(): TemplateResult {
     // If a preset is selected, show detail view
     if (this.selectedPreset) {
-      // Determine if this is the user's own preset
-      const isOwnPreset = this.config.showMyPresetsOnly && this.isAuthenticated;
+      // Determine if this is the user's own preset by checking if it exists in userSubmissions
+      // This is more accurate than just checking the toggle, as the user could be viewing
+      // a preset from the general list that happens to be theirs
+      const isOwnPreset = this.isAuthenticated &&
+        this.selectedPreset.apiPresetId !== undefined &&
+        this.userSubmissions.some(p => p.id === this.selectedPreset?.apiPresetId);
 
       return html`
         <v4-preset-detail
