@@ -777,10 +777,6 @@
     "platformHint": "ヒント",
     "useModifier": "システムショートカットにはCtrlを使用"
   },
-  "preset": {
-    "deleteTitle": "プリセットを削除",
-    "confirmDelete": "このプリセットを削除してもよろしいですか？この操作は取り消せません。"
-  },
   "palette": {
     "saved": "保存済み",
     "savePalette": "パレットを保存",
@@ -982,7 +978,8 @@
     "tab": "タブ",
     "edit": "編集",
     "delete": "削除",
-    "confirmDelete": "このプリセットを削除してもよろしいですか？",
+    "deleteTitle": "プリセットを削除",
+    "confirmDelete": "このプリセットを削除してもよろしいですか？この操作は取り消せません。",
     "categories": {
       "all": "すべて",
       "jobs": "ジョブ",

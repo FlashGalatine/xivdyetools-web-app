@@ -939,7 +939,8 @@
     "tab": "Onglet",
     "edit": "Modifier",
     "delete": "Supprimer",
-    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce préréglage?",
+    "deleteTitle": "Supprimer le preset",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce preset ? Cette action est irréversible.",
     "categories": {
       "all": "Tous",
       "jobs": "Classes",

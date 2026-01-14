@@ -939,7 +939,8 @@
     "tab": "탭",
     "edit": "편집",
     "delete": "삭제",
-    "confirmDelete": "이 프리셋을 삭제하시겠습니까?",
+    "deleteTitle": "프리셋 삭제",
+    "confirmDelete": "이 프리셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "categories": {
       "all": "전체",
       "jobs": "직업",

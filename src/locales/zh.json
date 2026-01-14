@@ -939,7 +939,8 @@
     "tab": "标签",
     "edit": "编辑",
     "delete": "删除",
-    "confirmDelete": "您确定要删除此预设吗？",
+    "deleteTitle": "删除预设",
+    "confirmDelete": "您确定要删除此预设吗？此操作无法撤销。",
     "categories": {
       "all": "全部",
       "jobs": "职业",
