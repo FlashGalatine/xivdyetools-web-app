@@ -12,7 +12,7 @@
 
 import { BaseComponent } from '@components/base-component';
 import { DyeSelector } from '@components/dye-selector';
-import { CollapsiblePanel } from '@mockups/CollapsiblePanel';
+import { CollapsiblePanel } from '@components/collapsible-panel';
 import { ResultCard } from '@components/v4/result-card';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
 import {

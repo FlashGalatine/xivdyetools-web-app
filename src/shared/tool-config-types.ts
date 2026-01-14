@@ -106,11 +106,21 @@ export interface GradientConfig {
 }
 
 /**
+ * Color mixing algorithm for the Dye Mixer tool
+ * - 'ryb': RYB subtractive mixing (paint-like, Blue + Yellow = Green)
+ * - 'lab': LAB perceptually uniform blending
+ * - 'rgb': RGB additive mixing (light-based, Blue + Yellow = Gray)
+ */
+export type MixingMode = 'ryb' | 'lab' | 'rgb';
+
+/**
  * Dye Mixer (NEW in v4) configuration
  */
 export interface MixerConfig {
   /** Maximum results to show (3-8) */
   maxResults: number;
+  /** Color mixing algorithm (default: 'ryb' for paint-like mixing) */
+  mixingMode: MixingMode;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
 }
@@ -323,6 +333,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   },
   mixer: {
     maxResults: 4,
+    mixingMode: 'ryb',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   presets: {

@@ -24,6 +24,7 @@ import type {
   ComparisonConfig,
   GradientConfig,
   MixerConfig,
+  MixingMode,
   PresetsConfig,
   BudgetConfig,
   SwatchConfig,
@@ -116,6 +117,7 @@ export class ConfigSidebar extends BaseLitComponent {
   };
   @state() private mixerConfig: MixerConfig = {
     maxResults: 3,
+    mixingMode: 'ryb',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private presetsConfig: PresetsConfig = {
@@ -976,6 +978,25 @@ export class ConfigSidebar extends BaseLitComponent {
     return html`
       <div class="config-section" ?hidden=${this.activeTool !== 'mixer'}>
         <div class="config-group">
+          <div class="config-label">${LanguageService.t('config.mixingMode')}</div>
+          <select
+            class="config-select"
+            .value=${this.mixerConfig.mixingMode ?? 'ryb'}
+            @change=${(e: Event) => {
+        const value = (e.target as HTMLSelectElement).value as MixingMode;
+        this.handleConfigChange('mixer', 'mixingMode', value);
+      }}
+          >
+            <option value="ryb">${LanguageService.t('config.mixingRyb')}</option>
+            <option value="lab">${LanguageService.t('config.mixingLab')}</option>
+            <option value="rgb">${LanguageService.t('config.mixingRgb')}</option>
+          </select>
+          <div class="config-description">
+            ${this.getMixingModeDescription()}
+          </div>
+        </div>
+
+        <div class="config-group">
           <div class="config-label">${LanguageService.t('config.resultSettings')}</div>
           <div class="slider-wrapper">
             <v4-range-slider
@@ -1003,6 +1024,21 @@ export class ConfigSidebar extends BaseLitComponent {
         ></v4-display-options>
       </div>
     `;
+  }
+
+  /**
+   * Get description text for the current mixing mode
+   */
+  private getMixingModeDescription(): string {
+    switch (this.mixerConfig.mixingMode) {
+      case 'ryb':
+        return LanguageService.t('config.mixingRybDesc');
+      case 'lab':
+        return LanguageService.t('config.mixingLabDesc');
+      case 'rgb':
+      default:
+        return LanguageService.t('config.mixingRgbDesc');
+    }
   }
 
   /**
