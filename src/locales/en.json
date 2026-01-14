@@ -777,6 +777,10 @@
     "platformHint": "Tip",
     "useModifier": "Use Ctrl for system shortcuts"
   },
+  "preset": {
+    "deleteTitle": "Delete Preset",
+    "confirmDelete": "Are you sure you want to delete this preset? This action cannot be undone."
+  },
   "palette": {
     "saved": "Saved",
     "savePalette": "Save Palette",

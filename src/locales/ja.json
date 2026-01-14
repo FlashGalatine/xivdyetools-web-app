@@ -777,6 +777,10 @@
     "platformHint": "ヒント",
     "useModifier": "システムショートカットにはCtrlを使用"
   },
+  "preset": {
+    "deleteTitle": "プリセットを削除",
+    "confirmDelete": "このプリセットを削除してもよろしいですか？この操作は取り消せません。"
+  },
   "palette": {
     "saved": "保存済み",
     "savePalette": "パレットを保存",
