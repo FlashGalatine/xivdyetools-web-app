@@ -19,7 +19,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ConfigController } from '@services/config-controller';
 import { hybridPresetService } from '@services/hybrid-preset-service';
-import { dyeService, LanguageService, authService, presetSubmissionService } from '@services/index';
+import { dyeService, LanguageService, authService, presetSubmissionService, ToastService } from '@services/index';
 import { RouterService } from '@services/router-service';
 import { logger } from '@shared/logger';
 import type { UnifiedPreset } from '@services/hybrid-preset-service';
@@ -559,9 +559,18 @@ export class PresetTool extends BaseLitComponent {
    * Handle delete preset from detail view
    */
   private async handleDeletePreset(e: CustomEvent<{ preset: UnifiedPreset }>): Promise<void> {
-    const preset = e.detail.preset;
+    logger.info('[v4-preset-tool] handleDeletePreset called');
+
+    const preset = e.detail?.preset;
+    if (!preset) {
+      logger.warn('[v4-preset-tool] Delete event received but no preset in detail');
+      ToastService.error('Unable to delete: preset data missing');
+      return;
+    }
+
     if (!preset.apiPresetId) {
       logger.warn('[v4-preset-tool] Cannot delete preset without API ID');
+      ToastService.error('Unable to delete: preset has no API ID');
       return;
     }
 
@@ -570,21 +579,25 @@ export class PresetTool extends BaseLitComponent {
       LanguageService.t('preset.confirmDelete') || 'Are you sure you want to delete this preset?';
 
     if (!window.confirm(confirmMessage)) {
+      logger.info('[v4-preset-tool] User cancelled delete');
       return;
     }
 
     try {
+      ToastService.info('Deleting preset...');
       await presetSubmissionService.deletePreset(preset.apiPresetId);
       logger.info('[v4-preset-tool] Preset deleted successfully');
+      ToastService.success('Preset deleted successfully');
 
       // Refresh the lists
       void this.loadPresets();
+      void this.loadUserSubmissions();
       // Go back to the list view
       this.selectedPreset = null;
       window.history.pushState({}, '', '/presets');
     } catch (error) {
       logger.error('[v4-preset-tool] Failed to delete preset:', error);
-      // Could show an error toast here
+      ToastService.error('Failed to delete preset. Please try again.');
     }
   }
 
