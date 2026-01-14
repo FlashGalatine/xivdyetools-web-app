@@ -35,7 +35,7 @@ export interface IconRailOptions {
  */
 const DEFAULT_TOOLS: IconRailTool[] = [
   { id: 'harmony', name: 'Harmony', icon: ICON_TOOL_HARMONY },
-  { id: 'matcher', name: 'Matcher', icon: ICON_TOOL_MATCHER },
+  { id: 'matcher', name: 'Extractor', icon: ICON_TOOL_MATCHER },
   { id: 'accessibility', name: 'Accessibility', icon: ICON_TOOL_ACCESSIBILITY },
   { id: 'comparison', name: 'Comparison', icon: ICON_TOOL_COMPARISON },
   { id: 'mixer', name: 'Mixer', icon: ICON_TOOL_MIXER },

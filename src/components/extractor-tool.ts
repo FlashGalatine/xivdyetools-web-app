@@ -45,7 +45,7 @@ import type { Dye, DyeWithDistance, PriceData } from '@shared/types';
 import type { ExtractorConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import { PaletteService, type PaletteMatch } from '@xivdyetools/core';
-import type { ResultCardData } from '@components/v4/result-card';
+import type { ResultCardData, ContextAction } from '@components/v4/result-card';
 import '@components/v4/result-card';
 
 // ============================================================================
@@ -2468,6 +2468,8 @@ export class ExtractorTool extends BaseComponent {
       // Create the v4-result-card element
       const card = document.createElement('v4-result-card');
       (card as any).data = cardData;
+      // Make primary button open context menu (same as Swatch tool)
+      card.setAttribute('primary-opens-menu', 'true');
 
       // Apply display options from config
       (card as any).showHex = this.displayOptions.showHex;
@@ -2478,10 +2480,77 @@ export class ExtractorTool extends BaseComponent {
       (card as any).showPrice = this.displayOptions.showPrice && this.showPrices;
       (card as any).showAcquisition = this.displayOptions.showAcquisition;
 
+      // Listen for context actions (both primary button and context menu trigger this)
+      card.addEventListener('context-action', ((
+        e: CustomEvent<{ action: ContextAction; dye: Dye }>
+      ) => {
+        this.handleContextAction(e.detail.action, e.detail.dye);
+      }) as EventListener);
+
       cardsGrid.appendChild(card);
     }
 
     this.resultsContainer.appendChild(cardsGrid);
+  }
+
+  /**
+   * Handle context menu actions from result cards
+   */
+  private handleContextAction(action: ContextAction, dye: Dye): void {
+    switch (action) {
+      case 'add-comparison':
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'comparison', dye },
+          })
+        );
+        ToastService.success(LanguageService.t('toast.addedToComparison') || 'Added to comparison');
+        break;
+
+      case 'add-mixer':
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'mixer', dye },
+          })
+        );
+        ToastService.success(LanguageService.t('toast.addedToMixer') || 'Added to mixer');
+        break;
+
+      case 'add-accessibility':
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'accessibility', dye },
+          })
+        );
+        ToastService.success(
+          LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check'
+        );
+        break;
+
+      case 'see-harmonies':
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'harmony', dye },
+          })
+        );
+        break;
+
+      case 'budget':
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'budget', dye },
+          })
+        );
+        break;
+
+      case 'copy-hex':
+        void navigator.clipboard.writeText(dye.hex).then(() => {
+          ToastService.success(
+            LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard'
+          );
+        });
+        break;
+    }
   }
 
   /**

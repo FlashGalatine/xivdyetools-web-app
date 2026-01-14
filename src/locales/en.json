@@ -44,7 +44,7 @@
     },
     "matcher": {
       "title": "Color Matcher",
-      "shortName": "Matcher",
+      "shortName": "Extractor",
       "description": "Match colors from images",
       "subtitle": "Upload an image or select a color to find the closest matching FFXIV dyes."
     },

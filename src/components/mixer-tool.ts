@@ -1341,6 +1341,7 @@ export class MixerTool extends BaseComponent {
       const card = document.createElement('v4-result-card') as HTMLElement;
       card.setAttribute('show-actions', 'true');
       card.setAttribute('show-slot-picker', 'true');
+      card.setAttribute('primary-action-label', LanguageService.t('mixer.replaceSlot') || 'Replace Slot');
 
       // Set data property (ResultCardData interface)
       // Get price data to resolve both price and world name
@@ -1371,13 +1372,6 @@ export class MixerTool extends BaseComponent {
         e: CustomEvent<{ action: ContextAction; dye: Dye }>
       ) => {
         this.handleContextAction(e.detail.action, e.detail.dye);
-      }) as EventListener);
-
-      // Listen for card selection
-      card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {
-        ToastService.info(
-          `${LanguageService.getDyeName(e.detail.dye.itemID) || e.detail.dye.name}`
-        );
       }) as EventListener);
 
       this.resultsGridContainer.appendChild(card);
