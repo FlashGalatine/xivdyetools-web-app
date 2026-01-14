@@ -19,10 +19,11 @@ import { customElement, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ConfigController } from '@services/config-controller';
 import { hybridPresetService } from '@services/hybrid-preset-service';
-import { dyeService, LanguageService } from '@services/index';
+import { dyeService, LanguageService, authService, presetSubmissionService } from '@services/index';
 import { RouterService } from '@services/router-service';
 import { logger } from '@shared/logger';
 import type { UnifiedPreset } from '@services/hybrid-preset-service';
+import type { CommunityPreset } from '@services/community-preset-service';
 import type { PresetsConfig, PresetCategoryFilter, PresetSortOption } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import type { PresetCategory } from '@xivdyetools/core';
@@ -84,7 +85,20 @@ export class PresetTool extends BaseLitComponent {
   @state()
   private searchQuery: string = '';
 
+  /**
+   * User's own submissions (when showMyPresetsOnly is enabled)
+   */
+  @state()
+  private userSubmissions: CommunityPreset[] = [];
+
+  /**
+   * Whether user is authenticated
+   */
+  @state()
+  private isAuthenticated: boolean = false;
+
   private configController: ConfigController | null = null;
+  private authUnsubscribe: (() => void) | null = null;
   private configUnsubscribe: (() => void) | null = null;
 
   static override styles: CSSResultGroup = [
@@ -302,6 +316,16 @@ export class PresetTool extends BaseLitComponent {
       void this.loadPresets();
     });
 
+    // Subscribe to auth changes
+    this.isAuthenticated = authService.isAuthenticated();
+    this.authUnsubscribe = authService.subscribe((state) => {
+      this.isAuthenticated = state.isAuthenticated;
+      // Reload presets when auth state changes (e.g., to load user submissions)
+      if (this.config.showMyPresetsOnly) {
+        void this.loadPresets();
+      }
+    });
+
     // Initialize service and load presets
     await hybridPresetService.initialize();
     await this.loadPresets();
@@ -315,6 +339,10 @@ export class PresetTool extends BaseLitComponent {
     if (this.configUnsubscribe) {
       this.configUnsubscribe();
       this.configUnsubscribe = null;
+    }
+    if (this.authUnsubscribe) {
+      this.authUnsubscribe();
+      this.authUnsubscribe = null;
     }
   }
 
@@ -348,6 +376,26 @@ export class PresetTool extends BaseLitComponent {
     this._presetError = '';
 
     try {
+      // If showMyPresetsOnly is enabled, load user's submissions
+      if (this.config.showMyPresetsOnly) {
+        if (!this.isAuthenticated) {
+          // User must be logged in to see their presets
+          this.presets = [];
+          this.userSubmissions = [];
+          this._presetError = '';
+          logger.info('[v4-preset-tool] showMyPresetsOnly enabled but not authenticated');
+          return;
+        }
+
+        // Load user's submissions
+        const response = await presetSubmissionService.getMySubmissions();
+        this.userSubmissions = response.presets;
+        // Convert to UnifiedPreset format
+        this.presets = this.userSubmissions.map((p) => this.communityToUnified(p));
+        logger.info('[v4-preset-tool] Loaded', this.presets.length, 'user submissions');
+        return;
+      }
+
       // Map config category to API category
       const category: PresetCategory | undefined =
         this.config.category === 'all' ? undefined : (this.config.category as PresetCategory);
@@ -370,6 +418,26 @@ export class PresetTool extends BaseLitComponent {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  /**
+   * Convert CommunityPreset to UnifiedPreset
+   */
+  private communityToUnified(preset: CommunityPreset): UnifiedPreset {
+    return {
+      id: `community-${preset.id}`,
+      name: preset.name,
+      description: preset.description,
+      category: preset.category_id,
+      dyes: preset.dyes,
+      tags: preset.tags,
+      author: preset.author_name || undefined,
+      voteCount: preset.vote_count,
+      isCurated: preset.is_curated,
+      isFromAPI: true,
+      apiPresetId: preset.id,
+      createdAt: preset.created_at,
+    };
   }
 
   /**
@@ -487,13 +555,37 @@ export class PresetTool extends BaseLitComponent {
    * Render empty state
    */
   private renderEmpty(): TemplateResult {
+    // If showMyPresetsOnly is enabled but not authenticated
+    if (this.config.showMyPresetsOnly && !this.isAuthenticated) {
+      return html`
+        <div class="empty-container">
+          <span class="empty-icon">🔐</span>
+          <p class="empty-message">
+            Please log in to view your submitted presets.
+          </p>
+        </div>
+      `;
+    }
+
+    // If showMyPresetsOnly is enabled and authenticated but no submissions
+    if (this.config.showMyPresetsOnly && this.isAuthenticated) {
+      return html`
+        <div class="empty-container">
+          <span class="empty-icon">📝</span>
+          <p class="empty-message">
+            You haven't submitted any presets yet.
+          </p>
+        </div>
+      `;
+    }
+
     return html`
       <div class="empty-container">
         <span class="empty-icon">📭</span>
         <p class="empty-message">
           ${this.searchQuery
-            ? `No presets found matching "${this.searchQuery}"`
-            : 'No presets found in this category'}
+        ? `No presets found matching "${this.searchQuery}"`
+        : 'No presets found in this category'}
         </p>
       </div>
     `;
@@ -519,8 +611,8 @@ export class PresetTool extends BaseLitComponent {
       <div class="results-info">
         <span class="results-count">${this.presets.length} preset${this.presets.length !== 1 ? 's' : ''}</span>
         ${this.config.category !== 'all'
-          ? html`<span class="category-badge">${this.getCategoryDisplayName()}</span>`
-          : nothing}
+        ? html`<span class="category-badge">${this.getCategoryDisplayName()}</span>`
+        : nothing}
       </div>
 
       <div class="preset-grid">

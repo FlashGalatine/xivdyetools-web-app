@@ -20,6 +20,7 @@ import { clearContainer } from '@shared/utils';
 import type { BaseComponent } from './base-component';
 import type { V4LayoutShell } from './v4/v4-layout-shell';
 import { ModalContainer } from './modal-container';
+import { ToastContainer } from './toast-container';
 import { showThemeModal } from './v4/theme-modal';
 import { showLanguageModal } from './v4/language-modal';
 import { showAboutModal } from './about-modal';
@@ -34,6 +35,7 @@ let configController: ConfigController | null = null;
 let languageUnsubscribe: (() => void) | null = null;
 let configUnsubscribe: (() => void) | null = null;
 let modalContainer: ModalContainer | null = null;
+let toastContainer: ToastContainer | null = null;
 
 /**
  * Initialize the v4 layout
@@ -141,6 +143,17 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
   }
   modalContainer = new ModalContainer(modalRoot);
   modalContainer.init();
+
+  // Initialize toast container for v4 layout
+  // Create toast root if it doesn't exist
+  let toastRoot = document.getElementById('toast-root');
+  if (!toastRoot) {
+    toastRoot = document.createElement('div');
+    toastRoot.id = 'toast-root';
+    document.body.appendChild(toastRoot);
+  }
+  toastContainer = new ToastContainer(toastRoot);
+  toastContainer.init();
 
   // Subscribe to route changes (browser back/forward)
   RouterService.subscribe((state) => {
@@ -391,6 +404,12 @@ export function destroyV4Layout(): void {
   if (modalContainer) {
     modalContainer.destroy();
     modalContainer = null;
+  }
+
+  // Clean up toast container
+  if (toastContainer) {
+    toastContainer.destroy();
+    toastContainer = null;
   }
 
   // Clean up layout element

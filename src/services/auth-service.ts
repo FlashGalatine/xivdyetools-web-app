@@ -503,9 +503,22 @@ class AuthServiceImpl {
    * This handles both successful login and error cases
    */
   private navigateAfterAuth(returnPath: string): void {
+    // Check if a returnTool was stored during login initiation
+    const returnTool = sessionStorage.getItem(OAUTH_RETURN_TOOL_KEY);
+    sessionStorage.removeItem(OAUTH_RETURN_TOOL_KEY);
+
+    // If returnTool is specified, navigate to that tool's route instead
+    let finalPath = returnPath;
+    if (returnTool) {
+      finalPath = `/${returnTool}`;
+      if (import.meta.env.DEV) {
+        console.log(`🔐 [AuthService] Using returnTool: ${returnTool} -> ${finalPath}`);
+      }
+    }
+
     // Use replaceState to avoid adding callback URL to history
     // Then navigate to the return path
-    const targetUrl = new URL(window.location.origin + returnPath);
+    const targetUrl = new URL(window.location.origin + finalPath);
     window.history.replaceState({}, '', targetUrl.toString());
     // Force page reload to re-render with new auth state
     // This ensures all components see the updated auth state
