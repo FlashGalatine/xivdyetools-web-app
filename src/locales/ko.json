@@ -209,6 +209,13 @@
     "colorSpace": "색 공간",
     "hsvHueBased": "HSV (색조 기반)",
     "rgbDirect": "RGB (직접)",
+    "mixingMode": "혼합 모드",
+    "mixingRyb": "RYB (물감 혼합)",
+    "mixingLab": "LAB (지각적)",
+    "mixingRgb": "RGB (빛)",
+    "mixingRybDesc": "감산 혼합. 파랑 + 노랑 = 초록.",
+    "mixingLabDesc": "LAB 색 공간에서의 지각적으로 균일한 혼합.",
+    "mixingRgbDesc": "가산 혼합. 파랑 + 노랑 = 회색.",
     "resultSettings": "결과 설정",
     "maxResults": "최대 결과 수",
     "category": "카테고리",
@@ -570,7 +577,8 @@
     "mixSettings": "믹스 설정",
     "slotsFullReplacing": "두 슬롯이 가득 찼습니다. 첫 번째 염료를 교체합니다.",
     "replacedSlot1": "슬롯 1 교체됨",
-    "replacedSlot2": "슬롯 2 교체됨"
+    "replacedSlot2": "슬롯 2 교체됨",
+    "replaceSlot": "슬롯 교체"
   },
   "gradient": {
     "selectColor": "색상 선택",

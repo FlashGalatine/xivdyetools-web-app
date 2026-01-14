@@ -209,6 +209,13 @@
     "colorSpace": "Color Space",
     "hsvHueBased": "HSV (Hue-based)",
     "rgbDirect": "RGB (Direct)",
+    "mixingMode": "Mixing Mode",
+    "mixingRyb": "RYB (Paint Mixing)",
+    "mixingLab": "LAB (Perceptual)",
+    "mixingRgb": "RGB (Light)",
+    "mixingRybDesc": "Subtractive paint mixing. Blue + Yellow = Green.",
+    "mixingLabDesc": "Perceptually uniform blending in LAB color space.",
+    "mixingRgbDesc": "Additive light mixing. Blue + Yellow = Gray.",
     "resultSettings": "Result Settings",
     "maxResults": "Max Results",
     "category": "Category",
@@ -570,7 +577,8 @@
     "mixSettings": "Mix Settings",
     "slotsFullReplacing": "Both slots full. Replacing first dye.",
     "replacedSlot1": "Replaced Slot 1",
-    "replacedSlot2": "Replaced Slot 2"
+    "replacedSlot2": "Replaced Slot 2",
+    "replaceSlot": "Replace Slot"
   },
   "gradient": {
     "selectColor": "Select Color",

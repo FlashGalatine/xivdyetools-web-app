@@ -209,6 +209,13 @@
     "colorSpace": "Espace colorimétrique",
     "hsvHueBased": "HSV (basé sur la teinte)",
     "rgbDirect": "RGB (direct)",
+    "mixingMode": "Mode de mélange",
+    "mixingRyb": "RYB (Mélange de peinture)",
+    "mixingLab": "LAB (Perceptuel)",
+    "mixingRgb": "RGB (Lumière)",
+    "mixingRybDesc": "Mélange soustractif de peinture. Bleu + Jaune = Vert.",
+    "mixingLabDesc": "Mélange perceptuellement uniforme dans l'espace colorimétrique LAB.",
+    "mixingRgbDesc": "Mélange additif de lumière. Bleu + Jaune = Gris.",
     "resultSettings": "Paramètres de résultat",
     "maxResults": "Résultats maximum",
     "category": "Catégorie",
@@ -570,7 +577,8 @@
     "mixSettings": "Paramètres de mélange",
     "slotsFullReplacing": "Les deux emplacements sont pleins. Remplacement de la première teinture.",
     "replacedSlot1": "Emplacement 1 remplacé",
-    "replacedSlot2": "Emplacement 2 remplacé"
+    "replacedSlot2": "Emplacement 2 remplacé",
+    "replaceSlot": "Remplacer l'emplacement"
   },
   "gradient": {
     "selectColor": "Sélectionner une Couleur",

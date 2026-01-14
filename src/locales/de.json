@@ -209,6 +209,13 @@
     "colorSpace": "Farbraum",
     "hsvHueBased": "HSV (Farbton-basiert)",
     "rgbDirect": "RGB (Direkt)",
+    "mixingMode": "Mischmodus",
+    "mixingRyb": "RYB (Farbmischung)",
+    "mixingLab": "LAB (Wahrnehmung)",
+    "mixingRgb": "RGB (Licht)",
+    "mixingRybDesc": "Subtraktive Farbmischung. Blau + Gelb = Grün.",
+    "mixingLabDesc": "Wahrnehmungsgetreue Mischung im LAB-Farbraum.",
+    "mixingRgbDesc": "Additive Lichtmischung. Blau + Gelb = Grau.",
     "resultSettings": "Ergebniseinstellungen",
     "maxResults": "Max. Ergebnisse",
     "category": "Kategorie",
@@ -570,7 +577,8 @@
     "mixSettings": "Mischeinstellungen",
     "slotsFullReplacing": "Beide Slots voll. Ersetze ersten Farbstoff.",
     "replacedSlot1": "Slot 1 ersetzt",
-    "replacedSlot2": "Slot 2 ersetzt"
+    "replacedSlot2": "Slot 2 ersetzt",
+    "replaceSlot": "Slot ersetzen"
   },
   "gradient": {
     "selectColor": "Farbe auswählen",

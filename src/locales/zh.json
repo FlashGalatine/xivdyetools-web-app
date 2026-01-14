@@ -209,6 +209,13 @@
     "colorSpace": "色彩空间",
     "hsvHueBased": "HSV（色相为基础）",
     "rgbDirect": "RGB（直接）",
+    "mixingMode": "混合模式",
+    "mixingRyb": "RYB (颜料混合)",
+    "mixingLab": "LAB (感知)",
+    "mixingRgb": "RGB (光)",
+    "mixingRybDesc": "减色颜料混合。蓝 + 黄 = 绿。",
+    "mixingLabDesc": "LAB 色彩空间中的感知均匀混合。",
+    "mixingRgbDesc": "加色光混合。蓝 + 黄 = 灰。",
     "resultSettings": "结果设置",
     "maxResults": "最大结果数",
     "category": "类别",
@@ -570,7 +577,8 @@
     "mixSettings": "混合设置",
     "slotsFullReplacing": "两个槽位已满。正在替换第一个染剂。",
     "replacedSlot1": "已替换槽位 1",
-    "replacedSlot2": "已替换槽位 2"
+    "replacedSlot2": "已替换槽位 2",
+    "replaceSlot": "替换槽位"
   },
   "gradient": {
     "selectColor": "选择颜色",
