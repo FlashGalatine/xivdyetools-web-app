@@ -489,6 +489,70 @@ export class PresetTool extends BaseLitComponent {
   }
 
   /**
+   * Handle edit preset from detail view
+   */
+  private async handleEditPreset(e: CustomEvent<{ preset: UnifiedPreset }>): Promise<void> {
+    const preset = e.detail.preset;
+    if (!preset.apiPresetId) {
+      logger.warn('[v4-preset-tool] Cannot edit preset without API ID');
+      return;
+    }
+
+    // Find the original CommunityPreset from userSubmissions
+    const communityPreset = this.userSubmissions.find((p) => p.id === preset.apiPresetId);
+    if (!communityPreset) {
+      logger.warn('[v4-preset-tool] Cannot find original community preset for editing');
+      return;
+    }
+
+    // Import and show the edit form dynamically
+    const { showPresetEditForm } = await import('../preset-edit-form');
+    showPresetEditForm(communityPreset, (result) => {
+      if (result.success) {
+        logger.info('[v4-preset-tool] Preset updated successfully');
+        // Refresh the lists
+        void this.loadPresets();
+        // Go back to the list view
+        this.selectedPreset = null;
+        window.history.pushState({}, '', '/presets');
+      }
+    });
+  }
+
+  /**
+   * Handle delete preset from detail view
+   */
+  private async handleDeletePreset(e: CustomEvent<{ preset: UnifiedPreset }>): Promise<void> {
+    const preset = e.detail.preset;
+    if (!preset.apiPresetId) {
+      logger.warn('[v4-preset-tool] Cannot delete preset without API ID');
+      return;
+    }
+
+    // Show confirmation dialog
+    const confirmMessage =
+      LanguageService.t('preset.confirmDelete') || 'Are you sure you want to delete this preset?';
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      await presetSubmissionService.deletePreset(preset.apiPresetId);
+      logger.info('[v4-preset-tool] Preset deleted successfully');
+
+      // Refresh the lists
+      void this.loadPresets();
+      // Go back to the list view
+      this.selectedPreset = null;
+      window.history.pushState({}, '', '/presets');
+    } catch (error) {
+      logger.error('[v4-preset-tool] Failed to delete preset:', error);
+      // Could show an error toast here
+    }
+  }
+
+  /**
    * Handle search input
    */
   private handleSearchInput(e: Event): void {
@@ -632,11 +696,17 @@ export class PresetTool extends BaseLitComponent {
   protected override render(): TemplateResult {
     // If a preset is selected, show detail view
     if (this.selectedPreset) {
+      // Determine if this is the user's own preset
+      const isOwnPreset = this.config.showMyPresetsOnly && this.isAuthenticated;
+
       return html`
         <v4-preset-detail
           .preset=${this.selectedPreset}
+          .isOwnPreset=${isOwnPreset}
           @back=${this.handleBack}
           @vote-update=${this.handleVoteUpdate}
+          @edit-preset=${this.handleEditPreset}
+          @delete-preset=${this.handleDeletePreset}
         ></v4-preset-detail>
       `;
     }

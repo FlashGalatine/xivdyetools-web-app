@@ -38,13 +38,20 @@ import './result-card';
  * @fires back - Emits when the back button is clicked
  * @fires vote-update - Emits when vote count changes
  *   - `detail.preset`: The updated preset
+ * @fires edit-preset - Emits when the edit button is clicked
+ *   - `detail.preset`: The preset to edit
+ * @fires delete-preset - Emits when the delete button is clicked
+ *   - `detail.preset`: The preset to delete
  *
  * @example
  * ```html
  * <v4-preset-detail
  *   .preset=${selectedPreset}
+ *   .isOwnPreset=${true}
  *   @back=${() => this.closeDetail()}
  *   @vote-update=${(e) => this.handleVoteUpdate(e.detail.preset)}
+ *   @edit-preset=${(e) => this.handleEdit(e.detail.preset)}
+ *   @delete-preset=${(e) => this.handleDelete(e.detail.preset)}
  * ></v4-preset-detail>
  * ```
  */
@@ -55,6 +62,12 @@ export class PresetDetail extends BaseLitComponent {
    */
   @property({ attribute: false })
   preset?: UnifiedPreset;
+
+  /**
+   * Whether this is the user's own preset (enables edit/delete)
+   */
+  @property({ type: Boolean, attribute: 'is-own-preset' })
+  isOwnPreset: boolean = false;
 
   /**
    * Whether the current user has voted for this preset
@@ -321,6 +334,25 @@ export class PresetDetail extends BaseLitComponent {
         font-size: 14px;
       }
 
+      /* Edit/Delete buttons */
+      .edit-btn {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+      }
+
+      .edit-btn:hover {
+        background: rgba(59, 130, 246, 0.3);
+      }
+
+      .delete-btn {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+      }
+
+      .delete-btn:hover {
+        background: rgba(239, 68, 68, 0.3);
+      }
+
       /* Loading state */
       .loading {
         display: flex;
@@ -446,6 +478,22 @@ export class PresetDetail extends BaseLitComponent {
   }
 
   /**
+   * Handle edit button click
+   */
+  private handleEdit(): void {
+    if (!this.preset) return;
+    this.emit<{ preset: UnifiedPreset }>('edit-preset', { preset: this.preset });
+  }
+
+  /**
+   * Handle delete button click
+   */
+  private handleDelete(): void {
+    if (!this.preset) return;
+    this.emit<{ preset: UnifiedPreset }>('delete-preset', { preset: this.preset });
+  }
+
+  /**
    * Handle vote button click
    */
   private async handleVote(): Promise<void> {
@@ -534,35 +582,35 @@ export class PresetDetail extends BaseLitComponent {
             ${this.preset.category}
           </span>
           ${this.preset.isCurated
-            ? html`<span class="badge badge-curated">Official</span>`
-            : html`<span class="badge badge-community">Community</span>`}
+        ? html`<span class="badge badge-curated">Official</span>`
+        : html`<span class="badge badge-community">Community</span>`}
           ${this.currentVoteCount > 0
-            ? html`<span class="badge badge-votes">★ ${this.currentVoteCount} votes</span>`
-            : nothing}
+        ? html`<span class="badge badge-votes">★ ${this.currentVoteCount} votes</span>`
+        : nothing}
         </div>
 
         <!-- Title & description -->
         <h2 class="preset-title">${this.preset.name}</h2>
         <p class="preset-description">${this.preset.description}</p>
         ${this.preset.author
-          ? html`<p class="preset-author">Created by ${this.preset.author}</p>`
-          : nothing}
+        ? html`<p class="preset-author">Created by ${this.preset.author}</p>`
+        : nothing}
 
         <!-- Dyes grid using v4-result-card -->
         <div class="dyes-section">
           <h3 class="section-title">Colors in Palette</h3>
           <div class="dyes-grid">
             ${this.preset.dyes.map((dyeId) => {
-              const dye = this.resolveDye(dyeId);
-              if (!dye) return nothing;
-              return html`
+          const dye = this.resolveDye(dyeId);
+          if (!dye) return nothing;
+          return html`
                 <v4-result-card
                   .data=${{
-                    dye,
-                    originalColor: dye.hex,
-                    matchedColor: dye.hex,
-                    marketServer: this.marketConfig.selectedServer,
-                  }}
+              dye,
+              originalColor: dye.hex,
+              matchedColor: dye.hex,
+              marketServer: this.marketConfig.selectedServer,
+            }}
                   ?show-actions=${false}
                   ?show-hex=${this.displayOptions.showHex}
                   ?show-rgb=${this.displayOptions.showRgb}
@@ -573,13 +621,13 @@ export class PresetDetail extends BaseLitComponent {
                   ?show-acquisition=${this.displayOptions.showAcquisition}
                 ></v4-result-card>
               `;
-            })}
+        })}
           </div>
         </div>
 
         <!-- Tags -->
         ${this.preset.tags && this.preset.tags.length > 0
-          ? html`
+        ? html`
               <div class="tags-section">
                 <h4 class="section-title">Tags</h4>
                 <div class="tags-list">
@@ -587,34 +635,40 @@ export class PresetDetail extends BaseLitComponent {
                 </div>
               </div>
             `
-          : nothing}
+        : nothing}
 
         <!-- Actions -->
         <div class="actions">
           <button class="action-btn share-btn" @click=${this.handleShare}>🔗 Copy Link</button>
           ${isVoteable
-            ? html`
+        ? html`
                 <button
                   class="action-btn vote-btn ${this.hasVoted ? 'voted' : ''}"
                   ?disabled=${this.isVoting}
                   @click=${this.handleVote}
                 >
                   ${this.hasVoted
-                    ? html`✓ Voted (${this.currentVoteCount})`
-                    : html`${unsafeHTML(ICON_CRYSTAL)} Vote (${this.currentVoteCount})`}
+            ? html`✓ Voted (${this.currentVoteCount})`
+            : html`${unsafeHTML(ICON_CRYSTAL)} Vote (${this.currentVoteCount})`}
                 </button>
               `
-            : nothing}
+        : nothing}
+          ${this.isOwnPreset && this.preset.isFromAPI && this.preset.apiPresetId
+        ? html`
+                <button class="action-btn edit-btn" @click=${this.handleEdit}>✏️ Edit</button>
+                <button class="action-btn delete-btn" @click=${this.handleDelete}>🗑️ Delete</button>
+              `
+        : nothing}
         </div>
 
         <!-- Login CTA for non-authenticated users viewing voteable presets -->
         ${isVoteable && !isAuthenticated
-          ? html`
+        ? html`
               <div class="login-cta">
                 Login with Discord or XIVAuth to vote for this preset
               </div>
             `
-          : nothing}
+        : nothing}
       </div>
     `;
   }
