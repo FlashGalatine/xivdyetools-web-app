@@ -15,6 +15,7 @@ import {
   presetSubmissionService,
   validateSubmission,
 } from '@services/index';
+import { getCategoryIcon } from '@shared/category-icons';
 import type { Dye } from '@shared/types';
 import type { PresetCategory } from '@xivdyetools/core';
 import type { PresetSubmission, SubmissionResult } from '@services/preset-submission-service';
@@ -37,13 +38,13 @@ type OnSubmitCallback = (result: SubmissionResult) => void;
 // Configuration
 // ============================================
 
-const CATEGORIES: { id: PresetCategory; label: string; icon: string }[] = [
-  { id: 'jobs', label: 'Jobs', icon: '⚔️' },
-  { id: 'grand-companies', label: 'Grand Companies', icon: '🏰' },
-  { id: 'seasons', label: 'Seasons', icon: '🌸' },
-  { id: 'events', label: 'Events', icon: '🎉' },
-  { id: 'aesthetics', label: 'Aesthetics', icon: '✨' },
-  { id: 'community', label: 'Community', icon: '🎨' },
+const CATEGORIES: { id: PresetCategory; label: string }[] = [
+  { id: 'jobs', label: 'Jobs' },
+  { id: 'grand-companies', label: 'Grand Companies' },
+  { id: 'seasons', label: 'Seasons' },
+  { id: 'events', label: 'Events' },
+  { id: 'aesthetics', label: 'Aesthetics' },
+  { id: 'community', label: 'Community' },
 ];
 
 const MIN_NAME_LENGTH = 2;
@@ -239,7 +240,7 @@ function createCategorySelector(state: FormState): HTMLElement {
         'background-color: var(--theme-card-background); color: var(--theme-text); border-color: var(--theme-border);';
     }
 
-    btn.innerHTML = `<span>${cat.icon}</span><span>${cat.label}</span>`;
+    btn.innerHTML = `<span class="w-4 h-4 inline-block">${getCategoryIcon(cat.id)}</span><span>${cat.label}</span>`;
 
     btn.addEventListener('click', () => {
       state.category = cat.id;

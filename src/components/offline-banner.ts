@@ -9,6 +9,7 @@
 
 import { LanguageService } from '@services/index';
 import { logger } from '@shared/logger';
+import { ICON_NETWORK } from '@shared/ui-icons';
 
 /**
  * OfflineBanner - Shows a sticky banner when offline
@@ -95,8 +96,8 @@ export class OfflineBanner {
 
     // Icon
     const icon = document.createElement('span');
-    icon.className = 'text-lg';
-    icon.textContent = '📡';
+    icon.className = 'w-5 h-5 inline-block';
+    icon.innerHTML = ICON_NETWORK;
     icon.setAttribute('aria-hidden', 'true');
     this.banner.appendChild(icon);
 

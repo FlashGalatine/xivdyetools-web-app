@@ -25,7 +25,7 @@ import { ConfigController } from '@services/config-controller';
 import type { DisplayOptionsConfig, MarketConfig } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import { getCategoryIcon, ICON_ARROW_BACK } from '@shared/category-icons';
-import { ICON_CRYSTAL } from '@shared/ui-icons';
+import { ICON_CRYSTAL, ICON_LINK } from '@shared/ui-icons';
 import type { UnifiedPreset } from '@services/hybrid-preset-service';
 import type { Dye } from '@shared/types';
 
@@ -639,7 +639,7 @@ export class PresetDetail extends BaseLitComponent {
 
         <!-- Actions -->
         <div class="actions">
-          <button class="action-btn share-btn" @click=${this.handleShare}>🔗 Copy Link</button>
+          <button class="action-btn share-btn" @click=${this.handleShare}><span class="icon">${unsafeHTML(ICON_LINK)}</span> Copy Link</button>
           ${isVoteable
         ? html`
                 <button

@@ -16,6 +16,7 @@
 
 import { html, css, CSSResultGroup, TemplateResult, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ConfigController } from '@services/config-controller';
 import { hybridPresetService } from '@services/hybrid-preset-service';
@@ -27,6 +28,8 @@ import type { CommunityPreset } from '@services/community-preset-service';
 import type { PresetsConfig, PresetCategoryFilter, PresetSortOption } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import type { PresetCategory } from '@xivdyetools/core';
+import { ICON_LOCKED, ICON_DOCUMENT } from '@shared/ui-icons';
+import { ICON_EMPTY_INBOX } from '@shared/empty-state-icons';
 
 // Import child components
 import './preset-card';
@@ -680,7 +683,7 @@ export class PresetTool extends BaseLitComponent {
     if (this.config.showMyPresetsOnly && !this.isAuthenticated) {
       return html`
         <div class="empty-container">
-          <span class="empty-icon">🔐</span>
+          <span class="empty-icon">${unsafeHTML(ICON_LOCKED)}</span>
           <p class="empty-message">
             Please log in to view your submitted presets.
           </p>
@@ -692,7 +695,7 @@ export class PresetTool extends BaseLitComponent {
     if (this.config.showMyPresetsOnly && this.isAuthenticated) {
       return html`
         <div class="empty-container">
-          <span class="empty-icon">📝</span>
+          <span class="empty-icon">${unsafeHTML(ICON_DOCUMENT)}</span>
           <p class="empty-message">
             You haven't submitted any presets yet.
           </p>
@@ -702,7 +705,7 @@ export class PresetTool extends BaseLitComponent {
 
     return html`
       <div class="empty-container">
-        <span class="empty-icon">📭</span>
+        <span class="empty-icon">${unsafeHTML(ICON_EMPTY_INBOX)}</span>
         <p class="empty-message">
           ${this.searchQuery
         ? `No presets found matching "${this.searchQuery}"`

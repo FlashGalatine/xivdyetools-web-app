@@ -12,6 +12,7 @@ import { LanguageService, dyeService } from '@services/index';
 import { presetSubmissionService, authService } from '@services/index';
 import type { CommunityPreset, PresetStatus } from '@services/community-preset-service';
 import { getCategoryIcon } from '@shared/category-icons';
+import { ICON_DOCUMENT } from '@shared/ui-icons';
 import { showPresetEditForm } from './preset-edit-form';
 
 // Use singleton dyeService from services (imported above)
@@ -176,8 +177,8 @@ export class MySubmissionsPanel extends BaseComponent {
       });
 
       const icon = this.createElement('div', {
-        className: 'text-4xl mb-2',
-        textContent: '📝',
+        className: 'w-12 h-12 mx-auto mb-2',
+        innerHTML: ICON_DOCUMENT,
       });
       empty.appendChild(icon);
 

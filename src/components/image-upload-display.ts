@@ -11,7 +11,7 @@ import { BaseComponent } from './base-component';
 import { LanguageService, cameraService } from '@services/index';
 import { showCameraPreviewModal } from './camera-preview-modal';
 import { clearContainer } from '@shared/utils';
-import { ICON_UPLOAD, ICON_CAMERA, ICON_HINT } from '@shared/ui-icons';
+import { ICON_UPLOAD, ICON_CAMERA, ICON_HINT, ICON_LOCK } from '@shared/ui-icons';
 
 /**
  * Image Upload Display Component
@@ -157,9 +157,12 @@ export class ImageUploadDisplay extends BaseComponent {
         `,
       },
     });
-    // Lock emoji
-    const lockEmoji = document.createTextNode('🔒 ');
-    privacyNotice.appendChild(lockEmoji);
+    // Lock icon
+    const lockIcon = this.createElement('span', {
+      className: 'inline-block w-4 h-4 align-middle mr-1',
+      innerHTML: ICON_LOCK,
+    });
+    privacyNotice.appendChild(lockIcon);
     // Strong title
     const privacyTitle = this.createElement('strong', {
       textContent: `${LanguageService.t('matcher.privacyTitle')}:`,

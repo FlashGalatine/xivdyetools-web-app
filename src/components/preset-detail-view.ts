@@ -23,6 +23,7 @@ import {
   type UnifiedPreset,
 } from '@services/index';
 import { getCategoryIcon, ICON_ARROW_BACK } from '@shared/category-icons';
+import { ICON_LINK } from '@shared/ui-icons';
 import { ICON_CRYSTAL } from '@shared/ui-icons';
 import type { Dye } from '@xivdyetools/core';
 
@@ -326,7 +327,8 @@ export class PresetDetailView extends BaseComponent {
       },
     });
     const shareIcon = this.createElement('span', {
-      innerHTML: '🔗',
+      className: 'w-4 h-4 inline-block',
+      innerHTML: ICON_LINK,
     });
     shareBtn.appendChild(shareIcon);
     const shareText = this.createElement('span', {
