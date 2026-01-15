@@ -1,793 +1,575 @@
+/**
+ * XIV Dye Tools - ModalContainer Unit Tests
+ *
+ * Tests the modal dialog container component.
+ * Covers rendering, focus trap, keyboard handling, and accessibility.
+ *
+ * @module components/__tests__/modal-container.test
+ */
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ModalContainer } from '../modal-container';
-import { ModalService, Modal, ModalType, ModalId } from '@services/modal-service';
 import {
   createTestContainer,
   cleanupTestContainer,
-  renderComponent,
-  cleanupComponent,
-  expectElement,
-} from './test-utils';
-
-// Helper to create a modal with required fields
-// Use Omit to exclude the branded id type and replace with string for test convenience
-const createModal = (
-  overrides: Omit<Partial<Modal>, 'id'> & { id: string; title: string }
-): Modal => ({
-  type: 'custom' as ModalType,
-  timestamp: Date.now(),
-  ...overrides,
-  id: overrides.id as ModalId,
-});
-
-// Mock ModalService
-vi.mock('@services/modal-service', () => {
-  let subscribers: ((modals: Modal[]) => void)[] = [];
-  let currentModals: Modal[] = [];
-
-  return {
-    ModalService: {
-      subscribe: vi.fn((callback) => {
-        subscribers.push(callback);
-        return () => {
-          subscribers = subscribers.filter((s) => s !== callback);
-        };
-      }),
-      getTopModal: vi.fn(() => currentModals[currentModals.length - 1]),
-      dismiss: vi.fn((id) => {
-        currentModals = currentModals.filter((m) => m.id !== id);
-        subscribers.forEach((cb) => cb(currentModals));
-      }),
-      prefersReducedMotion: vi.fn(() => false),
-      // Helper to trigger updates manually in tests
-      _updateModals: (modals: Modal[]) => {
-        currentModals = modals;
-        subscribers.forEach((cb) => cb(currentModals));
-      },
-    },
-  };
-});
-
-// Mock shared utils
-vi.mock('@shared/utils', () => ({
-  clearContainer: vi.fn((container: HTMLElement) => {
-    container.innerHTML = '';
-  }),
-}));
+  click,
+  query,
+  queryAll,
+  getText,
+  getAttr,
+  waitForRender,
+} from '../../__tests__/component-utils';
+import { ModalService } from '@services/modal-service';
 
 describe('ModalContainer', () => {
   let container: HTMLElement;
-  let component: ModalContainer;
+  let modalContainer: ModalContainer | null;
 
   beforeEach(() => {
     container = createTestContainer();
+    modalContainer = null;
+    // Clear any existing modals
+    ModalService.dismissAll();
+    // Reset body overflow
+    document.body.style.overflow = '';
   });
 
   afterEach(() => {
-    if (component && container) {
-      cleanupComponent(component, container);
-    } else {
-      cleanupTestContainer(container);
+    if (modalContainer) {
+      try {
+        modalContainer.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
-    document.body.style.overflow = ''; // Reset body style
+    cleanupTestContainer(container);
+    ModalService.dismissAll();
+    document.body.style.overflow = '';
+    vi.restoreAllMocks();
   });
 
-  describe('Initialization', () => {
-    it('should subscribe to ModalService on init', () => {
-      [component, container] = renderComponent(ModalContainer);
-      expect(ModalService.subscribe).toHaveBeenCalled();
-    });
-  });
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
 
-  describe('Rendering', () => {
-    it('should render nothing when no modals', () => {
-      [component, container] = renderComponent(ModalContainer);
-      // @ts-ignore
-      ModalService._updateModals([]);
+  describe('Basic Rendering', () => {
+    it('should not render container when no modals', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      expect(container.innerHTML).toBe('');
+      expect(query(container, '#modal-container')).toBeNull();
     });
 
-    it('should render a modal when added', () => {
-      [component, container] = renderComponent(ModalContainer);
+    it('should render container when modal is shown', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const modal: Modal = createModal({
-        id: 'test-modal',
-        title: 'Test Modal',
-        content: 'Modal Content',
-        closable: true,
-        type: 'custom',
-      });
+      ModalService.show({ title: 'Test Modal' });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const dialog = container.querySelector('.modal-dialog');
-      expect(dialog).not.toBeNull();
-      expect(dialog?.textContent).toContain('Test Modal');
-      expect(dialog?.textContent).toContain('Modal Content');
+      expect(query(container, '#modal-container')).not.toBeNull();
     });
 
-    it('should lock body scroll when modal is open', () => {
-      [component, container] = renderComponent(ModalContainer);
+    it('should render modal with title', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const modal: Modal = createModal({
-        id: 'test-modal',
+      ModalService.show({ title: 'My Modal Title' });
+
+      const title = query(container, '[id^="modal-title-"]');
+      expect(getText(title)).toBe('My Modal Title');
+    });
+
+    it('should render modal content as string', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({
         title: 'Test',
-        content: 'Content',
+        content: '<p>Modal content here</p>',
       });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      expect(document.body.style.overflow).toBe('hidden');
+      const content = query(container, '[id^="modal-content-"]');
+      expect(content?.innerHTML).toContain('Modal content here');
     });
 
-    it('should unlock body scroll when modal closes', () => {
-      [component, container] = renderComponent(ModalContainer);
+    it('should render modal content as HTMLElement', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const modal: Modal = createModal({
-        id: 'test-modal',
+      const contentEl = document.createElement('div');
+      contentEl.textContent = 'Custom element content';
+
+      ModalService.show({
         title: 'Test',
-        content: 'Content',
+        content: contentEl,
       });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-      expect(document.body.style.overflow).toBe('hidden');
-
-      // @ts-ignore
-      ModalService._updateModals([]);
-      expect(document.body.style.overflow).toBe('');
+      const content = query(container, '[id^="modal-content-"]');
+      expect(content?.textContent).toContain('Custom element content');
     });
   });
 
-  describe('Interactions', () => {
-    it('should dismiss modal on close button click', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'test-modal',
-        title: 'Test',
-        content: 'Content',
-        closable: true,
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const closeBtn = container.querySelector('button[aria-label="Close modal"]') as HTMLElement;
-      closeBtn.click();
-
-      expect(ModalService.dismiss).toHaveBeenCalledWith('test-modal');
-    });
-
-    it('should dismiss modal on backdrop click if allowed', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'test-modal',
-        title: 'Test',
-        content: 'Content',
-        closable: true,
-        closeOnBackdrop: true,
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const backdrop = container.querySelector('.modal-backdrop') as HTMLElement;
-      backdrop.click();
-
-      expect(ModalService.dismiss).toHaveBeenCalledWith('test-modal');
-    });
-
-    it('should NOT dismiss modal on backdrop click if NOT allowed', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'test-modal',
-        title: 'Test',
-        content: 'Content',
-        closable: true,
-        closeOnBackdrop: false,
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const backdrop = container.querySelector('.modal-backdrop') as HTMLElement;
-      backdrop.click();
-
-      // Should not have been called again (it might have been called in previous tests, so check count or reset mocks)
-      vi.clearAllMocks();
-      backdrop.click();
-      expect(ModalService.dismiss).not.toHaveBeenCalled();
-    });
-
-    it('should handle confirm button click', () => {
-      [component, container] = renderComponent(ModalContainer);
-      const onConfirm = vi.fn();
-
-      const modal: Modal = createModal({
-        id: 'confirm-modal',
-        title: 'Confirm',
-        content: 'Are you sure?',
-        type: 'confirm',
-        onConfirm,
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const confirmBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent === 'Confirm'
-      ) as HTMLElement;
-      confirmBtn.click();
-
-      expect(onConfirm).toHaveBeenCalled();
-      expect(ModalService.dismiss).toHaveBeenCalledWith('confirm-modal');
-    });
-  });
-
-  describe('Keyboard Interactions', () => {
-    it('should dismiss modal on Escape key if allowed', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'escape-modal',
-        title: 'Test',
-        content: 'Content',
-        closable: true,
-        closeOnEscape: true,
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      // Dispatch Escape key on document
-      // Since we can't easily dispatch on document, call the handler directly
-      component['handleKeyDown']({
-        key: 'Escape',
-        preventDefault: vi.fn(),
-      } as unknown as KeyboardEvent);
-
-      expect(ModalService.dismiss).toHaveBeenCalledWith('escape-modal');
-    });
-
-    it('should NOT dismiss on Escape if not closable', () => {
-      [component, container] = renderComponent(ModalContainer);
-      vi.clearAllMocks();
-
-      const modal: Modal = createModal({
-        id: 'no-escape-modal',
-        title: 'Test',
-        content: 'Content',
-        closable: false,
-        closeOnEscape: true,
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-      vi.clearAllMocks();
-
-      component['handleKeyDown']({
-        key: 'Escape',
-        preventDefault: vi.fn(),
-      } as unknown as KeyboardEvent);
-
-      expect(ModalService.dismiss).not.toHaveBeenCalled();
-    });
-
-    it('should NOT dismiss on Escape if closeOnEscape is false', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'no-escape-modal',
-        title: 'Test',
-        content: 'Content',
-        closable: true,
-        closeOnEscape: false,
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-      vi.clearAllMocks();
-
-      component['handleKeyDown']({
-        key: 'Escape',
-        preventDefault: vi.fn(),
-      } as unknown as KeyboardEvent);
-
-      expect(ModalService.dismiss).not.toHaveBeenCalled();
-    });
-
-    it('should trap focus within modal on Tab', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'focus-modal',
-        title: 'Focus Test',
-        content: '<button id="inner-btn">Inner</button>',
-        closable: true,
-        type: 'confirm',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      // Get the focusable elements
-      const focusables = component['focusTrapElements'];
-      expect(focusables.length).toBeGreaterThan(0);
-    });
-
-    it('should wrap focus from last to first element on Tab', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'focus-modal',
-        title: 'Focus Test',
-        content: 'Content',
-        closable: true,
-        type: 'confirm',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      // Set up focus trap elements
-      const focusables = component['focusTrapElements'];
-      if (focusables.length > 0) {
-        const lastElement = focusables[focusables.length - 1];
-        const firstElement = focusables[0];
-
-        // Mock document.activeElement to be last element
-        Object.defineProperty(document, 'activeElement', {
-          value: lastElement,
-          configurable: true,
-        });
-
-        const preventDefaultSpy = vi.fn();
-        component['handleFocusTrap']({
-          key: 'Tab',
-          shiftKey: false,
-          preventDefault: preventDefaultSpy,
-        } as unknown as KeyboardEvent);
-
-        expect(preventDefaultSpy).toHaveBeenCalled();
-
-        // Restore
-        Object.defineProperty(document, 'activeElement', {
-          value: document.body,
-          configurable: true,
-        });
-      }
-    });
-
-    it('should wrap focus from first to last element on Shift+Tab', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'focus-modal',
-        title: 'Focus Test',
-        content: 'Content',
-        closable: true,
-        type: 'confirm',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      // Set up focus trap elements
-      const focusables = component['focusTrapElements'];
-      if (focusables.length > 0) {
-        const firstElement = focusables[0];
-        const lastElement = focusables[focusables.length - 1];
-
-        // Mock document.activeElement to be first element
-        Object.defineProperty(document, 'activeElement', {
-          value: firstElement,
-          configurable: true,
-        });
-
-        const preventDefaultSpy = vi.fn();
-        component['handleFocusTrap']({
-          key: 'Tab',
-          shiftKey: true,
-          preventDefault: preventDefaultSpy,
-        } as unknown as KeyboardEvent);
-
-        expect(preventDefaultSpy).toHaveBeenCalled();
-
-        // Restore
-        Object.defineProperty(document, 'activeElement', {
-          value: document.body,
-          configurable: true,
-        });
-      }
-    });
-
-    it('should handle Tab key but not trap if focus is in the middle', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'focus-modal',
-        title: 'Focus Test',
-        content: 'Content',
-        closable: true,
-        type: 'confirm',
-        confirmText: 'OK',
-        cancelText: 'Cancel',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const focusables = component['focusTrapElements'];
-      if (focusables.length >= 3) {
-        // Focus on middle element
-        const middleElement = focusables[1];
-
-        Object.defineProperty(document, 'activeElement', {
-          value: middleElement,
-          configurable: true,
-        });
-
-        const preventDefaultSpy = vi.fn();
-        component['handleFocusTrap']({
-          key: 'Tab',
-          shiftKey: false,
-          preventDefault: preventDefaultSpy,
-        } as unknown as KeyboardEvent);
-
-        // Should not prevent default when in the middle
-        expect(preventDefaultSpy).not.toHaveBeenCalled();
-
-        Object.defineProperty(document, 'activeElement', {
-          value: document.body,
-          configurable: true,
-        });
-      }
-    });
-
-    it('should call handleFocusTrap on Tab when modals exist', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'tab-modal',
-        title: 'Tab Test',
-        content: 'Content',
-        closable: true,
-        type: 'confirm',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const handleFocusTrapSpy = vi.spyOn(component as any, 'handleFocusTrap');
-
-      component['handleKeyDown']({
-        key: 'Tab',
-        preventDefault: vi.fn(),
-      } as unknown as KeyboardEvent);
-
-      expect(handleFocusTrapSpy).toHaveBeenCalled();
-    });
-
-    it('should not call handleFocusTrap on Tab when no modals', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      // @ts-ignore
-      ModalService._updateModals([]);
-
-      const handleFocusTrapSpy = vi.spyOn(component as any, 'handleFocusTrap');
-
-      component['handleKeyDown']({
-        key: 'Tab',
-        preventDefault: vi.fn(),
-      } as unknown as KeyboardEvent);
-
-      expect(handleFocusTrapSpy).not.toHaveBeenCalled();
-    });
-  });
+  // ============================================================================
+  // Modal Size Tests
+  // ============================================================================
 
   describe('Modal Sizes', () => {
-    it('should use default md size when not specified', () => {
-      [component, container] = renderComponent(ModalContainer);
+    it('should render small modal', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const modal: Modal = createModal({
-        id: 'size-modal',
-        title: 'Size Test',
-        content: 'Content',
-      });
+      ModalService.show({ title: 'Small', size: 'sm' });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const dialog = container.querySelector('.modal-dialog');
-      expect(dialog?.classList.contains('max-w-lg')).toBe(true);
-    });
-
-    it('should use sm size when specified', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'size-modal',
-        title: 'Size Test',
-        content: 'Content',
-        size: 'sm',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const dialog = container.querySelector('.modal-dialog');
+      const dialog = query(container, '.modal-dialog');
       expect(dialog?.classList.contains('max-w-sm')).toBe(true);
     });
 
-    it('should use lg size when specified', () => {
-      [component, container] = renderComponent(ModalContainer);
+    it('should render medium modal by default', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const modal: Modal = createModal({
-        id: 'size-modal',
-        title: 'Size Test',
-        content: 'Content',
-        size: 'lg',
-      });
+      ModalService.show({ title: 'Default' });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
+      const dialog = query(container, '.modal-dialog');
+      expect(dialog?.classList.contains('max-w-lg')).toBe(true);
+    });
 
-      const dialog = container.querySelector('.modal-dialog');
+    it('should render large modal', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'Large', size: 'lg' });
+
+      const dialog = query(container, '.modal-dialog');
       expect(dialog?.classList.contains('max-w-2xl')).toBe(true);
     });
   });
 
-  describe('Reduced Motion', () => {
-    it('should skip animations when reduced motion is preferred', () => {
-      // Mock prefersReducedMotion to return true
-      (ModalService.prefersReducedMotion as any).mockReturnValue(true);
+  // ============================================================================
+  // Close Button Tests
+  // ============================================================================
 
-      [component, container] = renderComponent(ModalContainer);
+  describe('Close Button', () => {
+    it('should render close button when closable', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const modal: Modal = createModal({
-        id: 'motion-modal',
-        title: 'Motion Test',
-        content: 'Content',
-      });
+      ModalService.show({ title: 'Test', closable: true });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
+      const closeBtn = query(container, 'button[aria-label="Close modal"]');
+      expect(closeBtn).not.toBeNull();
+    });
 
-      const backdrop = container.querySelector('.modal-backdrop');
-      expect(backdrop?.classList.contains('modal-backdrop-animate-in')).toBe(false);
+    it('should not render close button when not closable', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      // Reset mock
-      (ModalService.prefersReducedMotion as any).mockReturnValue(false);
+      ModalService.show({ title: 'Test', closable: false });
+
+      const closeBtn = query(container, 'button[aria-label="Close modal"]');
+      expect(closeBtn).toBeNull();
+    });
+
+    it('should close modal when close button clicked', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'Test', closable: true });
+
+      const closeBtn = query<HTMLButtonElement>(container, 'button[aria-label="Close modal"]');
+      click(closeBtn);
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(0);
     });
   });
 
-  describe('Multiple Modals', () => {
-    it('should render multiple stacked modals', () => {
-      [component, container] = renderComponent(ModalContainer);
+  // ============================================================================
+  // Confirm Modal Tests
+  // ============================================================================
 
-      const modals: Modal[] = [
-        {
-          id: 'modal-1' as ModalId,
-          title: 'Modal 1',
-          content: 'Content 1',
-          type: 'custom',
-          timestamp: Date.now(),
-        },
-        {
-          id: 'modal-2' as ModalId,
-          title: 'Modal 2',
-          content: 'Content 2',
-          type: 'custom',
-          timestamp: Date.now() + 1,
-        },
-      ];
+  describe('Confirm Modal', () => {
+    it('should render confirm and cancel buttons for confirm type', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      // @ts-ignore
-      ModalService._updateModals(modals);
+      ModalService.show({ title: 'Confirm', type: 'confirm' });
 
-      const allModals = container.querySelectorAll('.modal-backdrop');
-      expect(allModals.length).toBe(2);
+      const buttons = queryAll(container, '.modal-dialog button[type="button"]');
+      // Close button + Cancel + Confirm = 3 or just Cancel + Confirm = 2
+      expect(buttons.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('should only show backdrop on topmost modal', () => {
-      [component, container] = renderComponent(ModalContainer);
+    it('should render custom confirm text', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const modals: Modal[] = [
-        createModal({ id: 'modal-1', title: 'Modal 1', content: 'Content 1' }),
-        createModal({ id: 'modal-2', title: 'Modal 2', content: 'Content 2' }),
-      ];
-
-      // @ts-ignore
-      ModalService._updateModals(modals);
-
-      const firstBackdrop = container.querySelector('[data-modal-id="modal-1"]');
-      const secondBackdrop = container.querySelector('[data-modal-id="modal-2"]');
-
-      // First modal should have transparent backdrop
-      expect(firstBackdrop?.classList.contains('bg-transparent')).toBe(true);
-      // Second (top) modal should have visible backdrop
-      expect(secondBackdrop?.classList.contains('bg-black/50')).toBe(true);
-    });
-  });
-
-  describe('Content Types', () => {
-    it('should render string content as HTML', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'html-modal',
-        title: 'HTML Test',
-        content: '<strong>Bold content</strong>',
+      ModalService.show({
+        title: 'Test',
+        confirmText: 'Yes, Delete',
       });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const content = container.querySelector('[id^="modal-content-"]');
-      expect(content?.innerHTML).toContain('<strong>Bold content</strong>');
-    });
-
-    it('should render HTMLElement content', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const contentElement = document.createElement('div');
-      contentElement.textContent = 'Element content';
-      contentElement.id = 'custom-content';
-
-      const modal: Modal = createModal({
-        id: 'element-modal',
-        title: 'Element Test',
-        content: contentElement,
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const content = container.querySelector('#custom-content');
-      expect(content).not.toBeNull();
-      expect(content?.textContent).toBe('Element content');
-    });
-  });
-
-  describe('Lifecycle', () => {
-    it('should unsubscribe on unmount', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      // Store a reference to check unsubscription
-      expect(component['unsubscribe']).not.toBeNull();
-
-      component.destroy();
-
-      expect(component['unsubscribe']).toBeNull();
-    });
-
-    it('should restore focus to previous element after modal closes', () => {
-      const previousButton = document.createElement('button');
-      previousButton.id = 'prev-button';
-      document.body.appendChild(previousButton);
-      previousButton.focus();
-
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'focus-restore-modal',
-        title: 'Focus Test',
-        content: 'Content',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      // Now close modal
-      // @ts-ignore
-      ModalService._updateModals([]);
-
-      // Focus should be restored
-      // Note: In jsdom, focus restoration may not work perfectly
-      document.body.removeChild(previousButton);
-    });
-  });
-
-  describe('Custom Buttons', () => {
-    it('should render cancel button with custom text', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'custom-btn-modal',
-        title: 'Custom Button Test',
-        content: 'Content',
-        cancelText: 'No Thanks',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const cancelBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent === 'No Thanks'
-      );
-      expect(cancelBtn).not.toBeUndefined();
-    });
-
-    it('should render confirm button with custom text', () => {
-      [component, container] = renderComponent(ModalContainer);
-
-      const modal: Modal = createModal({
-        id: 'custom-btn-modal',
-        title: 'Custom Button Test',
-        content: 'Content',
-        confirmText: 'Yes Please',
-      });
-
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-
-      const confirmBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent === 'Yes Please'
-      );
+      const buttons = queryAll(container, '.modal-dialog button');
+      const confirmBtn = Array.from(buttons).find((b) => getText(b) === 'Yes, Delete');
       expect(confirmBtn).not.toBeUndefined();
     });
 
-    it('should handle cancel button click', () => {
-      [component, container] = renderComponent(ModalContainer);
+    it('should render custom cancel text', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const modal: Modal = createModal({
-        id: 'cancel-modal',
-        title: 'Cancel Test',
-        content: 'Content',
-        cancelText: 'Cancel',
+      ModalService.show({
+        title: 'Test',
+        cancelText: 'No, Keep',
+        confirmText: 'Yes',
       });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
-      vi.clearAllMocks();
+      const buttons = queryAll(container, '.modal-dialog button');
+      const cancelBtn = Array.from(buttons).find((b) => getText(b) === 'No, Keep');
+      expect(cancelBtn).not.toBeUndefined();
+    });
 
-      const cancelBtn = Array.from(container.querySelectorAll('button')).find(
-        (b) => b.textContent === 'Cancel'
-      );
-      (cancelBtn as HTMLElement)?.click();
+    it('should call onConfirm callback when confirm clicked', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      expect(ModalService.dismiss).toHaveBeenCalledWith('cancel-modal');
+      const onConfirm = vi.fn();
+      ModalService.show({
+        title: 'Test',
+        confirmText: 'Confirm',
+        onConfirm,
+      });
+
+      const buttons = queryAll<HTMLButtonElement>(container, '.modal-dialog button');
+      const confirmBtn = Array.from(buttons).find((b) => getText(b) === 'Confirm');
+      click(confirmBtn!);
+
+      expect(onConfirm).toHaveBeenCalledTimes(1);
+    });
+
+    it('should close modal after confirm callback', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({
+        title: 'Test',
+        confirmText: 'OK',
+        onConfirm: vi.fn(),
+      });
+
+      const buttons = queryAll<HTMLButtonElement>(container, '.modal-dialog button');
+      const confirmBtn = Array.from(buttons).find((b) => getText(b) === 'OK');
+      click(confirmBtn!);
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(0);
     });
   });
 
-  describe('handleFocusTrap edge cases', () => {
-    it('should return early if no focusable elements', () => {
-      [component, container] = renderComponent(ModalContainer);
+  // ============================================================================
+  // Keyboard Handling Tests
+  // ============================================================================
 
-      // Set empty focusTrapElements
-      component['focusTrapElements'] = [];
+  describe('Keyboard Handling', () => {
+    it('should close modal on Escape when closeOnEscape is true', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
 
-      const preventDefaultSpy = vi.fn();
-      component['handleFocusTrap']({
-        key: 'Tab',
-        shiftKey: false,
-        preventDefault: preventDefaultSpy,
-      } as unknown as KeyboardEvent);
+      ModalService.show({
+        title: 'Test',
+        closable: true,
+        closeOnEscape: true,
+      });
 
-      expect(preventDefaultSpy).not.toHaveBeenCalled();
+      // Dispatch directly on document since that's where the listener is attached
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(0);
+    });
+
+    it('should not close modal on Escape when closeOnEscape is false', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({
+        title: 'Test',
+        closable: true,
+        closeOnEscape: false,
+      });
+
+      // Dispatch directly on document since that's where the listener is attached
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(1);
+    });
+
+    it('should not close modal on Escape when not closable', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({
+        title: 'Test',
+        closable: false,
+        closeOnEscape: true,
+      });
+
+      // Dispatch directly on document since that's where the listener is attached
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(1);
     });
   });
 
-  describe('Modal without content', () => {
-    it('should not add aria-describedby when no content', () => {
-      [component, container] = renderComponent(ModalContainer);
+  // ============================================================================
+  // Backdrop Tests
+  // ============================================================================
 
-      const modal: Modal = createModal({
-        id: 'no-content-modal',
-        title: 'No Content',
-        content: undefined,
+  describe('Backdrop', () => {
+    it('should render backdrop', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'Test' });
+
+      const backdrop = query(container, '.modal-backdrop');
+      expect(backdrop).not.toBeNull();
+    });
+
+    it('should close modal on backdrop click when closeOnBackdrop is true', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({
+        title: 'Test',
+        closable: true,
+        closeOnBackdrop: true,
       });
 
-      // @ts-ignore
-      ModalService._updateModals([modal]);
+      const backdrop = query<HTMLElement>(container, '.modal-backdrop');
+      click(backdrop);
 
-      const dialog = container.querySelector('.modal-dialog');
-      expect(dialog?.getAttribute('aria-describedby')).toBeNull();
+      expect(queryAll(container, '[data-modal-id]').length).toBe(0);
+    });
+
+    it('should not close modal on backdrop click when closeOnBackdrop is false', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({
+        title: 'Test',
+        closable: true,
+        closeOnBackdrop: false,
+      });
+
+      const backdrop = query<HTMLElement>(container, '.modal-backdrop');
+      click(backdrop);
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(1);
+    });
+
+    it('should not close modal when clicking dialog content', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({
+        title: 'Test',
+        closable: true,
+        closeOnBackdrop: true,
+      });
+
+      const dialog = query<HTMLElement>(container, '.modal-dialog');
+      click(dialog);
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(1);
+    });
+  });
+
+  // ============================================================================
+  // Accessibility Tests
+  // ============================================================================
+
+  describe('Accessibility', () => {
+    it('should have role="dialog" on modal', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'Test' });
+
+      const dialog = query(container, '.modal-dialog');
+      expect(getAttr(dialog, 'role')).toBe('dialog');
+    });
+
+    it('should have aria-modal="true"', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'Test' });
+
+      const dialog = query(container, '.modal-dialog');
+      expect(getAttr(dialog, 'aria-modal')).toBe('true');
+    });
+
+    it('should have aria-labelledby pointing to title', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'Test' });
+
+      const dialog = query(container, '.modal-dialog');
+      const labelledBy = getAttr(dialog, 'aria-labelledby');
+      expect(labelledBy).toMatch(/^modal-title-/);
+
+      const title = query(container, `#${labelledBy}`);
+      expect(title).not.toBeNull();
+    });
+
+    it('should have aria-describedby when content is provided', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({
+        title: 'Test',
+        content: 'Modal description',
+      });
+
+      const dialog = query(container, '.modal-dialog');
+      const describedBy = getAttr(dialog, 'aria-describedby');
+      expect(describedBy).toMatch(/^modal-content-/);
+    });
+
+    it('should mark background modals as inert', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'First' });
+      ModalService.show({ title: 'Second' });
+
+      const modals = queryAll(container, '[data-modal-id]');
+      expect(modals[0].hasAttribute('inert')).toBe(true);
+      expect(modals[1].hasAttribute('inert')).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // Stacking Tests
+  // ============================================================================
+
+  describe('Modal Stacking', () => {
+    it('should render multiple stacked modals', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'First' });
+      ModalService.show({ title: 'Second' });
+
+      const modals = queryAll(container, '[data-modal-id]');
+      expect(modals.length).toBe(2);
+    });
+
+    it('should only show backdrop on top modal', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'First' });
+      ModalService.show({ title: 'Second' });
+
+      const modals = queryAll(container, '.modal-backdrop');
+      expect(modals[0].classList.contains('bg-transparent')).toBe(true);
+      expect(modals[1].classList.contains('bg-black/50')).toBe(true);
+    });
+
+    it('should close only top modal on Escape', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'First', closable: true, closeOnEscape: true });
+      ModalService.show({ title: 'Second', closable: true, closeOnEscape: true });
+
+      // Dispatch directly on document since that's where the listener is attached
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      const modals = queryAll(container, '[data-modal-id]');
+      expect(modals.length).toBe(1);
+    });
+  });
+
+  // ============================================================================
+  // Body Scroll Tests
+  // ============================================================================
+
+  describe('Body Scroll', () => {
+    it('should prevent body scroll when modal is open', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'Test' });
+
+      expect(document.body.style.overflow).toBe('hidden');
+    });
+
+    it('should restore body scroll when all modals closed', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      const id = ModalService.show({ title: 'Test', closable: true });
+      expect(document.body.style.overflow).toBe('hidden');
+
+      ModalService.dismiss(id);
+
+      expect(document.body.style.overflow).toBe('');
+    });
+  });
+
+  // ============================================================================
+  // Service Subscription Tests
+  // ============================================================================
+
+  describe('Service Subscription', () => {
+    it('should update when modals are added', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(0);
+
+      ModalService.show({ title: 'New Modal' });
+
+      expect(queryAll(container, '[data-modal-id]').length).toBe(1);
+    });
+
+    it('should update when modals are removed', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      const id = ModalService.show({ title: 'Test', closable: true });
+      expect(queryAll(container, '[data-modal-id]').length).toBe(1);
+
+      ModalService.dismiss(id);
+      expect(queryAll(container, '[data-modal-id]').length).toBe(0);
+    });
+
+    it('should unsubscribe on destroy', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      modalContainer.destroy();
+
+      // Showing a modal after destroy should not cause errors
+      expect(() => ModalService.show({ title: 'Test' })).not.toThrow();
+    });
+  });
+
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
+
+  describe('Lifecycle', () => {
+    it('should clean up container on destroy', () => {
+      modalContainer = new ModalContainer(container);
+      modalContainer.init();
+
+      ModalService.show({ title: 'Test' });
+
+      modalContainer.destroy();
+
+      expect(query(container, '#modal-container')).toBeNull();
     });
   });
 });

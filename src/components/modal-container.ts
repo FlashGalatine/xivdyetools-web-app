@@ -65,8 +65,7 @@ export class ModalContainer extends BaseComponent {
       }
     });
 
-    // Listen for Escape key to close modals
-    this.on(document, 'keydown', this.handleKeyDown);
+    // Note: Document keydown listener is now in bindEvents() to survive updates
   }
 
   /**
@@ -424,6 +423,9 @@ export class ModalContainer extends BaseComponent {
    * Bind event listeners
    */
   bindEvents(): void {
-    // Events are bound in createModalElement
+    // Document-level keyboard listener for Escape key
+    // Must be re-added here since unbindAllEvents() is called during update()
+    this.on(document, 'keydown', this.handleKeyDown);
+    // Element-specific events are bound in createModalElement
   }
 }

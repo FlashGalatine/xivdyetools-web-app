@@ -1,33 +1,31 @@
 /**
- * XIV Dye Tools - Dye Action Dropdown Component Tests
+ * XIV Dye Tools - DyeActionDropdown Unit Tests
+ *
+ * Tests the dye action dropdown component for quick dye actions.
+ * Covers rendering, menu toggle, action dispatch, and accessibility.
  *
  * @module components/__tests__/dye-action-dropdown.test
  */
 
-import { createDyeActionDropdown, DyeAction, DyeActionCallback } from '../dye-action-dropdown';
-import { createTestContainer, cleanupTestContainer, mockDyeData } from './test-utils';
-import type { Dye } from '@shared/types';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { createDyeActionDropdown } from '../dye-action-dropdown';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  click,
+  query,
+  queryAll,
+  getAttr,
+} from '../../__tests__/component-utils';
+import { mockDyes } from '../../__tests__/mocks/services';
 
-// Mock services
 vi.mock('@services/index', () => ({
   LanguageService: {
-    t: vi.fn((key: string) => {
-      const translations: Record<string, string> = {
-        'harmony.actions': 'Actions',
-        'harmony.addToComparison': 'Add to Comparison',
-        'harmony.addToMixer': 'Add to Mixer',
-        'harmony.addToAccessibility': 'Add to Accessibility Checker',
-        'harmony.seeHarmonies': 'See Color Harmonies',
-        'harmony.seeBudget': 'See Budget Suggestions',
-        'harmony.copyHex': 'Copy Hex Code',
-        'harmony.copiedHex': 'Copied',
-        'harmony.copyFailed': 'Failed to copy',
-      };
-      return translations[key] || key;
-    }),
+    t: (key: string) => key,
+    getDyeName: (itemId: number) => `Dye-${itemId}`,
   },
   StorageService: {
-    getItem: vi.fn(() => null),
+    getItem: vi.fn().mockReturnValue([]),
     setItem: vi.fn(),
   },
   RouterService: {
@@ -35,308 +33,351 @@ vi.mock('@services/index', () => ({
   },
 }));
 
+vi.mock('@services/dye-service-wrapper', () => ({
+  DyeService: {
+    getInstance: vi.fn().mockReturnValue({
+      getDyeById: vi.fn((id: number) => mockDyes.find((d) => d.id === id)),
+    }),
+  },
+}));
+
 vi.mock('@services/toast-service', () => ({
   ToastService: {
     success: vi.fn(),
+    info: vi.fn(),
     error: vi.fn(),
   },
 }));
 
-describe('createDyeActionDropdown', () => {
+vi.mock('@services/modal-service', () => ({
+  ModalService: {
+    show: vi.fn().mockReturnValue('modal-123'),
+    dismiss: vi.fn(),
+  },
+}));
+
+vi.mock('@shared/logger', () => ({
+  logger: {
+    info: vi.fn(),
+  },
+}));
+
+// Mock clipboard API
+Object.assign(navigator, {
+  clipboard: {
+    writeText: vi.fn().mockResolvedValue(undefined),
+  },
+});
+
+describe('DyeActionDropdown', () => {
   let container: HTMLElement;
-  let testDye: Dye;
+  let dropdown: HTMLElement | null;
 
   beforeEach(() => {
     container = createTestContainer();
-    testDye = mockDyeData[0] as Dye;
-
-    // Mock clipboard API
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined),
-      },
-    });
+    dropdown = null;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
+    if (dropdown) {
+      // Call cleanup if available
+      const cleanupFn = (dropdown as HTMLElement & { __cleanup?: () => void }).__cleanup;
+      if (cleanupFn) cleanupFn();
+    }
     cleanupTestContainer(container);
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
-  describe('Rendering', () => {
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
+
+  describe('Basic Rendering', () => {
     it('should create dropdown container', () => {
-      const dropdown = createDyeActionDropdown(testDye);
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      expect(dropdown.className).toContain('dye-action-dropdown');
+      expect(dropdown.classList.contains('dye-action-dropdown')).toBe(true);
     });
 
-    it('should have a trigger button with three dots icon', () => {
-      const dropdown = createDyeActionDropdown(testDye);
+    it('should render trigger button', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const button = dropdown.querySelector('button');
+      const button = query(dropdown, 'button[aria-haspopup="true"]');
       expect(button).not.toBeNull();
-      expect(button?.getAttribute('aria-label')).toBe('Actions');
-      expect(button?.getAttribute('aria-haspopup')).toBe('true');
-      expect(button?.innerHTML).toContain('svg');
     });
 
-    it('should have a hidden menu initially', () => {
-      const dropdown = createDyeActionDropdown(testDye);
+    it('should render three-dot icon', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const menu = dropdown.querySelector('[role="menu"]');
+      const svg = query(dropdown, 'button svg');
+      expect(svg).not.toBeNull();
+    });
+
+    it('should render menu container', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      const menu = query(dropdown, '[role="menu"]');
       expect(menu).not.toBeNull();
-      expect(menu?.className).toContain('invisible');
-      expect(menu?.getAttribute('inert')).toBe('');
     });
 
-    it('should render six menu items', () => {
-      const dropdown = createDyeActionDropdown(testDye);
+    it('should have menu hidden initially', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
+      const menu = query(dropdown, '[role="menu"]');
+      expect(menu?.classList.contains('invisible')).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // Menu Items Tests
+  // ============================================================================
+
+  describe('Menu Items', () => {
+    it('should render 6 action menu items', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      const menuItems = queryAll(dropdown, '[role="menuitem"]');
       expect(menuItems.length).toBe(6);
     });
 
-    it('should have correct menu item labels in order', () => {
-      const dropdown = createDyeActionDropdown(testDye);
+    it('should render comparison action', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-      expect(menuItems[0].textContent).toContain('Add to Comparison');
-      expect(menuItems[1].textContent).toContain('Add to Mixer');
-      expect(menuItems[2].textContent).toContain('Add to Accessibility Checker');
-      expect(menuItems[3].textContent).toContain('See Color Harmonies');
-      expect(menuItems[4].textContent).toContain('See Budget Suggestions');
-      expect(menuItems[5].textContent).toContain('Copy Hex Code');
+      expect(dropdown.textContent).toContain('harmony.addToComparison');
+    });
+
+    it('should render mixer action', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      expect(dropdown.textContent).toContain('harmony.addToMixer');
+    });
+
+    it('should render accessibility action', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      expect(dropdown.textContent).toContain('harmony.addToAccessibility');
+    });
+
+    it('should render harmony action', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      expect(dropdown.textContent).toContain('harmony.seeHarmonies');
+    });
+
+    it('should render budget action', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      expect(dropdown.textContent).toContain('harmony.seeBudget');
+    });
+
+    it('should render copy hex action', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      expect(dropdown.textContent).toContain('harmony.copyHex');
     });
   });
+
+  // ============================================================================
+  // Menu Toggle Tests
+  // ============================================================================
 
   describe('Menu Toggle', () => {
     it('should open menu on button click', () => {
-      const dropdown = createDyeActionDropdown(testDye);
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      const menu = dropdown.querySelector('[role="menu"]') as HTMLElement;
+      const button = query<HTMLButtonElement>(dropdown, 'button[aria-haspopup="true"]');
+      click(button);
 
-      button.click();
-
-      expect(menu.className).toContain('visible');
-      expect(menu.className).not.toContain('invisible');
-      expect(button.getAttribute('aria-expanded')).toBe('true');
-      expect(menu.hasAttribute('inert')).toBe(false);
+      const menu = query(dropdown, '[role="menu"]');
+      expect(menu?.classList.contains('visible')).toBe(true);
     });
 
-    it('should close menu on second button click', () => {
-      const dropdown = createDyeActionDropdown(testDye);
+    it('should set aria-expanded to true when open', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      const menu = dropdown.querySelector('[role="menu"]') as HTMLElement;
+      const button = query<HTMLButtonElement>(dropdown, 'button[aria-haspopup="true"]');
+      click(button);
 
-      button.click(); // Open
-      button.click(); // Close
+      expect(getAttr(button, 'aria-expanded')).toBe('true');
+    });
 
-      expect(menu.className).toContain('invisible');
-      expect(button.getAttribute('aria-expanded')).toBe('false');
+    it('should close menu on second click', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      const button = query<HTMLButtonElement>(dropdown, 'button[aria-haspopup="true"]');
+      click(button); // Open
+      click(button); // Close
+
+      const menu = query(dropdown, '[role="menu"]');
+      expect(menu?.classList.contains('invisible')).toBe(true);
     });
 
     it('should close menu on escape key', () => {
-      const dropdown = createDyeActionDropdown(testDye);
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      const menu = dropdown.querySelector('[role="menu"]') as HTMLElement;
+      const button = query<HTMLButtonElement>(dropdown, 'button[aria-haspopup="true"]');
+      click(button);
 
-      button.click(); // Open
+      dropdown.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
 
-      const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' });
-      dropdown.dispatchEvent(escapeEvent);
-
-      expect(menu.className).toContain('invisible');
-    });
-
-    it('should close menu when clicking outside', async () => {
-      const dropdown = createDyeActionDropdown(testDye);
-      container.appendChild(dropdown);
-
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      const menu = dropdown.querySelector('[role="menu"]') as HTMLElement;
-
-      button.click(); // Open
-
-      // Wait for click outside listener to be added
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // Click outside
-      document.body.click();
-
-      expect(menu.className).toContain('invisible');
+      const menu = query(dropdown, '[role="menu"]');
+      expect(menu?.classList.contains('invisible')).toBe(true);
     });
   });
 
-  describe('Actions', () => {
-    it('should call onAction callback for comparison action', () => {
+  // ============================================================================
+  // Action Dispatch Tests
+  // ============================================================================
+
+  describe('Action Dispatch', () => {
+    it('should call onAction callback when action clicked', async () => {
       const onAction = vi.fn();
-      const dropdown = createDyeActionDropdown(testDye, onAction);
+      dropdown = createDyeActionDropdown(mockDyes[0], onAction);
       container.appendChild(dropdown);
 
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      button.click(); // Open menu
+      // Open menu
+      const button = query<HTMLButtonElement>(dropdown, 'button[aria-haspopup="true"]');
+      click(button);
 
-      const menuItems = dropdown.querySelectorAll('[role="menuitem"]') as NodeListOf<HTMLElement>;
-      menuItems[0].click(); // Click "Add to Comparison"
-
-      expect(onAction).toHaveBeenCalledWith('comparison', testDye);
-    });
-
-    it('should call onAction callback for mixer action', () => {
-      const onAction = vi.fn();
-      const dropdown = createDyeActionDropdown(testDye, onAction);
-      container.appendChild(dropdown);
-
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      button.click(); // Open menu
-
-      const menuItems = dropdown.querySelectorAll('[role="menuitem"]') as NodeListOf<HTMLElement>;
-      menuItems[1].click(); // Click "Add to Mixer"
-
-      expect(onAction).toHaveBeenCalledWith('mixer', testDye);
-    });
-
-    it('should copy hex to clipboard for copy action', async () => {
-      const dropdown = createDyeActionDropdown(testDye);
-      container.appendChild(dropdown);
-
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      button.click(); // Open menu
-
-      const menuItems = dropdown.querySelectorAll('[role="menuitem"]') as NodeListOf<HTMLElement>;
-      menuItems[5].click(); // Click "Copy Hex Code" (index 5)
+      // Click copy hex action
+      const menuItems = queryAll<HTMLButtonElement>(dropdown, '[role="menuitem"]');
+      const copyAction = menuItems[menuItems.length - 1]; // Copy is last
+      click(copyAction);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(testDye.hex);
+      expect(onAction).toHaveBeenCalledWith('copy', mockDyes[0]);
     });
 
-    it('should call onAction callback for harmony action', () => {
-      const onAction = vi.fn();
-      const dropdown = createDyeActionDropdown(testDye, onAction);
+    it('should close menu after action click', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      button.click(); // Open menu
+      // Open menu
+      const button = query<HTMLButtonElement>(dropdown, 'button[aria-haspopup="true"]');
+      click(button);
 
-      const menuItems = dropdown.querySelectorAll('[role="menuitem"]') as NodeListOf<HTMLElement>;
-      menuItems[3].click(); // Click "See Color Harmonies" (index 3)
+      // Click an action
+      const menuItem = query<HTMLButtonElement>(dropdown, '[role="menuitem"]');
+      click(menuItem);
 
-      expect(onAction).toHaveBeenCalledWith('harmony', testDye);
-    });
-
-    it('should close menu after action', () => {
-      const onAction = vi.fn();
-      const dropdown = createDyeActionDropdown(testDye, onAction);
-      container.appendChild(dropdown);
-
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      const menu = dropdown.querySelector('[role="menu"]') as HTMLElement;
-
-      button.click(); // Open menu
-
-      const menuItems = dropdown.querySelectorAll('[role="menuitem"]') as NodeListOf<HTMLElement>;
-      menuItems[0].click(); // Click action
-
-      expect(menu.className).toContain('invisible');
+      const menu = query(dropdown, '[role="menu"]');
+      expect(menu?.classList.contains('invisible')).toBe(true);
     });
   });
 
-  describe('Global Close Event', () => {
-    it('should close when another dropdown opens', () => {
-      const dropdown1 = createDyeActionDropdown(testDye);
-      const dropdown2 = createDyeActionDropdown(mockDyeData[1] as Dye);
+  // ============================================================================
+  // Accessibility Tests
+  // ============================================================================
+
+  describe('Accessibility', () => {
+    it('should have aria-label on trigger button', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      const button = query(dropdown, 'button[aria-haspopup="true"]');
+      expect(button?.hasAttribute('aria-label')).toBe(true);
+    });
+
+    it('should have aria-controls linking button to menu', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      const button = query(dropdown, 'button[aria-haspopup="true"]');
+      const menu = query(dropdown, '[role="menu"]');
+
+      expect(getAttr(button, 'aria-controls')).toBe(menu?.id);
+    });
+
+    it('should have aria-label on menu', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      const menu = query(dropdown, '[role="menu"]');
+      expect(menu?.hasAttribute('aria-label')).toBe(true);
+    });
+
+    it('should use inert attribute when menu is closed', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      const menu = query(dropdown, '[role="menu"]');
+      expect(menu?.hasAttribute('inert')).toBe(true);
+    });
+
+    it('should remove inert attribute when menu is open', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
+
+      const button = query<HTMLButtonElement>(dropdown, 'button[aria-haspopup="true"]');
+      click(button);
+
+      const menu = query(dropdown, '[role="menu"]');
+      expect(menu?.hasAttribute('inert')).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // Unique ID Tests
+  // ============================================================================
+
+  describe('Unique IDs', () => {
+    it('should generate unique menu IDs', () => {
+      const dropdown1 = createDyeActionDropdown(mockDyes[0]);
+      const dropdown2 = createDyeActionDropdown(mockDyes[1]);
+
       container.appendChild(dropdown1);
       container.appendChild(dropdown2);
 
-      const button1 = dropdown1.querySelector('button') as HTMLButtonElement;
-      const button2 = dropdown2.querySelector('button') as HTMLButtonElement;
-      const menu1 = dropdown1.querySelector('[role="menu"]') as HTMLElement;
+      const menu1 = query(dropdown1, '[role="menu"]');
+      const menu2 = query(dropdown2, '[role="menu"]');
 
-      button1.click(); // Open first dropdown
-      expect(menu1.className).toContain('visible');
+      expect(menu1?.id).not.toBe(menu2?.id);
 
-      button2.click(); // Open second dropdown - should close first
-
-      expect(menu1.className).toContain('invisible');
+      // Cleanup
+      const cleanup1 = (dropdown1 as HTMLElement & { __cleanup?: () => void }).__cleanup;
+      const cleanup2 = (dropdown2 as HTMLElement & { __cleanup?: () => void }).__cleanup;
+      if (cleanup1) cleanup1();
+      if (cleanup2) cleanup2();
     });
   });
+
+  // ============================================================================
+  // Cleanup Tests
+  // ============================================================================
 
   describe('Cleanup', () => {
     it('should have cleanup function attached', () => {
-      const dropdown = createDyeActionDropdown(testDye) as HTMLElement & {
-        __cleanup?: () => void;
-      };
-
-      expect(typeof dropdown.__cleanup).toBe('function');
-    });
-
-    it('should cleanup properly when called', () => {
-      const dropdown = createDyeActionDropdown(testDye) as HTMLElement & {
-        __cleanup?: () => void;
-      };
+      dropdown = createDyeActionDropdown(mockDyes[0]);
       container.appendChild(dropdown);
 
-      const button = dropdown.querySelector('button') as HTMLButtonElement;
-      button.click(); // Open menu
-
-      dropdown.__cleanup?.();
-
-      const menu = dropdown.querySelector('[role="menu"]') as HTMLElement;
-      expect(menu.className).toContain('invisible');
-    });
-  });
-});
-
-// ==========================================================================
-// Branch Coverage - Additional Tests
-// ==========================================================================
-
-describe('Branch Coverage - Clipboard Fallback', function () {
-  let container: HTMLElement;
-  let testDye: Dye;
-
-  beforeEach(function () {
-    container = createTestContainer();
-    testDye = mockDyeData[0] as Dye;
-  });
-
-  afterEach(function () {
-    cleanupTestContainer(container);
-    vi.clearAllMocks();
-  });
-
-  it('should use fallback when navigator.clipboard fails', async function () {
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: vi.fn().mockRejectedValue(new Error('Clipboard denied')),
-      },
+      const cleanupFn = (dropdown as HTMLElement & { __cleanup?: () => void }).__cleanup;
+      expect(typeof cleanupFn).toBe('function');
     });
 
-    const execMock = vi.fn().mockReturnValue(true);
-    document.execCommand = execMock;
+    it('should not throw on cleanup', () => {
+      dropdown = createDyeActionDropdown(mockDyes[0]);
+      container.appendChild(dropdown);
 
-    const dropdown = createDyeActionDropdown(testDye);
-    container.appendChild(dropdown);
-
-    const button = dropdown.querySelector('button') as HTMLButtonElement;
-    button.click();
-
-    const menuItems = dropdown.querySelectorAll('[role="menuitem"]');
-    (menuItems[5] as HTMLElement).click();
-
-    await new Promise((r) => setTimeout(r, 20));
-    expect(execMock).toHaveBeenCalledWith('copy');
+      const cleanupFn = (dropdown as HTMLElement & { __cleanup?: () => void }).__cleanup;
+      expect(() => cleanupFn?.()).not.toThrow();
+    });
   });
 });

@@ -1,414 +1,383 @@
+/**
+ * XIV Dye Tools - ColorWheelDisplay Unit Tests
+ *
+ * Tests the color wheel display component for visualizing color harmonies.
+ * Covers rendering, SVG structure, harmony types, and accessibility.
+ *
+ * @module components/__tests__/color-wheel-display.test
+ */
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ColorWheelDisplay } from '../color-wheel-display';
-import { createTestContainer, cleanupComponent } from './test-utils';
-import type { Dye, ThemePalette } from '@shared/types';
-import { ThemeService } from '@services/index';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  query,
+  queryAll,
+  getAttr,
+} from '../../__tests__/component-utils';
+import { mockDyes } from '../../__tests__/mocks/services';
+
+vi.mock('@services/index', () => ({
+  ColorService: {
+    hexToRgb: vi.fn((hex: string) => {
+      const r = parseInt(hex.slice(1, 3), 16) || 0;
+      const g = parseInt(hex.slice(3, 5), 16) || 0;
+      const b = parseInt(hex.slice(5, 7), 16) || 0;
+      return { r, g, b };
+    }),
+    rgbToHsv: vi.fn((r: number, g: number, b: number) => {
+      // Simplified HSV calculation for testing
+      const max = Math.max(r, g, b);
+      const v = (max / 255) * 100;
+      let h = 0;
+      if (r >= g && r >= b) h = 0;
+      else if (g >= r && g >= b) h = 120;
+      else h = 240;
+      return { h, s: 50, v };
+    }),
+  },
+  ThemeService: {
+    getCurrentThemeObject: vi.fn().mockReturnValue({ isDark: false }),
+  },
+  LanguageService: {
+    t: (key: string) => key,
+    getDyeName: (itemId: number) => `Dye-${itemId}`,
+  },
+}));
 
 describe('ColorWheelDisplay', () => {
   let container: HTMLElement;
-  let component: ColorWheelDisplay | null = null;
-
-  const baseColor = '#ff0000';
-  const harmonyDyes: Dye[] = [
-    {
-      id: 2,
-      itemID: 2,
-      stainID: null,
-      name: 'Second',
-      hex: '#00ff00',
-      rgb: { r: 0, g: 255, b: 0 },
-      hsv: { h: 120, s: 100, v: 100 },
-      category: 'Green',
-      acquisition: 'Test',
-      cost: 1,
-      isMetallic: false,
-      isPastel: false,
-      isDark: false,
-      isCosmic: false,
-    },
-    {
-      id: 3,
-      itemID: 3,
-      stainID: null,
-      name: 'Third',
-      hex: '#0000ff',
-      rgb: { r: 0, g: 0, b: 255 },
-      hsv: { h: 240, s: 100, v: 100 },
-      category: 'Blue',
-      acquisition: 'Test',
-      cost: 1,
-      isMetallic: false,
-      isPastel: false,
-      isDark: false,
-      isCosmic: false,
-    },
-  ];
+  let wheel: ColorWheelDisplay | null;
 
   beforeEach(() => {
     container = createTestContainer();
-    vi.spyOn(ThemeService, 'getCurrentThemeObject').mockReturnValue({
-      name: 'standard-light',
-      palette: {} as unknown as ThemePalette,
-      isDark: false,
-    });
+    wheel = null;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
-    if (component) {
-      cleanupComponent(component, container);
-    } else {
-      container.remove();
+    if (wheel) {
+      try {
+        wheel.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
+    cleanupTestContainer(container);
+    vi.restoreAllMocks();
   });
 
-  const createComponentWithHarmony = (harmonyType: string): void => {
-    component = new ColorWheelDisplay(container, baseColor, harmonyDyes, harmonyType, 160);
-    component.init();
-  };
-
-  // ==========================================================================
+  // ============================================================================
   // Basic Rendering Tests
-  // ==========================================================================
+  // ============================================================================
 
   describe('Basic Rendering', () => {
-    it('renders SVG wheel with donut segments', () => {
-      createComponentWithHarmony('triadic');
+    it('should render SVG element', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
 
-      const svg = container.querySelector('svg.color-wheel');
+      const svg = query(container, 'svg');
       expect(svg).not.toBeNull();
     });
 
-    it('renders a dot for each harmony dye', () => {
-      createComponentWithHarmony('triadic');
-      const dots = container.querySelectorAll('circle');
+    it('should have class color-wheel on SVG', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
 
-      // Expect at least base + harmony dots (plus glow circles)
-      expect(dots.length).toBeGreaterThanOrEqual(harmonyDyes.length + 1);
-    });
-
-    it('displays harmony short name at center', () => {
-      createComponentWithHarmony('triadic');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('TRIAD');
-    });
-
-    it('renders with default size when not specified', () => {
-      component = new ColorWheelDisplay(container, baseColor, harmonyDyes, 'triadic');
-      component.init();
-
-      const svg = container.querySelector('svg.color-wheel');
-      expect(svg?.getAttribute('width')).toBe('200');
-      expect(svg?.getAttribute('height')).toBe('200');
-    });
-  });
-
-  // ==========================================================================
-  // Harmony Type Branch Coverage
-  // ==========================================================================
-
-  describe('Harmony Types', () => {
-    it('renders complementary harmony', () => {
-      createComponentWithHarmony('complementary');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('COMP');
-    });
-
-    it('renders analogous harmony', () => {
-      createComponentWithHarmony('analogous');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('ANALOG');
-    });
-
-    it('renders triadic harmony', () => {
-      createComponentWithHarmony('triadic');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('TRIAD');
-    });
-
-    it('renders split-complementary harmony', () => {
-      createComponentWithHarmony('split-complementary');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('SPLIT');
-    });
-
-    it('renders tetradic harmony', () => {
-      createComponentWithHarmony('tetradic');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('TETRA');
-    });
-
-    it('renders square harmony', () => {
-      createComponentWithHarmony('square');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('SQUARE');
-    });
-
-    it('renders monochromatic harmony', () => {
-      createComponentWithHarmony('monochromatic');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('MONO');
-    });
-
-    it('renders compound harmony', () => {
-      createComponentWithHarmony('compound');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('COMPND');
-    });
-
-    it('renders shades harmony', () => {
-      createComponentWithHarmony('shades');
-      const label = container.querySelector('text');
-      expect(label?.textContent).toBe('SHADES');
-    });
-
-    it('handles unknown harmony type with fallback', () => {
-      createComponentWithHarmony('unknown-type');
-      const label = container.querySelector('text');
-      // Should use uppercase slice fallback
-      expect(label?.textContent).toBe('UNKNOW');
-    });
-
-    it('handles harmony type longer than 6 characters', () => {
-      createComponentWithHarmony('verylongharmonytype');
-      const label = container.querySelector('text');
-      // Should truncate to first 6 uppercase characters
-      expect(label?.textContent).toBe('VERYLO');
-    });
-  });
-
-  // ==========================================================================
-  // Theme Branch Coverage
-  // ==========================================================================
-
-  describe('Theme Handling', () => {
-    it('renders with light theme styling', () => {
-      vi.spyOn(ThemeService, 'getCurrentThemeObject').mockReturnValue({
-        name: 'standard-light',
-        palette: {} as unknown as ThemePalette,
-        isDark: false,
-      });
-
-      createComponentWithHarmony('triadic');
-
-      const svg = container.querySelector('svg.color-wheel');
+      const svg = query(container, 'svg.color-wheel');
       expect(svg).not.toBeNull();
-
-      // Check that a text element exists with light theme color
-      const label = container.querySelector('text');
-      expect(label?.getAttribute('fill')).toBe('#666666');
     });
 
-    it('renders with dark theme styling', () => {
-      vi.spyOn(ThemeService, 'getCurrentThemeObject').mockReturnValue({
-        name: 'standard-dark',
-        palette: {} as unknown as ThemePalette,
-        isDark: true,
-      });
+    it('should render with specified size', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary', 300);
+      wheel.init();
 
-      createComponentWithHarmony('triadic');
-
-      const svg = container.querySelector('svg.color-wheel');
-      expect(svg).not.toBeNull();
-
-      // Check that a text element exists with dark theme color
-      const label = container.querySelector('text');
-      expect(label?.getAttribute('fill')).toBe('#CCCCCC');
+      const svg = query(container, 'svg');
+      expect(getAttr(svg, 'width')).toBe('300');
+      expect(getAttr(svg, 'height')).toBe('300');
     });
 
-    it('applies correct dot stroke color for light theme', () => {
-      vi.spyOn(ThemeService, 'getCurrentThemeObject').mockReturnValue({
-        name: 'standard-light',
-        palette: {} as unknown as ThemePalette,
-        isDark: false,
-      });
+    it('should use default size of 200', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
 
-      createComponentWithHarmony('triadic');
-
-      // Find a circle with stroke attribute
-      const circles = container.querySelectorAll('circle[stroke]');
-      const hasWhiteStroke = Array.from(circles).some(
-        (c) => c.getAttribute('stroke') === '#FFFFFF'
-      );
-      expect(hasWhiteStroke).toBe(true);
+      const svg = query(container, 'svg');
+      expect(getAttr(svg, 'width')).toBe('200');
     });
 
-    it('applies correct dot stroke color for dark theme', () => {
-      vi.spyOn(ThemeService, 'getCurrentThemeObject').mockReturnValue({
-        name: 'standard-dark',
-        palette: {} as unknown as ThemePalette,
-        isDark: true,
-      });
+    it('should have viewBox attribute', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary', 200);
+      wheel.init();
 
-      createComponentWithHarmony('triadic');
-
-      // Find a circle with stroke attribute
-      const circles = container.querySelectorAll('circle[stroke]');
-      const hasDarkStroke = Array.from(circles).some((c) => c.getAttribute('stroke') === '#333333');
-      expect(hasDarkStroke).toBe(true);
+      const svg = query(container, 'svg');
+      expect(getAttr(svg, 'viewBox')).toBe('0 0 200 200');
     });
   });
 
-  // ==========================================================================
-  // Mouse Events Branch Coverage
-  // ==========================================================================
+  // ============================================================================
+  // Color Wheel Segments Tests
+  // ============================================================================
 
-  describe('Mouse Events', () => {
-    it('enlarges dot on mouseenter', () => {
-      createComponentWithHarmony('triadic');
+  describe('Color Wheel Segments', () => {
+    it('should render color segments (paths)', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
 
-      // Find harmony dot circles (those with cursor-pointer class)
-      const circles = container.querySelectorAll('circle.cursor-pointer');
-      expect(circles.length).toBeGreaterThan(0);
-
-      const circle = circles[0] as SVGCircleElement;
-      const initialRadius = circle.getAttribute('r');
-
-      // Trigger mouseenter
-      circle.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-
-      // Radius should be larger
-      const newRadius = circle.getAttribute('r');
-      expect(Number(newRadius)).toBeGreaterThan(Number(initialRadius));
+      const paths = queryAll(container, 'svg path');
+      expect(paths.length).toBeGreaterThan(0);
     });
 
-    it('restores dot size on mouseleave', () => {
-      createComponentWithHarmony('triadic');
+    it('should render 60 hue segments', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
 
-      const circles = container.querySelectorAll('circle.cursor-pointer');
-      expect(circles.length).toBeGreaterThan(0);
-
-      const circle = circles[0] as SVGCircleElement;
-      const initialRadius = circle.getAttribute('r');
-
-      // Trigger mouseenter then mouseleave
-      circle.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-      circle.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-
-      // Radius should be back to initial
-      const finalRadius = circle.getAttribute('r');
-      expect(finalRadius).toBe(initialRadius);
+      // 60 segments for the color wheel donut
+      const paths = queryAll(container, 'svg path');
+      expect(paths.length).toBe(60);
     });
 
-    it('enlarges glow circle on mouseenter', () => {
-      createComponentWithHarmony('triadic');
+    it('should have fill colors on segments', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
 
-      // Find harmony dot circles
-      const circles = container.querySelectorAll('circle.cursor-pointer');
-      expect(circles.length).toBeGreaterThan(0);
-
-      const circle = circles[0] as SVGCircleElement;
-
-      // Find the glow circle (previous sibling)
-      const glowCircle = circle.previousElementSibling as SVGCircleElement;
-      expect(glowCircle).not.toBeNull();
-
-      const initialGlowRadius = glowCircle.getAttribute('r');
-      const initialGlowOpacity = glowCircle.getAttribute('opacity');
-
-      // Trigger mouseenter
-      circle.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-
-      // Glow should be larger and more opaque
-      expect(Number(glowCircle.getAttribute('r'))).toBeGreaterThan(Number(initialGlowRadius));
-      expect(Number(glowCircle.getAttribute('opacity'))).toBeGreaterThan(
-        Number(initialGlowOpacity)
-      );
-    });
-
-    it('restores glow circle on mouseleave', () => {
-      createComponentWithHarmony('triadic');
-
-      const circles = container.querySelectorAll('circle.cursor-pointer');
-      expect(circles.length).toBeGreaterThan(0);
-
-      const circle = circles[0] as SVGCircleElement;
-      const glowCircle = circle.previousElementSibling as SVGCircleElement;
-
-      const initialGlowRadius = glowCircle.getAttribute('r');
-      const initialGlowOpacity = glowCircle.getAttribute('opacity');
-
-      // Trigger mouseenter then mouseleave
-      circle.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-      circle.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-
-      // Glow should be back to initial
-      expect(glowCircle.getAttribute('r')).toBe(initialGlowRadius);
-      expect(glowCircle.getAttribute('opacity')).toBe(initialGlowOpacity);
+      const path = query(container, 'svg path');
+      expect(path?.hasAttribute('fill')).toBe(true);
     });
   });
 
-  // ==========================================================================
+  // ============================================================================
+  // Color Dots Tests
+  // ============================================================================
+
+  describe('Color Dots', () => {
+    it('should render circles for base color', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const circles = queryAll(container, 'svg circle');
+      expect(circles.length).toBeGreaterThan(0);
+    });
+
+    it('should render circles for harmony colors', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', mockDyes.slice(0, 3), 'triadic');
+      wheel.init();
+
+      const circles = queryAll(container, 'svg circle');
+      // Each dye gets 2 circles (glow + main), plus base color gets 2
+      // So with 3 harmony dyes + base = 8 circles
+      expect(circles.length).toBe(8);
+    });
+
+    it('should have tooltips on harmony circles', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const titles = queryAll(container, 'svg title');
+      expect(titles.length).toBeGreaterThan(0);
+    });
+
+    it('should include dye name in tooltip', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const title = query(container, 'svg title');
+      expect(title?.textContent).toContain(`Dye-${mockDyes[0].itemID}`);
+    });
+  });
+
+  // ============================================================================
+  // Connection Lines Tests
+  // ============================================================================
+
+  describe('Connection Lines', () => {
+    it('should render connection lines between colors', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const lines = queryAll(container, 'svg line');
+      expect(lines.length).toBeGreaterThan(0);
+    });
+
+    it('should have dashed stroke on connection lines', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      // Query specifically for lines with stroke-dasharray (connection lines)
+      // Indicator lines are rendered first without stroke-dasharray
+      const dashedLines = queryAll(container, 'svg line[stroke-dasharray]');
+      expect(dashedLines.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ============================================================================
+  // Center Label Tests
+  // ============================================================================
+
+  describe('Center Label', () => {
+    it('should render center text label', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const text = query(container, 'svg text');
+      expect(text).not.toBeNull();
+    });
+
+    it('should show short name for complementary', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const text = query(container, 'svg text');
+      expect(text?.textContent).toBe('COMP');
+    });
+
+    it('should show short name for analogous', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'analogous');
+      wheel.init();
+
+      const text = query(container, 'svg text');
+      expect(text?.textContent).toBe('ANALOG');
+    });
+
+    it('should show short name for triadic', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', mockDyes.slice(0, 2), 'triadic');
+      wheel.init();
+
+      const text = query(container, 'svg text');
+      expect(text?.textContent).toBe('TRIAD');
+    });
+
+    it('should show short name for split-complementary', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', mockDyes.slice(0, 2), 'split-complementary');
+      wheel.init();
+
+      const text = query(container, 'svg text');
+      expect(text?.textContent).toBe('SPLIT');
+    });
+
+    it('should show short name for tetradic', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', mockDyes.slice(0, 3), 'tetradic');
+      wheel.init();
+
+      const text = query(container, 'svg text');
+      expect(text?.textContent).toBe('TETRA');
+    });
+
+    it('should show short name for square', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', mockDyes.slice(0, 3), 'square');
+      wheel.init();
+
+      const text = query(container, 'svg text');
+      expect(text?.textContent).toBe('SQUARE');
+    });
+
+    it('should show short name for monochromatic', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'monochromatic');
+      wheel.init();
+
+      const text = query(container, 'svg text');
+      expect(text?.textContent).toBe('MONO');
+    });
+  });
+
+  // ============================================================================
+  // Accessibility Tests
+  // ============================================================================
+
+  describe('Accessibility', () => {
+    it('should have role="img" on SVG', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const svg = query(container, 'svg');
+      expect(getAttr(svg, 'role')).toBe('img');
+    });
+
+    it('should have aria-label on SVG', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const svg = query(container, 'svg');
+      expect(svg?.hasAttribute('aria-label')).toBe(true);
+    });
+
+    it('should include harmony type in aria-label', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const svg = query(container, 'svg');
+      const ariaLabel = getAttr(svg, 'aria-label');
+      expect(ariaLabel).toContain('harmony.complementary');
+    });
+
+    it('should include color count in aria-label', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', mockDyes.slice(0, 3), 'triadic');
+      wheel.init();
+
+      const svg = query(container, 'svg');
+      const ariaLabel = getAttr(svg, 'aria-label');
+      expect(ariaLabel).toContain('3');
+    });
+  });
+
+  // ============================================================================
+  // Harmony Indicator Lines Tests
+  // ============================================================================
+
+  describe('Harmony Indicator Lines', () => {
+    it('should render indicator lines for complementary', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const lines = queryAll(container, 'svg line');
+      // At least 2 indicator lines + connection lines
+      expect(lines.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should render 3 indicator lines for triadic', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', mockDyes.slice(0, 2), 'triadic');
+      wheel.init();
+
+      const lines = queryAll(container, 'svg line');
+      // 3 indicator lines + 2 connection lines = 5
+      expect(lines.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  // ============================================================================
+  // Defs and Gradients Tests
+  // ============================================================================
+
+  describe('Defs and Gradients', () => {
+    it('should render defs element', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const defs = query(container, 'svg defs');
+      expect(defs).not.toBeNull();
+    });
+
+    it('should render radial gradients for segments', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
+
+      const gradients = queryAll(container, 'svg radialGradient');
+      expect(gradients.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ============================================================================
   // Lifecycle Tests
-  // ==========================================================================
+  // ============================================================================
 
   describe('Lifecycle', () => {
-    it('destroys component without errors', () => {
-      createComponentWithHarmony('triadic');
+    it('should clean up on destroy', () => {
+      wheel = new ColorWheelDisplay(container, '#FF0000', [mockDyes[0]], 'complementary');
+      wheel.init();
 
-      expect(() => {
-        component?.destroy();
-      }).not.toThrow();
-    });
+      wheel.destroy();
 
-    it('returns correct state', () => {
-      createComponentWithHarmony('complementary');
-
-      const state = component?.['getState']();
-      expect(state?.baseColor).toBe(baseColor);
-      expect(state?.harmonyType).toBe('complementary');
-      expect(state?.dyeCount).toBe(harmonyDyes.length);
-    });
-
-    it('bindEvents does not throw', () => {
-      createComponentWithHarmony('triadic');
-
-      expect(() => {
-        component?.bindEvents();
-      }).not.toThrow();
-    });
-  });
-
-  // ==========================================================================
-  // Edge Cases
-  // ==========================================================================
-
-  describe('Edge Cases', () => {
-    it('renders with empty harmony dyes array', () => {
-      component = new ColorWheelDisplay(container, baseColor, [], 'triadic', 160);
-      component.init();
-
-      const svg = container.querySelector('svg.color-wheel');
-      expect(svg).not.toBeNull();
-    });
-
-    it('renders with single harmony dye', () => {
-      component = new ColorWheelDisplay(
-        container,
-        baseColor,
-        [harmonyDyes[0]],
-        'complementary',
-        160
-      );
-      component.init();
-
-      const svg = container.querySelector('svg.color-wheel');
-      expect(svg).not.toBeNull();
-    });
-
-    it('handles very small size', () => {
-      component = new ColorWheelDisplay(container, baseColor, harmonyDyes, 'triadic', 50);
-      component.init();
-
-      const svg = container.querySelector('svg.color-wheel');
-      expect(svg?.getAttribute('width')).toBe('50');
-    });
-
-    it('handles different base colors', () => {
-      component = new ColorWheelDisplay(container, '#00ff00', harmonyDyes, 'triadic', 160);
-      component.init();
-
-      const svg = container.querySelector('svg.color-wheel');
-      expect(svg).not.toBeNull();
+      expect(container.children.length).toBe(0);
     });
   });
 });

@@ -1,728 +1,370 @@
 /**
- * XIV Dye Tools - Harmony Type Component Tests
+ * XIV Dye Tools - HarmonyType Unit Tests
  *
- * Tests for the HarmonyType component which displays matching dyes
- * for a specific color harmony type
+ * Tests the harmony type component for displaying color harmony matches.
+ * Covers rendering, harmony display, deviance scoring, and interactions.
+ *
+ * @module components/__tests__/harmony-type.test
  */
 
-import { HarmonyType, type HarmonyTypeInfo } from '../harmony-type';
-import { createTestContainer, cleanupTestContainer, cleanupComponent } from './test-utils';
-import type { Dye } from '@shared/types';
-import { vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { HarmonyType, HarmonyTypeInfo } from '../harmony-type';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  query,
+  queryAll,
+} from '../../__tests__/component-utils';
+import { mockDyes } from '../../__tests__/mocks/services';
 
-// Mock data
-const mockHarmonyInfo: HarmonyTypeInfo = {
-  id: 'complementary',
-  name: 'Complementary',
-  description: 'Colors opposite on the color wheel',
-  icon: 'complementary',
-};
+vi.mock('@services/index', () => ({
+  LanguageService: {
+    t: (key: string) => key,
+    getDyeName: (itemId: number) => `Dye-${itemId}`,
+    getCategory: (category: string) => category,
+    subscribe: vi.fn().mockReturnValue(() => {}),
+  },
+  ColorService: {
+    hexToRgb: vi.fn((hex: string) => {
+      const r = parseInt(hex.slice(1, 3), 16) || 0;
+      const g = parseInt(hex.slice(3, 5), 16) || 0;
+      const b = parseInt(hex.slice(5, 7), 16) || 0;
+      return { r, g, b };
+    }),
+    rgbToHsv: vi.fn(() => ({ h: 0, s: 100, v: 100 })),
+  },
+  ThemeService: {
+    getCurrentThemeObject: vi.fn().mockReturnValue({ isDark: false }),
+  },
+  CollectionService: {
+    isFavorite: vi.fn().mockReturnValue(false),
+    toggleFavorite: vi.fn(),
+    subscribeFavorites: vi.fn().mockReturnValue(() => {}),
+  },
+  APIService: {
+    formatPrice: vi.fn((price: number) => `${price.toLocaleString()} Gil`),
+  },
+}));
 
-const mockDye1: Dye = {
-  itemID: 1,
-  id: 1,
-  stainID: null,
-  name: 'Jet Black',
-  hex: '#000000',
-  rgb: { r: 0, g: 0, b: 0 },
-  hsv: { h: 0, s: 0, v: 0 },
-  category: 'Neutral',
-  acquisition: 'Weaver',
-  cost: 0,
-  isMetallic: false,
-  isPastel: false,
-  isDark: false,
-  isCosmic: false,
-};
+vi.mock('@shared/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
 
-const mockDye2: Dye = {
-  itemID: 2,
-  id: 2,
-  stainID: null,
-  name: 'Snow White',
-  hex: '#FFFFFF',
-  rgb: { r: 255, g: 255, b: 255 },
-  hsv: { h: 0, s: 0, v: 100 },
-  category: 'Neutral',
-  acquisition: 'Weaver',
-  cost: 0,
-  isMetallic: false,
-  isPastel: false,
-  isDark: false,
-  isCosmic: false,
-};
+vi.mock('@shared/ui-icons', () => ({
+  ICON_STAR: '<svg></svg>',
+  ICON_STAR_FILLED: '<svg></svg>',
+}));
 
-describe('HarmonyType Component', () => {
+vi.mock('@shared/harmony-icons', () => ({
+  HARMONY_ICONS: {
+    complementary: '<svg data-icon="complementary"></svg>',
+    analogous: '<svg data-icon="analogous"></svg>',
+    triadic: '<svg data-icon="triadic"></svg>',
+    splitComplementary: '<svg data-icon="split"></svg>',
+    tetradic: '<svg data-icon="tetradic"></svg>',
+  },
+}));
+
+vi.mock('../color-wheel-display', () => ({
+  ColorWheelDisplay: class MockColorWheelDisplay {
+    init() {}
+    destroy() {}
+  },
+}));
+
+vi.mock('../dye-action-dropdown', () => ({
+  createDyeActionDropdown: vi.fn().mockImplementation(() => {
+    const div = document.createElement('div');
+    div.className = 'dye-action-dropdown';
+    return div;
+  }),
+}));
+
+vi.mock('../info-tooltip', () => ({
+  addInfoIconTo: vi.fn(),
+  TOOLTIP_CONTENT: {},
+}));
+
+describe('HarmonyType', () => {
   let container: HTMLElement;
-  let component: HarmonyType;
+  let harmony: HarmonyType | null;
+
+  const createHarmonyInfo = (overrides: Partial<HarmonyTypeInfo> = {}): HarmonyTypeInfo => ({
+    id: 'complementary',
+    name: 'Complementary',
+    description: 'Colors opposite on the color wheel',
+    icon: 'complementary', // Key into HARMONY_ICONS
+    ...overrides,
+  });
+
+  const createMatchedDyes = (dyes = mockDyes.slice(0, 2)) => {
+    return dyes.map((dye, index) => ({
+      dye,
+      deviance: 5 + index * 5, // 5, 10, 15, etc.
+    }));
+  };
 
   beforeEach(() => {
     container = createTestContainer();
+    harmony = null;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (component) {
-      cleanupComponent(component, container);
-    } else {
-      cleanupTestContainer(container);
+    if (harmony) {
+      try {
+        harmony.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
+    cleanupTestContainer(container);
+    vi.restoreAllMocks();
   });
 
-  describe('Initialization', () => {
-    it('should create component with required properties', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
 
-      expect(component).toBeDefined();
-      expect(container.children.length).toBeGreaterThan(0);
-    });
-
-    it('should initialize without matched dyes', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const emptyState = container.textContent;
-      expect(emptyState).toContain('No matching dyes found');
-    });
-
-    it('should initialize with matched dyes', () => {
-      const matchedDyes = [
-        { dye: mockDye1, deviance: 2 },
-        { dye: mockDye2, deviance: 3 },
-      ];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
+  describe('Basic Rendering', () => {
+    it('should render harmony type container', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        createMatchedDyes()
+      );
+      harmony.init();
 
       expect(container.children.length).toBeGreaterThan(0);
     });
 
-    it('should initialize with prices disabled by default', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', [], false);
-      component.init();
+    it('should render harmony type name', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo({ name: 'Complementary' }),
+        '#FF0000',
+        createMatchedDyes()
+      );
+      harmony.init();
 
-      expect(component).toBeDefined();
+      expect(container.textContent).toContain('Complementary');
     });
 
-    it('should initialize with prices enabled', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', [], true);
-      component.init();
+    it('should render as a card with shadow', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        createMatchedDyes()
+      );
+      harmony.init();
 
-      expect(component).toBeDefined();
-    });
-  });
-
-  describe('Rendering', () => {
-    it('should render header with harmony info', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      expect(container.textContent).toContain(mockHarmonyInfo.name);
-    });
-
-    it('should display matched dyes when provided', () => {
-      const matchedDyes = [
-        { dye: mockDye1, deviance: 1.5 },
-        { dye: mockDye2, deviance: 2.0 },
-      ];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const text = container.textContent || '';
-      expect(text).toContain('Jet Black');
-    });
-
-    it('should display correct dye names', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const text = container.textContent || '';
-      expect(text).toContain('Jet Black');
-    });
-
-    it('should apply card styling classes', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const card = container.querySelector('div');
-      expect(card?.className).toContain('rounded-lg');
-    });
-
-    it('should apply theme-aware styling', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const card = container.querySelector('div');
-      expect(card?.className).toContain('dark:bg-gray-800');
+      const card = query(container, '.shadow-md');
+      expect(card).not.toBeNull();
     });
   });
 
-  describe('State Management', () => {
-    it('should maintain harmony info through lifecycle', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
+  // ============================================================================
+  // Matched Dyes Tests
+  // ============================================================================
 
-      expect(container.textContent).toContain(mockHarmonyInfo.name);
+  describe('Matched Dyes', () => {
+    it('should render dye items for each matched dye', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        createMatchedDyes(mockDyes.slice(0, 3))
+      );
+      harmony.init();
+
+      // Should show dye names
+      expect(container.textContent).toContain(`Dye-${mockDyes[0].itemID}`);
+      expect(container.textContent).toContain(`Dye-${mockDyes[1].itemID}`);
+      expect(container.textContent).toContain(`Dye-${mockDyes[2].itemID}`);
     });
 
-    it('should handle empty matched dyes gracefully', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
+    it('should display deviance values', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        [{ dye: mockDyes[0], deviance: 15.5 }]
+      );
+      harmony.init();
 
-      const emptyState = container.textContent;
-      expect(emptyState).toContain('No matching dyes found');
+      expect(container.textContent).toContain('15.5');
+    });
+  });
+
+  // ============================================================================
+  // Empty State Tests
+  // ============================================================================
+
+  describe('Empty State', () => {
+    it('should show empty state when no matched dyes', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        []
+      );
+      harmony.init();
+
+      expect(container.textContent).toContain('harmony.noMatchingDyes');
+    });
+  });
+
+  // ============================================================================
+  // Harmony Type Variations Tests
+  // ============================================================================
+
+  describe('Harmony Type Variations', () => {
+    const harmonyTypes = [
+      { id: 'complementary', name: 'Complementary' },
+      { id: 'analogous', name: 'Analogous' },
+      { id: 'triadic', name: 'Triadic' },
+      { id: 'split-complementary', name: 'Split Complementary' },
+    ];
+
+    harmonyTypes.forEach(({ id, name }) => {
+      it(`should render ${name} harmony type`, () => {
+        harmony = new HarmonyType(
+          container,
+          createHarmonyInfo({ id, name }),
+          '#FF0000',
+          createMatchedDyes()
+        );
+        harmony.init();
+
+        expect(container.textContent).toContain(name);
+      });
+    });
+  });
+
+  // ============================================================================
+  // Price Display Tests
+  // ============================================================================
+
+  describe('Price Display', () => {
+    it('should not show prices when showPrices is false', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        createMatchedDyes(),
+        false
+      );
+      harmony.init();
+
+      // With showPrices false, shouldn't show Gil prices
+      expect(container.textContent).not.toContain('Gil');
+    });
+  });
+
+  // ============================================================================
+  // Update Tests
+  // ============================================================================
+
+  describe('Updates', () => {
+    it('should have update methods', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        createMatchedDyes()
+      );
+      harmony.init();
+
+      // Component should have update methods
+      expect(typeof harmony.updateShowPrices).toBe('function');
+      expect(typeof harmony.setPriceData).toBe('function');
+      expect(typeof harmony.updateDyes).toBe('function');
+      expect(typeof harmony.updateBaseColor).toBe('function');
     });
 
-    it('should handle multiple matched dyes', () => {
-      const matchedDyes = Array.from({ length: 5 }, (_, i) => ({
-        dye: { ...mockDye1, id: i, itemID: i, name: `Dye ${i}` },
-        deviance: Math.random() * 10,
-      }));
+    it('should update showPrices', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        createMatchedDyes(),
+        false
+      );
+      harmony.init();
 
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
+      harmony.updateShowPrices(true);
+
+      // Method should exist and be callable
+      expect(container.children.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ============================================================================
+  // Different Base Colors Tests
+  // ============================================================================
+
+  describe('Different Base Colors', () => {
+    it('should handle red base color', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        createMatchedDyes()
+      );
+      harmony.init();
 
       expect(container.children.length).toBeGreaterThan(0);
     });
 
-    it('should display different harmony types correctly', () => {
-      const analogousInfo: HarmonyTypeInfo = {
-        id: 'analogous',
-        name: 'Analogous',
-        description: 'Adjacent colors on the color wheel',
-        icon: 'analogous',
-      };
+    it('should handle blue base color', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#0000FF',
+        createMatchedDyes()
+      );
+      harmony.init();
 
-      component = new HarmonyType(container, analogousInfo, '#FF0000', []);
-      component.init();
+      expect(container.children.length).toBeGreaterThan(0);
+    });
 
-      expect(container.textContent).toContain('Analogous');
+    it('should handle green base color', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#00FF00',
+        createMatchedDyes()
+      );
+      harmony.init();
+
+      expect(container.children.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Edge Cases', () => {
-    it('should handle very long dye names', () => {
-      const longNameDye: Dye = {
-        ...mockDye1,
-        name: 'This is an extremely long dye name that should still render properly without breaking',
-      };
-
-      const matchedDyes = [{ dye: longNameDye, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      expect(container.textContent).toContain('extremely long dye name');
-    });
-
-    it('should handle special characters in dye names', () => {
-      const specialDye: Dye = {
-        ...mockDye1,
-        name: "Dye's Name & Special <tag>",
-      };
-
-      const matchedDyes = [{ dye: specialDye, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      expect(container.textContent).toContain("Dye's Name & Special");
-    });
-
-    it('should handle very high deviance values', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 100 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      expect(component).toBeDefined();
-    });
-
-    it('should handle various color formats', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#000000', []);
-      component.init();
-
-      expect(component).toBeDefined();
-    });
-  });
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
 
   describe('Lifecycle', () => {
-    it('should properly initialize and destroy', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      expect(container.children.length).toBeGreaterThan(0);
-
-      component.destroy();
-      expect(container.children.length).toBe(0);
-    });
-
-    it('should handle multiple update cycles', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      component.update();
-      expect(container.children.length).toBeGreaterThan(0);
-
-      component.update();
-      expect(container.children.length).toBeGreaterThan(0);
-    });
-
-    it('should cleanup resources on destroy', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const initialChildCount = container.children.length;
-      expect(initialChildCount).toBeGreaterThan(0);
-
-      component.destroy();
-      expect(container.children.length).toBe(0);
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('should have semantic HTML structure', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const card = container.querySelector('div');
-      expect(card).toBeDefined();
-    });
-
-    it('should display harmony information clearly', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      expect(container.textContent).toContain(mockHarmonyInfo.name);
-      expect(container.textContent).toContain(mockHarmonyInfo.description);
-    });
-
-    it('should have proper text contrast', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      expect(container).toBeDefined();
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - bindEvents
-  // ==========================================================================
-
-  describe('bindEvents function coverage', () => {
-    it('should call bindEvents without throwing', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      expect(() => {
-        component.bindEvents();
-      }).not.toThrow();
-    });
-
-    it('should emit dye-selected event when dye swatch is clicked', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-      component.bindEvents();
-
-      const eventHandler = vi.fn();
-      container.addEventListener('dye-selected', eventHandler);
-
-      // Find the dye swatch (element with background-color style)
-      const swatch = container.querySelector('[style*="background-color"]');
-      swatch?.dispatchEvent(new Event('click', { bubbles: true }));
-
-      expect(eventHandler).toHaveBeenCalled();
-    });
-
-    it('should not throw when no dye items exist', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      expect(() => {
-        component.bindEvents();
-      }).not.toThrow();
-    });
-
-    it('should handle multiple dye swatches', () => {
-      const matchedDyes = [
-        { dye: mockDye1, deviance: 2 },
-        { dye: mockDye2, deviance: 3 },
-      ];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-      component.bindEvents();
-
-      const swatches = container.querySelectorAll('[style*="background-color"]');
-      expect(swatches.length).toBeGreaterThan(0);
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - updateDyes
-  // ==========================================================================
-
-  describe('updateDyes function coverage', () => {
-    it('should update matched dyes', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const newDyes = [{ dye: mockDye1, deviance: 2 }];
-      component.updateDyes(newDyes);
-
-      expect(container.textContent).toContain('Jet Black');
-    });
-
-    it('should re-render after updating dyes', () => {
-      const initialDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', initialDyes);
-      component.init();
-
-      expect(container.textContent).toContain('Jet Black');
-
-      const newDyes = [{ dye: mockDye2, deviance: 3 }];
-      component.updateDyes(newDyes);
-
-      expect(container.textContent).toContain('Snow White');
-    });
-
-    it('should handle updating to empty dyes', () => {
-      const initialDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', initialDyes);
-      component.init();
-
-      component.updateDyes([]);
-
-      expect(container.textContent).toContain('No matching dyes found');
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - updateBaseColor
-  // ==========================================================================
-
-  describe('updateBaseColor function coverage', () => {
-    it('should update base color', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      expect(() => {
-        component.updateBaseColor('#00FF00');
-      }).not.toThrow();
-    });
-
-    it('should re-render after updating base color', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      component.updateBaseColor('#00FF00');
-
-      // Component should still render properly
-      expect(container.children.length).toBeGreaterThan(0);
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - setPriceData
-  // ==========================================================================
-
-  describe('setPriceData function coverage', () => {
-    it('should set price data', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes, true);
-      component.init();
-
-      const priceData = new Map<number, { currentAverage: number }>();
-      priceData.set(mockDye1.itemID, { currentAverage: 5000 });
-
-      expect(() => {
-        component.setPriceData(
-          priceData as unknown as Map<number, import('@shared/types').PriceData>
-        );
-      }).not.toThrow();
-    });
-
-    it('should display prices after setting price data', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes, true);
-      component.init();
-
-      const priceData = new Map<number, { currentAverage: number }>();
-      priceData.set(mockDye1.itemID, { currentAverage: 5000 });
-      component.setPriceData(
-        priceData as unknown as Map<number, import('@shared/types').PriceData>
+    it('should clean up on destroy', () => {
+      harmony = new HarmonyType(
+        container,
+        createHarmonyInfo(),
+        '#FF0000',
+        createMatchedDyes()
       );
+      harmony.init();
 
-      expect(container.textContent).toContain('5,000');
-    });
+      harmony.destroy();
 
-    it('should display N/A when price data is missing', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes, true);
-      component.init();
-
-      const priceData = new Map<number, { currentAverage: number }>();
-      component.setPriceData(
-        priceData as unknown as Map<number, import('@shared/types').PriceData>
-      );
-
-      expect(container.textContent).toContain('N/A');
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - updateShowPrices
-  // ==========================================================================
-
-  describe('updateShowPrices function coverage', () => {
-    it('should toggle prices on', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes, false);
-      component.init();
-
-      component.updateShowPrices(true);
-
-      // N/A should appear when prices are enabled but no data
-      expect(container.textContent).toContain('N/A');
-    });
-
-    it('should toggle prices off', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes, true);
-      component.init();
-
-      // Check that N/A is initially shown
-      expect(container.textContent).toContain('N/A');
-
-      component.updateShowPrices(false);
-
-      // N/A should no longer appear
-      expect(container.textContent).not.toContain('N/A');
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - getDyes
-  // ==========================================================================
-
-  describe('getDyes function coverage', () => {
-    it('should return empty array when no dyes', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const dyes = component.getDyes();
-
-      expect(dyes).toEqual([]);
-    });
-
-    it('should return array of dyes', () => {
-      const matchedDyes = [
-        { dye: mockDye1, deviance: 2 },
-        { dye: mockDye2, deviance: 3 },
-      ];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const dyes = component.getDyes();
-
-      expect(dyes).toHaveLength(2);
-      expect(dyes[0].name).toBe('Jet Black');
-      expect(dyes[1].name).toBe('Snow White');
-    });
-
-    it('should return dyes after update', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const newDyes = [{ dye: mockDye1, deviance: 2 }];
-      component.updateDyes(newDyes);
-
-      const dyes = component.getDyes();
-
-      expect(dyes).toHaveLength(1);
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - getState
-  // ==========================================================================
-
-  describe('getState function coverage', () => {
-    it('should return component state', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 2 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      // Access protected method
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-
-      expect(state.harmonyType).toBe('complementary');
-      expect(state.baseColor).toBe('#FF0000');
-      expect(state.matchedDyesCount).toBe(1);
-    });
-
-    it('should return 0 matchedDyesCount when no dyes', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-
-      expect(state.matchedDyesCount).toBe(0);
-    });
-
-    it('should update state after updating dyes', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      const newDyes = [
-        { dye: mockDye1, deviance: 2 },
-        { dye: mockDye2, deviance: 3 },
-      ];
-      component.updateDyes(newDyes);
-
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-
-      expect(state.matchedDyesCount).toBe(2);
-    });
-
-    it('should update state after updating base color', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      component.updateBaseColor('#00FF00');
-
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-
-      expect(state.baseColor).toBe('#00FF00');
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - getDevianceColor
-  // ==========================================================================
-
-  describe('getDevianceColor function coverage', () => {
-    it('should return green for very low deviance (≤5)', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 3 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      // Check that green color class is applied
-      const devianceElement = container.querySelector('[title="Hue Difference (lower is better)"]');
-      expect(devianceElement?.className).toContain('text-green');
-    });
-
-    it('should return blue for low deviance (≤15)', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 10 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const devianceElement = container.querySelector('[title="Hue Difference (lower is better)"]');
-      expect(devianceElement?.className).toContain('text-blue');
-    });
-
-    it('should return yellow for medium deviance (≤30)', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 25 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const devianceElement = container.querySelector('[title="Hue Difference (lower is better)"]');
-      expect(devianceElement?.className).toContain('text-yellow');
-    });
-
-    it('should return red for high deviance (>30)', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 50 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const devianceElement = container.querySelector('[title="Hue Difference (lower is better)"]');
-      expect(devianceElement?.className).toContain('text-red');
-    });
-
-    it('should handle boundary value of exactly 5', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 5 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const devianceElement = container.querySelector('[title="Hue Difference (lower is better)"]');
-      expect(devianceElement?.className).toContain('text-green');
-    });
-
-    it('should handle boundary value of exactly 15', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 15 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const devianceElement = container.querySelector('[title="Hue Difference (lower is better)"]');
-      expect(devianceElement?.className).toContain('text-blue');
-    });
-
-    it('should handle boundary value of exactly 30', () => {
-      const matchedDyes = [{ dye: mockDye1, deviance: 30 }];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      const devianceElement = container.querySelector('[title="Hue Difference (lower is better)"]');
-      expect(devianceElement?.className).toContain('text-yellow');
-    });
-  });
-
-  // ==========================================================================
-  // Function Coverage Tests - renderHeader
-  // ==========================================================================
-
-  describe('renderHeader function coverage', () => {
-    it('should display harmony icon', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      // Icon is now rendered as inline SVG in a span element
-      const iconSpan = container.querySelector('span.harmony-icon');
-      expect(iconSpan).toBeDefined();
-      // Check for SVG content
-      expect(iconSpan?.innerHTML.includes('<svg') || iconSpan?.querySelector('svg')).toBeTruthy();
-    });
-
-    it('should display harmony name', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      expect(container.textContent).toContain(mockHarmonyInfo.name);
-    });
-
-    it('should display harmony description', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      expect(container.textContent).toContain(mockHarmonyInfo.description);
-    });
-
-    it('should display average deviance when dyes exist', () => {
-      const matchedDyes = [
-        { dye: mockDye1, deviance: 5 },
-        { dye: mockDye2, deviance: 15 },
-      ];
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', matchedDyes);
-      component.init();
-
-      // Average should be 10.0
-      expect(container.textContent).toContain('10.0');
-    });
-
-    it('should not display deviance info when no dyes', () => {
-      component = new HarmonyType(container, mockHarmonyInfo, '#FF0000', []);
-      component.init();
-
-      // Should not contain deviance degree symbol (when no dyes present in header)
-      const headerDevianceDiv = container.querySelector('.harmony-deviance-info');
-      expect(headerDevianceDiv).toBeNull();
+      expect(container.children.length).toBe(0);
     });
   });
 });

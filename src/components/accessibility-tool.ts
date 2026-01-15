@@ -1769,22 +1769,6 @@ export class AccessibilityTool extends BaseComponent {
   }
 
   /**
-   * Get distinguishability styles (color and background) based on score
-   */
-  private getDistinguishabilityStyles(score: number): { color: string; bgColor: string } {
-    if (score >= 60) {
-      return { color: '#22c55e', bgColor: 'rgba(34, 197, 94, 0.1)' }; // Good - green
-    }
-    if (score >= 40) {
-      return { color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)' }; // OK - blue
-    }
-    if (score >= 20) {
-      return { color: '#eab308', bgColor: 'rgba(234, 179, 8, 0.1)' }; // Warning - yellow
-    }
-    return { color: '#ef4444', bgColor: 'rgba(239, 68, 68, 0.1)' }; // Critical - red
-  }
-
-  /**
    * Get CSS class name for distinguishability score
    */
   private getDistinguishabilityClass(score: number): string {
@@ -2309,31 +2293,4 @@ export class AccessibilityTool extends BaseComponent {
     };
   }
 
-  // ============================================================================
-  // Helper Methods
-  // ============================================================================
-
-  /**
-   * Get WCAG badge inline style
-   */
-  private getWCAGBadgeStyle(level: string): string {
-    switch (level) {
-      case 'AAA':
-        return 'background: #22c55e20; color: #22c55e;';
-      case 'AA':
-        return 'background: #3b82f620; color: #3b82f6;';
-      default:
-        return 'background: #ef444420; color: #ef4444;';
-    }
-  }
-
-  /**
-   * Get distinguishability color based on score
-   */
-  private getDistinguishabilityColor(score: number): string {
-    if (score >= 60) return '#22c55e';
-    if (score >= 40) return '#3b82f6';
-    if (score >= 20) return '#eab308';
-    return '#ef4444';
-  }
 }

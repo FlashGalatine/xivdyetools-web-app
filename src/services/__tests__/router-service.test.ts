@@ -455,7 +455,7 @@ describe('RouterService', () => {
       expect(route).toBeDefined();
       expect(route?.id).toBe('harmony');
       expect(route?.path).toBe('/harmony');
-      expect(route?.title).toBe('Color Harmony');
+      expect(route?.title).toBe('Harmony Explorer');
     });
 
     it('should return undefined for invalid tool', () => {

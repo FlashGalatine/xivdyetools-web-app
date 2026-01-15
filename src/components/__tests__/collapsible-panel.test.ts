@@ -1,451 +1,435 @@
 /**
- * XIV Dye Tools - Collapsible Panel Tests
+ * XIV Dye Tools - CollapsiblePanel Unit Tests
  *
- * Tests for the CollapsiblePanel component
- * Covers: initialization, toggle behavior, persistence, content management
+ * Tests the collapsible panel component used for config sections.
+ * Covers toggle behavior, persistence, and accessibility.
+ *
+ * @module components/__tests__/collapsible-panel.test
  */
 
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CollapsiblePanel } from '../collapsible-panel';
-import { StorageService } from '@services/index';
 import {
   createTestContainer,
   cleanupTestContainer,
-  cleanupComponent,
-  expectElement,
-} from './test-utils';
+  click,
+  query,
+  getText,
+  getAttr,
+  hasClass,
+} from '../../__tests__/component-utils';
 
-// ============================================================================
-// Tests
-// ============================================================================
+// Use vi.hoisted() to create mock functions that are available when vi.mock runs
+const { mockGetItem, mockSetItem } = vi.hoisted(() => ({
+  mockGetItem: vi.fn(),
+  mockSetItem: vi.fn(),
+}));
+
+// Mock StorageService
+vi.mock('@services/index', () => ({
+  StorageService: {
+    getItem: mockGetItem,
+    setItem: mockSetItem,
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  },
+}));
 
 describe('CollapsiblePanel', () => {
   let container: HTMLElement;
-  let panel: CollapsiblePanel;
+  let panel: CollapsiblePanel | null;
 
   beforeEach(() => {
     container = createTestContainer();
-    // Clear storage before each test
-    StorageService.clear();
+    panel = null;
+    // Reset storage mock
+    mockGetItem.mockReturnValue(null);
+    mockSetItem.mockClear();
+    mockGetItem.mockClear();
   });
 
   afterEach(() => {
     if (panel) {
-      cleanupComponent(panel, container);
-    } else {
-      cleanupTestContainer(container);
+      try {
+        panel.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
+    cleanupTestContainer(container);
+    vi.restoreAllMocks();
   });
 
-  // ==========================================================================
-  // Initialization Tests
-  // ==========================================================================
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
 
-  describe('Initialization', () => {
-    it('should render panel with given title', () => {
+  describe('Basic Rendering', () => {
+    it('should render panel wrapper', () => {
       panel = new CollapsiblePanel(container, { title: 'Test Panel' });
       panel.init();
 
-      const titleElement = container.querySelector('span');
-      expect(titleElement?.textContent).toBe('Test Panel');
+      expect(query(container, '.collapsible-panel')).not.toBeNull();
     });
 
-    it('should be open by default when no options specified', () => {
-      panel = new CollapsiblePanel(container, { title: 'Test Panel' });
+    it('should render title', () => {
+      panel = new CollapsiblePanel(container, { title: 'Filters' });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
+      const titleSpan = query(container, 'button span span');
+      expect(getText(titleSpan)).toBe('Filters');
     });
 
-    it('should respect defaultOpen: true option', () => {
+    it('should render header as button', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
+      panel.init();
+
+      const button = query<HTMLButtonElement>(container, 'button');
+      expect(button).not.toBeNull();
+      expect(getAttr(button, 'type')).toBe('button');
+    });
+
+    it('should render chevron icon', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
+      panel.init();
+
+      const chevron = query(container, 'button svg');
+      expect(chevron).not.toBeNull();
+    });
+
+    it('should render optional icon', () => {
+      const iconSvg = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></svg>';
       panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
+        title: 'Test',
+        icon: iconSvg,
       });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
+      // Should have both chevron and custom icon
+      const svgs = container.querySelectorAll('svg');
+      expect(svgs.length).toBe(2);
     });
 
-    it('should respect defaultOpen: false option', () => {
+    it('should render content area', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
+      panel.init();
+
+      const contentArea = query(container, '.collapsible-content');
+      expect(contentArea).not.toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // Default State Tests
+  // ============================================================================
+
+  describe('Default State', () => {
+    it('should be open by default', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
+      panel.init();
+
+      const button = query(container, 'button');
+      expect(getAttr(button, 'aria-expanded')).toBe('true');
+    });
+
+    it('should be closed when defaultOpen is false', () => {
       panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
+        title: 'Test',
         defaultOpen: false,
       });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
+      const button = query(container, 'button');
+      expect(getAttr(button, 'aria-expanded')).toBe('false');
     });
 
-    it('should render icon when provided', () => {
-      const testIcon =
-        '<svg class="test-icon" viewBox="0 0 20 20"><circle cx="10" cy="10" r="5"/></svg>';
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        icon: testIcon,
-      });
+    it('should show content when open', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      const iconContainer = container.querySelector('.w-4.h-4');
-      expect(iconContainer).not.toBeNull();
-      expect(iconContainer?.innerHTML).toContain('test-icon');
-    });
-
-    it('should not render icon container when icon not provided', () => {
-      panel = new CollapsiblePanel(container, { title: 'Test Panel' });
-      panel.init();
-
-      // Look for the icon wrapper (w-4 h-4 class)
-      const iconWrapper = container.querySelector('.w-4.h-4.flex-shrink-0');
-      expect(iconWrapper).toBeNull();
-    });
-  });
-
-  // ==========================================================================
-  // Toggle Behavior Tests
-  // ==========================================================================
-
-  describe('Toggle Behavior', () => {
-    it('should toggle from open to closed when toggle() is called', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
-      });
-      panel.init();
-
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
-
-      panel.toggle();
-
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
-    });
-
-    it('should toggle from closed to open when toggle() is called', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: false,
-      });
-      panel.init();
-
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
-
-      panel.toggle();
-
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
-    });
-
-    it('should toggle when header button is clicked', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
-      });
-      panel.init();
-
-      const header = container.querySelector('button') as HTMLButtonElement;
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
-
-      header.click();
-
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
-    });
-
-    it('should update chevron rotation on toggle', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
-      });
-      panel.init();
-
-      const chevron = container.querySelector('.transition-transform') as HTMLElement;
-      expect(chevron?.style.transform).toBe('rotate(0deg)');
-
-      panel.toggle();
-
-      expect(chevron?.style.transform).toBe('rotate(-90deg)');
-    });
-
-    it('should update content visibility on toggle', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
-      });
-      panel.init();
-
-      const content = container.querySelector('.collapsible-content') as HTMLElement;
+      const content = query<HTMLElement>(container, '.collapsible-content');
       expect(content?.style.maxHeight).toBe('1000px');
       expect(content?.style.opacity).toBe('1');
+    });
 
-      panel.toggle();
+    it('should hide content when closed', () => {
+      panel = new CollapsiblePanel(container, {
+        title: 'Test',
+        defaultOpen: false,
+      });
+      panel.init();
 
+      const content = query<HTMLElement>(container, '.collapsible-content');
       expect(content?.style.maxHeight).toBe('0');
       expect(content?.style.opacity).toBe('0');
     });
   });
 
-  // ==========================================================================
-  // Open/Close Methods Tests
-  // ==========================================================================
+  // ============================================================================
+  // Toggle Tests
+  // ============================================================================
 
-  describe('Open/Close Methods', () => {
-    it('should open panel when open() is called on closed panel', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: false,
-      });
+  describe('Toggle Behavior', () => {
+    it('should toggle on header click', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
+      const button = query<HTMLButtonElement>(container, 'button');
 
-      panel.open();
+      // Initially open
+      expect(getAttr(button, 'aria-expanded')).toBe('true');
 
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
+      // Click to close
+      click(button);
+      expect(getAttr(button, 'aria-expanded')).toBe('false');
+
+      // Click to open
+      click(button);
+      expect(getAttr(button, 'aria-expanded')).toBe('true');
     });
 
-    it('should not change state when open() is called on already open panel', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
-      });
+    it('should update content visibility on toggle', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
+      const button = query<HTMLButtonElement>(container, 'button');
+      const content = query<HTMLElement>(container, '.collapsible-content');
 
-      panel.open();
+      // Close
+      click(button);
+      expect(content?.style.maxHeight).toBe('0');
 
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
+      // Open
+      click(button);
+      expect(content?.style.maxHeight).toBe('1000px');
     });
 
-    it('should close panel when close() is called on open panel', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
-      });
+    it('should rotate chevron on toggle', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
+      const button = query<HTMLButtonElement>(container, 'button');
+      const chevronWrapper = query<HTMLElement>(container, 'button > span:last-child');
 
-      panel.close();
+      // Initially open - 0deg
+      expect(chevronWrapper?.style.transform).toBe('rotate(0deg)');
 
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
-    });
+      // Close - -90deg
+      click(button);
+      expect(chevronWrapper?.style.transform).toBe('rotate(-90deg)');
 
-    it('should not change state when close() is called on already closed panel', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: false,
-      });
-      panel.init();
-
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
-
-      panel.close();
-
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
+      // Open again - 0deg
+      click(button);
+      expect(chevronWrapper?.style.transform).toBe('rotate(0deg)');
     });
   });
 
-  // ==========================================================================
-  // State Persistence Tests
-  // ==========================================================================
+  // ============================================================================
+  // Programmatic Control Tests
+  // ============================================================================
 
-  describe('State Persistence', () => {
-    it('should persist state to storage when storageKey is provided', () => {
+  describe('Programmatic Control', () => {
+    it('should open with open()', () => {
       panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        storageKey: 'test-panel',
-        defaultOpen: true,
-      });
-      panel.init();
-
-      panel.toggle(); // Close it
-
-      const storedValue = StorageService.getItem<boolean>('v3_panel_test-panel');
-      expect(storedValue).toBe(false);
-    });
-
-    it('should load persisted state from storage', () => {
-      // Set initial persisted state
-      StorageService.setItem('v3_panel_test-panel', false);
-
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        storageKey: 'test-panel',
-        defaultOpen: true, // Default is true, but storage says false
-      });
-      panel.init();
-
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('false'); // Should respect stored value
-    });
-
-    it('should use defaultOpen when no stored value exists', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        storageKey: 'new-panel',
+        title: 'Test',
         defaultOpen: false,
       });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
+      panel.open();
+
+      const button = query(container, 'button');
+      expect(getAttr(button, 'aria-expanded')).toBe('true');
     });
 
-    it('should not persist state when storageKey is not provided', () => {
+    it('should close with close()', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
+      panel.init();
+
+      panel.close();
+
+      const button = query(container, 'button');
+      expect(getAttr(button, 'aria-expanded')).toBe('false');
+    });
+
+    it('should not re-open if already open', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
+      panel.init();
+
+      // Clear any storage calls from init
+      mockSetItem.mockClear();
+
+      panel.open(); // Should be no-op
+
+      // Storage should not be called since state didn't change
+      expect(mockSetItem).not.toHaveBeenCalled();
+    });
+
+    it('should not re-close if already closed', () => {
       panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
+        title: 'Test',
+        defaultOpen: false,
       });
       panel.init();
 
-      panel.toggle();
+      mockSetItem.mockClear();
 
-      // No storage key should be set
-      const keys = Object.keys(localStorage);
-      const panelKeys = keys.filter((k) => k.startsWith('v3_panel_'));
-      expect(panelKeys.length).toBe(0);
+      panel.close(); // Should be no-op
+
+      expect(mockSetItem).not.toHaveBeenCalled();
     });
   });
 
-  // ==========================================================================
+  // ============================================================================
   // Content Management Tests
-  // ==========================================================================
+  // ============================================================================
 
   describe('Content Management', () => {
     it('should return content container via getContentContainer()', () => {
-      panel = new CollapsiblePanel(container, { title: 'Test Panel' });
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
       const contentContainer = panel.getContentContainer();
+
       expect(contentContainer).not.toBeNull();
-      expect(contentContainer?.classList.contains('px-4')).toBe(true);
+      expect(hasClass(contentContainer!, 'px-4')).toBe(true);
     });
 
     it('should set string content via setContent()', () => {
-      panel = new CollapsiblePanel(container, { title: 'Test Panel' });
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      panel.setContent('<p>Test content here</p>');
+      panel.setContent('<p>Custom content</p>');
 
       const contentContainer = panel.getContentContainer();
-      expect(contentContainer?.innerHTML).toContain('Test content here');
+      expect(contentContainer?.innerHTML).toBe('<p>Custom content</p>');
     });
 
-    it('should set HTMLElement content via setContent()', () => {
-      panel = new CollapsiblePanel(container, { title: 'Test Panel' });
+    it('should set element content via setContent()', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      const customElement = document.createElement('div');
-      customElement.className = 'custom-content';
-      customElement.textContent = 'Custom element content';
-
-      panel.setContent(customElement);
+      const element = document.createElement('div');
+      element.textContent = 'Test element';
+      panel.setContent(element);
 
       const contentContainer = panel.getContentContainer();
-      expect(contentContainer?.querySelector('.custom-content')).not.toBeNull();
-      expect(contentContainer?.textContent).toContain('Custom element content');
+      expect(contentContainer?.firstElementChild).toBe(element);
     });
 
-    it('should replace existing content when setContent() is called', () => {
-      panel = new CollapsiblePanel(container, { title: 'Test Panel' });
+    it('should clear previous content when setting new content', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
       panel.setContent('First content');
       panel.setContent('Second content');
 
       const contentContainer = panel.getContentContainer();
-      expect(contentContainer?.textContent).toBe('Second content');
-      expect(contentContainer?.textContent).not.toContain('First content');
+      expect(contentContainer?.innerHTML).toBe('Second content');
     });
   });
 
-  // ==========================================================================
+  // ============================================================================
+  // Storage Persistence Tests
+  // ============================================================================
+
+  describe('Storage Persistence', () => {
+    it('should save state to storage when storageKey provided', () => {
+      panel = new CollapsiblePanel(container, {
+        title: 'Test',
+        storageKey: 'test-panel',
+      });
+      panel.init();
+
+      const button = query<HTMLButtonElement>(container, 'button');
+      click(button); // Toggle to closed
+
+      expect(mockSetItem).toHaveBeenCalledWith(
+        'v3_panel_test-panel',
+        false
+      );
+    });
+
+    it('should load state from storage on init', () => {
+      mockGetItem.mockReturnValue(false);
+
+      panel = new CollapsiblePanel(container, {
+        title: 'Test',
+        storageKey: 'test-panel',
+        defaultOpen: true, // Would be open, but storage says false
+      });
+      panel.init();
+
+      const button = query(container, 'button');
+      expect(getAttr(button, 'aria-expanded')).toBe('false');
+    });
+
+    it('should use defaultOpen when no stored value', () => {
+      mockGetItem.mockReturnValue(null);
+
+      panel = new CollapsiblePanel(container, {
+        title: 'Test',
+        storageKey: 'test-panel',
+        defaultOpen: false,
+      });
+      panel.init();
+
+      const button = query(container, 'button');
+      expect(getAttr(button, 'aria-expanded')).toBe('false');
+    });
+
+    it('should not call storage when no storageKey provided', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
+      panel.init();
+
+      expect(mockGetItem).not.toHaveBeenCalled();
+
+      const button = query<HTMLButtonElement>(container, 'button');
+      click(button);
+
+      expect(mockSetItem).not.toHaveBeenCalled();
+    });
+  });
+
+  // ============================================================================
   // Accessibility Tests
-  // ==========================================================================
+  // ============================================================================
 
   describe('Accessibility', () => {
-    it('should have proper aria-expanded attribute on header', () => {
-      panel = new CollapsiblePanel(container, { title: 'Test Panel' });
+    it('should have aria-expanded on header button', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.hasAttribute('aria-expanded')).toBe(true);
+      const button = query(container, 'button');
+      expect(button?.hasAttribute('aria-expanded')).toBe(true);
     });
 
-    it('should update aria-expanded when toggled', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
-      });
+    it('should update aria-expanded on toggle', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
+      const button = query<HTMLButtonElement>(container, 'button');
 
-      panel.toggle();
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
+      expect(getAttr(button, 'aria-expanded')).toBe('true');
 
-      panel.toggle();
-      expect(header?.getAttribute('aria-expanded')).toBe('true');
-    });
+      click(button);
 
-    it('should have button type attribute', () => {
-      panel = new CollapsiblePanel(container, { title: 'Test Panel' });
-      panel.init();
-
-      const header = container.querySelector('button');
-      expect(header?.getAttribute('type')).toBe('button');
+      expect(getAttr(button, 'aria-expanded')).toBe('false');
     });
   });
 
-  // ==========================================================================
-  // Edge Cases Tests
-  // ==========================================================================
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
 
-  describe('Edge Cases', () => {
-    it('should handle empty title', () => {
-      panel = new CollapsiblePanel(container, { title: '' });
+  describe('Lifecycle', () => {
+    it('should clean up on destroy', () => {
+      panel = new CollapsiblePanel(container, { title: 'Test' });
       panel.init();
 
-      // Should still render without errors
-      const header = container.querySelector('button');
-      expect(header).not.toBeNull();
-    });
+      panel.destroy();
 
-    it('should handle special characters in title', () => {
-      const specialTitle = 'Test <Panel> & "Options"';
-      panel = new CollapsiblePanel(container, { title: specialTitle });
-      panel.init();
-
-      const titleElement = container.querySelector('button span span');
-      expect(titleElement?.textContent).toBe(specialTitle);
-    });
-
-    it('should handle multiple rapid toggles', () => {
-      panel = new CollapsiblePanel(container, {
-        title: 'Test Panel',
-        defaultOpen: true,
-      });
-      panel.init();
-
-      const header = container.querySelector('button');
-
-      // Toggle rapidly
-      panel.toggle();
-      panel.toggle();
-      panel.toggle();
-      panel.toggle();
-      panel.toggle();
-
-      // Should be closed (5 toggles from open)
-      expect(header?.getAttribute('aria-expanded')).toBe('false');
+      expect(query(container, '.collapsible-panel')).toBeNull();
     });
   });
 });

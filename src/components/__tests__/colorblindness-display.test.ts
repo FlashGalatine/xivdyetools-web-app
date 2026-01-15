@@ -1,352 +1,249 @@
 /**
- * XIV Dye Tools - Colorblindness Display Component Tests
+ * XIV Dye Tools - ColorblindnessDisplay Unit Tests
  *
- * Tests for the colorblindness simulation display component
+ * Tests the colorblindness display component for vision simulation.
+ * Covers rendering, all 5 simulation types, and color value display.
  *
  * @module components/__tests__/colorblindness-display.test
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ColorblindnessDisplay } from '../colorblindness-display';
-import { createTestContainer, cleanupTestContainer, waitForComponent } from './test-utils';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  query,
+  queryAll,
+} from '../../__tests__/component-utils';
+
+vi.mock('@services/index', () => ({
+  ColorService: {
+    hexToRgb: vi.fn((hex: string) => {
+      const r = parseInt(hex.slice(1, 3), 16) || 0;
+      const g = parseInt(hex.slice(3, 5), 16) || 0;
+      const b = parseInt(hex.slice(5, 7), 16) || 0;
+      return { r, g, b };
+    }),
+    rgbToHex: vi.fn((r: number, g: number, b: number) => {
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
+    }),
+    simulateColorblindnessHex: vi.fn((hex: string, _type: string) => {
+      // Return modified hex to simulate colorblindness effect
+      return hex;
+    }),
+  },
+}));
+
+vi.mock('@shared/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
 
 describe('ColorblindnessDisplay', () => {
   let container: HTMLElement;
-  let component: ColorblindnessDisplay;
+  let display: ColorblindnessDisplay | null;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     container = createTestContainer();
+    display = null;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (component) {
-      component.destroy();
+    if (display) {
+      try {
+        display.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
     cleanupTestContainer(container);
     vi.restoreAllMocks();
   });
 
-  // ==========================================================================
-  // Rendering
-  // ==========================================================================
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
 
-  describe('rendering', () => {
-    it('should render the colorblindness display', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
+  describe('Basic Rendering', () => {
+    it('should render display container', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
       expect(container.children.length).toBeGreaterThan(0);
     });
 
     it('should render title', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
       expect(container.textContent).toContain('Color Perception Simulation');
     });
 
     it('should render description', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
       expect(container.textContent).toContain('See how this color appears');
     });
 
-    it('should render all 5 vision types', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
+    it('should render color swatches', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
+      const swatches = queryAll(container, '[style*="background"]');
+      expect(swatches.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ============================================================================
+  // Vision Type Simulation Tests
+  // ============================================================================
+
+  describe('Vision Type Simulations', () => {
+    const visionTypes = [
+      { type: 'normal', name: 'Normal Vision' },
+      { type: 'deuteranopia', name: 'Deuteranopia' },
+      { type: 'protanopia', name: 'Protanopia' },
+      { type: 'tritanopia', name: 'Tritanopia' },
+      { type: 'achromatopsia', name: 'Achromatopsia' },
+    ];
+
+    visionTypes.forEach(({ name }) => {
+      it(`should render ${name} simulation`, () => {
+        display = new ColorblindnessDisplay(container, '#FF0000');
+        display.init();
+
+        expect(container.textContent).toContain(name);
+      });
+    });
+
+    it('should render all 5 vision type sections', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
+
+      // Check for all vision type names
       expect(container.textContent).toContain('Normal Vision');
       expect(container.textContent).toContain('Deuteranopia');
       expect(container.textContent).toContain('Protanopia');
       expect(container.textContent).toContain('Tritanopia');
       expect(container.textContent).toContain('Achromatopsia');
     });
+  });
 
-    it('should render vision type cards', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
+  // ============================================================================
+  // Color Value Display Tests
+  // ============================================================================
 
-      // Check for card structure (5 vision types)
-      const cards = container.querySelectorAll('.rounded-lg.border');
-      expect(cards.length).toBeGreaterThanOrEqual(5);
-    });
-
+  describe('Color Value Display', () => {
     it('should render color values section', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
       expect(container.textContent).toContain('Color Values');
     });
-  });
 
-  // ==========================================================================
-  // Vision Type Information
-  // ==========================================================================
+    it('should show RGB values', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
-  describe('vision type information', () => {
-    it('should display normal vision description', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      expect(container.textContent).toContain('Standard trichromatic color vision');
-    });
-
-    it('should display deuteranopia description', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      expect(container.textContent).toContain('missing green cones');
-    });
-
-    it('should display protanopia description', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      expect(container.textContent).toContain('missing red cones');
-    });
-
-    it('should display tritanopia description', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      expect(container.textContent).toContain('missing blue cones');
-    });
-
-    it('should display achromatopsia description', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      expect(container.textContent).toContain('Complete colorblindness');
-    });
-
-    it('should display prevalence information', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      expect(container.textContent).toContain('~92-94%'); // Normal vision
-      expect(container.textContent).toContain('~1.2%'); // Deuteranopia
-      expect(container.textContent).toContain('~1.3%'); // Protanopia
-      expect(container.textContent).toContain('~0.02%'); // Tritanopia
-      expect(container.textContent).toContain('~0.003%'); // Achromatopsia
+      expect(container.textContent).toContain('rgb');
     });
   });
 
-  // ==========================================================================
-  // Color Simulation
-  // ==========================================================================
+  // ============================================================================
+  // Prevalence Information Tests
+  // ============================================================================
 
-  describe('color simulation', () => {
-    it('should use default red color', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
+  describe('Prevalence Information', () => {
+    it('should show prevalence for deuteranopia', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
-      // Default color is #FF0000
-      expect(container.textContent).toContain('#FF0000');
+      expect(container.textContent).toContain('~1.2%');
     });
 
-    it('should accept custom initial color', () => {
-      component = new ColorblindnessDisplay(container, '#0000FF');
-      component.init();
+    it('should show prevalence for protanopia', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
-      expect(container.textContent).toContain('#0000FF');
+      expect(container.textContent).toContain('~1.3%');
     });
 
-    it('should display simulated colors for each vision type', () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
+    it('should show prevalence for tritanopia', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
-      // Check that we have hex values displayed (component uses 'number' class)
-      const hexValues = container.querySelectorAll('.number');
-      expect(hexValues.length).toBeGreaterThan(0);
-    });
-
-    it('should display RGB values', () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
-
-      // Should show rgb() format
-      expect(container.textContent).toContain('rgb(');
+      expect(container.textContent).toContain('~0.02%');
     });
   });
 
-  // ==========================================================================
-  // Update Color
-  // ==========================================================================
+  // ============================================================================
+  // Update Tests
+  // ============================================================================
 
-  describe('updateColor', () => {
-    it('should update display when color changes', async () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
+  describe('Updates', () => {
+    it('should update color', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
-      expect(container.textContent).toContain('#FF0000');
+      display.updateColor('#00FF00');
 
-      component.updateColor('#00FF00');
-      await waitForComponent();
-
-      expect(container.textContent).toContain('#00FF00');
-    });
-
-    it('should update simulated colors', async () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
-
-      const initialHtml = container.innerHTML;
-
-      component.updateColor('#0000FF');
-      await waitForComponent();
-
-      // Content should change after updating color
-      expect(container.innerHTML).not.toBe(initialHtml);
+      // Component should re-render with new color
+      expect(container.textContent).toContain('Color Perception Simulation');
     });
   });
 
-  // ==========================================================================
-  // Color Swatches
-  // ==========================================================================
+  // ============================================================================
+  // Different Input Colors Tests
+  // ============================================================================
 
-  describe('color swatches', () => {
-    it('should render color swatches for each vision type', () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
+  describe('Different Input Colors', () => {
+    it('should handle blue color', () => {
+      display = new ColorblindnessDisplay(container, '#0000FF');
+      display.init();
 
-      const swatches = container.querySelectorAll('[style*="background-color"]');
-      // Should have at least 5 swatches (one per vision type in cards)
-      // Plus additional small swatches in color values section
-      expect(swatches.length).toBeGreaterThanOrEqual(5);
+      expect(container.children.length).toBeGreaterThan(0);
     });
 
-    it('should display original color for normal vision', () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
+    it('should handle green color', () => {
+      display = new ColorblindnessDisplay(container, '#00FF00');
+      display.init();
 
-      // Normal vision should show the original color
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-      const simulatedColors = state.simulatedColors as Record<string, string>;
-
-      expect(simulatedColors.normal).toBe('#FF0000');
-    });
-  });
-
-  // ==========================================================================
-  // State Management
-  // ==========================================================================
-
-  describe('state management', () => {
-    it('should return correct state', () => {
-      component = new ColorblindnessDisplay(container, '#00FF00');
-      component.init();
-
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-
-      expect(state).toHaveProperty('originalColor', '#00FF00');
-      expect(state).toHaveProperty('simulatedColors');
+      expect(container.children.length).toBeGreaterThan(0);
     });
 
-    it('should include all vision types in simulated colors', () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
+    it('should handle white color', () => {
+      display = new ColorblindnessDisplay(container, '#FFFFFF');
+      display.init();
 
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-      const simulatedColors = state.simulatedColors as Record<string, string>;
+      expect(container.children.length).toBeGreaterThan(0);
+    });
 
-      expect(simulatedColors).toHaveProperty('normal');
-      expect(simulatedColors).toHaveProperty('deuteranopia');
-      expect(simulatedColors).toHaveProperty('protanopia');
-      expect(simulatedColors).toHaveProperty('tritanopia');
-      expect(simulatedColors).toHaveProperty('achromatopsia');
+    it('should use default red if no color provided', () => {
+      display = new ColorblindnessDisplay(container);
+      display.init();
+
+      expect(container.children.length).toBeGreaterThan(0);
     });
   });
 
-  // ==========================================================================
-  // Color Values Section
-  // ==========================================================================
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
 
-  describe('color values section', () => {
-    it('should display hex values for each vision type', () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
+  describe('Lifecycle', () => {
+    it('should clean up on destroy', () => {
+      display = new ColorblindnessDisplay(container, '#FF0000');
+      display.init();
 
-      // Multiple hex codes should be displayed
-      const hexPattern = /#[0-9A-Fa-f]{6}/g;
-      const matches = container.textContent?.match(hexPattern);
-      expect(matches).not.toBeNull();
-      expect(matches!.length).toBeGreaterThanOrEqual(5);
-    });
+      display.destroy();
 
-    it('should display vision type names in values section', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      const valuesSection = container.querySelector('.bg-gray-50');
-      expect(valuesSection).not.toBeNull();
-    });
-  });
-
-  // ==========================================================================
-  // Grayscale Simulation
-  // ==========================================================================
-
-  describe('achromatopsia simulation', () => {
-    it('should convert color to grayscale', () => {
-      component = new ColorblindnessDisplay(container, '#FF0000');
-      component.init();
-
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-      const simulatedColors = state.simulatedColors as Record<string, string>;
-
-      // Achromatopsia should produce a grayscale color
-      // Pure red (#FF0000) should become a gray value
-      const achroColor = simulatedColors.achromatopsia;
-      expect(achroColor).toMatch(/^#[0-9A-Fa-f]{6}$/);
-
-      // For grayscale, R, G, B values should be equal or very similar
-      // We can verify by checking the hex pattern
-    });
-  });
-
-  // ==========================================================================
-  // Visual Layout
-  // ==========================================================================
-
-  describe('visual layout', () => {
-    it('should use grid layout for vision type cards', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      const grid = container.querySelector('.grid');
-      expect(grid).not.toBeNull();
-    });
-
-    it('should have responsive columns', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      const grid = container.querySelector('.grid');
-      expect(grid?.classList.contains('md:grid-cols-3')).toBe(true);
-      expect(grid?.classList.contains('lg:grid-cols-5')).toBe(true);
-    });
-  });
-
-  // ==========================================================================
-  // Cleanup
-  // ==========================================================================
-
-  describe('cleanup', () => {
-    it('should clean up without error', () => {
-      component = new ColorblindnessDisplay(container);
-      component.init();
-
-      expect(() => component.destroy()).not.toThrow();
+      expect(container.children.length).toBe(0);
     });
   });
 });

@@ -477,6 +477,69 @@ describe('TutorialService', () => {
 
       expect(LanguageService.t).toHaveBeenCalledWith('tools.harmony.shortName');
     });
+
+    it('should handle skip button click and mark tutorial complete', () => {
+      (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
+      let capturedContent: HTMLElement | null = null;
+
+      // Capture the modal content
+      (ModalService.show as ReturnType<typeof vi.fn>).mockImplementation((options) => {
+        capturedContent = options.content as HTMLElement;
+        return 'modal-id';
+      });
+
+      TutorialService.promptStart('harmony');
+
+      // Find and click the skip button
+      const buttons = capturedContent?.querySelectorAll('button');
+      const skipButton = buttons?.[0]; // First button is skip
+
+      if (skipButton) {
+        skipButton.click();
+      }
+
+      // Should dismiss modal and mark as complete
+      expect(ModalService.dismissTop).toHaveBeenCalled();
+      expect(StorageService.setItem).toHaveBeenCalledWith(
+        expect.stringContaining('tutorial_harmony'),
+        expect.anything()
+      );
+    });
+
+    it('should handle start button click and begin tutorial', () => {
+      vi.useFakeTimers();
+      (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
+      let capturedContent: HTMLElement | null = null;
+
+      // Capture the modal content
+      (ModalService.show as ReturnType<typeof vi.fn>).mockImplementation((options) => {
+        capturedContent = options.content as HTMLElement;
+        return 'modal-id';
+      });
+
+      TutorialService.promptStart('harmony');
+
+      // Find and click the start button
+      const buttons = capturedContent?.querySelectorAll('button');
+      const startButton = buttons?.[1]; // Second button is start
+
+      if (startButton) {
+        startButton.click();
+      }
+
+      // Should dismiss modal
+      expect(ModalService.dismissTop).toHaveBeenCalled();
+
+      // Advance timer to trigger tutorial start
+      vi.advanceTimersByTime(300);
+
+      // Tutorial should be started
+      expect(TutorialService.getState().isActive).toBe(true);
+      expect(TutorialService.getState().currentTool).toBe('harmony');
+
+      TutorialService.skip();
+      vi.useRealTimers();
+    });
   });
 
   // ============================================================================

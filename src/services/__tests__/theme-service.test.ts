@@ -54,9 +54,9 @@ describe('ThemeService Integration', () => {
   // ============================================================================
 
   describe('Theme Selection', () => {
-    it('should support all 11 theme variants', () => {
+    it('should support all 12 theme variants', () => {
       const themes = ThemeService.getAllThemes();
-      expect(themes.length).toBe(11);
+      expect(themes.length).toBe(12);
     });
 
     it('should switch between light and dark themes', () => {
@@ -152,13 +152,18 @@ describe('ThemeService Integration', () => {
       expect(primary).toMatch(/^#[0-9A-Fa-f]{6}$/);
     });
 
-    it('should have valid hex colors in all palettes', () => {
-      const hexPattern = /^#[0-9A-Fa-f]{6}$/;
+    it('should have valid color values in all palettes', () => {
+      // V4 palettes can include hex, rgba, and other CSS color formats
+      const colorPattern = /^(#[0-9A-Fa-f]{6}|rgba?\([^)]+\)|none|[a-z]+)$/i;
       const themes = ThemeService.getAllThemes();
 
       themes.forEach((theme) => {
-        Object.values(theme.palette).forEach((color) => {
-          expect(color).toMatch(hexPattern);
+        Object.entries(theme.palette).forEach(([key, value]) => {
+          // Skip boolean properties like disableBlur
+          if (typeof value === 'boolean') return;
+          // Skip shadow/gradient properties which have complex values
+          if (key.includes('shadow') || key.includes('gradient') || key === 'accentRgb') return;
+          expect(value).toMatch(colorPattern);
         });
       });
     });
@@ -636,5 +641,194 @@ describe('ThemeService Initialize Edge Cases', () => {
 
     const current = ThemeService.getCurrentTheme();
     expect(current).toBeDefined();
+  });
+});
+
+// ==========================================================================
+// Branch Coverage Tests - V4 CSS Property Setting
+// ==========================================================================
+
+describe('ThemeService V4 CSS Properties', () => {
+  beforeEach(() => {
+    if (StorageService.isAvailable()) {
+      StorageService.clear();
+    }
+  });
+
+  it('should set V4 glass blur property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const blurValue = root.style.getPropertyValue('--v4-glass-blur');
+
+    expect(blurValue).toBe('blur(12px)');
+  });
+
+  it('should disable blur for high contrast themes', () => {
+    ThemeService.setTheme('high-contrast-light' as ThemeName);
+
+    const root = document.documentElement;
+    const blurValue = root.style.getPropertyValue('--v4-glass-blur');
+
+    expect(blurValue).toBe('none');
+  });
+
+  it('should set V4 glass background property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const glassValue = root.style.getPropertyValue('--v4-glass-bg');
+
+    expect(glassValue).toBeTruthy();
+  });
+
+  it('should set V4 text header muted property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const textMutedValue = root.style.getPropertyValue('--v4-text-header-muted');
+
+    expect(textMutedValue).toBeTruthy();
+  });
+
+  it('should set V4 accent hover property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const accentHoverValue = root.style.getPropertyValue('--v4-accent-hover');
+
+    expect(accentHoverValue).toBeTruthy();
+  });
+
+  it('should set V4 accent RGB property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const accentRgbValue = root.style.getPropertyValue('--v4-accent-rgb');
+
+    expect(accentRgbValue).toBeTruthy();
+  });
+
+  it('should set V4 shadow soft property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const shadowValue = root.style.getPropertyValue('--v4-shadow-soft');
+
+    expect(shadowValue).toBeTruthy();
+  });
+
+  it('should set V4 shadow glow property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const glowValue = root.style.getPropertyValue('--v4-shadow-glow');
+
+    expect(glowValue).toBeTruthy();
+  });
+
+  it('should set V4 gradient start property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const gradientStart = root.style.getPropertyValue('--v4-gradient-start');
+
+    expect(gradientStart).toBeTruthy();
+  });
+
+  it('should set V4 gradient end property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const gradientEnd = root.style.getPropertyValue('--v4-gradient-end');
+
+    expect(gradientEnd).toBeTruthy();
+  });
+
+  it('should set V4 card gradient end property', () => {
+    ThemeService.setTheme('premium-dark' as ThemeName);
+
+    const root = document.documentElement;
+    const cardGradientEnd = root.style.getPropertyValue('--v4-card-gradient-end');
+
+    expect(cardGradientEnd).toBeTruthy();
+  });
+
+  it('should apply all V4 properties for each theme', () => {
+    const v4Themes: ThemeName[] = [
+      'standard-light',
+      'standard-dark',
+      'premium-dark',
+      'hydaelyn-light',
+      'og-classic-dark',
+      'parchment-light',
+      'cotton-candy',
+      'sugar-riot',
+      'grayscale-light',
+      'grayscale-dark',
+      'high-contrast-light',
+      'high-contrast-dark',
+    ];
+
+    v4Themes.forEach((themeName) => {
+      ThemeService.setTheme(themeName);
+
+      const root = document.documentElement;
+
+      // All themes should set the V4 glass-bg property
+      const glassBg = root.style.getPropertyValue('--v4-glass-bg');
+      expect(glassBg.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+// ==========================================================================
+// Branch Coverage Tests - getRequiredColor
+// ==========================================================================
+
+describe('ThemeService getRequiredColor', () => {
+  it('should return primary color', () => {
+    const primary = ThemeService.getRequiredColor('primary');
+    expect(primary).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('should return background color', () => {
+    const background = ThemeService.getRequiredColor('background');
+    expect(background).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('should return text color', () => {
+    const text = ThemeService.getRequiredColor('text');
+    expect(text).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('should return textHeader color', () => {
+    const textHeader = ThemeService.getRequiredColor('textHeader');
+    expect(textHeader).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('should return border color', () => {
+    const border = ThemeService.getRequiredColor('border');
+    expect(border).toBeTruthy();
+  });
+
+  it('should return backgroundSecondary color', () => {
+    const bgSecondary = ThemeService.getRequiredColor('backgroundSecondary');
+    expect(bgSecondary).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('should return cardBackground color', () => {
+    const cardBg = ThemeService.getRequiredColor('cardBackground');
+    expect(cardBg).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('should return cardHover color', () => {
+    const cardHover = ThemeService.getRequiredColor('cardHover');
+    expect(cardHover).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('should return textMuted color', () => {
+    const textMuted = ThemeService.getRequiredColor('textMuted');
+    expect(textMuted).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
 });

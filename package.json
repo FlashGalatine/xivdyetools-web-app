@@ -18,6 +18,9 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
+    "test:e2e:coverage": "cross-env PLAYWRIGHT_PROJECT_NAME=chromium-coverage playwright test --project=chromium-coverage",
+    "test:e2e:comparison": "playwright test dye-comparison.spec.ts",
+    "test:e2e:mobile": "playwright test --project=mobile-chrome",
     "build:css": "tailwindcss -i ./src/tailwind-input.css -o ./assets/css/tailwind.css",
     "build:css:watch": "tailwindcss -i ./src/tailwind-input.css -o ./assets/css/tailwind.css --watch",
     "check-bundle-size": "node scripts/check-bundle-size.js",
@@ -29,7 +32,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/FlashGalatine/xivdyetools-web-app/issues"
   },
@@ -63,7 +66,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.17",
-    "@xivdyetools/core": "^1.9.0",
+    "@xivdyetools/core": "^1.10.1",
     "@xivdyetools/logger": "^1.0.2",
     "@xivdyetools/types": "^1.5.0",
     "lit": "^3.1.0"

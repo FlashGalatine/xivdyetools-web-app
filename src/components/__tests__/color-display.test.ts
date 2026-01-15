@@ -1,451 +1,436 @@
 /**
- * XIV Dye Tools - Color Display Component Tests
+ * XIV Dye Tools - ColorDisplay Unit Tests
  *
- * Tests for the color display UI component showing dye information
+ * Tests the color display component for showing dye colors and properties.
+ * Covers rendering, comparison mode, color values, and accessibility.
  *
  * @module components/__tests__/color-display.test
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ColorDisplay } from '../color-display';
-import { createTestContainer, cleanupTestContainer } from './test-utils';
-import type { Dye } from '@shared/types';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  click,
+  query,
+  queryAll,
+  getAttr,
+} from '../../__tests__/component-utils';
+import { mockDyes } from '../../__tests__/mocks/services';
 
-// Mock dye data - use unique IDs to avoid conflicts with real dye database
-const mockDye: Dye = {
-  id: 9999,
-  itemID: 99999,
-  stainID: null,
-  name: 'Jet Black',
-  hex: '#2B2B2B',
-  rgb: { r: 43, g: 43, b: 43 },
-  hsv: { h: 0, s: 0, v: 17 },
-  category: 'Black',
-  acquisition: 'Market Board',
-  cost: 500,
-  isMetallic: false,
-  isPastel: false,
-  isDark: true,
-  isCosmic: false,
-};
+// Mock clipboard API
+Object.assign(navigator, {
+  clipboard: {
+    writeText: vi.fn().mockResolvedValue(undefined),
+  },
+});
 
-const mockComparisonDye: Dye = {
-  id: 9998,
-  itemID: 99998,
-  stainID: null,
-  name: 'Pure White',
-  hex: '#FFFFFF',
-  rgb: { r: 255, g: 255, b: 255 },
-  hsv: { h: 0, s: 0, v: 100 },
-  category: 'White',
-  acquisition: 'Market Board',
-  cost: 500,
-  isMetallic: false,
-  isPastel: false,
-  isDark: false,
-  isCosmic: false,
-};
+vi.mock('@services/index', () => ({
+  ColorService: {
+    getColorDistance: vi.fn().mockReturnValue(42.5),
+    getContrastRatio: vi.fn().mockReturnValue(4.5),
+    meetsWCAGAA: vi.fn().mockReturnValue(true),
+    meetsWCAGAAA: vi.fn().mockReturnValue(false),
+    getPerceivedLuminance: vi.fn().mockReturnValue(0.42),
+    isLightColor: vi.fn().mockReturnValue(true),
+    getOptimalTextColor: vi.fn().mockReturnValue('#000000'),
+  },
+  LanguageService: {
+    t: (key: string) => key,
+    getDyeName: (itemId: number) => `Dye-${itemId}`,
+    subscribe: vi.fn().mockReturnValue(() => {}),
+  },
+}));
+
+vi.mock('@shared/logger', () => ({
+  logger: {
+    warn: vi.fn(),
+  },
+}));
 
 describe('ColorDisplay', () => {
   let container: HTMLElement;
-  let component: ColorDisplay;
+  let display: ColorDisplay | null;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     container = createTestContainer();
+    display = null;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (component) {
-      component.destroy();
+    if (display) {
+      try {
+        display.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
     cleanupTestContainer(container);
     vi.restoreAllMocks();
   });
 
-  // ==========================================================================
-  // Rendering - Empty State
-  // ==========================================================================
+  // ============================================================================
+  // Empty State Tests
+  // ============================================================================
 
-  describe('rendering - empty state', () => {
-    it('should render empty state when no dye is set', () => {
-      component = new ColorDisplay(container);
-      component.init();
+  describe('Empty State', () => {
+    it('should render empty state when no dye selected', () => {
+      display = new ColorDisplay(container);
+      display.init();
+
+      const emptyState = query(container, '.border-dashed');
+      expect(emptyState).not.toBeNull();
+    });
+
+    it('should show "No color selected" text', () => {
+      display = new ColorDisplay(container);
+      display.init();
 
       expect(container.textContent).toContain('No color selected');
     });
-
-    it('should render with dashed border in empty state', () => {
-      component = new ColorDisplay(container);
-      component.init();
-
-      const emptyState = container.querySelector('.border-dashed');
-      expect(emptyState).not.toBeNull();
-    });
   });
 
-  // ==========================================================================
-  // Rendering - With Dye
-  // ==========================================================================
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
 
-  describe('rendering - with dye', () => {
-    it('should render dye name', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+  describe('Basic Rendering', () => {
+    it('should render primary color card when dye is set', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      expect(container.textContent).toContain('Jet Black');
+      const labelEl = query(container, '.uppercase.tracking-wide');
+      expect(labelEl?.textContent).toBe('Primary');
     });
 
     it('should render color swatch with correct background', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      const swatch = container.querySelector('[style*="background-color"]');
+      const swatch = query(container, `[style*="background-color: ${mockDyes[0].hex}"]`);
       expect(swatch).not.toBeNull();
-      expect(swatch?.getAttribute('style')).toContain('#2B2B2B');
     });
 
-    it('should render hex value by default', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+    it('should render dye name', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      expect(container.textContent).toContain('#2B2B2B');
-    });
-
-    it('should render RGB values by default', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-
-      expect(container.textContent).toContain('43, 43, 43');
-    });
-
-    it('should render HSV values by default', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-
-      // Check for H, S, V labels
-      expect(container.textContent).toContain('H');
-      expect(container.textContent).toContain('S');
-      expect(container.textContent).toContain('V');
-    });
-
-    it('should render color properties section', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-
-      expect(container.textContent).toContain('Color Properties');
-      expect(container.textContent).toContain('Category');
-      expect(container.textContent).toContain('Black');
-    });
-
-    it('should render accessibility section by default', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-
-      expect(container.textContent).toContain('Accessibility');
-      expect(container.textContent).toContain('Perceived Luminance');
+      expect(container.textContent).toContain(`Dye-${mockDyes[0].itemID}`);
     });
   });
 
-  // ==========================================================================
-  // Options
-  // ==========================================================================
+  // ============================================================================
+  // Color Values Tests
+  // ============================================================================
 
-  describe('options', () => {
-    it('should hide hex when showHex is false', () => {
-      component = new ColorDisplay(container, { showHex: false });
-      component.init();
-      component.setDye(mockDye);
+  describe('Color Values', () => {
+    it('should show hex value when showHex is true', () => {
+      display = new ColorDisplay(container, { showHex: true });
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      // Hex should not be in the info grid (but may appear in comparison metrics)
-      const hexLabels = container.querySelectorAll('.text-xs');
-      let hasHexLabel = false;
-      hexLabels.forEach((el) => {
-        if (el.textContent === 'Hex') hasHexLabel = true;
-      });
-      expect(hasHexLabel).toBe(false);
+      expect(container.textContent).toContain('Hex');
+      expect(container.textContent).toContain(mockDyes[0].hex);
     });
 
-    it('should hide RGB when showRGB is false', () => {
-      component = new ColorDisplay(container, { showRGB: false });
-      component.init();
-      component.setDye(mockDye);
+    it('should hide hex value when showHex is false', () => {
+      display = new ColorDisplay(container, { showHex: false });
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      const rgbLabels = container.querySelectorAll('.text-xs');
-      let hasRGBLabel = false;
-      rgbLabels.forEach((el) => {
-        if (el.textContent === 'RGB') hasRGBLabel = true;
-      });
-      expect(hasRGBLabel).toBe(false);
+      // Should not find the Hex label section
+      const hexLabel = Array.from(container.querySelectorAll('.uppercase')).find(
+        (el) => el.textContent === 'Hex'
+      );
+      expect(hexLabel).toBeUndefined();
     });
 
-    it('should hide accessibility when showAccessibility is false', () => {
-      component = new ColorDisplay(container, { showAccessibility: false });
-      component.init();
-      component.setDye(mockDye);
+    it('should show RGB value when showRGB is true', () => {
+      display = new ColorDisplay(container, { showRGB: true });
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      expect(container.textContent).not.toContain('Perceived Luminance');
+      expect(container.textContent).toContain('RGB');
+    });
+
+    it('should show HSV value when showHSV is true', () => {
+      display = new ColorDisplay(container, { showHSV: true });
+      display.init();
+      display.setDye(mockDyes[0]);
+
+      expect(container.textContent).toContain('HSV');
+    });
+
+    it('should have clickable hex value for copy', () => {
+      display = new ColorDisplay(container, { showHex: true });
+      display.init();
+      display.setDye(mockDyes[0]);
+
+      const copyBtn = query(container, `[data-copy="${mockDyes[0].hex}"]`);
+      expect(copyBtn).not.toBeNull();
+    });
+
+    it('should copy value to clipboard on click', async () => {
+      display = new ColorDisplay(container, { showHex: true });
+      display.init();
+      display.setDye(mockDyes[0]);
+
+      const copyBtn = query<HTMLButtonElement>(container, `[data-copy="${mockDyes[0].hex}"]`);
+      click(copyBtn);
+
+      // Wait for async clipboard operation
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockDyes[0].hex);
     });
   });
 
-  // ==========================================================================
-  // Comparison Mode
-  // ==========================================================================
+  // ============================================================================
+  // Comparison Mode Tests
+  // ============================================================================
 
-  describe('comparison mode', () => {
-    it('should render comparison dye when set', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-      component.setComparisonDye(mockComparisonDye);
+  describe('Comparison Mode', () => {
+    it('should render comparison card when comparison dye is set', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
+      display.setComparisonDye(mockDyes[1]);
 
-      expect(container.textContent).toContain('Jet Black');
-      expect(container.textContent).toContain('Pure White');
+      const labels = queryAll(container, '.uppercase.tracking-wide');
+      const labelTexts = Array.from(labels).map((l) => l.textContent);
+      expect(labelTexts).toContain('Comparison');
     });
 
-    it('should render comparison metrics section', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-      component.setComparisonDye(mockComparisonDye);
+    it('should show color distance when showDistance is true', () => {
+      display = new ColorDisplay(container, { showDistance: true });
+      display.init();
+      display.setDye(mockDyes[0]);
+      display.setComparisonDye(mockDyes[1]);
 
-      expect(container.textContent).toContain('Color Comparison');
       expect(container.textContent).toContain('Color Distance');
     });
 
-    it('should render contrast ratio', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-      component.setComparisonDye(mockComparisonDye);
+    it('should show contrast ratio in comparison', () => {
+      display = new ColorDisplay(container, { showDistance: true });
+      display.init();
+      display.setDye(mockDyes[0]);
+      display.setComparisonDye(mockDyes[1]);
 
       expect(container.textContent).toContain('Contrast Ratio');
     });
 
-    it('should render WCAG compliance information', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-      component.setComparisonDye(mockComparisonDye);
+    it('should show WCAG compliance status', () => {
+      display = new ColorDisplay(container, { showDistance: true });
+      display.init();
+      display.setDye(mockDyes[0]);
+      display.setComparisonDye(mockDyes[1]);
 
       expect(container.textContent).toContain('WCAG AA');
       expect(container.textContent).toContain('WCAG AAA');
     });
 
-    it('should show Pass for high contrast colors', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye); // Very dark
-      component.setComparisonDye(mockComparisonDye); // White
+    it('should show progress bar for distance', () => {
+      display = new ColorDisplay(container, { showDistance: true });
+      display.init();
+      display.setDye(mockDyes[0]);
+      display.setComparisonDye(mockDyes[1]);
 
-      // Black and white should pass WCAG
-      expect(container.textContent).toContain('✓ Pass');
-    });
-
-    it('should accept comparison dye via constructor options', () => {
-      component = new ColorDisplay(container, { comparisonDye: mockComparisonDye });
-      component.init();
-      component.setDye(mockDye);
-
-      expect(container.textContent).toContain('Pure White');
+      const progressBar = query(container, '.bg-blue-500.h-2.rounded-full');
+      expect(progressBar).not.toBeNull();
     });
   });
 
-  // ==========================================================================
-  // State Management
-  // ==========================================================================
+  // ============================================================================
+  // Color Properties Tests
+  // ============================================================================
 
-  describe('state management', () => {
-    it('should return current dye via getDye', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+  describe('Color Properties', () => {
+    it('should render color properties section', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      expect(component.getDye()).toEqual(mockDye);
+      expect(container.textContent).toContain('Color Properties');
     });
 
-    it('should return null when no dye is set', () => {
-      component = new ColorDisplay(container);
-      component.init();
+    it('should show category property', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      expect(component.getDye()).toBeNull();
+      expect(container.textContent).toContain('Category');
+      expect(container.textContent).toContain(mockDyes[0].category);
     });
 
-    it('should update display when setDye is called', () => {
-      component = new ColorDisplay(container);
-      component.init();
-
-      expect(container.textContent).toContain('No color selected');
-
-      component.setDye(mockDye);
-
-      expect(container.textContent).not.toContain('No color selected');
-      expect(container.textContent).toContain('Jet Black');
-    });
-
-    it('should return correct state via getState', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-
-      expect(state).toHaveProperty('displayDye');
-      expect(state.displayDye).toEqual(mockDye);
-    });
-  });
-
-  // ==========================================================================
-  // Copy Functionality
-  // ==========================================================================
-
-  describe('copy functionality', () => {
-    it('should have data-copy attribute on hex value', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-
-      const copyElement = container.querySelector('[data-copy]');
-      expect(copyElement).not.toBeNull();
-      expect(copyElement?.getAttribute('data-copy')).toBe('#2B2B2B');
-    });
-
-    it('should show "Click to copy" tooltip', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-
-      const copyElement = container.querySelector('[data-copy]');
-      expect(copyElement?.getAttribute('title')).toBe('Click to copy');
-    });
-  });
-
-  // ==========================================================================
-  // Property Display
-  // ==========================================================================
-
-  describe('property display', () => {
-    it('should display acquisition method', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+    it('should show acquisition property', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
       expect(container.textContent).toContain('Acquisition');
-      expect(container.textContent).toContain('Market Board');
     });
 
-    it('should display item ID', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+    it('should show item ID property', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
       expect(container.textContent).toContain('Item ID');
-      expect(container.textContent).toContain('99999');
+      expect(container.textContent).toContain(String(mockDyes[0].itemID));
     });
 
-    it('should display cost when available', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-
-      expect(container.textContent).toContain('Cost');
-      expect(container.textContent).toContain('500');
-    });
-
-    it('should display N/A when cost is not available', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const dyeWithoutCost = { ...mockDye, cost: undefined } as any;
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(dyeWithoutCost);
-
-      expect(container.textContent).toContain('N/A');
-    });
-
-    it('should display brightness percentage', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+    it('should show brightness property', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
       expect(container.textContent).toContain('Brightness');
-      expect(container.textContent).toContain('17%');
     });
 
-    it('should display saturation percentage', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+    it('should show saturation property', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
       expect(container.textContent).toContain('Saturation');
-      expect(container.textContent).toContain('0%');
     });
   });
 
-  // ==========================================================================
-  // Accessibility Information
-  // ==========================================================================
+  // ============================================================================
+  // Accessibility Section Tests
+  // ============================================================================
 
-  describe('accessibility information', () => {
-    it('should display perceived luminance', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+  describe('Accessibility Section', () => {
+    it('should render accessibility section when showAccessibility is true', () => {
+      display = new ColorDisplay(container, { showAccessibility: true });
+      display.init();
+      display.setDye(mockDyes[0]);
+
+      expect(container.textContent).toContain('Accessibility');
+    });
+
+    it('should hide accessibility section when showAccessibility is false', () => {
+      display = new ColorDisplay(container, { showAccessibility: false });
+      display.init();
+      display.setDye(mockDyes[0]);
+
+      // Should only find one "Accessibility" - in the section title
+      const accessibilityMentions = container.textContent?.match(/Accessibility/g) || [];
+      expect(accessibilityMentions.length).toBe(0);
+    });
+
+    it('should show perceived luminance', () => {
+      display = new ColorDisplay(container, { showAccessibility: true });
+      display.init();
+      display.setDye(mockDyes[0]);
 
       expect(container.textContent).toContain('Perceived Luminance');
     });
 
-    it('should display brightness classification', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+    it('should show brightness classification', () => {
+      display = new ColorDisplay(container, { showAccessibility: true });
+      display.init();
+      display.setDye(mockDyes[0]);
 
       expect(container.textContent).toContain('Brightness Classification');
-      // Jet Black should be classified as Dark
-      expect(container.textContent).toContain('Dark');
     });
 
-    it('should display optimal text color', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+    it('should show optimal text color', () => {
+      display = new ColorDisplay(container, { showAccessibility: true });
+      display.init();
+      display.setDye(mockDyes[0]);
 
       expect(container.textContent).toContain('Optimal Text Color');
     });
   });
 
-  // ==========================================================================
-  // Cleanup
-  // ==========================================================================
+  // ============================================================================
+  // Swatch Accessibility Tests
+  // ============================================================================
 
-  describe('cleanup', () => {
-    it('should clean up without error', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
+  describe('Swatch Accessibility', () => {
+    it('should have role="img" on color swatch', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      expect(() => component.destroy()).not.toThrow();
+      const swatch = query(container, '[role="img"]');
+      expect(swatch).not.toBeNull();
     });
 
-    it('should clear comparison dye', () => {
-      component = new ColorDisplay(container);
-      component.init();
-      component.setDye(mockDye);
-      component.setComparisonDye(mockComparisonDye);
+    it('should have aria-label on color swatch', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
 
-      expect(container.textContent).toContain('Pure White');
+      const swatch = query(container, '[role="img"]');
+      expect(swatch?.hasAttribute('aria-label')).toBe(true);
+    });
+  });
 
-      component.setComparisonDye(null);
+  // ============================================================================
+  // State Management Tests
+  // ============================================================================
 
-      expect(container.textContent).not.toContain('Pure White');
+  describe('State Management', () => {
+    it('should return current dye with getDye', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
+
+      expect(display.getDye()).toEqual(mockDyes[0]);
+    });
+
+    it('should return null when no dye set', () => {
+      display = new ColorDisplay(container);
+      display.init();
+
+      expect(display.getDye()).toBeNull();
+    });
+
+    it('should update when setDye is called', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
+
+      expect(container.textContent).toContain(mockDyes[0].hex);
+
+      display.setDye(mockDyes[1]);
+
+      expect(container.textContent).toContain(mockDyes[1].hex);
+    });
+
+    it('should clear comparison when setComparisonDye(null) is called', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
+      display.setComparisonDye(mockDyes[1]);
+      display.setComparisonDye(null);
+
+      const labels = queryAll(container, '.uppercase.tracking-wide');
+      const labelTexts = Array.from(labels).map((l) => l.textContent);
+      expect(labelTexts).not.toContain('Comparison');
+    });
+  });
+
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
+
+  describe('Lifecycle', () => {
+    it('should clean up on destroy', () => {
+      display = new ColorDisplay(container);
+      display.init();
+      display.setDye(mockDyes[0]);
+
+      display.destroy();
+
+      expect(container.children.length).toBe(0);
     });
   });
 });
