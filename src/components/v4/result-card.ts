@@ -586,7 +586,7 @@ export class ResultCard extends BaseLitComponent {
   private formatLabValues(): string {
     if (!this.data) return '—';
     const lab = ColorService.hexToLab(this.data.matchedColor);
-    return `${Math.round(lab.L)},${Math.round(lab.a)},${Math.round(lab.b)}`;
+    return `${Math.round(lab.L)}, ${Math.round(lab.a)}, ${Math.round(lab.b)}`;
   }
 
   /**
@@ -753,7 +753,7 @@ export class ResultCard extends BaseLitComponent {
         ? html`
                   <div class="detail-row">
                     <span class="detail-label">RGB</span>
-                    <span class="detail-value"> ${dye.rgb.r},${dye.rgb.g},${dye.rgb.b} </span>
+                    <span class="detail-value">${dye.rgb.r}, ${dye.rgb.g}, ${dye.rgb.b}</span>
                   </div>
                 `
         : nothing}
@@ -761,9 +761,7 @@ export class ResultCard extends BaseLitComponent {
         ? html`
                   <div class="detail-row">
                     <span class="detail-label">HSV</span>
-                    <span class="detail-value">
-                      ${Math.round(hsv.h)},${Math.round(hsv.s)},${Math.round(hsv.v)}
-                    </span>
+                    <span class="detail-value">${Math.round(hsv.h)}°, ${Math.round(hsv.s)}%, ${Math.round(hsv.v)}%</span>
                   </div>
                 `
         : nothing}
