@@ -148,20 +148,8 @@ body.theme-sugar-riot .tool-card:hover {
    Toast Notifications
    ============================================================================ */
 
-/* Toast animations */
+/* Toast animations - slide up from bottom (bottom-center position) */
 @keyframes toast-slide-in {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes toast-slide-in-mobile {
   from {
     opacity: 0;
     transform: translateY(100%);
@@ -186,12 +174,12 @@ body.theme-sugar-riot .tool-card:hover {
 @keyframes toast-slide-out {
   from {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
   }
 
   to {
     opacity: 0;
-    transform: translateX(100%);
+    transform: translateY(100%);
   }
 }
 
@@ -201,13 +189,6 @@ body.theme-sugar-riot .tool-card:hover {
 
 .toast-animate-out {
   animation: toast-slide-out 0.15s ease-in forwards;
-}
-
-/* Mobile: slide up from bottom */
-@media (max-width: 640px) {
-  .toast-animate-in {
-    animation: toast-slide-in-mobile 0.3s ease-out forwards;
-  }
 }
 
 /* Reduced motion: use fade instead of slide */
@@ -232,37 +213,52 @@ body.theme-sugar-riot .tool-card:hover {
    Semantic colors blended with theme for visual harmony
    ============================================================================ */
 
-/* Light theme toast variables - blend theme surface with semantic colors */
+/* Light theme toast variables - blend theme card background with semantic colors */
 :root {
   /* Success - green tinted */
-  --toast-success-bg: color-mix(in srgb, var(--theme-surface, #ffffff) 85%, #22c55e 15%);
+  --toast-success-bg: color-mix(in srgb, var(--theme-card-background, #ffffff) 85%, #22c55e 15%);
   --toast-success-border: color-mix(in srgb, var(--theme-border, #e5e7eb) 50%, #22c55e 50%);
   --toast-success-text: #166534;
 
   /* Error - red tinted */
-  --toast-error-bg: color-mix(in srgb, var(--theme-surface, #ffffff) 85%, #ef4444 15%);
+  --toast-error-bg: color-mix(in srgb, var(--theme-card-background, #ffffff) 85%, #ef4444 15%);
   --toast-error-border: color-mix(in srgb, var(--theme-border, #e5e7eb) 50%, #ef4444 50%);
   --toast-error-text: #991b1b;
 
   /* Warning - yellow tinted */
-  --toast-warning-bg: color-mix(in srgb, var(--theme-surface, #ffffff) 85%, #eab308 15%);
+  --toast-warning-bg: color-mix(in srgb, var(--theme-card-background, #ffffff) 85%, #eab308 15%);
   --toast-warning-border: color-mix(in srgb, var(--theme-border, #e5e7eb) 50%, #eab308 50%);
   --toast-warning-text: #92400e;
 
   /* Info - blue tinted */
-  --toast-info-bg: color-mix(in srgb, var(--theme-surface, #ffffff) 85%, #3b82f6 15%);
+  --toast-info-bg: color-mix(in srgb, var(--theme-card-background, #ffffff) 85%, #3b82f6 15%);
   --toast-info-border: color-mix(in srgb, var(--theme-border, #e5e7eb) 50%, #3b82f6 50%);
   --toast-info-text: #1e40af;
 }
 
-/* Dark theme toast text colors - brighter for visibility */
+/* Dark theme toast colors - darker backgrounds with brighter text for visibility */
 .dark,
 [class*="-dark"],
 .theme-sugar-riot,
 .theme-og-classic-dark {
+  /* Success - dark green tinted background */
+  --toast-success-bg: color-mix(in srgb, #1f2937 85%, #22c55e 15%);
+  --toast-success-border: color-mix(in srgb, #374151 60%, #22c55e 40%);
   --toast-success-text: #86efac;
+
+  /* Error - dark red tinted background */
+  --toast-error-bg: color-mix(in srgb, #1f2937 85%, #ef4444 15%);
+  --toast-error-border: color-mix(in srgb, #374151 60%, #ef4444 40%);
   --toast-error-text: #fca5a5;
+
+  /* Warning - dark yellow tinted background */
+  --toast-warning-bg: color-mix(in srgb, #1f2937 85%, #eab308 15%);
+  --toast-warning-border: color-mix(in srgb, #374151 60%, #eab308 40%);
   --toast-warning-text: #fde047;
+
+  /* Info - dark blue tinted background */
+  --toast-info-bg: color-mix(in srgb, #1f2937 85%, #3b82f6 15%);
+  --toast-info-border: color-mix(in srgb, #374151 60%, #3b82f6 40%);
   --toast-info-text: #93c5fd;
 }
 

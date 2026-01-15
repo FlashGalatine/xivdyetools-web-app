@@ -51,9 +51,7 @@ export class ToastContainer extends BaseComponent {
       this.toasts = toasts;
       this.update();
     });
-
-    // Listen for Escape key to dismiss all toasts
-    this.on(document, 'keydown', this.handleKeyDown);
+    // Note: Document keydown listener is now in bindEvents() to survive updates
   }
 
   /**
@@ -174,12 +172,9 @@ export class ToastContainer extends BaseComponent {
       id: 'toast-container',
       className: `
         fixed z-50 pointer-events-none
-        top-4 right-4
-        sm:top-4 sm:right-4
-        max-sm:bottom-4 max-sm:left-4 max-sm:right-4 max-sm:top-auto
+        bottom-4 left-0 right-0
         flex flex-col gap-2
-        max-sm:items-stretch
-        items-end
+        items-center
       `
         .replace(/\s+/g, ' ')
         .trim(),
@@ -208,6 +203,10 @@ export class ToastContainer extends BaseComponent {
    * Bind event listeners
    */
   bindEvents(): void {
+    // Document-level keyboard listener for Escape key
+    // Must be re-added here since unbindAllEvents() is called during update()
+    this.on(document, 'keydown', this.handleKeyDown);
+
     // Touch swipe to dismiss on mobile
     if ('ontouchstart' in window) {
       this.setupSwipeToDismiss();

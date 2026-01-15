@@ -751,6 +751,7 @@ export class GradientTool extends BaseComponent {
     const stepsInput = this.createElement('input', {
       className: 'w-full',
       attributes: {
+        'data-testid': 'gradient-step-slider',
         type: 'range',
         min: '2',
         max: '10',
@@ -787,6 +788,7 @@ export class GradientTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: 'RGB',
       attributes: {
+        'data-testid': 'gradient-rgb-button',
         style:
           this.colorSpace === 'rgb'
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -798,6 +800,7 @@ export class GradientTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: 'HSV',
       attributes: {
+        'data-testid': 'gradient-hsv-button',
         style:
           this.colorSpace === 'hsv'
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -877,6 +880,7 @@ export class GradientTool extends BaseComponent {
     const gradientBuilderUI = this.createElement('div', {
       className: 'gradient-builder-ui',
       attributes: {
+        'data-testid': 'gradient-builder-ui',
         style: `
           flex: 0 0 auto;
           display: flex;
@@ -896,6 +900,7 @@ export class GradientTool extends BaseComponent {
     const startNode = this.createElement('div', {
       className: 'gradient-node main start',
       attributes: {
+        'data-testid': 'gradient-start-node',
         style: `
           display: flex;
           flex-direction: column;
@@ -982,6 +987,7 @@ export class GradientTool extends BaseComponent {
     const endNode = this.createElement('div', {
       className: 'gradient-node main end',
       attributes: {
+        'data-testid': 'gradient-end-node',
         style: `
           display: flex;
           flex-direction: column;
@@ -1031,6 +1037,7 @@ export class GradientTool extends BaseComponent {
     // Results section container
     const resultsSection = this.createElement('div', {
       attributes: {
+        'data-testid': 'gradient-results-section',
         style:
           'width: 100%; overflow: hidden; display: flex; flex-direction: column; position: relative; flex: 1;',
       },
@@ -1053,6 +1060,7 @@ export class GradientTool extends BaseComponent {
     this.matchesContainer = this.createElement('div', {
       className: 'gradient-results-list',
       attributes: {
+        'data-testid': 'gradient-matches-container',
         style: `
           display: flex;
           flex-direction: row;
@@ -1071,6 +1079,7 @@ export class GradientTool extends BaseComponent {
     this.emptyStateContainer = this.createElement('div', {
       className: 'empty-state-message',
       attributes: {
+        'data-testid': 'gradient-empty-state',
         style: `
           display: flex;
           flex-direction: column;
@@ -2369,6 +2378,7 @@ export class GradientTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: 'RGB',
       attributes: {
+        'data-testid': 'gradient-rgb-button',
         style:
           this.colorSpace === 'rgb'
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -2380,6 +2390,7 @@ export class GradientTool extends BaseComponent {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
       textContent: 'HSV',
       attributes: {
+        'data-testid': 'gradient-hsv-button',
         style:
           this.colorSpace === 'hsv'
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -2567,36 +2578,52 @@ export class GradientTool extends BaseComponent {
   public selectDye(dye: Dye): void {
     if (!dye) return;
 
-    // Prevent selecting the same dye for both Start and End
-    // Check if the dye is already selected in either slot
+    // Check if this dye is already selected
     const isAlreadyStart = this.startDye && this.startDye.id === dye.id;
     const isAlreadyEnd = this.endDye && this.endDye.id === dye.id;
-
-    if (isAlreadyStart || isAlreadyEnd) {
-      // Show a toast message to inform the user
-      ToastService.warning(
-        LanguageService.t('gradient.sameDyeWarning') ||
-        'This dye is already selected. Choose a different dye for the gradient.'
-      );
-      logger.info(`[GradientTool] Prevented duplicate dye selection: ${dye.name}`);
-      return;
-    }
 
     // If no start dye, set as start
     if (!this.startDye) {
       this.selectedDyes[0] = dye;
       logger.info(`[GradientTool] External dye set as start: ${dye.name}`);
     }
-    // If no end dye, set as end
+    // If no end dye, set as end (but warn if it would duplicate start)
     else if (!this.endDye) {
+      if (isAlreadyStart) {
+        // Would result in same dye for both slots
+        ToastService.warning(
+          LanguageService.t('gradient.sameDyeWarning') ||
+            'Start and end dyes are the same. Select different dyes for a gradient.'
+        );
+        logger.info(`[GradientTool] Prevented duplicate: ${dye.name} is already start`);
+        return;
+      }
       this.selectedDyes[1] = dye;
       logger.info(`[GradientTool] External dye set as end: ${dye.name}`);
     }
-    // If both are set: old Start → new End, new dye → new Start
+    // If both are set: shift dyes (new dye → Start, old Start → End)
     else {
-      this.selectedDyes[1] = this.selectedDyes[0]; // Old start becomes new end
-      this.selectedDyes[0] = dye; // New dye becomes new start
-      logger.info(`[GradientTool] Shifted dyes: ${dye.name} is now start`);
+      // Check if shift would result in same dye in both slots
+      // After shift: Start = new dye, End = old Start
+      // This would be a problem if new dye === old Start (already handled by isAlreadyStart)
+      if (isAlreadyStart) {
+        // Selecting the current start again - no change needed, just ignore
+        logger.info(`[GradientTool] Dye ${dye.name} is already start, ignoring`);
+        return;
+      }
+
+      // If selecting the current end dye, swap start and end
+      if (isAlreadyEnd) {
+        const temp = this.selectedDyes[0];
+        this.selectedDyes[0] = this.selectedDyes[1];
+        this.selectedDyes[1] = temp;
+        logger.info(`[GradientTool] Swapped: ${dye.name} is now start`);
+      } else {
+        // Normal shift: old Start → End, new dye → Start
+        this.selectedDyes[1] = this.selectedDyes[0];
+        this.selectedDyes[0] = dye;
+        logger.info(`[GradientTool] Shifted dyes: ${dye.name} is now start`);
+      }
     }
 
     // Update DyeSelector if it exists (with guard flag to prevent event handler loop)
