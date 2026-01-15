@@ -491,7 +491,7 @@ describe('TutorialService', () => {
       TutorialService.promptStart('harmony');
 
       // Find and click the skip button
-      const buttons = capturedContent?.querySelectorAll('button');
+      const buttons = (capturedContent as HTMLElement | null)?.querySelectorAll('button');
       const skipButton = buttons?.[0]; // First button is skip
 
       if (skipButton) {
@@ -520,7 +520,7 @@ describe('TutorialService', () => {
       TutorialService.promptStart('harmony');
 
       // Find and click the start button
-      const buttons = capturedContent?.querySelectorAll('button');
+      const buttons = (capturedContent as HTMLElement | null)?.querySelectorAll('button');
       const startButton = buttons?.[1]; // Second button is start
 
       if (startButton) {

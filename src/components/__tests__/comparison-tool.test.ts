@@ -332,7 +332,17 @@ describe('ComparisonTool', () => {
       tool.init();
 
       // Should not throw
-      tool.setConfig({ showMatrix: true });
+      tool.setConfig({
+        displayOptions: {
+          showHex: true,
+          showRgb: false,
+          showHsv: false,
+          showLab: false,
+          showPrice: false,
+          showDeltaE: false,
+          showAcquisition: false,
+        },
+      });
 
       expect(leftPanel.children.length).toBeGreaterThan(0);
     });

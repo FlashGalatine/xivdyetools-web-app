@@ -237,7 +237,7 @@ describe('HarmonyResultPanel', () => {
 
   describe('Price Display', () => {
     it('should show price when showPrices is true and price exists', () => {
-      const priceData = new Map([[mockDyes[0].itemID, { currentAverage: 5000, currentMinimum: 4500, itemId: mockDyes[0].itemID, lastUpdated: Date.now() }]]);
+      const priceData = new Map([[mockDyes[0].itemID, { itemID: mockDyes[0].itemID, currentAverage: 5000, currentMinPrice: 4500, currentMaxPrice: 5500, lastUpdate: Date.now() }]]);
       panel = new HarmonyResultPanel(
         container,
         createOptions({ showPrices: true, priceData })
@@ -248,7 +248,7 @@ describe('HarmonyResultPanel', () => {
     });
 
     it('should not show price when showPrices is false', () => {
-      const priceData = new Map([[mockDyes[0].itemID, { currentAverage: 5000, currentMinimum: 4500, itemId: mockDyes[0].itemID, lastUpdated: Date.now() }]]);
+      const priceData = new Map([[mockDyes[0].itemID, { itemID: mockDyes[0].itemID, currentAverage: 5000, currentMinPrice: 4500, currentMaxPrice: 5500, lastUpdate: Date.now() }]]);
       panel = new HarmonyResultPanel(
         container,
         createOptions({ showPrices: false, priceData })
@@ -268,14 +268,14 @@ describe('HarmonyResultPanel', () => {
       panel = new HarmonyResultPanel(container, createOptions({ showPrices: true }));
       panel.init();
 
-      const priceData = new Map([[mockDyes[0].itemID, { currentAverage: 10000, currentMinimum: 9000, itemId: mockDyes[0].itemID, lastUpdated: Date.now() }]]);
+      const priceData = new Map([[mockDyes[0].itemID, { itemID: mockDyes[0].itemID, currentAverage: 10000, currentMinPrice: 9000, currentMaxPrice: 11000, lastUpdate: Date.now() }]]);
       panel.setPriceData(priceData);
 
       expect(container.textContent).toContain('10,000');
     });
 
     it('should update showPrices setting', () => {
-      const priceData = new Map([[mockDyes[0].itemID, { currentAverage: 5000, currentMinimum: 4500, itemId: mockDyes[0].itemID, lastUpdated: Date.now() }]]);
+      const priceData = new Map([[mockDyes[0].itemID, { itemID: mockDyes[0].itemID, currentAverage: 5000, currentMinPrice: 4500, currentMaxPrice: 5500, lastUpdate: Date.now() }]]);
       panel = new HarmonyResultPanel(container, createOptions({ showPrices: false, priceData }));
       panel.init();
 

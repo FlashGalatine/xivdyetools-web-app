@@ -358,7 +358,7 @@ describe('ImageUploadDisplay', () => {
       display = new ImageUploadDisplay(container);
       display.init();
 
-      const desktopCameraBtn = query(container, '#desktop-camera-btn');
+      const desktopCameraBtn = query<HTMLElement>(container, '#desktop-camera-btn');
       expect(desktopCameraBtn?.style.display).toBe('none');
     });
   });

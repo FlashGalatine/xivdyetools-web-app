@@ -364,7 +364,7 @@ describe('ExtractorTool', () => {
       tool.init();
 
       // Should not throw
-      tool.setConfig({ paletteSize: 8 });
+      tool.setConfig({ maxColors: 8 });
 
       expect(leftPanel.children.length).toBeGreaterThan(0);
     });

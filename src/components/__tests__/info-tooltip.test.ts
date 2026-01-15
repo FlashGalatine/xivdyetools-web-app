@@ -56,7 +56,7 @@ describe('InfoTooltip', () => {
       const icon = createInfoIcon({ content: 'Test tooltip' });
 
       expect(icon.tagName).toBe('BUTTON');
-      expect(icon.type).toBe('button');
+      expect((icon as HTMLButtonElement).type).toBe('button');
     });
 
     it('should display info icon character', () => {

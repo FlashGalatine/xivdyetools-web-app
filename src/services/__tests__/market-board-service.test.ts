@@ -54,29 +54,28 @@ vi.mock('../storage-service', () => ({
 const createMockDye = (overrides: Partial<Dye> = {}): Dye => ({
   id: 1,
   itemID: 12345,
+  stainID: 1,
   name: 'Snow White',
   hex: '#FFFFFF',
   rgb: { r: 255, g: 255, b: 255 },
+  hsv: { h: 0, s: 0, v: 100 },
   category: 'White',
-  categoryId: 1,
   acquisition: 'Dye Vendor',
   cost: 216,
+  isMetallic: false,
+  isPastel: false,
+  isDark: false,
+  isCosmic: false,
   ...overrides,
 });
 
 const createMockPriceData = (overrides: Partial<PriceData> = {}): PriceData => ({
-  itemId: 12345,
-  worldId: 34,
-  lastUploadTime: Date.now(),
+  itemID: 12345,
+  currentAverage: 1200,
   currentMinPrice: 1000,
-  currentMinPriceHQ: 1500,
-  averagePrice: 1200,
-  averagePriceHQ: 1800,
-  nqSaleVelocity: 5,
-  hqSaleVelocity: 2,
-  stackSizeHistogram: {},
-  stackSizeHistogramHQ: {},
-  regularSaleVelocity: 7,
+  currentMaxPrice: 1500,
+  lastUpdate: Date.now(),
+  worldId: 34,
   worldName: 'Brynhildr',
   ...overrides,
 });
@@ -270,7 +269,7 @@ describe('MarketBoardService', () => {
 
   describe('price data methods', () => {
     it('should get cached price for a dye', () => {
-      const priceData = createMockPriceData({ itemId: 12345 });
+      const priceData = createMockPriceData({ itemID: 12345 });
       service['priceData'].set(12345, priceData);
 
       expect(service.getPriceForDye(12345)).toBe(priceData);

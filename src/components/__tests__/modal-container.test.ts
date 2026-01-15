@@ -64,7 +64,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test Modal' });
+      ModalService.show({ type: 'custom', title: 'Test Modal' });
 
       expect(query(container, '#modal-container')).not.toBeNull();
     });
@@ -73,7 +73,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'My Modal Title' });
+      ModalService.show({ type: 'custom', title: 'My Modal Title' });
 
       const title = query(container, '[id^="modal-title-"]');
       expect(getText(title)).toBe('My Modal Title');
@@ -84,6 +84,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         content: '<p>Modal content here</p>',
       });
@@ -100,6 +101,7 @@ describe('ModalContainer', () => {
       contentEl.textContent = 'Custom element content';
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         content: contentEl,
       });
@@ -118,7 +120,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Small', size: 'sm' });
+      ModalService.show({ type: 'custom', title: 'Small', size: 'sm' });
 
       const dialog = query(container, '.modal-dialog');
       expect(dialog?.classList.contains('max-w-sm')).toBe(true);
@@ -128,7 +130,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Default' });
+      ModalService.show({ type: 'custom', title: 'Default' });
 
       const dialog = query(container, '.modal-dialog');
       expect(dialog?.classList.contains('max-w-lg')).toBe(true);
@@ -138,7 +140,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Large', size: 'lg' });
+      ModalService.show({ type: 'custom', title: 'Large', size: 'lg' });
 
       const dialog = query(container, '.modal-dialog');
       expect(dialog?.classList.contains('max-w-2xl')).toBe(true);
@@ -154,7 +156,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test', closable: true });
+      ModalService.show({ type: 'custom', title: 'Test', closable: true });
 
       const closeBtn = query(container, 'button[aria-label="Close modal"]');
       expect(closeBtn).not.toBeNull();
@@ -164,7 +166,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test', closable: false });
+      ModalService.show({ type: 'custom', title: 'Test', closable: false });
 
       const closeBtn = query(container, 'button[aria-label="Close modal"]');
       expect(closeBtn).toBeNull();
@@ -174,7 +176,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test', closable: true });
+      ModalService.show({ type: 'custom', title: 'Test', closable: true });
 
       const closeBtn = query<HTMLButtonElement>(container, 'button[aria-label="Close modal"]');
       click(closeBtn);
@@ -204,6 +206,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'confirm',
         title: 'Test',
         confirmText: 'Yes, Delete',
       });
@@ -218,6 +221,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'confirm',
         title: 'Test',
         cancelText: 'No, Keep',
         confirmText: 'Yes',
@@ -234,6 +238,7 @@ describe('ModalContainer', () => {
 
       const onConfirm = vi.fn();
       ModalService.show({
+        type: 'confirm',
         title: 'Test',
         confirmText: 'Confirm',
         onConfirm,
@@ -251,6 +256,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'confirm',
         title: 'Test',
         confirmText: 'OK',
         onConfirm: vi.fn(),
@@ -274,6 +280,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         closable: true,
         closeOnEscape: true,
@@ -290,6 +297,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         closable: true,
         closeOnEscape: false,
@@ -306,6 +314,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         closable: false,
         closeOnEscape: true,
@@ -327,7 +336,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test' });
+      ModalService.show({ type: 'custom', title: 'Test' });
 
       const backdrop = query(container, '.modal-backdrop');
       expect(backdrop).not.toBeNull();
@@ -338,6 +347,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         closable: true,
         closeOnBackdrop: true,
@@ -354,6 +364,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         closable: true,
         closeOnBackdrop: false,
@@ -370,6 +381,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         closable: true,
         closeOnBackdrop: true,
@@ -391,7 +403,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test' });
+      ModalService.show({ type: 'custom', title: 'Test' });
 
       const dialog = query(container, '.modal-dialog');
       expect(getAttr(dialog, 'role')).toBe('dialog');
@@ -401,7 +413,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test' });
+      ModalService.show({ type: 'custom', title: 'Test' });
 
       const dialog = query(container, '.modal-dialog');
       expect(getAttr(dialog, 'aria-modal')).toBe('true');
@@ -411,7 +423,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test' });
+      ModalService.show({ type: 'custom', title: 'Test' });
 
       const dialog = query(container, '.modal-dialog');
       const labelledBy = getAttr(dialog, 'aria-labelledby');
@@ -426,6 +438,7 @@ describe('ModalContainer', () => {
       modalContainer.init();
 
       ModalService.show({
+        type: 'custom',
         title: 'Test',
         content: 'Modal description',
       });
@@ -439,8 +452,8 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'First' });
-      ModalService.show({ title: 'Second' });
+      ModalService.show({ type: 'custom', title: 'First' });
+      ModalService.show({ type: 'custom', title: 'Second' });
 
       const modals = queryAll(container, '[data-modal-id]');
       expect(modals[0].hasAttribute('inert')).toBe(true);
@@ -457,8 +470,8 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'First' });
-      ModalService.show({ title: 'Second' });
+      ModalService.show({ type: 'custom', title: 'First' });
+      ModalService.show({ type: 'custom', title: 'Second' });
 
       const modals = queryAll(container, '[data-modal-id]');
       expect(modals.length).toBe(2);
@@ -468,8 +481,8 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'First' });
-      ModalService.show({ title: 'Second' });
+      ModalService.show({ type: 'custom', title: 'First' });
+      ModalService.show({ type: 'custom', title: 'Second' });
 
       const modals = queryAll(container, '.modal-backdrop');
       expect(modals[0].classList.contains('bg-transparent')).toBe(true);
@@ -480,8 +493,8 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'First', closable: true, closeOnEscape: true });
-      ModalService.show({ title: 'Second', closable: true, closeOnEscape: true });
+      ModalService.show({ type: 'custom', title: 'First', closable: true, closeOnEscape: true });
+      ModalService.show({ type: 'custom', title: 'Second', closable: true, closeOnEscape: true });
 
       // Dispatch directly on document since that's where the listener is attached
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
@@ -500,7 +513,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test' });
+      ModalService.show({ type: 'custom', title: 'Test' });
 
       expect(document.body.style.overflow).toBe('hidden');
     });
@@ -509,7 +522,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      const id = ModalService.show({ title: 'Test', closable: true });
+      const id = ModalService.show({ type: 'custom', title: 'Test', closable: true });
       expect(document.body.style.overflow).toBe('hidden');
 
       ModalService.dismiss(id);
@@ -529,7 +542,7 @@ describe('ModalContainer', () => {
 
       expect(queryAll(container, '[data-modal-id]').length).toBe(0);
 
-      ModalService.show({ title: 'New Modal' });
+      ModalService.show({ type: 'custom', title: 'New Modal' });
 
       expect(queryAll(container, '[data-modal-id]').length).toBe(1);
     });
@@ -538,7 +551,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      const id = ModalService.show({ title: 'Test', closable: true });
+      const id = ModalService.show({ type: 'custom', title: 'Test', closable: true });
       expect(queryAll(container, '[data-modal-id]').length).toBe(1);
 
       ModalService.dismiss(id);
@@ -552,7 +565,7 @@ describe('ModalContainer', () => {
       modalContainer.destroy();
 
       // Showing a modal after destroy should not cause errors
-      expect(() => ModalService.show({ title: 'Test' })).not.toThrow();
+      expect(() => ModalService.show({ type: 'custom', title: 'Test' })).not.toThrow();
     });
   });
 
@@ -565,7 +578,7 @@ describe('ModalContainer', () => {
       modalContainer = new ModalContainer(container);
       modalContainer.init();
 
-      ModalService.show({ title: 'Test' });
+      ModalService.show({ type: 'custom', title: 'Test' });
 
       modalContainer.destroy();
 

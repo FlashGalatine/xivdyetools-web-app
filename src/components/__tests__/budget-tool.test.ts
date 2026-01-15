@@ -317,7 +317,7 @@ describe('BudgetTool', () => {
       tool.init();
 
       // Should not throw
-      expect(() => tool!.setConfig({ budgetLimit: 50000 })).not.toThrow();
+      expect(() => tool!.setConfig({ maxPrice: 50000 })).not.toThrow();
     });
   });
 

@@ -416,7 +416,7 @@ describe('ColorPickerDisplay', () => {
       canvas.height = 10;
 
       // Should not throw even when context is null
-      expect(() => picker.setColorFromImage(canvas, 5, 5, 1)).not.toThrow();
+      expect(() => picker!.setColorFromImage(canvas, 5, 5, 1)).not.toThrow();
     });
 
     it('should not change color when canvas context is null', () => {

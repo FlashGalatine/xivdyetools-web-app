@@ -157,10 +157,11 @@ describe('DyeCardRenderer', () => {
         dye: mockDyes[0],
         showPrice: true,
         price: {
-          itemId: mockDyes[0].itemID,
+          itemID: mockDyes[0].itemID,
           currentAverage: 5000,
-          currentMinimum: 4500,
-          lastUpdated: Date.now(),
+          currentMinPrice: 4500,
+          currentMaxPrice: 5500,
+          lastUpdate: Date.now(),
         },
       });
 
@@ -183,10 +184,11 @@ describe('DyeCardRenderer', () => {
         dye: mockDyes[0],
         showPrice: false,
         price: {
-          itemId: mockDyes[0].itemID,
+          itemID: mockDyes[0].itemID,
           currentAverage: 5000,
-          currentMinimum: 4500,
-          lastUpdated: Date.now(),
+          currentMinPrice: 4500,
+          currentMaxPrice: 5500,
+          lastUpdate: Date.now(),
         },
       });
 
@@ -199,10 +201,11 @@ describe('DyeCardRenderer', () => {
         dye: mockDyes[0],
         showPrice: true,
         price: {
-          itemId: mockDyes[0].itemID,
+          itemID: mockDyes[0].itemID,
           currentAverage: 5000,
-          currentMinimum: 4500,
-          lastUpdated: Date.now(),
+          currentMinPrice: 4500,
+          currentMaxPrice: 5500,
+          lastUpdate: Date.now(),
         },
       });
 

@@ -339,7 +339,7 @@ describe('MixerTool', () => {
       tool.init();
 
       // Should not throw
-      tool.setConfig({ blendMode: 'rgb' });
+      tool.setConfig({ mixingMode: 'rgb' });
 
       expect(leftPanel.children.length).toBeGreaterThan(0);
     });

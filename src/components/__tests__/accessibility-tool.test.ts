@@ -328,7 +328,7 @@ describe('AccessibilityTool', () => {
       tool.init();
 
       // Should not throw
-      expect(() => tool!.setConfig({ simulationType: 'deuteranopia' })).not.toThrow();
+      expect(() => tool!.setConfig({ deuteranopia: true })).not.toThrow();
     });
   });
 
