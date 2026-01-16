@@ -6,4 +6,4 @@ Disallow: /coloraccessibility_experimental.html
 
 Allow: /
 
-Sitemap: https://xivdyetools.projectgalatine.com/sitemap.xml
+Sitemap: https://xivdyetools.app/sitemap.xml

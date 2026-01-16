@@ -50,9 +50,16 @@
     Cache-Control = "public, max-age=86400"
     Content-Type = "application/json; charset=utf-8"
 
-# Redirect rules (if needed)
+# Redirect rules
 [[redirects]]
   from = "https://xivdyetools.netlify.app/*"
-  to = "https://xivdyetools.projectgalatine.com/:splat"
+  to = "https://xivdyetools.app/:splat"
+  status = 301
+  force = true
+
+# Redirect from old domain to new domain
+[[redirects]]
+  from = "https://xivdyetools.projectgalatine.com/*"
+  to = "https://xivdyetools.app/:splat"
   status = 301
   force = true

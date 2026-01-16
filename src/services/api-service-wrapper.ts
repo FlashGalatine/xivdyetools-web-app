@@ -35,7 +35,7 @@ function getUniversalisBaseUrl(): string {
   // In production, use the deployed proxy worker
   // This ensures CORS headers are always present, even on error responses (like 429)
   if (import.meta.env.PROD) {
-    const proxyUrl = 'https://proxy.xivdyetools.projectgalatine.com/api/v2';
+    const proxyUrl = 'https://proxy.xivdyetools.app/api/v2';
     logger.info(`Using production Universalis proxy: ${proxyUrl}`);
     return proxyUrl;
   }

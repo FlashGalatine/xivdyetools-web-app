@@ -76,7 +76,7 @@ export interface VoteCheckResponse {
 /**
  * Default API URL - can be overridden via environment or config
  */
-const DEFAULT_API_URL = 'https://api.xivdyetools.projectgalatine.com';
+const DEFAULT_API_URL = 'https://api.xivdyetools.app';
 
 /**
  * Cache TTL in milliseconds (5 minutes)
