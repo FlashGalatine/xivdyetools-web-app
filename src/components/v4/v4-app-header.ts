@@ -77,6 +77,7 @@ export class V4AppHeader extends BaseLitComponent {
       }
 
       .v4-header-logo-text {
+        font-family: 'Space Grotesk', sans-serif;
         user-select: none;
       }
 
