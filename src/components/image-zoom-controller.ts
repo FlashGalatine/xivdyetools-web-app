@@ -31,6 +31,9 @@ export class ImageZoomController extends BaseComponent {
   // Track whether image should be centered (set by fit-to-screen)
   private isCentered: boolean = false;
 
+  // Drag threshold for click vs drag differentiation (in pixels)
+  private dragThreshold: number = 5;
+
   // Store zoom control functions for public access
   private updateZoomFn: ((newZoom: number, setCenter?: boolean) => void) | null = null;
   private getContainerDimensionsFn: (() => { width: number; height: number }) | null = null;
@@ -444,50 +447,30 @@ export class ImageZoomController extends BaseComponent {
     if (!this.canvasRef || !this.currentImage) return;
 
     let isDragging = false;
+    let hasDraggedPastThreshold = false;
     let startX = 0;
     let startY = 0;
+    let startClientX = 0;
+    let startClientY = 0;
 
-    this.on(this.canvasRef, 'mousedown', (e: Event) => {
-      if (!this.canvasRef) return;
-      const mouseEvent = e as MouseEvent;
+    // Helper to calculate distance
+    const getDistance = (x1: number, y1: number, x2: number, y2: number): number => {
+      return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    };
+
+    // Helper to get canvas coordinates from client coordinates
+    const getCanvasCoords = (clientX: number, clientY: number): { x: number; y: number } => {
+      if (!this.canvasRef) return { x: 0, y: 0 };
       const rect = this.canvasRef.getBoundingClientRect();
-      startX = (mouseEvent.clientX - rect.left) * (this.canvasRef.width / rect.width);
-      startY = (mouseEvent.clientY - rect.top) * (this.canvasRef.height / rect.height);
-      isDragging = true;
-    });
+      return {
+        x: (clientX - rect.left) * (this.canvasRef.width / rect.width),
+        y: (clientY - rect.top) * (this.canvasRef.height / rect.height),
+      };
+    };
 
-    this.on(this.canvasRef, 'mousemove', (e: Event) => {
-      if (!isDragging || !this.canvasRef || !this.currentImage) return;
-
-      const mouseEvent = e as MouseEvent;
-      const rect = this.canvasRef.getBoundingClientRect();
-      const currentX = (mouseEvent.clientX - rect.left) * (this.canvasRef.width / rect.width);
-      const currentY = (mouseEvent.clientY - rect.top) * (this.canvasRef.height / rect.height);
-
-      const ctx = this.canvasRef.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(this.currentImage, 0, 0);
-        ctx.strokeStyle = '#3B82F6';
-        ctx.lineWidth = 2;
-        const width = currentX - startX;
-        const height = currentY - startY;
-        ctx.strokeRect(startX, startY, width, height);
-      }
-    });
-
-    this.on(this.canvasRef, 'mouseup', (e: Event) => {
-      if (!isDragging || !this.canvasRef || !this.currentImage) return;
-      isDragging = false;
-
-      const mouseEvent = e as MouseEvent;
-      const rect = this.canvasRef.getBoundingClientRect();
-      const endX = (mouseEvent.clientX - rect.left) * (this.canvasRef.width / rect.width);
-      const endY = (mouseEvent.clientY - rect.top) * (this.canvasRef.height / rect.height);
-
-      const centerX = (startX + endX) / 2;
-      const centerY = (startY + endY) / 2;
-
-      // Get color at center
+    // Helper to sample color at position and emit event
+    const sampleColorAt = (centerX: number, centerY: number): void => {
+      if (!this.canvasRef || !this.currentImage) return;
       const ctx = this.canvasRef.getContext('2d');
       if (ctx) {
         // Redraw original image first to clear selection box
@@ -509,17 +492,201 @@ export class ImageZoomController extends BaseComponent {
         // Also emit custom event
         this.emit('image-sampled', { hex, x: centerX, y: centerY });
       }
+    };
+
+    // === MOUSE EVENTS ===
+    this.on(this.canvasRef, 'mousedown', (e: Event) => {
+      if (!this.canvasRef) return;
+      e.stopPropagation();
+      const mouseEvent = e as MouseEvent;
+      const coords = getCanvasCoords(mouseEvent.clientX, mouseEvent.clientY);
+      startX = coords.x;
+      startY = coords.y;
+      startClientX = mouseEvent.clientX;
+      startClientY = mouseEvent.clientY;
+      isDragging = true;
+      hasDraggedPastThreshold = false;
+      // Set initial cursor to pointer (will change to crosshair if dragging)
+      this.canvasRef.style.cursor = 'pointer';
+    });
+
+    this.on(this.canvasRef, 'mousemove', (e: Event) => {
+      if (!isDragging || !this.canvasRef || !this.currentImage) return;
+      e.stopPropagation();
+
+      const mouseEvent = e as MouseEvent;
+      const distance = getDistance(startClientX, startClientY, mouseEvent.clientX, mouseEvent.clientY);
+
+      // Check if we've exceeded the drag threshold
+      if (distance > this.dragThreshold) {
+        hasDraggedPastThreshold = true;
+        this.canvasRef.style.cursor = 'crosshair';
+
+        // Draw selection rectangle
+        const coords = getCanvasCoords(mouseEvent.clientX, mouseEvent.clientY);
+        const ctx = this.canvasRef.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(this.currentImage, 0, 0);
+          ctx.strokeStyle = '#3B82F6';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(startX, startY, coords.x - startX, coords.y - startY);
+        }
+      }
+    });
+
+    this.on(this.canvasRef, 'mouseup', (e: Event) => {
+      if (!isDragging || !this.canvasRef || !this.currentImage) return;
+      e.stopPropagation();
+      isDragging = false;
+      this.canvasRef.style.cursor = 'pointer';
+
+      const mouseEvent = e as MouseEvent;
+      const coords = getCanvasCoords(mouseEvent.clientX, mouseEvent.clientY);
+
+      if (hasDraggedPastThreshold) {
+        // Drag completed - emit region bounds for palette extraction
+        const ctx = this.canvasRef.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(this.currentImage, 0, 0);
+        }
+
+        // Calculate region bounds
+        const x = Math.min(startX, coords.x);
+        const y = Math.min(startY, coords.y);
+        const width = Math.abs(coords.x - startX);
+        const height = Math.abs(coords.y - startY);
+
+        // Emit event with region information
+        this.emit('image-sampled', { 
+          x, 
+          y, 
+          width, 
+          height,
+          isRegion: true 
+        });
+      } else {
+        // Click (no drag) - emit canvas-clicked event for file upload
+        const ctx = this.canvasRef.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(this.currentImage, 0, 0);
+        }
+        this.emit('canvas-clicked', {});
+      }
+      hasDraggedPastThreshold = false;
     });
 
     this.on(this.canvasRef, 'mouseleave', () => {
       if (isDragging && this.canvasRef && this.currentImage) {
         isDragging = false;
+        hasDraggedPastThreshold = false;
+        this.canvasRef.style.cursor = 'pointer';
         const ctx = this.canvasRef.getContext('2d');
         if (ctx) {
           ctx.drawImage(this.currentImage, 0, 0);
         }
       }
     });
+
+    // === TOUCH EVENTS ===
+    this.on(this.canvasRef, 'touchstart', (e: Event) => {
+      if (!this.canvasRef) return;
+      e.stopPropagation();
+      const touchEvent = e as TouchEvent;
+      if (touchEvent.touches.length !== 1) return;
+      const touch = touchEvent.touches[0];
+      const coords = getCanvasCoords(touch.clientX, touch.clientY);
+      startX = coords.x;
+      startY = coords.y;
+      startClientX = touch.clientX;
+      startClientY = touch.clientY;
+      isDragging = true;
+      hasDraggedPastThreshold = false;
+    });
+
+    this.on(this.canvasRef, 'touchmove', (e: Event) => {
+      if (!isDragging || !this.canvasRef || !this.currentImage) return;
+      e.stopPropagation();
+      e.preventDefault(); // Prevent scrolling while dragging
+
+      const touchEvent = e as TouchEvent;
+      if (touchEvent.touches.length !== 1) return;
+      const touch = touchEvent.touches[0];
+      const distance = getDistance(startClientX, startClientY, touch.clientX, touch.clientY);
+
+      if (distance > this.dragThreshold) {
+        hasDraggedPastThreshold = true;
+
+        // Draw selection rectangle
+        const coords = getCanvasCoords(touch.clientX, touch.clientY);
+        const ctx = this.canvasRef.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(this.currentImage, 0, 0);
+          ctx.strokeStyle = '#3B82F6';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(startX, startY, coords.x - startX, coords.y - startY);
+        }
+      }
+    });
+
+    this.on(this.canvasRef, 'touchend', (e: Event) => {
+      if (!isDragging || !this.canvasRef || !this.currentImage) return;
+      e.stopPropagation();
+      isDragging = false;
+
+      const touchEvent = e as TouchEvent;
+      const touch = touchEvent.changedTouches[0];
+      const coords = getCanvasCoords(touch.clientX, touch.clientY);
+
+      if (hasDraggedPastThreshold) {
+        // Drag completed - emit region bounds for palette extraction
+        const ctx = this.canvasRef.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(this.currentImage, 0, 0);
+        }
+
+        // Calculate region bounds
+        const x = Math.min(startX, coords.x);
+        const y = Math.min(startY, coords.y);
+        const width = Math.abs(coords.x - startX);
+        const height = Math.abs(coords.y - startY);
+
+        // Emit event with region information
+        this.emit('image-sampled', { 
+          x, 
+          y, 
+          width, 
+          height,
+          isRegion: true 
+        });
+      } else {
+        // Tap (no drag) - emit canvas-clicked event for file upload
+        const ctx = this.canvasRef.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(this.currentImage, 0, 0);
+        }
+        this.emit('canvas-clicked', {});
+      }
+      hasDraggedPastThreshold = false;
+    });
+
+    this.on(this.canvasRef, 'touchcancel', () => {
+      if (isDragging && this.canvasRef && this.currentImage) {
+        isDragging = false;
+        hasDraggedPastThreshold = false;
+        const ctx = this.canvasRef.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(this.currentImage, 0, 0);
+        }
+      }
+    });
+  }
+
+  /**
+   * Set the drag threshold for click vs drag differentiation
+   * @param threshold Threshold in pixels (default 5)
+   */
+  public setDragThreshold(threshold: number): void {
+    this.dragThreshold = Math.max(3, Math.min(15, threshold));
   }
 
   /**

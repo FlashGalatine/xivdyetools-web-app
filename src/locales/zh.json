@@ -215,6 +215,8 @@
     "extractionSettings": "提取设置",
     "vibrancyBoost": "鲜艳度增强",
     "maxColors": "最大颜色数",
+    "dragThreshold": "选择灵敏度",
+    "dragThresholdTooltip": "较低的值使拖动更容易，较高的值使点击更容易",
     "visionTypes": "视觉类型",
     "deuteranopia": "绿色盲",
     "protanopia": "红色盲",

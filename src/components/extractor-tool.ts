@@ -134,6 +134,7 @@ export class ExtractorTool extends BaseComponent {
   private resultsTitleElement: HTMLElement | null = null;
   private dropZone: HTMLElement | null = null;
   private dropContent: HTMLElement | null = null;
+  private dropZoneFileInput: HTMLInputElement | null = null;
 
   // Mobile-specific DOM References (separate from desktop to avoid conflicts)
   private mobileSampleSlider: HTMLInputElement | null = null;
@@ -439,6 +440,12 @@ export class ExtractorTool extends BaseComponent {
       this.displayOptions = { ...this.displayOptions, ...config.displayOptions };
       needsRerender = true;
       logger.info(`[ExtractorTool] setConfig: displayOptions updated`, config.displayOptions);
+    }
+
+    // Handle dragThreshold
+    if (config.dragThreshold !== undefined && this.imageZoom) {
+      this.imageZoom.setDragThreshold(config.dragThreshold);
+      logger.info(`[ExtractorTool] setConfig: dragThreshold -> ${config.dragThreshold}`);
     }
 
     // Re-extract palette if config changed and we're in palette mode with an image
@@ -1047,26 +1054,38 @@ export class ExtractorTool extends BaseComponent {
     if (!this.dropZone || !this.dropContent) return;
 
     // Click to trigger file upload - create hidden file input in drop zone
-    const fileInput = this.createElement('input', {
+    this.dropZoneFileInput = this.createElement('input', {
       attributes: {
         type: 'file',
         accept: 'image/*',
         style: 'display: none;',
       },
     }) as HTMLInputElement;
-    this.dropZone.appendChild(fileInput);
+    this.dropZone.appendChild(this.dropZoneFileInput);
 
-    this.on(fileInput, 'change', () => {
-      const file = fileInput.files?.[0];
+    this.on(this.dropZoneFileInput, 'change', () => {
+      const file = this.dropZoneFileInput?.files?.[0];
       if (file && file.type.startsWith('image/')) {
         this.handleDroppedFile(file);
       }
       // Reset input so same file can be selected again
-      fileInput.value = '';
+      if (this.dropZoneFileInput) {
+        this.dropZoneFileInput.value = '';
+      }
     });
 
-    this.on(this.dropZone, 'click', () => {
-      fileInput.click();
+    // Only trigger file dialog when clicking on drop zone if no image is loaded
+    // When an image is loaded, clicking on the canvas triggers canvas-clicked event instead
+    this.on(this.dropZone, 'click', (e: Event) => {
+      // Don't trigger if click came from the canvas (stopPropagation should handle this,
+      // but check target as a fallback)
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'CANVAS') return;
+      
+      // If no image loaded, trigger file dialog
+      if (!this.currentImage) {
+        this.dropZoneFileInput?.click();
+      }
     });
 
     // Drag and drop handling
@@ -1232,6 +1251,21 @@ export class ExtractorTool extends BaseComponent {
     // Listen for clear image request from zoom controls
     this.onPanelEvent(canvasWrapper, 'image-clear-requested', () => {
       this.clearImage();
+    });
+
+    // Listen for canvas click (no drag) to trigger file upload
+    this.onPanelEvent(canvasWrapper, 'canvas-clicked', () => {
+      // Trigger file dialog when user clicks (not drags) on the canvas
+      this.dropZoneFileInput?.click();
+    });
+
+    // Listen for image-sampled (drag to select region) to extract palette from region
+    this.onPanelEvent(canvasWrapper, 'image-sampled', (event: CustomEvent) => {
+      const { x, y, width, height, isRegion } = event.detail;
+      if (isRegion) {
+        // User selected a region - extract palette from that region
+        void this.extractPaletteFromRegion(x, y, width, height);
+      }
     });
 
     // If we already have an image, set it
@@ -2203,6 +2237,88 @@ export class ExtractorTool extends BaseComponent {
   // ============================================================================
   // Palette Extraction
   // ============================================================================
+
+  /**
+   * Extract palette from a specific region of the loaded image
+   */
+  private async extractPaletteFromRegion(x: number, y: number, width: number, height: number): Promise<void> {
+    // Get canvas from ImageZoomController
+    const canvas = this.imageZoom?.getCanvas();
+
+    if (!canvas || !this.currentImage) {
+      ToastService.error(
+        LanguageService.t('matcher.noImageForPalette') || 'Please load an image first'
+      );
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      ToastService.error('Could not get canvas context');
+      return;
+    }
+
+    // Ensure region is within canvas bounds
+    const regionX = Math.max(0, Math.floor(x));
+    const regionY = Math.max(0, Math.floor(y));
+    const regionWidth = Math.min(Math.floor(width), canvas.width - regionX);
+    const regionHeight = Math.min(Math.floor(height), canvas.height - regionY);
+
+    if (regionWidth <= 0 || regionHeight <= 0) {
+      ToastService.error('Selected region is too small');
+      return;
+    }
+
+    try {
+      // Get pixel data from the selected region
+      const imageData = ctx.getImageData(regionX, regionY, regionWidth, regionHeight);
+      const pixels = PaletteService.pixelDataToRGBFiltered(imageData.data);
+
+      if (pixels.length === 0) {
+        ToastService.error('No pixels to analyze in selected region');
+        return;
+      }
+
+      // Extract palette and match to dyes
+      const matches = this.paletteService.extractAndMatchPalette(pixels, dyeService, {
+        colorCount: this.paletteColorCount,
+      });
+
+      this.lastPaletteResults = matches;
+
+      // Draw indicators on the original canvas to show the selected region
+      ctx.strokeStyle = '#3B82F6';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(regionX, regionY, regionWidth, regionHeight);
+
+      // Render results
+      this.renderPaletteResults(matches);
+
+      // Hide empty state
+      this.showEmptyState(false);
+
+      // Fetch prices if enabled
+      if (this.showPrices && this.marketBoard) {
+        // Convert PaletteMatch to DyeWithDistance for price fetching
+        this.matchedDyes = matches.map((m: PaletteMatch) => ({
+          ...m.matchedDye,
+          distance: m.distance,
+        }));
+        void this.fetchPricesForMatches();
+      }
+
+      ToastService.success(
+        LanguageService.tInterpolate('matcher.paletteExtracted', {
+          count: String(matches.length),
+        }) || `Extracted ${matches.length} colors from selected region`
+      );
+
+      logger.info('[ExtractorTool] Palette extracted from region:', matches.length, 'colors');
+    } catch (error) {
+      logger.error('[ExtractorTool] Palette extraction from region failed:', error);
+      ToastService.error('Failed to extract palette from region');
+    }
+  }
 
   /**
    * Extract palette from loaded image using K-Means clustering

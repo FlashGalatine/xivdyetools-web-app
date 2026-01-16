@@ -195,6 +195,8 @@
     "extractionSettings": "추출 설정",
     "vibrancyBoost": "생동감 부스트",
     "maxColors": "최대 색상 수",
+    "dragThreshold": "선택 감도",
+    "dragThresholdTooltip": "낮은 값은 드래그하기 쉽고, 높은 값은 클릭하기 쉽습니다",
     "visionTypes": "시각 유형",
     "deuteranopia": "녹색맹",
     "protanopia": "적색맹",

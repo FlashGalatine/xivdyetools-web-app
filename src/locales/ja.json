@@ -195,6 +195,8 @@
     "extractionSettings": "抽出設定",
     "vibrancyBoost": "鮮やかさブースト",
     "maxColors": "最大色数",
+    "dragThreshold": "選択感度",
+    "dragThresholdTooltip": "低い値はドラッグしやすく、高い値はクリックしやすくなります",
     "visionTypes": "視覚タイプ",
     "deuteranopia": "第二色覚異常",
     "protanopia": "第一色覚異常",

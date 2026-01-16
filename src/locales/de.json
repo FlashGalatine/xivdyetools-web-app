@@ -195,6 +195,8 @@
     "extractionSettings": "Extraktionseinstellungen",
     "vibrancyBoost": "Leuchtkraft-Boost",
     "maxColors": "Max. Farben",
+    "dragThreshold": "Auswahlempfindlichkeit",
+    "dragThresholdTooltip": "Niedrigere Werte erleichtern das Ziehen, höhere Werte erleichtern das Klicken",
     "visionTypes": "Sichttypen",
     "deuteranopia": "Deuteranopie",
     "protanopia": "Protanopie",

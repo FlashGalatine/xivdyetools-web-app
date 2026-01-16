@@ -56,6 +56,8 @@ export interface ExtractorConfig {
   vibrancyBoost: boolean;
   /** Maximum number of colors to extract (3-10) */
   maxColors: number;
+  /** Drag threshold in pixels for click vs drag differentiation (3-15, default 5) */
+  dragThreshold: number;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
 }
@@ -305,6 +307,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   extractor: {
     vibrancyBoost: true,
     maxColors: 4,
+    dragThreshold: 5,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   accessibility: {

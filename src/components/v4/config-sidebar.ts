@@ -127,6 +127,7 @@ export class ConfigSidebar extends BaseLitComponent {
   @state() private extractorConfig: ExtractorConfig = {
     vibrancyBoost: true,
     maxColors: 8,
+    dragThreshold: 5,
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private accessibilityConfig: AccessibilityConfig = {
@@ -832,6 +833,16 @@ export class ConfigSidebar extends BaseLitComponent {
               .max=${10}
               @slider-change=${(e: CustomEvent<{ value: number }>) =>
         this.handleConfigChange('extractor', 'maxColors', e.detail.value)}
+            ></v4-range-slider>
+          </div>
+          <div class="slider-wrapper" title=${LanguageService.t('config.dragThresholdTooltip')}>
+            <v4-range-slider
+              label=${LanguageService.t('config.dragThreshold')}
+              .value=${this.extractorConfig.dragThreshold}
+              .min=${3}
+              .max=${15}
+              @slider-change=${(e: CustomEvent<{ value: number }>) =>
+        this.handleConfigChange('extractor', 'dragThreshold', e.detail.value)}
             ></v4-range-slider>
           </div>
         </div>
