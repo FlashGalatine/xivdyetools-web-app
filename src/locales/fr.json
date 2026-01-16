@@ -1058,5 +1058,25 @@
     "moreActions": "Plus d'actions",
     "slider": "Curseur",
     "toggle": "Basculer"
+  },
+  "resultCard": {
+    "inspectDyeIn": "Inspecter la teinture dans...",
+    "transformDyeIn": "Transformer la teinture dans...",
+    "openInBrowser": "Ouvrir dans le navigateur...",
+    "sentToBudget": "Envoyé aux Suggestions de Budget",
+    "dyeAlreadyIn": "Teinture déjà ajoutée",
+    "addedTo": "Ajouté avec succès",
+    "slotsFull": "Tous les emplacements sont pleins. Sélectionnez-en un à remplacer :",
+    "selectSlotToReplace": "Sélectionner l'emplacement à remplacer",
+    "addingDye": "Ajout",
+    "replacedInTool": "Remplacé avec succès",
+    "tools": {
+      "harmony": "Explorateur d'Harmonie",
+      "budget": "Suggestions de Budget",
+      "accessibility": "Vérificateur d'Accessibilité",
+      "comparison": "Comparaison de Teintures",
+      "gradient": "Créateur de Dégradé",
+      "mixer": "Mélangeur de Teintures"
+    }
   }
 }

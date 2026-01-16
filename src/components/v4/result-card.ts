@@ -23,7 +23,10 @@ import { BaseLitComponent } from './base-lit-component';
 import { ICON_CONTEXT_MENU } from '@shared/ui-icons';
 import type { Dye, DyeWithDistance } from '@shared/types';
 import { ColorService } from '@xivdyetools/core';
-import { LanguageService } from '@services/index';
+import { LanguageService, StorageService, RouterService } from '@services/index';
+import { ToastService } from '@services/toast-service';
+import { ModalService } from '@services/modal-service';
+import { DyeService } from '@services/dye-service-wrapper';
 
 /**
  * Data structure for the result card
@@ -49,16 +52,76 @@ export interface ResultCardData {
 
 /**
  * Context menu action identifiers
+ *
+ * Grouped into categories:
+ * - Inspect: harmony, budget, accessibility, comparison
+ * - Transform: gradient, mixer
+ * - External: universalis, garlandtools, teamcraft, saddlebag
+ *
+ * Also includes legacy action names for backwards compatibility with
+ * existing tool components that listen for context-action events.
  */
 export type ContextAction =
-  | 'add-comparison'
-  | 'add-mixer'
+  // Inspect Dye in...
+  | 'inspect-harmony'
+  | 'inspect-budget'
+  | 'inspect-accessibility'
+  | 'inspect-comparison'
+  // Transform Dye in...
+  | 'transform-gradient'
+  | 'transform-mixer'
+  // Open in browser...
+  | 'external-universalis'
+  | 'external-garlandtools'
+  | 'external-teamcraft'
+  | 'external-saddlebag'
+  // Legacy actions (for backwards compatibility with existing tool components)
+  | 'add-comparison'      // → use 'inspect-comparison'
+  | 'add-mixer'           // → use 'transform-mixer'
+  | 'add-accessibility'   // → use 'inspect-accessibility'
+  | 'see-harmonies'       // → use 'inspect-harmony'
+  | 'budget'              // → use 'inspect-budget'
+  | 'copy-hex'            // kept for clipboard functionality
   | 'add-mixer-slot-1'
-  | 'add-mixer-slot-2'
-  | 'add-accessibility'
-  | 'see-harmonies'
-  | 'budget'
-  | 'copy-hex';
+  | 'add-mixer-slot-2';
+
+/**
+ * Storage keys for tool dye selections
+ *
+ * Note: The Dye Mixer (v4) uses a different format than other tools:
+ * - Mixer v4: [number | null, number | null] tuple
+ * - Other tools: number[] array
+ */
+const STORAGE_KEYS = {
+  comparison: 'v3_comparison_selected_dyes',
+  // Gradient Builder uses the legacy v3 mixer key (stores as number[])
+  gradient: 'v3_mixer_selected_dyes',
+  accessibility: 'v3_accessibility_selected_dyes',
+  budget: 'v3_budget_target',
+  harmony: 'v3_harmony_target',
+  // Dye Mixer v4 uses a different key AND format (tuple, not array)
+  mixerV4: 'v4_mixer_selected_dyes',
+} as const;
+
+/**
+ * Maximum dye slots per tool
+ * Note: mixer is handled separately due to different storage format
+ */
+const MAX_SLOTS = {
+  comparison: 4,
+  gradient: 2,
+  accessibility: 4,
+} as const;
+
+/**
+ * External URL templates (use itemID)
+ */
+const EXTERNAL_URLS = {
+  universalis: (itemID: number) => `https://universalis.app/market/${itemID}`,
+  garlandtools: (itemID: number) => `https://www.garlandtools.org/db/#item/${itemID}`,
+  teamcraft: (itemID: number) => `https://ffxivteamcraft.com/db/en/item/${itemID}`,
+  saddlebag: (itemID: number) => `https://saddlebagexchange.com/queries/item-data/${itemID}`,
+} as const;
 
 /**
  * V4 Result Card - Unified dye result display
@@ -203,12 +266,23 @@ export class ResultCard extends BaseLitComponent {
         );
         border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.1));
         border-radius: 12px;
-        overflow: hidden;
+        /* overflow: visible to allow context menu submenus to escape */
+        overflow: visible;
         transition:
           transform var(--v4-transition-fast, 150ms),
           box-shadow var(--v4-transition-fast, 150ms),
           border-color var(--v4-transition-fast, 150ms);
         position: relative;
+      }
+
+      /* Clip color preview area for rounded corners */
+      .color-preview {
+        overflow: hidden;
+      }
+
+      /* Clip header for rounded top corners */
+      .card-header {
+        border-radius: 11px 11px 0 0;
       }
 
       .result-card:hover {
@@ -472,6 +546,84 @@ export class ResultCard extends BaseLitComponent {
         outline-offset: -2px;
       }
 
+      /* Submenu parent item - has chevron indicator */
+      .menu-item.has-submenu {
+        position: relative;
+        justify-content: space-between;
+      }
+
+      /* Chevron arrow pointing left */
+      .menu-item.has-submenu::after {
+        content: '';
+        width: 0;
+        height: 0;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+        border-right: 5px solid currentColor;
+        transform: rotate(180deg);
+        opacity: 0.6;
+        transition: opacity 0.15s;
+        flex-shrink: 0;
+        margin-left: 8px;
+      }
+
+      .menu-item.has-submenu:hover::after {
+        opacity: 1;
+      }
+
+      /* Invisible bridge to left side - prevents hover gap */
+      .menu-item.has-submenu::before {
+        content: '';
+        position: absolute;
+        right: 100%;
+        top: 0;
+        width: 16px;
+        height: 100%;
+        background: transparent;
+      }
+
+      /* Nested submenu - pops LEFT from parent menu */
+      .submenu {
+        position: absolute;
+        right: calc(100% + 8px);
+        top: -6px;
+        width: 200px;
+        background: var(--theme-card-background, #2a2a2a);
+        border: 1px solid var(--theme-border, #3a3a3a);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        padding: 6px 0;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(8px);
+        transition:
+          opacity 0.15s,
+          transform 0.15s,
+          visibility 0.15s;
+        pointer-events: none;
+        z-index: 200;
+      }
+
+      .menu-item.has-submenu:hover > .submenu,
+      .menu-item.has-submenu:focus-within > .submenu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+
+      .submenu .menu-item {
+        font-size: 12px;
+        padding: 8px 14px;
+      }
+
+      /* Menu section divider */
+      .menu-divider {
+        height: 1px;
+        background: var(--theme-border, rgba(255, 255, 255, 0.1));
+        margin: 4px 0;
+      }
+
       /* Slot Picker Menu - Pops UP from primary button */
       .slot-picker-container {
         position: relative;
@@ -633,15 +785,302 @@ export class ResultCard extends BaseLitComponent {
 
   /**
    * Handle context menu action
+   * Routes to appropriate handler based on action type
    */
   private handleMenuAction(action: ContextAction): void {
-    if (this.data) {
-      this.emit<{ action: ContextAction; dye: Dye }>('context-action', {
-        action,
-        dye: this.data.dye,
-      });
+    if (!this.data) return;
+
+    const dye = this.data.dye;
+
+    // Handle action based on type
+    switch (action) {
+      // Inspect actions - navigate to tool
+      case 'inspect-harmony':
+        this.navigateToHarmony(dye);
+        break;
+      case 'inspect-budget':
+        this.setAsBudgetTarget(dye);
+        break;
+      case 'inspect-accessibility':
+        this.addToTool('accessibility', dye);
+        break;
+      case 'inspect-comparison':
+        this.addToTool('comparison', dye);
+        break;
+
+      // Transform actions - navigate to tool
+      case 'transform-gradient':
+        this.addToTool('gradient', dye);
+        break;
+      case 'transform-mixer':
+        this.addToMixer(dye);
+        break;
+
+      // External links - open in new tab
+      case 'external-universalis':
+        this.openExternalUrl('universalis', dye.itemID);
+        break;
+      case 'external-garlandtools':
+        this.openExternalUrl('garlandtools', dye.itemID);
+        break;
+      case 'external-teamcraft':
+        this.openExternalUrl('teamcraft', dye.itemID);
+        break;
+      case 'external-saddlebag':
+        this.openExternalUrl('saddlebag', dye.itemID);
+        break;
+
+      // Legacy slot picker actions
+      case 'add-mixer-slot-1':
+      case 'add-mixer-slot-2':
+        // Handled by handleSlotAction
+        break;
     }
+
+    // Also emit for external listeners
+    this.emit<{ action: ContextAction; dye: Dye }>('context-action', {
+      action,
+      dye,
+    });
     this.menuOpen = false;
+  }
+
+  /**
+   * Navigate to Harmony Explorer with dye pre-selected
+   * Overwrites any existing dye in localStorage
+   */
+  private navigateToHarmony(dye: Dye): void {
+    // Use itemID for localization-safe deep linking
+    RouterService.navigateTo('harmony', { dyeId: String(dye.itemID) });
+  }
+
+  /**
+   * Set dye as Budget Suggestions target
+   * Overwrites any existing target
+   */
+  private setAsBudgetTarget(dye: Dye): void {
+    StorageService.setItem(STORAGE_KEYS.budget, dye.id);
+    ToastService.success(
+      LanguageService.t('resultCard.sentToBudget') || 'Sent to Budget Suggestions'
+    );
+    RouterService.navigateTo('budget');
+  }
+
+  /**
+   * Add dye to a multi-slot tool (comparison, accessibility, gradient)
+   * Shows slot selection modal if all slots are full
+   * Note: Mixer is handled separately via addToMixer() due to different storage format
+   */
+  private addToTool(
+    tool: 'comparison' | 'accessibility' | 'gradient',
+    dye: Dye
+  ): void {
+    const storageKey = STORAGE_KEYS[tool];
+    const maxSlots = MAX_SLOTS[tool];
+    const currentDyes = StorageService.getItem<number[]>(storageKey) ?? [];
+
+    // Check if dye already exists
+    if (currentDyes.includes(dye.id)) {
+      const toolName = this.getToolDisplayName(tool);
+      ToastService.info(
+        LanguageService.t('resultCard.dyeAlreadyIn') || `Dye already in ${toolName}`
+      );
+      return;
+    }
+
+    // Has space - add directly
+    if (currentDyes.length < maxSlots) {
+      currentDyes.push(dye.id);
+      StorageService.setItem(storageKey, currentDyes);
+      const toolName = this.getToolDisplayName(tool);
+      ToastService.success(
+        LanguageService.t('resultCard.addedTo') || `Added to ${toolName}`
+      );
+      // Navigate to the appropriate tool
+      RouterService.navigateTo(tool);
+      return;
+    }
+
+    // Full - show slot selection modal
+    this.showSlotSelectionModal(tool, dye, currentDyes);
+  }
+
+  /**
+   * Add dye to the Dye Mixer (v4)
+   * Uses tuple format [number | null, number | null] instead of array
+   */
+  private addToMixer(dye: Dye): void {
+    const currentDyes = StorageService.getItem<[number | null, number | null]>(
+      STORAGE_KEYS.mixerV4
+    ) ?? [null, null];
+
+    // Check if dye already exists in either slot
+    if (currentDyes[0] === dye.id || currentDyes[1] === dye.id) {
+      ToastService.info(
+        LanguageService.t('resultCard.dyeAlreadyIn') || 'Dye already in Dye Mixer'
+      );
+      return;
+    }
+
+    // Find first empty slot
+    if (currentDyes[0] === null) {
+      currentDyes[0] = dye.id;
+      StorageService.setItem(STORAGE_KEYS.mixerV4, currentDyes);
+      ToastService.success(
+        LanguageService.t('resultCard.addedTo') || 'Added to Dye Mixer'
+      );
+      RouterService.navigateTo('mixer');
+      return;
+    }
+
+    if (currentDyes[1] === null) {
+      currentDyes[1] = dye.id;
+      StorageService.setItem(STORAGE_KEYS.mixerV4, currentDyes);
+      ToastService.success(
+        LanguageService.t('resultCard.addedTo') || 'Added to Dye Mixer'
+      );
+      RouterService.navigateTo('mixer');
+      return;
+    }
+
+    // Both slots full - show slot selection modal
+    // Convert tuple to array for modal compatibility
+    const dyeIds = currentDyes.filter((id): id is number => id !== null);
+    this.showSlotSelectionModal('mixer', dye, dyeIds);
+  }
+
+  /**
+   * Get display name for a tool
+   */
+  private getToolDisplayName(tool: 'comparison' | 'accessibility' | 'gradient' | 'mixer'): string {
+    const toolNames: Record<typeof tool, string> = {
+      comparison: LanguageService.t('tools.comparison.shortName') || 'Dye Comparison',
+      accessibility: LanguageService.t('tools.accessibility.shortName') || 'Accessibility Checker',
+      gradient: LanguageService.t('tools.gradient.shortName') || 'Gradient Builder',
+      mixer: LanguageService.t('tools.mixer.shortName') || 'Dye Mixer',
+    };
+    return toolNames[tool];
+  }
+
+  /**
+   * Show modal for selecting which slot to replace when tool is full
+   */
+  private showSlotSelectionModal(
+    tool: 'comparison' | 'accessibility' | 'gradient' | 'mixer',
+    newDye: Dye,
+    currentDyeIds: number[]
+  ): void {
+    const dyeService = DyeService.getInstance();
+    const toolName = this.getToolDisplayName(tool);
+
+    // Generate slot labels based on tool type
+    const slotLabels =
+      tool === 'mixer' || tool === 'gradient'
+        ? [
+            LanguageService.t('mixer.startDye') || 'Start Dye',
+            LanguageService.t('mixer.endDye') || 'End Dye',
+          ]
+        : currentDyeIds.map((_, i) => `${LanguageService.t('common.slot') || 'Slot'} ${i + 1}`);
+
+    // Build slot buttons HTML
+    const slotsHtml = currentDyeIds
+      .map((dyeId, index) => {
+        const existingDye = dyeService.getDyeById(dyeId);
+        const dyeName = existingDye
+          ? LanguageService.getDyeName(existingDye.itemID) || existingDye.name
+          : 'Unknown';
+        const dyeHex = existingDye?.hex ?? '#888888';
+
+        return `
+        <button type="button" class="slot-select-btn flex items-center gap-3 w-full p-3 rounded-lg border transition-colors"
+          style="background: var(--theme-card-background); border-color: var(--theme-border);"
+          data-slot="${index}">
+          <div class="w-8 h-8 rounded" style="background: ${dyeHex}; border: 1px solid var(--theme-border);"></div>
+          <div class="flex-1 text-left">
+            <p class="font-medium text-sm" style="color: var(--theme-text);">${slotLabels[index]}</p>
+            <p class="text-xs" style="color: var(--theme-text-muted);">${dyeName}</p>
+          </div>
+          <span class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('common.replace') || 'Replace'}</span>
+        </button>
+      `;
+      })
+      .join('');
+
+    const newDyeName = LanguageService.getDyeName(newDye.itemID) || newDye.name;
+
+    const content = `
+      <p class="mb-4" style="color: var(--theme-text);">
+        ${LanguageService.t('resultCard.slotsFull') || 'All slots are full. Select one to replace:'}
+      </p>
+      <div class="space-y-2">${slotsHtml}</div>
+      <div class="mt-4 p-3 rounded-lg flex items-center gap-3" style="background: var(--theme-background-secondary);">
+        <div class="w-8 h-8 rounded" style="background: ${newDye.hex}; border: 1px solid var(--theme-border);"></div>
+        <div>
+          <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('resultCard.addingDye') || 'Adding'}:</p>
+          <p class="font-medium text-sm" style="color: var(--theme-text);">${newDyeName}</p>
+        </div>
+      </div>
+    `;
+
+    const modalId = ModalService.show({
+      type: 'custom',
+      title: LanguageService.t('resultCard.selectSlotToReplace') || 'Select Slot to Replace',
+      content: content,
+      size: 'sm',
+      closable: true,
+      closeOnBackdrop: true,
+      cancelText: LanguageService.t('common.cancel') || 'Cancel',
+    });
+
+    // Attach click handlers after modal renders
+    setTimeout(() => {
+      const buttons = document.querySelectorAll('.slot-select-btn');
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const slotIndex = parseInt(btn.getAttribute('data-slot') || '0', 10);
+
+          // Handle mixer specially (uses tuple format)
+          if (tool === 'mixer') {
+            const mixerDyes: [number | null, number | null] = [
+              currentDyeIds[0] ?? null,
+              currentDyeIds[1] ?? null,
+            ];
+            mixerDyes[slotIndex as 0 | 1] = newDye.id;
+            StorageService.setItem(STORAGE_KEYS.mixerV4, mixerDyes);
+          } else {
+            // Other tools use array format
+            const storageKey = STORAGE_KEYS[tool];
+            currentDyeIds[slotIndex] = newDye.id;
+            StorageService.setItem(storageKey, currentDyeIds);
+          }
+
+          ModalService.dismiss(modalId);
+          ToastService.success(
+            LanguageService.t('resultCard.replacedInTool') || `Replaced in ${toolName}`
+          );
+          RouterService.navigateTo(tool);
+        });
+
+        // Hover effects
+        btn.addEventListener('mouseenter', () => {
+          (btn as HTMLElement).style.backgroundColor = 'var(--theme-card-hover)';
+        });
+        btn.addEventListener('mouseleave', () => {
+          (btn as HTMLElement).style.backgroundColor = 'var(--theme-card-background)';
+        });
+      });
+    }, 50);
+  }
+
+  /**
+   * Open an external URL in a new browser tab
+   */
+  private openExternalUrl(
+    site: 'universalis' | 'garlandtools' | 'teamcraft' | 'saddlebag',
+    itemID: number
+  ): void {
+    const url = EXTERNAL_URLS[site](itemID);
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   /**
@@ -864,54 +1303,104 @@ export class ResultCard extends BaseLitComponent {
                     >
                       ${unsafeHTML(ICON_CONTEXT_MENU)}
                     </button>
-                    <!-- Context Menu - Pops UP -->
+                    <!-- Context Menu - Pops UP with nested submenus -->
                     <div
                       class="context-menu ${this.menuOpen ? 'open' : ''}"
                       role="menu"
                       aria-hidden=${!this.menuOpen}
                     >
-                      <button
-                        class="menu-item"
-                        role="menuitem"
-                        @click=${() => this.handleMenuAction('add-comparison')}
-                      >
-                        ${LanguageService.t('harmony.addToComparison')}
-                      </button>
-                      <button
-                        class="menu-item"
-                        role="menuitem"
-                        @click=${() => this.handleMenuAction('add-mixer')}
-                      >
-                        ${LanguageService.t('harmony.addToMixer')}
-                      </button>
-                      <button
-                        class="menu-item"
-                        role="menuitem"
-                        @click=${() => this.handleMenuAction('add-accessibility')}
-                      >
-                        ${LanguageService.t('harmony.addToAccessibility')}
-                      </button>
-                      <button
-                        class="menu-item"
-                        role="menuitem"
-                        @click=${() => this.handleMenuAction('see-harmonies')}
-                      >
-                        ${LanguageService.t('harmony.seeHarmonies')}
-                      </button>
-                      <button
-                        class="menu-item"
-                        role="menuitem"
-                        @click=${() => this.handleMenuAction('budget')}
-                      >
-                        ${LanguageService.t('harmony.seeBudget')}
-                      </button>
-                      <button
-                        class="menu-item"
-                        role="menuitem"
-                        @click=${() => this.handleMenuAction('copy-hex')}
-                      >
-                        ${LanguageService.t('harmony.copyHex')}
-                      </button>
+                      <!-- Inspect Dye in... -->
+                      <div class="menu-item has-submenu" role="menuitem" tabindex="0">
+                        ${LanguageService.t('resultCard.inspectDyeIn') || 'Inspect Dye in...'}
+                        <div class="submenu" role="menu">
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('inspect-harmony')}
+                          >
+                            ${LanguageService.t('resultCard.tools.harmony') || 'Harmony Explorer'}
+                          </button>
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('inspect-budget')}
+                          >
+                            ${LanguageService.t('resultCard.tools.budget') || 'Budget Suggestions'}
+                          </button>
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('inspect-accessibility')}
+                          >
+                            ${LanguageService.t('resultCard.tools.accessibility') || 'Accessibility Checker'}
+                          </button>
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('inspect-comparison')}
+                          >
+                            ${LanguageService.t('resultCard.tools.comparison') || 'Dye Comparison'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Transform Dye in... -->
+                      <div class="menu-item has-submenu" role="menuitem" tabindex="0">
+                        ${LanguageService.t('resultCard.transformDyeIn') || 'Transform Dye in...'}
+                        <div class="submenu" role="menu">
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('transform-gradient')}
+                          >
+                            ${LanguageService.t('resultCard.tools.gradient') || 'Gradient Builder'}
+                          </button>
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('transform-mixer')}
+                          >
+                            ${LanguageService.t('resultCard.tools.mixer') || 'Dye Mixer'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="menu-divider"></div>
+
+                      <!-- Open in browser... -->
+                      <div class="menu-item has-submenu" role="menuitem" tabindex="0">
+                        ${LanguageService.t('resultCard.openInBrowser') || 'Open in browser...'}
+                        <div class="submenu" role="menu">
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('external-universalis')}
+                          >
+                            Universalis
+                          </button>
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('external-garlandtools')}
+                          >
+                            GarlandTools
+                          </button>
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('external-teamcraft')}
+                          >
+                            TeamCraft
+                          </button>
+                          <button
+                            class="menu-item"
+                            role="menuitem"
+                            @click=${() => this.handleMenuAction('external-saddlebag')}
+                          >
+                            Saddlebag Exchange
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

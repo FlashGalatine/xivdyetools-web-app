@@ -1058,5 +1058,25 @@
     "moreActions": "More actions",
     "slider": "Slider",
     "toggle": "Toggle"
+  },
+  "resultCard": {
+    "inspectDyeIn": "Inspect Dye in...",
+    "transformDyeIn": "Transform Dye in...",
+    "openInBrowser": "Open in browser...",
+    "sentToBudget": "Sent to Budget Suggestions",
+    "dyeAlreadyIn": "Dye already added",
+    "addedTo": "Added successfully",
+    "slotsFull": "All slots are full. Select one to replace:",
+    "selectSlotToReplace": "Select Slot to Replace",
+    "addingDye": "Adding",
+    "replacedInTool": "Replaced successfully",
+    "tools": {
+      "harmony": "Harmony Explorer",
+      "budget": "Budget Suggestions",
+      "accessibility": "Accessibility Checker",
+      "comparison": "Dye Comparison",
+      "gradient": "Gradient Builder",
+      "mixer": "Dye Mixer"
+    }
   }
 }

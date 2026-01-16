@@ -1058,5 +1058,25 @@
     "moreActions": "Weitere Aktionen",
     "slider": "Schieberegler",
     "toggle": "Umschalten"
+  },
+  "resultCard": {
+    "inspectDyeIn": "Farbstoff prüfen in...",
+    "transformDyeIn": "Farbstoff umwandeln in...",
+    "openInBrowser": "Im Browser öffnen...",
+    "sentToBudget": "An Budget-Vorschläge gesendet",
+    "dyeAlreadyIn": "Farbstoff bereits hinzugefügt",
+    "addedTo": "Erfolgreich hinzugefügt",
+    "slotsFull": "Alle Plätze belegt. Wählen Sie einen zum Ersetzen:",
+    "selectSlotToReplace": "Platz zum Ersetzen auswählen",
+    "addingDye": "Hinzufügen",
+    "replacedInTool": "Erfolgreich ersetzt",
+    "tools": {
+      "harmony": "Harmonie-Explorer",
+      "budget": "Budget-Vorschläge",
+      "accessibility": "Barrierefreiheits-Prüfer",
+      "comparison": "Farbstoff-Vergleich",
+      "gradient": "Farbverlauf-Ersteller",
+      "mixer": "Farbstoff-Mischer"
+    }
   }
 }

@@ -1058,5 +1058,25 @@
     "moreActions": "추가 작업",
     "slider": "슬라이더",
     "toggle": "토글"
+  },
+  "resultCard": {
+    "inspectDyeIn": "염료 검사...",
+    "transformDyeIn": "염료 변환...",
+    "openInBrowser": "브라우저에서 열기...",
+    "sentToBudget": "예산 제안으로 전송됨",
+    "dyeAlreadyIn": "염료가 이미 추가되었습니다",
+    "addedTo": "추가됨",
+    "slotsFull": "모든 슬롯이 꽉 찼습니다. 교체할 슬롯을 선택하세요:",
+    "selectSlotToReplace": "교체할 슬롯 선택",
+    "addingDye": "추가 중",
+    "replacedInTool": "교체됨",
+    "tools": {
+      "harmony": "하모니 탐색기",
+      "budget": "예산 제안",
+      "accessibility": "접근성 검사기",
+      "comparison": "염료 비교",
+      "gradient": "그라디언트 빌더",
+      "mixer": "염료 믹서"
+    }
   }
 }

@@ -163,6 +163,26 @@
     "closeModal": "关闭弹窗",
     "full": "已满"
   },
+  "resultCard": {
+    "inspectDyeIn": "在以下工具中查看...",
+    "transformDyeIn": "在以下工具中变换...",
+    "openInBrowser": "在浏览器中打开...",
+    "sentToBudget": "已发送至预算建议",
+    "dyeAlreadyIn": "染剂已添加",
+    "addedTo": "添加成功",
+    "slotsFull": "所有槽位已满。请选择要替换的槽位：",
+    "selectSlotToReplace": "选择要替换的槽位",
+    "addingDye": "正在添加",
+    "replacedInTool": "替换成功",
+    "tools": {
+      "harmony": "色彩和谐探索器",
+      "budget": "预算建议",
+      "accessibility": "无障碍检查器",
+      "comparison": "染剂比较",
+      "gradient": "渐变生成器",
+      "mixer": "染剂混合器"
+    }
+  },
   "config": {
     "harmonyType": "和谐类型",
     "complementary": "互补色",
