@@ -21,6 +21,8 @@ import {
   communityPresetService,
   ToastService,
 } from '@services/index';
+import { MarketBoardService } from '@services/market-board-service';
+import type { PriceData } from '@shared/types';
 import { ConfigController } from '@services/config-controller';
 import type { DisplayOptionsConfig, MarketConfig } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
@@ -100,9 +102,26 @@ export class PresetDetail extends BaseLitComponent {
   private marketConfig: MarketConfig = { selectedServer: 'Crystal', showPrices: false };
 
   /**
+   * Cached price data for preset dyes (itemID -> PriceData)
+   */
+  @state()
+  private priceData: Map<number, PriceData> = new Map();
+
+  /**
+   * Whether prices are currently being fetched
+   */
+  @state()
+  private isFetchingPrices: boolean = false;
+
+  /**
    * Config controller instance
    */
   private configController: ConfigController | null = null;
+
+  /**
+   * MarketBoardService instance for price fetching
+   */
+  private marketBoardService: MarketBoardService | null = null;
 
   /**
    * Unsubscribe functions for config subscriptions
@@ -393,8 +412,11 @@ export class PresetDetail extends BaseLitComponent {
 
   override async connectedCallback(): Promise<void> {
     super.connectedCallback();
+    this.marketBoardService = MarketBoardService.getInstance();
     this.loadConfigAndSubscribe();
     await this.checkVoteStatus();
+    // Fetch prices for preset dyes if prices are enabled
+    await this.fetchPricesIfNeeded();
   }
 
   override disconnectedCallback(): void {
@@ -423,9 +445,32 @@ export class PresetDetail extends BaseLitComponent {
 
     // Subscribe to market config changes
     const unsubMarket = this.configController.subscribe('market', (config) => {
+      const serverChanged = config.selectedServer !== this.marketConfig.selectedServer;
+      const pricesToggled = config.showPrices !== this.marketConfig.showPrices;
       this.marketConfig = config;
+      // Re-fetch prices if server changed or prices were enabled
+      if (serverChanged || (pricesToggled && config.showPrices)) {
+        void this.fetchPricesIfNeeded();
+      }
     });
     this.configUnsubscribers.push(unsubMarket);
+
+    // Subscribe to MarketBoardService price updates
+    if (this.marketBoardService) {
+      const handlePricesUpdated = (event: Event) => {
+        const customEvent = event as CustomEvent<{ prices: Map<number, PriceData> }>;
+        // Update our local price cache with the new prices
+        for (const [itemId, priceInfo] of customEvent.detail.prices) {
+          this.priceData.set(itemId, priceInfo);
+        }
+        // Trigger re-render with updated prices
+        this.priceData = new Map(this.priceData);
+      };
+      this.marketBoardService.addEventListener('prices-updated', handlePricesUpdated);
+      this.configUnsubscribers.push(() => {
+        this.marketBoardService?.removeEventListener('prices-updated', handlePricesUpdated);
+      });
+    }
   }
 
   override updated(changedProperties: Map<PropertyKey, unknown>): void {
@@ -433,6 +478,9 @@ export class PresetDetail extends BaseLitComponent {
     if (changedProperties.has('preset')) {
       this.currentVoteCount = this.preset?.voteCount ?? 0;
       void this.checkVoteStatus();
+      // Clear old price data and fetch for new preset
+      this.priceData.clear();
+      void this.fetchPricesIfNeeded();
     }
   }
 
@@ -455,6 +503,43 @@ export class PresetDetail extends BaseLitComponent {
     } catch (error) {
       console.error('[v4-preset-detail] Failed to check vote status:', error);
       this.hasVoted = false;
+    }
+  }
+
+  /**
+   * Fetch market board prices for preset dyes if prices are enabled
+   */
+  private async fetchPricesIfNeeded(): Promise<void> {
+    // Check if we should fetch prices
+    if (!this.marketConfig.showPrices || !this.preset || !this.marketBoardService) {
+      return;
+    }
+
+    // Resolve dye IDs to Dye objects
+    const dyes = this.preset.dyes
+      .map((dyeId) => this.resolveDye(dyeId))
+      .filter((dye): dye is Dye => dye !== null);
+
+    if (dyes.length === 0) {
+      return;
+    }
+
+    this.isFetchingPrices = true;
+
+    try {
+      // Fetch prices via MarketBoardService (handles race conditions internally)
+      const prices = await this.marketBoardService.fetchPricesForDyes(dyes);
+
+      // Update local price cache
+      for (const [itemId, priceInfo] of prices) {
+        this.priceData.set(itemId, priceInfo);
+      }
+      // Trigger re-render with new price data
+      this.priceData = new Map(this.priceData);
+    } catch (error) {
+      console.error('[v4-preset-detail] Failed to fetch prices:', error);
+    } finally {
+      this.isFetchingPrices = false;
     }
   }
 
@@ -603,13 +688,20 @@ export class PresetDetail extends BaseLitComponent {
             ${this.preset.dyes.map((dyeId) => {
           const dye = this.resolveDye(dyeId);
           if (!dye) return nothing;
+          // Get price data for this dye
+          const priceInfo = this.priceData.get(dye.itemID);
+          // Resolve world name from price data, or fall back to selected server
+          const marketServer = this.marketBoardService?.getWorldNameForPrice(priceInfo)
+            ?? this.marketConfig.selectedServer;
           return html`
                 <v4-result-card
                   .data=${{
               dye,
               originalColor: dye.hex,
               matchedColor: dye.hex,
-              marketServer: this.marketConfig.selectedServer,
+              marketServer: marketServer,
+              price: this.marketConfig.showPrices && priceInfo ? priceInfo.currentAverage : undefined,
+              vendorCost: dye.cost,
             }}
                   ?show-actions=${false}
                   ?show-hex=${this.displayOptions.showHex}
