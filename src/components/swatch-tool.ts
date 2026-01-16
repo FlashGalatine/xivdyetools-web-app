@@ -74,39 +74,40 @@ const STORAGE_KEYS = {
 } as const;
 
 /**
- * Subrace display names (for UI)
+ * Mapping from SubRace type values to ClanKey for localization lookup
+ * SubRace uses PascalCase, ClanKey uses camelCase
  */
-const SUBRACE_DISPLAY_NAMES: Record<SubRace, string> = {
-  Midlander: 'Midlander',
-  Highlander: 'Highlander',
-  Wildwood: 'Wildwood',
-  Duskwight: 'Duskwight',
-  Plainsfolk: 'Plainsfolk',
-  Dunesfolk: 'Dunesfolk',
-  SeekerOfTheSun: 'Seeker of the Sun',
-  KeeperOfTheMoon: 'Keeper of the Moon',
-  SeaWolf: 'Sea Wolf',
-  Hellsguard: 'Hellsguard',
-  Raen: 'Raen',
-  Xaela: 'Xaela',
-  Helion: 'Helion',
-  TheLost: 'The Lost',
-  Rava: 'Rava',
-  Veena: 'Veena',
+const SUBRACE_TO_CLAN_KEY: Record<SubRace, string> = {
+  Midlander: 'midlander',
+  Highlander: 'highlander',
+  Wildwood: 'wildwood',
+  Duskwight: 'duskwight',
+  Plainsfolk: 'plainsfolk',
+  Dunesfolk: 'dunesfolk',
+  SeekerOfTheSun: 'seekerOfTheSun',
+  KeeperOfTheMoon: 'keeperOfTheMoon',
+  SeaWolf: 'seaWolf',
+  Hellsguard: 'hellsguard',
+  Raen: 'raen',
+  Xaela: 'xaela',
+  Helion: 'helion',
+  TheLost: 'theLost',
+  Rava: 'rava',
+  Veena: 'veena',
 };
 
 /**
- * Race groups with their subraces
+ * Race groups with their subraces and race key for localization
  */
-const RACE_GROUPS: Array<{ name: string; subraces: SubRace[] }> = [
-  { name: 'Hyur', subraces: ['Midlander', 'Highlander'] },
-  { name: 'Elezen', subraces: ['Wildwood', 'Duskwight'] },
-  { name: 'Lalafell', subraces: ['Plainsfolk', 'Dunesfolk'] },
-  { name: "Miqo'te", subraces: ['SeekerOfTheSun', 'KeeperOfTheMoon'] },
-  { name: 'Roegadyn', subraces: ['SeaWolf', 'Hellsguard'] },
-  { name: 'Au Ra', subraces: ['Raen', 'Xaela'] },
-  { name: 'Hrothgar', subraces: ['Helion', 'TheLost'] },
-  { name: 'Viera', subraces: ['Rava', 'Veena'] },
+const RACE_GROUPS: Array<{ raceKey: string; subraces: SubRace[] }> = [
+  { raceKey: 'hyur', subraces: ['Midlander', 'Highlander'] },
+  { raceKey: 'elezen', subraces: ['Wildwood', 'Duskwight'] },
+  { raceKey: 'lalafell', subraces: ['Plainsfolk', 'Dunesfolk'] },
+  { raceKey: 'miqote', subraces: ['SeekerOfTheSun', 'KeeperOfTheMoon'] },
+  { raceKey: 'roegadyn', subraces: ['SeaWolf', 'Hellsguard'] },
+  { raceKey: 'auRa', subraces: ['Raen', 'Xaela'] },
+  { raceKey: 'hrothgar', subraces: ['Helion', 'TheLost'] },
+  { raceKey: 'viera', subraces: ['Rava', 'Veena'] },
 ];
 
 /**
@@ -443,15 +444,18 @@ export class SwatchTool extends BaseComponent {
       },
     }) as HTMLSelectElement;
 
-    // Group subraces by race
+    // Group subraces by race with localized names
     for (const group of RACE_GROUPS) {
+      const localizedRaceName = LanguageService.getRace(group.raceKey);
       const optgroup = this.createElement('optgroup', {
-        attributes: { label: group.name },
+        attributes: { label: localizedRaceName },
       }) as HTMLOptGroupElement;
 
       for (const subrace of group.subraces) {
+        const clanKey = SUBRACE_TO_CLAN_KEY[subrace];
+        const localizedClanName = LanguageService.getClan(clanKey);
         const option = this.createElement('option', {
-          textContent: SUBRACE_DISPLAY_NAMES[subrace],
+          textContent: localizedClanName,
           attributes: { value: subrace },
         }) as HTMLOptionElement;
         if (subrace === this.subrace) {
@@ -1371,14 +1375,18 @@ export class SwatchTool extends BaseComponent {
       },
     }) as HTMLSelectElement;
 
+    // Group subraces by race with localized names
     for (const group of RACE_GROUPS) {
+      const localizedRaceName = LanguageService.getRace(group.raceKey);
       const optgroup = this.createElement('optgroup', {
-        attributes: { label: group.name },
+        attributes: { label: localizedRaceName },
       }) as HTMLOptGroupElement;
 
       for (const subrace of group.subraces) {
+        const clanKey = SUBRACE_TO_CLAN_KEY[subrace];
+        const localizedClanName = LanguageService.getClan(clanKey);
         const option = this.createElement('option', {
-          textContent: SUBRACE_DISPLAY_NAMES[subrace],
+          textContent: localizedClanName,
           attributes: { value: subrace },
         }) as HTMLOptionElement;
         if (subrace === this.subrace) {

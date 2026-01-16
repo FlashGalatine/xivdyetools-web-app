@@ -43,6 +43,44 @@ import './toggle-switch-v4';
 import './range-slider-v4';
 import './display-options-v4';
 import type { DisplayOptionsChangeDetail } from './display-options-v4';
+import type { SubRace } from '@xivdyetools/types';
+
+/**
+ * Mapping from SubRace type values to ClanKey for localization lookup
+ * SubRace uses PascalCase, ClanKey uses camelCase
+ */
+const SUBRACE_TO_CLAN_KEY: Record<SubRace, string> = {
+  Midlander: 'midlander',
+  Highlander: 'highlander',
+  Wildwood: 'wildwood',
+  Duskwight: 'duskwight',
+  Plainsfolk: 'plainsfolk',
+  Dunesfolk: 'dunesfolk',
+  SeekerOfTheSun: 'seekerOfTheSun',
+  KeeperOfTheMoon: 'keeperOfTheMoon',
+  SeaWolf: 'seaWolf',
+  Hellsguard: 'hellsguard',
+  Raen: 'raen',
+  Xaela: 'xaela',
+  Helion: 'helion',
+  TheLost: 'theLost',
+  Rava: 'rava',
+  Veena: 'veena',
+};
+
+/**
+ * Race groups with their subraces and race key for localization
+ */
+const RACE_GROUPS: Array<{ raceKey: string; subraces: SubRace[] }> = [
+  { raceKey: 'hyur', subraces: ['Midlander', 'Highlander'] },
+  { raceKey: 'elezen', subraces: ['Wildwood', 'Duskwight'] },
+  { raceKey: 'lalafell', subraces: ['Plainsfolk', 'Dunesfolk'] },
+  { raceKey: 'miqote', subraces: ['SeekerOfTheSun', 'KeeperOfTheMoon'] },
+  { raceKey: 'roegadyn', subraces: ['SeaWolf', 'Hellsguard'] },
+  { raceKey: 'auRa', subraces: ['Raen', 'Xaela'] },
+  { raceKey: 'hrothgar', subraces: ['Helion', 'TheLost'] },
+  { raceKey: 'viera', subraces: ['Rava', 'Veena'] },
+];
 
 /**
  * V4 Config Sidebar - Tool configuration panel
@@ -1317,38 +1355,22 @@ export class ConfigSidebar extends BaseLitComponent {
         this.handleConfigChange('swatch', 'race', value);
       }}
           >
-            <optgroup label="Hyur">
-              <option value="Midlander">Midlander</option>
-              <option value="Highlander">Highlander</option>
-            </optgroup>
-            <optgroup label="Elezen">
-              <option value="Wildwood">Wildwood</option>
-              <option value="Duskwight">Duskwight</option>
-            </optgroup>
-            <optgroup label="Lalafell">
-              <option value="Plainsfolk">Plainsfolk</option>
-              <option value="Dunesfolk">Dunesfolk</option>
-            </optgroup>
-            <optgroup label="Miqo'te">
-              <option value="SeekerOfTheSun">Seeker of the Sun</option>
-              <option value="KeeperOfTheMoon">Keeper of the Moon</option>
-            </optgroup>
-            <optgroup label="Roegadyn">
-              <option value="SeaWolf">Sea Wolf</option>
-              <option value="Hellsguard">Hellsguard</option>
-            </optgroup>
-            <optgroup label="Au Ra">
-              <option value="Raen">Raen</option>
-              <option value="Xaela">Xaela</option>
-            </optgroup>
-            <optgroup label="Hrothgar">
-              <option value="Helion">Helion</option>
-              <option value="TheLost">The Lost</option>
-            </optgroup>
-            <optgroup label="Viera">
-              <option value="Rava">Rava</option>
-              <option value="Veena">Veena</option>
-            </optgroup>
+            ${RACE_GROUPS.map(
+          (group) => html`
+                <optgroup label="${LanguageService.getRace(group.raceKey)}">
+                  ${group.subraces.map(
+            (subrace) => html`
+                      <option
+                        value="${subrace}"
+                        ?selected=${this.swatchConfig.race === subrace}
+                      >
+                        ${LanguageService.getClan(SUBRACE_TO_CLAN_KEY[subrace])}
+                      </option>
+                    `
+          )}
+                </optgroup>
+              `
+        )}
           </select>
           <select
             class="config-select"
@@ -1358,8 +1380,12 @@ export class ConfigSidebar extends BaseLitComponent {
         this.handleConfigChange('swatch', 'gender', value);
       }}
           >
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
+            <option value="Male" ?selected=${this.swatchConfig.gender === 'Male'}>
+              ${LanguageService.t('tools.character.male')}
+            </option>
+            <option value="Female" ?selected=${this.swatchConfig.gender === 'Female'}>
+              ${LanguageService.t('tools.character.female')}
+            </option>
           </select>
         </div>
 

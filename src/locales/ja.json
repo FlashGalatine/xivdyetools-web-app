@@ -97,7 +97,7 @@
     },
     "character": {
       "title": "キャラクターマッチャー",
-      "shortName": "キャラクター",
+      "shortName": "見本",
       "description": "キャラクターの色に合う染料を探す",
       "subtitle": "キャラクターの髪、目、肌などのカスタマイズカラーに合うFFXIVの染料を見つけます。",
       "selectSubrace": "部族を選択",

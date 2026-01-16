@@ -241,6 +241,20 @@ export class LanguageService {
     return LocalizationService.getLabel(key as Parameters<typeof LocalizationService.getLabel>[0]);
   }
 
+  /**
+   * Get localized race name from core library
+   */
+  static getRace(key: string): string {
+    return LocalizationService.getRace(key as Parameters<typeof LocalizationService.getRace>[0]);
+  }
+
+  /**
+   * Get localized clan (subrace) name from core library
+   */
+  static getClan(key: string): string {
+    return LocalizationService.getClan(key as Parameters<typeof LocalizationService.getClan>[0]);
+  }
+
   // ============================================================================
   // Utility Methods
   // ============================================================================

@@ -97,7 +97,7 @@
     },
     "character": {
       "title": "Correspondance Personnage",
-      "shortName": "Personnage",
+      "shortName": "Palette",
       "description": "Associer les teintures aux couleurs du personnage",
       "subtitle": "Trouvez les teintures FFXIV qui correspondent aux cheveux, yeux, peau et autres couleurs de personnalisation de votre personnage.",
       "selectSubrace": "Sélectionner l'ethnie",

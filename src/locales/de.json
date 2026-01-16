@@ -97,7 +97,7 @@
     },
     "character": {
       "title": "Charakter-Matcher",
-      "shortName": "Charakter",
+      "shortName": "Palette",
       "description": "Farbstoffe zu Charakterfarben zuordnen",
       "subtitle": "Finde FFXIV-Farbstoffe, die zu den Haar-, Augen-, Haut- und anderen Anpassungsfarben deines Charakters passen.",
       "selectSubrace": "Volksgruppe wählen",

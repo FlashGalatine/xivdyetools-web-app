@@ -97,7 +97,7 @@
     },
     "character": {
       "title": "Character Matcher",
-      "shortName": "Character",
+      "shortName": "Swatch",
       "description": "Match dyes to character colors",
       "subtitle": "Find FFXIV dyes that match your character's hair, eyes, skin, and other customization colors.",
       "selectSubrace": "Select Subrace",

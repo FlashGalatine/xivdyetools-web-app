@@ -97,7 +97,7 @@
     },
     "character": {
       "title": "캐릭터 매처",
-      "shortName": "캐릭터",
+      "shortName": "견본",
       "description": "캐릭터 색상에 맞는 염료 찾기",
       "subtitle": "캐릭터의 머리카락, 눈, 피부 및 기타 커스터마이징 색상과 일치하는 FFXIV 염료를 찾습니다.",
       "selectSubrace": "부족 선택",

@@ -97,7 +97,7 @@
     },
     "character": {
       "title": "角色配色器",
-      "shortName": "角色",
+      "shortName": "色板",
       "description": "为角色颜色匹配染料",
       "subtitle": "寻找与您角色的头发、眼睛、皮肤等自定义颜色相匹配的FFXIV染料。",
       "selectSubrace": "选择部族",
