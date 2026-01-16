@@ -426,6 +426,7 @@
     "showLabels": "Beschriftungen anzeigen",
     "highContrastMode": "Hochkontrastmodus",
     "selectDyes": "Farbstoffe auswählen",
+    "selectedDyes": "Ausgewählte Farbstoffe",
     "selectUpTo": "Wähle bis zu {count} Farbstoffe zur Barrierefreiheitsprüfung",
     "selectDyesToSeeAnalysis": "Wähle Farbstoffe, um die Barrierefreiheitsanalyse zu sehen",
     "visionSimulation": "Sehsimulation",

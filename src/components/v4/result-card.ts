@@ -308,6 +308,7 @@ export class ResultCard extends BaseLitComponent {
 
       .dye-name {
         margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
         font-size: 14px;
         font-weight: 700;
         letter-spacing: 0.5px;

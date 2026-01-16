@@ -426,6 +426,7 @@
     "showLabels": "Show Labels",
     "highContrastMode": "High Contrast Mode",
     "selectDyes": "Select Dyes",
+    "selectedDyes": "Selected Dyes",
     "selectUpTo": "Select up to {count} dyes to check accessibility",
     "selectDyesToSeeAnalysis": "Select dyes to see accessibility analysis",
     "visionSimulation": "Vision Simulations",

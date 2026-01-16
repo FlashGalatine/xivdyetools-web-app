@@ -426,6 +426,7 @@
     "showLabels": "ラベルを表示",
     "highContrastMode": "ハイコントラストモード",
     "selectDyes": "カララントを選択",
+    "selectedDyes": "選択された染料",
     "selectUpTo": "アクセシビリティをチェックするカララントを最大{count}個選択",
     "selectDyesToSeeAnalysis": "カララントを選択してアクセシビリティ分析を表示",
     "visionSimulation": "色覚シミュレーション",

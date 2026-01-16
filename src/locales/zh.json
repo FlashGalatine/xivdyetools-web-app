@@ -446,6 +446,7 @@
     "showLabels": "显示标签",
     "highContrastMode": "高对比度模式",
     "selectDyes": "选择染剂",
+    "selectedDyes": "已选染剂",
     "selectUpTo": "选择最多 {count} 种染剂检查无障碍性",
     "selectDyesToSeeAnalysis": "选择染剂以查看无障碍性分析",
     "visionSimulation": "视觉模拟",
