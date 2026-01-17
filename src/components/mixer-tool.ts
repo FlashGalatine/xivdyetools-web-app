@@ -597,7 +597,7 @@ export class MixerTool extends BaseComponent {
     const dyeSelectionContainer = this.createElement('div');
     left.appendChild(dyeSelectionContainer);
     this.dyeSelectionPanel = new CollapsiblePanel(dyeSelectionContainer, {
-      title: LanguageService.t('mixer.dyeSelection') || 'Dye Selection',
+      title: LanguageService.t('mixer.dyeSelection'),
       storageKey: 'v4_mixer_dye_selection_panel',
       defaultOpen: true,
       icon: ICON_PALETTE,
@@ -611,7 +611,7 @@ export class MixerTool extends BaseComponent {
     const settingsContainer = this.createElement('div');
     left.appendChild(settingsContainer);
     this.settingsPanel = new CollapsiblePanel(settingsContainer, {
-      title: LanguageService.t('mixer.mixSettings') || 'Mix Settings',
+      title: LanguageService.t('mixer.mixSettings'),
       storageKey: 'v4_mixer_settings_panel',
       defaultOpen: true,
       icon: ICON_SLIDERS,
@@ -625,7 +625,7 @@ export class MixerTool extends BaseComponent {
     const filtersContainer = this.createElement('div');
     left.appendChild(filtersContainer);
     this.filtersPanel = new CollapsiblePanel(filtersContainer, {
-      title: LanguageService.t('filters.advancedFilters') || 'Advanced Dye Filters',
+      title: LanguageService.t('filters.advancedFilters'),
       storageKey: 'v4_mixer_filters',
       defaultOpen: false,
       icon: ICON_FILTER,
@@ -652,7 +652,7 @@ export class MixerTool extends BaseComponent {
     const marketContainer = this.createElement('div');
     left.appendChild(marketContainer);
     this.marketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'v4_mixer_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -699,7 +699,7 @@ export class MixerTool extends BaseComponent {
     // Instruction text
     const instruction = this.createElement('p', {
       className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectDyesToBlend') || 'Select 2-3 dyes to blend together (3rd is optional)',
+      textContent: LanguageService.t('mixer.selectDyesToBlend'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     dyeContainer.appendChild(instruction);
@@ -792,7 +792,7 @@ export class MixerTool extends BaseComponent {
       // Empty state - dashed border placeholder
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('mixer.selectDyes') || 'Select dyes below to blend',
+        textContent: LanguageService.t('mixer.selectDyes'),
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -803,9 +803,9 @@ export class MixerTool extends BaseComponent {
 
     // Display each selected dye with role label
     const labels = [
-      LanguageService.t('mixer.dye1') || 'Dye 1',
-      LanguageService.t('mixer.dye2') || 'Dye 2',
-      LanguageService.t('mixer.dye3') || 'Dye 3 (Optional)',
+      LanguageService.t('mixer.dye1'),
+      LanguageService.t('mixer.dye2'),
+      LanguageService.t('mixer.dye3'),
     ];
 
     for (let i = 0; i < 3; i++) {
@@ -869,7 +869,7 @@ export class MixerTool extends BaseComponent {
         attributes: {
           style:
             'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
-          title: LanguageService.t('common.remove') || 'Remove',
+          title: LanguageService.t('common.remove'),
         },
       });
 
@@ -926,7 +926,7 @@ export class MixerTool extends BaseComponent {
     });
 
     const labelText = this.createElement('span', {
-      textContent: LanguageService.t('mixer.maxResults') || 'Max Results',
+      textContent: LanguageService.t('mixer.maxResults'),
       attributes: { style: 'color: var(--theme-text);' },
     });
 
@@ -1034,7 +1034,7 @@ export class MixerTool extends BaseComponent {
     });
     const resultsTitle = this.createElement('span', {
       className: 'section-title',
-      textContent: LanguageService.t('mixer.matchingDyes') || 'Matching Dyes',
+      textContent: LanguageService.t('mixer.matchingDyes'),
     });
     resultsHeader.appendChild(resultsTitle);
     this.resultsSection.appendChild(resultsHeader);
@@ -1071,7 +1071,7 @@ export class MixerTool extends BaseComponent {
 
     empty.innerHTML = `
       <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_DYE_MIXER}</span>
-      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors'}</p>
+      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('mixer.selectTwoDyesToMix')}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);
@@ -1177,7 +1177,7 @@ export class MixerTool extends BaseComponent {
 
     // Empty state message (shown when no dyes selected)
     this.emptyStateMessage = this.createElement('p', {
-      textContent: LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors',
+      textContent: LanguageService.t('mixer.selectTwoDyesToMix'),
       attributes: {
         style: `
           color: var(--theme-text-muted);
@@ -1292,7 +1292,7 @@ export class MixerTool extends BaseComponent {
       // Show "Optional" label for slot 3
       if (isOptional) {
         const optionalLabel = this.createElement('span', {
-          textContent: LanguageService.t('common.optional') || 'Optional',
+          textContent: LanguageService.t('common.optional'),
           attributes: {
             style: `
               font-size: 9px;
@@ -1353,7 +1353,7 @@ export class MixerTool extends BaseComponent {
     if (this.blendedColor) {
       // "Blend" label at top
       const blendLabel = this.createElement('span', {
-        textContent: LanguageService.t('mixer.blend') || 'Blend',
+        textContent: LanguageService.t('mixer.blend'),
         attributes: {
           style: `
             font-size: 10px;
@@ -1463,7 +1463,7 @@ export class MixerTool extends BaseComponent {
       const card = document.createElement('v4-result-card') as HTMLElement;
       card.setAttribute('show-actions', 'true');
       card.setAttribute('show-slot-picker', 'true');
-      card.setAttribute('primary-action-label', LanguageService.t('mixer.replaceSlot') || 'Replace Slot');
+      card.setAttribute('primary-action-label', LanguageService.t('mixer.replaceSlot'));
 
       // Set data property (ResultCardData interface)
       // Get price data to resolve both price and world name
@@ -1512,7 +1512,7 @@ export class MixerTool extends BaseComponent {
             detail: { toolId: 'comparison', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToComparison') || 'Added to comparison');
+        ToastService.success(LanguageService.t('toast.addedToComparison'));
         break;
 
       case 'add-mixer':
@@ -1523,7 +1523,7 @@ export class MixerTool extends BaseComponent {
           this.selectedDyes[1] = dye;
         } else {
           ToastService.warning(
-            LanguageService.t('mixer.slotsFullReplacing') || 'Both slots full. Replacing first dye.'
+            LanguageService.t('mixer.slotsFullReplacing')
           );
           this.selectedDyes[0] = this.selectedDyes[1];
           this.selectedDyes[1] = dye;
@@ -1536,7 +1536,7 @@ export class MixerTool extends BaseComponent {
         this.selectedDyes[0] = dye;
         this.handleDyeSelection(this.selectedDyes.filter((d): d is Dye => d !== null));
         ToastService.success(
-          LanguageService.t('mixer.replacedSlot1') || 'Replaced Slot 1'
+          LanguageService.t('mixer.replacedSlot1')
         );
         break;
 
@@ -1545,7 +1545,7 @@ export class MixerTool extends BaseComponent {
         this.selectedDyes[1] = dye;
         this.handleDyeSelection(this.selectedDyes.filter((d): d is Dye => d !== null));
         ToastService.success(
-          LanguageService.t('mixer.replacedSlot2') || 'Replaced Slot 2'
+          LanguageService.t('mixer.replacedSlot2')
         );
         break;
 
@@ -1556,7 +1556,7 @@ export class MixerTool extends BaseComponent {
           })
         );
         ToastService.success(
-          LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check'
+          LanguageService.t('toast.addedToAccessibility')
         );
         break;
 
@@ -1579,7 +1579,7 @@ export class MixerTool extends BaseComponent {
       case 'copy-hex':
         void navigator.clipboard.writeText(dye.hex).then(() => {
           ToastService.success(
-            LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard'
+            LanguageService.t('toast.copiedToClipboard')
           );
         });
         break;
@@ -1608,7 +1608,7 @@ export class MixerTool extends BaseComponent {
     const dyeSelectionContainer = this.createElement('div');
     drawer.appendChild(dyeSelectionContainer);
     this.mobileDyeSelectionPanel = new CollapsiblePanel(dyeSelectionContainer, {
-      title: LanguageService.t('mixer.dyeSelection') || 'Dye Selection',
+      title: LanguageService.t('mixer.dyeSelection'),
       storageKey: 'v4_mixer_mobile_dye_selection_panel',
       defaultOpen: true,
       icon: ICON_PALETTE,
@@ -1622,7 +1622,7 @@ export class MixerTool extends BaseComponent {
     const settingsContainer = this.createElement('div');
     drawer.appendChild(settingsContainer);
     this.mobileSettingsPanel = new CollapsiblePanel(settingsContainer, {
-      title: LanguageService.t('mixer.mixSettings') || 'Mix Settings',
+      title: LanguageService.t('mixer.mixSettings'),
       storageKey: 'v4_mixer_mobile_settings_panel',
       defaultOpen: true,
       icon: ICON_SLIDERS,
@@ -1636,7 +1636,7 @@ export class MixerTool extends BaseComponent {
     const filtersContainer = this.createElement('div');
     drawer.appendChild(filtersContainer);
     this.mobileFiltersPanel = new CollapsiblePanel(filtersContainer, {
-      title: LanguageService.t('filters.advancedFilters') || 'Advanced Dye Filters',
+      title: LanguageService.t('filters.advancedFilters'),
       storageKey: 'v4_mixer_mobile_filters',
       defaultOpen: false,
       icon: ICON_FILTER,
@@ -1663,7 +1663,7 @@ export class MixerTool extends BaseComponent {
     const marketContainer = this.createElement('div');
     drawer.appendChild(marketContainer);
     this.mobileMarketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'v4_mixer_mobile_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -1710,7 +1710,7 @@ export class MixerTool extends BaseComponent {
     // Instruction
     const instruction = this.createElement('p', {
       className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectDyesToBlend') || 'Select 2-3 dyes to blend together (3rd is optional)',
+      textContent: LanguageService.t('mixer.selectDyesToBlend'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     dyeContainer.appendChild(instruction);
@@ -1770,7 +1770,7 @@ export class MixerTool extends BaseComponent {
     if (filledSlots.length === 0) {
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('mixer.selectDyes') || 'Select dyes below to blend',
+        textContent: LanguageService.t('mixer.selectDyes'),
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -1781,9 +1781,9 @@ export class MixerTool extends BaseComponent {
 
     // Same display as desktop
     const labels = [
-      LanguageService.t('mixer.dye1') || 'Dye 1',
-      LanguageService.t('mixer.dye2') || 'Dye 2',
-      LanguageService.t('mixer.dye3') || 'Dye 3 (Optional)',
+      LanguageService.t('mixer.dye1'),
+      LanguageService.t('mixer.dye2'),
+      LanguageService.t('mixer.dye3'),
     ];
 
     for (let i = 0; i < 3; i++) {
@@ -1826,7 +1826,7 @@ export class MixerTool extends BaseComponent {
     });
 
     const labelText = this.createElement('span', {
-      textContent: LanguageService.t('mixer.maxResults') || 'Max Results',
+      textContent: LanguageService.t('mixer.maxResults'),
       attributes: { style: 'color: var(--theme-text);' },
     });
 

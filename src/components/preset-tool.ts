@@ -261,7 +261,7 @@ export class PresetTool extends BaseComponent {
         logger.warn('[PresetTool] Preset not found for deep link:', presetId);
         // Show a toast notification
         const { ToastService } = await import('@services/index');
-        ToastService.warning(LanguageService.t('preset.notFound') || 'Preset not found');
+        ToastService.warning(LanguageService.t('preset.notFound'));
       }
     } catch (error) {
       logger.error('[PresetTool] Failed to load deep linked preset:', error);
@@ -369,7 +369,7 @@ export class PresetTool extends BaseComponent {
 
     // Section 1: Search (with tabs if authenticated)
     const searchPanel = new CollapsiblePanel(left, {
-      title: LanguageService.t('preset.search') || 'Search',
+      title: LanguageService.t('preset.search'),
       storageKey: 'preset_search',
       defaultOpen: true,
       icon: ICON_SEARCH,
@@ -383,7 +383,7 @@ export class PresetTool extends BaseComponent {
 
     // Section 2: Categories
     const categoriesPanel = new CollapsiblePanel(left, {
-      title: LanguageService.t('preset.categoriesTitle') || 'Categories',
+      title: LanguageService.t('preset.categoriesTitle'),
       storageKey: 'preset_categories',
       defaultOpen: true,
       icon: ICON_GRID,
@@ -397,7 +397,7 @@ export class PresetTool extends BaseComponent {
 
     // Section 3: Sort Options
     const sortPanel = new CollapsiblePanel(left, {
-      title: LanguageService.t('preset.sortBy') || 'Sort By',
+      title: LanguageService.t('preset.sortBy'),
       storageKey: 'preset_sort',
       defaultOpen: true,
       icon: ICON_SORT,
@@ -411,7 +411,7 @@ export class PresetTool extends BaseComponent {
 
     // Section 4: Account
     const accountPanel = new CollapsiblePanel(left, {
-      title: LanguageService.t('preset.account') || 'Account',
+      title: LanguageService.t('preset.account'),
       storageKey: 'preset_account',
       defaultOpen: true,
       icon: ICON_USER,
@@ -481,7 +481,7 @@ export class PresetTool extends BaseComponent {
       className: 'w-full pl-10 pr-3 py-2 rounded-lg border text-sm',
       attributes: {
         type: 'text',
-        placeholder: LanguageService.t('preset.searchPlaceholder') || 'Search presets...',
+        placeholder: LanguageService.t('preset.searchPlaceholder'),
         style:
           'background: var(--theme-background); border-color: var(--theme-border); color: var(--theme-text);',
       },
@@ -527,7 +527,7 @@ export class PresetTool extends BaseComponent {
 
     const browseBtn = this.createElement('button', {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: LanguageService.t('preset.browse') || 'Browse',
+      textContent: LanguageService.t('preset.browse'),
       attributes: {
         style:
           this.currentTab === 'browse'
@@ -538,7 +538,7 @@ export class PresetTool extends BaseComponent {
 
     const mySubmissionsBtn = this.createElement('button', {
       className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: LanguageService.t('preset.mySubmissions') || 'My Submissions',
+      textContent: LanguageService.t('preset.mySubmissions'),
       attributes: {
         style:
           this.currentTab === 'my-submissions'
@@ -578,7 +578,7 @@ export class PresetTool extends BaseComponent {
       const isSelected = this.selectedCategory === cat.id;
       const btn = this.createElement('button', {
         className: 'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
-        textContent: LanguageService.t(cat.labelKey) || cat.fallback,
+        textContent: LanguageService.t(cat.labelKey),
         attributes: {
           style: isSelected
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -650,7 +650,7 @@ export class PresetTool extends BaseComponent {
 
       const text = this.createElement('span', {
         className: 'text-sm',
-        textContent: LanguageService.t(opt.labelKey) || opt.fallback,
+        textContent: LanguageService.t(opt.labelKey),
         attributes: { style: 'color: var(--theme-text);' },
       });
 
@@ -710,7 +710,7 @@ export class PresetTool extends BaseComponent {
       });
       const submissionCount = this.createElement('p', {
         className: 'text-xs',
-        textContent: `${this.userSubmissions.length} ${LanguageService.t('preset.submissions') || 'submissions'}`,
+        textContent: `${this.userSubmissions.length} ${LanguageService.t('preset.submissions')}`,
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       userInfo.appendChild(userName);
@@ -722,7 +722,7 @@ export class PresetTool extends BaseComponent {
       // My Submissions button
       const mySubmissionsBtn = this.createElement('button', {
         className: 'w-full px-3 py-2 text-sm rounded-lg',
-        textContent: LanguageService.t('preset.viewMySubmissions') || 'My Submissions',
+        textContent: LanguageService.t('preset.viewMySubmissions'),
         attributes: {
           style:
             'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
@@ -739,7 +739,7 @@ export class PresetTool extends BaseComponent {
       // Submit Preset button
       const submitBtn = this.createElement('button', {
         className: 'w-full px-3 py-2 text-sm rounded-lg',
-        textContent: `+ ${LanguageService.t('preset.submitPreset') || 'Submit Preset'}`,
+        textContent: `+ ${LanguageService.t('preset.submitPreset')}`,
         attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);' },
       });
       this.on(submitBtn, 'click', () => {
@@ -755,7 +755,7 @@ export class PresetTool extends BaseComponent {
       // Logout button
       const logoutBtn = this.createElement('button', {
         className: 'w-full px-3 py-2 text-sm rounded-lg text-red-500',
-        textContent: LanguageService.t('auth.logout') || 'Logout',
+        textContent: LanguageService.t('auth.logout'),
         attributes: {
           style: 'background: transparent; border: 1px solid var(--theme-border);',
         },
@@ -768,7 +768,7 @@ export class PresetTool extends BaseComponent {
       // Logged out state
       const message = this.createElement('p', {
         className: 'text-sm mb-3',
-        textContent: LanguageService.t('preset.loginPrompt') || 'Log in to submit presets and vote',
+        textContent: LanguageService.t('preset.loginPrompt'),
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       wrapper.appendChild(message);
@@ -810,7 +810,7 @@ export class PresetTool extends BaseComponent {
     const featuredSection = this.createElement('div', { className: 'mb-6 hidden' });
     featuredSection.setAttribute('data-section', 'featured');
     featuredSection.appendChild(
-      this.createHeader(LanguageService.t('preset.featured') || 'Featured Presets')
+      this.createHeader(LanguageService.t('preset.featured'))
     );
     this.featuredContainer = this.createElement('div', { className: 'grid gap-4 grid-cols-2' });
     featuredSection.appendChild(this.featuredContainer);
@@ -820,7 +820,7 @@ export class PresetTool extends BaseComponent {
     const gridSection = this.createElement('div', { className: 'hidden' });
     gridSection.setAttribute('data-section', 'grid');
     gridSection.appendChild(
-      this.createHeader(LanguageService.t('preset.allPresets') || 'All Presets')
+      this.createHeader(LanguageService.t('preset.allPresets'))
     );
     this.presetsGridContainer = this.createElement('div', {
       className: 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3',
@@ -850,13 +850,13 @@ export class PresetTool extends BaseComponent {
     if (this.isLoading) {
       empty.innerHTML = `
         <div class="inline-block w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mb-4" style="border-color: var(--theme-primary); border-top-color: transparent;"></div>
-        <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('preset.loading') || 'Loading presets...'}</p>
+        <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('preset.loading')}</p>
       `;
     } else {
       empty.innerHTML = `
         <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_PRESETS}</span>
-        <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('preset.noPresets') || 'No presets found'}</p>
-        <p class="text-sm mt-2" style="color: var(--theme-text-muted);">${LanguageService.t('preset.tryDifferentFilters') || 'Try adjusting your filters'}</p>
+        <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('preset.noPresets')}</p>
+        <p class="text-sm mt-2" style="color: var(--theme-text-muted);">${LanguageService.t('preset.tryDifferentFilters')}</p>
       `;
     }
 
@@ -918,7 +918,7 @@ export class PresetTool extends BaseComponent {
     // Featured badge
     const badge = this.createElement('div', {
       className: 'absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium',
-      textContent: LanguageService.t('preset.featured') || 'Featured',
+      textContent: LanguageService.t('preset.featured'),
       attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);' },
     });
     card.appendChild(badge);
@@ -979,8 +979,8 @@ export class PresetTool extends BaseComponent {
     if (header) {
       header.textContent =
         this.currentTab === 'my-submissions'
-          ? LanguageService.t('preset.mySubmissions') || 'My Submissions'
-          : LanguageService.t('preset.allPresets') || 'All Presets';
+          ? LanguageService.t('preset.mySubmissions')
+          : LanguageService.t('preset.allPresets');
     }
 
     const presetsToShow =
@@ -1077,7 +1077,7 @@ export class PresetTool extends BaseComponent {
       const editIcon = this.createElement('span', { className: 'w-3 h-3' });
       editIcon.innerHTML = ICON_EDIT;
       editBtn.appendChild(editIcon);
-      editBtn.appendChild(document.createTextNode(LanguageService.t('preset.edit') || 'Edit'));
+      editBtn.appendChild(document.createTextNode(LanguageService.t('preset.edit')));
       this.on(editBtn, 'click', (e: MouseEvent) => {
         e.stopPropagation();
         this.handleEditPreset(preset);
@@ -1097,7 +1097,7 @@ export class PresetTool extends BaseComponent {
       deleteIcon.innerHTML = ICON_TRASH;
       deleteBtn.appendChild(deleteIcon);
       deleteBtn.appendChild(
-        document.createTextNode(LanguageService.t('preset.delete') || 'Delete')
+        document.createTextNode(LanguageService.t('preset.delete'))
       );
       this.on(deleteBtn, 'click', (e: MouseEvent) => {
         e.stopPropagation();
@@ -1127,7 +1127,7 @@ export class PresetTool extends BaseComponent {
 
     const loadMoreBtn = this.createElement('button', {
       className: 'px-6 py-2 text-sm rounded-lg transition-colors',
-      textContent: LanguageService.t('preset.loadMore') || 'Load More',
+      textContent: LanguageService.t('preset.loadMore'),
       attributes: {
         style:
           'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
@@ -1400,7 +1400,7 @@ export class PresetTool extends BaseComponent {
 
     // Show confirmation dialog
     const confirmMessage =
-      LanguageService.t('preset.confirmDelete') || 'Are you sure you want to delete this preset?';
+      LanguageService.t('preset.confirmDelete');
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -1449,7 +1449,7 @@ export class PresetTool extends BaseComponent {
 
     // Section 1: Search (with tabs if authenticated)
     const searchPanel = new CollapsiblePanel(drawer, {
-      title: LanguageService.t('preset.search') || 'Search',
+      title: LanguageService.t('preset.search'),
       storageKey: 'preset_drawer_search',
       defaultOpen: true,
       icon: ICON_SEARCH,
@@ -1463,7 +1463,7 @@ export class PresetTool extends BaseComponent {
 
     // Section 2: Categories
     const categoriesPanel = new CollapsiblePanel(drawer, {
-      title: LanguageService.t('preset.categoriesTitle') || 'Categories',
+      title: LanguageService.t('preset.categoriesTitle'),
       storageKey: 'preset_drawer_categories',
       defaultOpen: true,
       icon: ICON_GRID,
@@ -1477,7 +1477,7 @@ export class PresetTool extends BaseComponent {
 
     // Section 3: Sort Options
     const sortPanel = new CollapsiblePanel(drawer, {
-      title: LanguageService.t('preset.sortBy') || 'Sort By',
+      title: LanguageService.t('preset.sortBy'),
       storageKey: 'preset_drawer_sort',
       defaultOpen: true,
       icon: ICON_SORT,
@@ -1491,7 +1491,7 @@ export class PresetTool extends BaseComponent {
 
     // Section 4: Account
     const accountPanel = new CollapsiblePanel(drawer, {
-      title: LanguageService.t('preset.account') || 'Account',
+      title: LanguageService.t('preset.account'),
       storageKey: 'preset_drawer_account',
       defaultOpen: true,
       icon: ICON_USER,
@@ -1516,7 +1516,7 @@ export class PresetTool extends BaseComponent {
     if (this.authState.isAuthenticated) {
       const browseBtn = this.createElement('button', {
         className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-        textContent: LanguageService.t('preset.browse') || 'Browse',
+        textContent: LanguageService.t('preset.browse'),
         attributes: {
           style:
             this.currentTab === 'browse'
@@ -1527,7 +1527,7 @@ export class PresetTool extends BaseComponent {
 
       const mySubmissionsBtn = this.createElement('button', {
         className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-        textContent: LanguageService.t('preset.mySubmissions') || 'My Submissions',
+        textContent: LanguageService.t('preset.mySubmissions'),
         attributes: {
           style:
             this.currentTab === 'my-submissions'
@@ -1572,7 +1572,7 @@ export class PresetTool extends BaseComponent {
       className: 'w-full pl-10 pr-3 py-2 rounded-lg border text-sm',
       attributes: {
         type: 'text',
-        placeholder: LanguageService.t('preset.searchPlaceholder') || 'Search presets...',
+        placeholder: LanguageService.t('preset.searchPlaceholder'),
         value: this.searchQuery,
         style:
           'background: var(--theme-background); border-color: var(--theme-border); color: var(--theme-text);',
@@ -1611,7 +1611,7 @@ export class PresetTool extends BaseComponent {
       const isSelected = this.selectedCategory === cat.id;
       const btn = this.createElement('button', {
         className: 'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
-        textContent: LanguageService.t(cat.labelKey) || cat.fallback,
+        textContent: LanguageService.t(cat.labelKey),
         attributes: {
           style: isSelected
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -1674,7 +1674,7 @@ export class PresetTool extends BaseComponent {
 
       const text = this.createElement('span', {
         className: 'text-sm',
-        textContent: LanguageService.t(opt.labelKey) || opt.fallback,
+        textContent: LanguageService.t(opt.labelKey),
         attributes: { style: 'color: var(--theme-text);' },
       });
 
@@ -1731,7 +1731,7 @@ export class PresetTool extends BaseComponent {
       });
       const submissionCount = this.createElement('p', {
         className: 'text-xs',
-        textContent: `${this.userSubmissions.length} ${LanguageService.t('preset.submissions') || 'submissions'}`,
+        textContent: `${this.userSubmissions.length} ${LanguageService.t('preset.submissions')}`,
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       userInfo.appendChild(userName);
@@ -1743,7 +1743,7 @@ export class PresetTool extends BaseComponent {
       // Submit Preset button
       const submitBtn = this.createElement('button', {
         className: 'w-full px-3 py-2 text-sm rounded-lg',
-        textContent: `+ ${LanguageService.t('preset.submitPreset') || 'Submit Preset'}`,
+        textContent: `+ ${LanguageService.t('preset.submitPreset')}`,
         attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);' },
       });
       this.on(submitBtn, 'click', () => {
@@ -1759,7 +1759,7 @@ export class PresetTool extends BaseComponent {
       // Logout button
       const logoutBtn = this.createElement('button', {
         className: 'w-full px-3 py-2 text-sm rounded-lg text-red-500',
-        textContent: LanguageService.t('auth.logout') || 'Logout',
+        textContent: LanguageService.t('auth.logout'),
         attributes: {
           style: 'background: transparent; border: 1px solid var(--theme-border);',
         },
@@ -1772,7 +1772,7 @@ export class PresetTool extends BaseComponent {
       // Logged out state
       const message = this.createElement('p', {
         className: 'text-sm mb-3',
-        textContent: LanguageService.t('preset.loginPrompt') || 'Log in to submit presets and vote',
+        textContent: LanguageService.t('preset.loginPrompt'),
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       wrapper.appendChild(message);

@@ -383,7 +383,7 @@ export class ComparisonTool extends BaseComponent {
     const dyeContainer = this.createElement('div');
     left.appendChild(dyeContainer);
     this.dyeSelectorPanel = new CollapsiblePanel(dyeContainer, {
-      title: LanguageService.t('comparison.compareDyes') || 'Compare Dyes',
+      title: LanguageService.t('comparison.compareDyes'),
       storageKey: 'v3_comparison_dyes',
       defaultOpen: true,
       icon: ICON_BEAKER,
@@ -397,7 +397,7 @@ export class ComparisonTool extends BaseComponent {
     const optionsContainer = this.createElement('div');
     left.appendChild(optionsContainer);
     this.optionsPanel = new CollapsiblePanel(optionsContainer, {
-      title: LanguageService.t('common.options') || 'Options',
+      title: LanguageService.t('common.options'),
       storageKey: 'v3_comparison_options',
       defaultOpen: true,
       icon: ICON_SETTINGS,
@@ -411,7 +411,7 @@ export class ComparisonTool extends BaseComponent {
     const marketContainer = this.createElement('div');
     left.appendChild(marketContainer);
     this.marketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'v3_comparison_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -541,7 +541,7 @@ export class ComparisonTool extends BaseComponent {
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
         textContent:
-          LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
+          LanguageService.t('comparison.selectDyesToCompare'),
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -591,7 +591,7 @@ export class ComparisonTool extends BaseComponent {
     if (this.selectedDyes.length < 4) {
       const addBtn = this.createElement('button', {
         className: 'w-full p-3 rounded-lg border-2 border-dashed text-sm',
-        textContent: `+ ${LanguageService.t('comparison.addDye') || 'Add Dye'}`,
+        textContent: `+ ${LanguageService.t('comparison.addDye')}`,
         attributes: { style: 'border-color: var(--theme-border); color: var(--theme-text-muted);' },
       });
       // The DyeSelector below handles actual adding
@@ -607,12 +607,12 @@ export class ComparisonTool extends BaseComponent {
 
     // === COLOR FORMATS SECTION ===
     const colorFormatsSection = this.createOptionsSection(
-      LanguageService.t('common.colorFormats') || 'Color Formats'
+      LanguageService.t('common.colorFormats')
     );
     const colorFormatsOptions = [
-      { key: 'showHex' as const, label: LanguageService.t('common.hexCodes') || 'Hex Codes' },
-      { key: 'showRgb' as const, label: LanguageService.t('common.rgbValues') || 'RGB Values' },
-      { key: 'showHsv' as const, label: LanguageService.t('common.hsvValues') || 'HSV Values' },
+      { key: 'showHex' as const, label: LanguageService.t('common.hexCodes') },
+      { key: 'showRgb' as const, label: LanguageService.t('common.rgbValues') },
+      { key: 'showHsv' as const, label: LanguageService.t('common.hsvValues') },
     ];
     for (const option of colorFormatsOptions) {
       colorFormatsSection.content.appendChild(this.createToggleRow(option.key, option.label));
@@ -621,16 +621,16 @@ export class ComparisonTool extends BaseComponent {
 
     // === COMPARISON OPTIONS SECTION ===
     const comparisonSection = this.createOptionsSection(
-      LanguageService.t('comparison.comparisonOptions') || 'Comparison Options'
+      LanguageService.t('comparison.comparisonOptions')
     );
     const comparisonOptions = [
       {
         key: 'showDistanceValues' as const,
-        label: LanguageService.t('comparison.showDistanceValues') || 'Show Distance Values',
+        label: LanguageService.t('comparison.showDistanceValues'),
       },
       {
         key: 'highlightClosestPair' as const,
-        label: LanguageService.t('comparison.highlightClosestPair') || 'Highlight Closest Pair',
+        label: LanguageService.t('comparison.highlightClosestPair'),
       },
     ];
     for (const option of comparisonOptions) {
@@ -879,7 +879,7 @@ export class ComparisonTool extends BaseComponent {
       attributes: { style: 'display: none;' },
     });
     this.selectedDyesSection.appendChild(
-      this.createHeader(LanguageService.t('comparison.selectedDyes') || 'Selected Dyes')
+      this.createHeader(LanguageService.t('comparison.selectedDyes'))
     );
     this.selectedDyesCardsContainer = this.createElement('div', {
       className: 'flex flex-wrap gap-4 justify-center comparison-cards-container',
@@ -898,7 +898,7 @@ export class ComparisonTool extends BaseComponent {
       attributes: { style: 'display: none;' },
     });
     this.statsSection.appendChild(
-      this.createHeader(LanguageService.t('comparison.statistics') || 'Statistics')
+      this.createHeader(LanguageService.t('comparison.statistics'))
     );
     this.statsContainer = this.createElement('div');
     this.statsSection.appendChild(this.statsContainer);
@@ -927,7 +927,7 @@ export class ComparisonTool extends BaseComponent {
     });
     this.matrixSection.appendChild(
       this.createHeader(
-        LanguageService.t('comparison.colorDistanceMatrix') || 'Color Distance Matrix'
+        LanguageService.t('comparison.colorDistanceMatrix')
       )
     );
     this.matrixContainer = this.createElement('div');
@@ -1032,7 +1032,7 @@ export class ComparisonTool extends BaseComponent {
 
       // "Add Dye" text
       const text = this.createElement('span', {
-        textContent: LanguageService.t('comparison.addDye') || 'Add Dye',
+        textContent: LanguageService.t('comparison.addDye'),
         attributes: {
           style: `
             font-size: 0.85rem;
@@ -1089,7 +1089,7 @@ export class ComparisonTool extends BaseComponent {
     // Message text
     const message = this.createElement('p', {
       textContent:
-        LanguageService.t('comparison.selectAtLeastTwoDyes') ||
+        LanguageService.t('comparison.selectAtLeastTwoDyes')
         'Select 2 or more dyes from the Color Palette to compare them',
       attributes: {
         style: `
@@ -1182,7 +1182,7 @@ export class ComparisonTool extends BaseComponent {
       card.showDeltaE = false; // No Delta-E in comparison context
       card.showPrice = this.comparisonOptions.showMarketPrices;
       card.showAcquisition = true;
-      card.primaryActionLabel = LanguageService.t('common.remove') || 'Remove';
+      card.primaryActionLabel = LanguageService.t('common.remove');
 
       // Handle remove action
       card.addEventListener('card-select', () => {
@@ -1351,22 +1351,22 @@ export class ComparisonTool extends BaseComponent {
 
     const statItems = [
       {
-        label: LanguageService.t('comparison.avgSaturation') || 'Avg Saturation',
+        label: LanguageService.t('comparison.avgSaturation'),
         value: this.stats.avgSaturation,
         unit: '%',
       },
       {
-        label: LanguageService.t('comparison.avgBrightness') || 'Avg Brightness',
+        label: LanguageService.t('comparison.avgBrightness'),
         value: this.stats.avgBrightness,
         unit: '%',
       },
       {
-        label: LanguageService.t('comparison.hueRange') || 'Hue Range',
+        label: LanguageService.t('comparison.hueRange'),
         value: this.stats.hueRange,
         unit: '°',
       },
       {
-        label: LanguageService.t('comparison.avgDistance') || 'Avg Distance',
+        label: LanguageService.t('comparison.avgDistance'),
         value: this.stats.avgDistance.toFixed(1),
         unit: '',
       },
@@ -1475,7 +1475,7 @@ export class ComparisonTool extends BaseComponent {
     // Hue-Saturation Plot
     this.chartsContainer.appendChild(
       this.createChartCard(
-        LanguageService.t('comparison.hueSaturationPlot') || 'Hue-Saturation Plot',
+        LanguageService.t('comparison.hueSaturationPlot'),
         this.createHueSatPlot()
       )
     );
@@ -1483,7 +1483,7 @@ export class ComparisonTool extends BaseComponent {
     // Brightness Distribution
     this.chartsContainer.appendChild(
       this.createChartCard(
-        LanguageService.t('comparison.brightnessDistribution') || 'Brightness Distribution',
+        LanguageService.t('comparison.brightnessDistribution'),
         this.createBrightnessChart()
       )
     );
@@ -2097,7 +2097,7 @@ export class ComparisonTool extends BaseComponent {
     const marketContainer = this.createElement('div');
     drawer.appendChild(marketContainer);
     this.drawerMarketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'v3_comparison_mobile_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -2138,7 +2138,7 @@ export class ComparisonTool extends BaseComponent {
    */
   private renderDrawerDyePanel(container: HTMLElement): void {
     this.drawerDyeSelectorPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('comparison.compareDyes') || 'Compare Dyes',
+      title: LanguageService.t('comparison.compareDyes'),
       defaultOpen: true,
       storageKey: 'v3_comparison_dyes_drawer',
       icon: ICON_BEAKER,
@@ -2222,7 +2222,7 @@ export class ComparisonTool extends BaseComponent {
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
         textContent:
-          LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
+          LanguageService.t('comparison.selectDyesToCompare'),
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -2279,7 +2279,7 @@ export class ComparisonTool extends BaseComponent {
    */
   private renderDrawerOptionsPanel(container: HTMLElement): void {
     this.drawerOptionsPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('common.options') || 'Options',
+      title: LanguageService.t('common.options'),
       defaultOpen: true,
       storageKey: 'v3_comparison_options_drawer',
       icon: ICON_SETTINGS,
@@ -2301,11 +2301,11 @@ export class ComparisonTool extends BaseComponent {
     const options = [
       {
         key: 'showDistanceValues' as const,
-        label: LanguageService.t('comparison.showDistanceValues') || 'Show Distance Values',
+        label: LanguageService.t('comparison.showDistanceValues'),
       },
       {
         key: 'highlightClosestPair' as const,
-        label: LanguageService.t('comparison.highlightClosestPair') || 'Highlight Closest Pair',
+        label: LanguageService.t('comparison.highlightClosestPair'),
       },
     ];
 

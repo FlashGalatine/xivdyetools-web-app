@@ -211,7 +211,7 @@ export class ExtractorTool extends BaseComponent {
         logger.info('[MatcherTool] Image too large to persist, cleared storage');
       }
 
-      ToastService.success(LanguageService.t('matcher.imageLoaded') || 'Image loaded');
+      ToastService.success(LanguageService.t('matcher.imageLoaded'));
 
       // Hide drop zone content and show canvas
       if (this.dropContent) {
@@ -469,7 +469,7 @@ export class ExtractorTool extends BaseComponent {
     const uploadContainer = this.createElement('div');
     left.appendChild(uploadContainer);
     this.imageSourcePanel = new CollapsiblePanel(uploadContainer, {
-      title: LanguageService.t('matcher.imageSource') || 'Image Source',
+      title: LanguageService.t('matcher.imageSource'),
       storageKey: 'matcher_imageSource',
       defaultOpen: true,
       icon: ICON_UPLOAD,
@@ -483,7 +483,7 @@ export class ExtractorTool extends BaseComponent {
     const colorContainer = this.createElement('div');
     left.appendChild(colorContainer);
     this.colorSelectionPanel = new CollapsiblePanel(colorContainer, {
-      title: LanguageService.t('matcher.colorSelection') || 'Color Selection',
+      title: LanguageService.t('matcher.colorSelection'),
       storageKey: 'matcher_colorSelection',
       defaultOpen: true,
       icon: ICON_PALETTE,
@@ -497,7 +497,7 @@ export class ExtractorTool extends BaseComponent {
     const optionsContainer = this.createElement('div');
     left.appendChild(optionsContainer);
     this.optionsPanel = new CollapsiblePanel(optionsContainer, {
-      title: LanguageService.t('matcher.options') || 'Options',
+      title: LanguageService.t('matcher.options'),
       storageKey: 'matcher_options',
       defaultOpen: false,
       icon: ICON_SETTINGS,
@@ -569,7 +569,7 @@ export class ExtractorTool extends BaseComponent {
       className: 'flex items-center justify-between text-sm mb-2',
     });
     sampleLabel.innerHTML = `
-      <span style="color: var(--theme-text);">${LanguageService.t('matcher.sampleSize') || 'Sample Size'}</span>
+      <span style="color: var(--theme-text);">${LanguageService.t('matcher.sampleSize')}</span>
       <span class="number" style="color: var(--theme-text-muted);">${this.sampleSize}px</span>
     `;
     this.sampleDisplay = sampleLabel.querySelector('span:last-child') as HTMLElement;
@@ -613,8 +613,8 @@ export class ExtractorTool extends BaseComponent {
 
     const toggleText = this.createElement('div');
     toggleText.innerHTML = `
-      <p class="text-sm font-medium" style="color: var(--theme-text);">${LanguageService.t('matcher.extractPalette') || 'Extract Palette'}</p>
-      <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('matcher.extractPaletteDesc') || 'Get multiple colors from image'}</p>
+      <p class="text-sm font-medium" style="color: var(--theme-text);">${LanguageService.t('matcher.extractPalette')}</p>
+      <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('matcher.extractPaletteDesc')}</p>
     `;
 
     paletteToggle.appendChild(this.paletteModeCheckbox);
@@ -636,7 +636,7 @@ export class ExtractorTool extends BaseComponent {
       className: 'flex items-center justify-between text-sm mb-2',
     });
     colorCountLabel.innerHTML = `
-      <span style="color: var(--theme-text);">${LanguageService.t('matcher.colorCount') || 'Colors to Extract'}</span>
+      <span style="color: var(--theme-text);">${LanguageService.t('matcher.colorCount')}</span>
       <span class="number font-bold" style="color: var(--theme-primary);">${this.paletteColorCount}</span>
     `;
     this.colorCountDisplay = colorCountLabel.querySelector('span:last-child') as HTMLElement;
@@ -661,7 +661,7 @@ export class ExtractorTool extends BaseComponent {
     // Extract palette button
     this.extractPaletteBtn = this.createElement('button', {
       className: 'w-full py-2 px-4 rounded-lg font-medium text-sm transition-colors',
-      textContent: LanguageService.t('matcher.extractPaletteBtn') || 'Extract Palette from Image',
+      textContent: LanguageService.t('matcher.extractPaletteBtn'),
       attributes: {
         style: 'background: var(--theme-primary); color: white;',
       },
@@ -691,7 +691,7 @@ export class ExtractorTool extends BaseComponent {
    */
   private renderFiltersPanel(container: HTMLElement): void {
     this.filtersPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('filters.advancedFilters') || 'Dye Filters',
+      title: LanguageService.t('filters.advancedFilters'),
       storageKey: 'matcher_filters',
       defaultOpen: false,
       icon: ICON_FILTER,
@@ -720,7 +720,7 @@ export class ExtractorTool extends BaseComponent {
    */
   private renderMarketPanel(container: HTMLElement): void {
     this.marketPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'matcher_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -861,7 +861,7 @@ export class ExtractorTool extends BaseComponent {
 
     const dropText = this.createElement('span', {
       className: 'drop-text',
-      textContent: LanguageService.t('matcher.dropImageHere') || 'Drop image here or click to upload',
+      textContent: LanguageService.t('matcher.dropImageHere'),
       attributes: {
         style: `
           font-size: 16px;
@@ -873,7 +873,7 @@ export class ExtractorTool extends BaseComponent {
 
     const dropSubtext = this.createElement('span', {
       className: 'drop-subtext',
-      textContent: LanguageService.t('matcher.supportedFormats') || 'Supports PNG, JPG, WebP',
+      textContent: LanguageService.t('matcher.supportedFormats'),
       attributes: {
         style: `
           font-size: 13px;
@@ -937,7 +937,7 @@ export class ExtractorTool extends BaseComponent {
 
     const sectionTitle = this.createElement('span', {
       className: 'extractor-section-title',
-      textContent: LanguageService.t('matcher.extractedPalette') || 'Extracted Palette',
+      textContent: LanguageService.t('matcher.extractedPalette'),
       attributes: {
         style: `
           font-size: 14px;
@@ -972,7 +972,7 @@ export class ExtractorTool extends BaseComponent {
 
     this.exportCssBtn = this.createElement('button', {
       className: 'action-btn-text',
-      textContent: LanguageService.t('matcher.exportCss') || 'Export CSS',
+      textContent: LanguageService.t('matcher.exportCss'),
       attributes: { disabled: 'true', style: disabledBtnStyle },
     }) as HTMLButtonElement;
 
@@ -1160,7 +1160,7 @@ export class ExtractorTool extends BaseComponent {
         this.showEmptyState(false);
         this.updateDrawerContent();
 
-        ToastService.success(LanguageService.t('matcher.imageLoaded') || 'Image loaded');
+        ToastService.success(LanguageService.t('matcher.imageLoaded'));
 
         // Auto-extract palette (v4 default behavior)
         void this.extractPalette();
@@ -1205,7 +1205,7 @@ export class ExtractorTool extends BaseComponent {
 
     // Reset section title
     if (this.resultsTitleElement) {
-      this.resultsTitleElement.textContent = LanguageService.t('matcher.extractedPalette') || 'Extracted Palette';
+      this.resultsTitleElement.textContent = LanguageService.t('matcher.extractedPalette');
     }
 
     // Disable export button
@@ -1222,7 +1222,7 @@ export class ExtractorTool extends BaseComponent {
     // Re-render the canvas area to clear zoom controller
     this.renderImageCanvas();
 
-    ToastService.info(LanguageService.t('matcher.imageCleared') || 'Image cleared');
+    ToastService.info(LanguageService.t('matcher.imageCleared'));
     logger.info('[ExtractorTool] Image cleared');
   }
 
@@ -1291,7 +1291,7 @@ export class ExtractorTool extends BaseComponent {
 
     // Text
     const text = this.createElement('p', {
-      textContent: LanguageService.t('matcher.uploadPrompt') || 'Upload an image to extract its color palette',
+      textContent: LanguageService.t('matcher.uploadPrompt'),
       attributes: { style: 'font-size: 16px; margin: 0;' },
     });
 
@@ -1413,7 +1413,7 @@ export class ExtractorTool extends BaseComponent {
       innerHTML: ICON_SETTINGS,
     });
     const titleText = this.createElement('span', {
-      textContent: LanguageService.t('matcher.options') || 'Options',
+      textContent: LanguageService.t('matcher.options'),
     });
     titleContainer.appendChild(iconSpan);
     titleContainer.appendChild(titleText);
@@ -1455,7 +1455,7 @@ export class ExtractorTool extends BaseComponent {
       className: 'flex items-center justify-between text-sm mb-2',
     });
     sampleLabel.innerHTML = `
-      <span style="color: var(--theme-text);">${LanguageService.t('matcher.sampleSize') || 'Sample Size'}</span>
+      <span style="color: var(--theme-text);">${LanguageService.t('matcher.sampleSize')}</span>
       <span class="number" style="color: var(--theme-text-muted);">${this.sampleSize}px</span>
     `;
     this.mobileSampleDisplay = sampleLabel.querySelector('span:last-child') as HTMLElement;
@@ -1510,8 +1510,8 @@ export class ExtractorTool extends BaseComponent {
 
     const toggleText = this.createElement('div');
     toggleText.innerHTML = `
-      <p class="text-sm font-medium" style="color: var(--theme-text);">${LanguageService.t('matcher.extractPalette') || 'Extract Palette'}</p>
-      <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('matcher.extractPaletteDesc') || 'Get multiple colors from image'}</p>
+      <p class="text-sm font-medium" style="color: var(--theme-text);">${LanguageService.t('matcher.extractPalette')}</p>
+      <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('matcher.extractPaletteDesc')}</p>
     `;
 
     paletteToggle.appendChild(this.mobilePaletteModeCheckbox);
@@ -1532,7 +1532,7 @@ export class ExtractorTool extends BaseComponent {
       className: 'flex items-center justify-between text-sm mb-2',
     });
     colorCountLabel.innerHTML = `
-      <span style="color: var(--theme-text);">${LanguageService.t('matcher.colorCount') || 'Colors to Extract'}</span>
+      <span style="color: var(--theme-text);">${LanguageService.t('matcher.colorCount')}</span>
       <span class="number font-bold" style="color: var(--theme-primary);">${this.paletteColorCount}</span>
     `;
     this.mobileColorCountDisplay = colorCountLabel.querySelector('span:last-child') as HTMLElement;
@@ -1564,7 +1564,7 @@ export class ExtractorTool extends BaseComponent {
     // Extract palette button
     this.mobileExtractPaletteBtn = this.createElement('button', {
       className: 'w-full py-2 px-4 rounded-lg font-medium text-sm transition-colors',
-      textContent: LanguageService.t('matcher.extractPaletteBtn') || 'Extract Palette from Image',
+      textContent: LanguageService.t('matcher.extractPaletteBtn'),
       attributes: {
         style: 'background: var(--theme-primary); color: white;',
       },
@@ -1619,7 +1619,7 @@ export class ExtractorTool extends BaseComponent {
       innerHTML: ICON_FILTER,
     });
     const titleText = this.createElement('span', {
-      textContent: LanguageService.t('filters.advancedFilters') || 'Dye Filters',
+      textContent: LanguageService.t('filters.advancedFilters'),
     });
     titleContainer.appendChild(iconSpan);
     titleContainer.appendChild(titleText);
@@ -1724,7 +1724,7 @@ export class ExtractorTool extends BaseComponent {
       innerHTML: ICON_UPLOAD,
     });
     const titleText = this.createElement('span', {
-      textContent: LanguageService.t('matcher.imageSource') || 'Image Source',
+      textContent: LanguageService.t('matcher.imageSource'),
     });
     titleContainer.appendChild(iconSpan);
     titleContainer.appendChild(titleText);
@@ -1780,7 +1780,7 @@ export class ExtractorTool extends BaseComponent {
         StorageService.removeItem(STORAGE_KEYS.imageDataUrl);
       }
 
-      ToastService.success(LanguageService.t('matcher.imageLoaded') || 'Image loaded');
+      ToastService.success(LanguageService.t('matcher.imageLoaded'));
 
       if (this.imageZoom) {
         this.imageZoom.setImage(image);
@@ -1833,7 +1833,7 @@ export class ExtractorTool extends BaseComponent {
       innerHTML: ICON_PALETTE,
     });
     const titleText = this.createElement('span', {
-      textContent: LanguageService.t('matcher.colorSelection') || 'Color Selection',
+      textContent: LanguageService.t('matcher.colorSelection'),
     });
     titleContainer.appendChild(iconSpan);
     titleContainer.appendChild(titleText);
@@ -1926,7 +1926,7 @@ export class ExtractorTool extends BaseComponent {
       innerHTML: ICON_MARKET,
     });
     const titleText = this.createElement('span', {
-      textContent: LanguageService.t('marketBoard.title') || 'Market Board',
+      textContent: LanguageService.t('marketBoard.title'),
     });
     titleContainer.appendChild(iconSpan);
     titleContainer.appendChild(titleText);
@@ -2108,7 +2108,7 @@ export class ExtractorTool extends BaseComponent {
       if (this.selectedColor) {
         const noResults = this.createElement('p', {
           className: 'text-sm text-center py-4',
-          textContent: LanguageService.t('matcher.noMatchingDyes') || 'No matching dyes found',
+          textContent: LanguageService.t('matcher.noMatchingDyes'),
           attributes: { style: 'color: var(--theme-text-muted);' },
         });
         this.resultsContainer.appendChild(noResults);
@@ -2247,7 +2247,7 @@ export class ExtractorTool extends BaseComponent {
 
     if (!canvas || !this.currentImage) {
       ToastService.error(
-        LanguageService.t('matcher.noImageForPalette') || 'Please load an image first'
+        LanguageService.t('matcher.noImageForPalette')
       );
       return;
     }
@@ -2329,7 +2329,7 @@ export class ExtractorTool extends BaseComponent {
 
     if (!canvas || !this.currentImage) {
       ToastService.error(
-        LanguageService.t('matcher.noImageForPalette') || 'Please load an image first'
+        LanguageService.t('matcher.noImageForPalette')
       );
       return;
     }
@@ -2343,7 +2343,7 @@ export class ExtractorTool extends BaseComponent {
     // Update button to show loading state
     if (this.extractPaletteBtn) {
       this.extractPaletteBtn.textContent =
-        LanguageService.t('matcher.extractingPalette') || 'Extracting...';
+        LanguageService.t('matcher.extractingPalette');
       this.extractPaletteBtn.disabled = true;
       this.extractPaletteBtn.style.opacity = '0.7';
     }
@@ -2398,8 +2398,7 @@ export class ExtractorTool extends BaseComponent {
     } finally {
       // Restore button state
       if (this.extractPaletteBtn) {
-        this.extractPaletteBtn.textContent =
-          LanguageService.t('matcher.extractPaletteBtn') || 'Extract Palette from Image';
+        this.extractPaletteBtn.textContent = LanguageService.t('matcher.extractPaletteBtn');
         this.extractPaletteBtn.disabled = false;
         this.extractPaletteBtn.style.opacity = '1';
       }
@@ -2526,7 +2525,7 @@ export class ExtractorTool extends BaseComponent {
 
     // Update section title with color count
     if (this.resultsTitleElement) {
-      this.resultsTitleElement.textContent = `${LanguageService.t('matcher.extractedPalette') || 'Extracted Palette'} (${matches.length} ${matches.length === 1 ? 'color' : 'colors'})`;
+      this.resultsTitleElement.textContent = `${LanguageService.t('matcher.extractedPalette')} (${matches.length} ${matches.length === 1 ? 'color' : 'colors'})`;
     }
 
     // Enable/disable export button based on results
@@ -2620,7 +2619,7 @@ export class ExtractorTool extends BaseComponent {
             detail: { toolId: 'comparison', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToComparison') || 'Added to comparison');
+        ToastService.success(LanguageService.t('toast.addedToComparison'));
         break;
 
       case 'add-mixer':
@@ -2629,7 +2628,7 @@ export class ExtractorTool extends BaseComponent {
             detail: { toolId: 'mixer', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToMixer') || 'Added to mixer');
+        ToastService.success(LanguageService.t('toast.addedToMixer'));
         break;
 
       case 'add-accessibility':
@@ -2639,7 +2638,7 @@ export class ExtractorTool extends BaseComponent {
           })
         );
         ToastService.success(
-          LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check'
+          LanguageService.t('toast.addedToAccessibility')
         );
         break;
 
@@ -2662,7 +2661,7 @@ export class ExtractorTool extends BaseComponent {
       case 'copy-hex':
         void navigator.clipboard.writeText(dye.hex).then(() => {
           ToastService.success(
-            LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard'
+            LanguageService.t('toast.copiedToClipboard')
           );
         });
         break;
@@ -2674,7 +2673,7 @@ export class ExtractorTool extends BaseComponent {
    */
   private exportPaletteAsCss(): void {
     if (this.lastPaletteResults.length === 0) {
-      ToastService.error(LanguageService.t('matcher.noPaletteToExport') || 'No palette to export');
+      ToastService.error(LanguageService.t('matcher.noPaletteToExport'));
       return;
     }
 
@@ -2730,7 +2729,7 @@ export class ExtractorTool extends BaseComponent {
     URL.revokeObjectURL(url);
 
     ToastService.success(
-      LanguageService.t('matcher.paletteExported') || 'Palette exported as CSS'
+      LanguageService.t('matcher.paletteExported')
     );
     logger.info('[ExtractorTool] Palette exported as CSS');
   }

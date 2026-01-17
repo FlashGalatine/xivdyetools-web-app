@@ -416,7 +416,7 @@ export class SwatchTool extends BaseComponent {
     const raceContainer = this.createElement('div');
     left.appendChild(raceContainer);
     this.racePanel = new CollapsiblePanel(raceContainer, {
-      title: LanguageService.t('tools.character.selectSubrace') || 'Select Subrace',
+      title: LanguageService.t('tools.character.selectSubrace'),
       storageKey: 'v3_character_race_panel',
       defaultOpen: true,
       icon: ICON_TOOL_CHARACTER,
@@ -430,7 +430,7 @@ export class SwatchTool extends BaseComponent {
     const categoryContainer = this.createElement('div');
     left.appendChild(categoryContainer);
     this.categoryPanel = new CollapsiblePanel(categoryContainer, {
-      title: LanguageService.t('tools.character.colorCategory') || 'Color Category',
+      title: LanguageService.t('tools.character.colorCategory'),
       storageKey: 'v3_character_category_panel',
       defaultOpen: true,
       icon: ICON_PALETTE,
@@ -444,7 +444,7 @@ export class SwatchTool extends BaseComponent {
     const marketContainer = this.createElement('div');
     left.appendChild(marketContainer);
     this.marketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'v3_character_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -498,7 +498,7 @@ export class SwatchTool extends BaseComponent {
     const subraceGroup = this.createElement('div', { className: 'space-y-2' });
     const subraceLabel = this.createElement('label', {
       className: 'block text-sm font-medium',
-      textContent: LanguageService.t('tools.character.selectSubrace') || 'Subrace',
+      textContent: LanguageService.t('tools.character.selectSubrace'),
       attributes: { style: 'color: var(--theme-text);' },
     });
     subraceGroup.appendChild(subraceLabel);
@@ -549,7 +549,7 @@ export class SwatchTool extends BaseComponent {
     const genderGroup = this.createElement('div', { className: 'space-y-2' });
     const genderLabel = this.createElement('label', {
       className: 'block text-sm font-medium',
-      textContent: LanguageService.t('tools.character.selectGender') || 'Gender',
+      textContent: LanguageService.t('tools.character.selectGender'),
       attributes: { style: 'color: var(--theme-text);' },
     });
     genderGroup.appendChild(genderLabel);
@@ -563,13 +563,13 @@ export class SwatchTool extends BaseComponent {
     }) as HTMLSelectElement;
 
     const maleOption = this.createElement('option', {
-      textContent: LanguageService.t('tools.character.male') || 'Male',
+      textContent: LanguageService.t('tools.character.male'),
       attributes: { value: 'Male' },
     }) as HTMLOptionElement;
     if (this.gender === 'Male') maleOption.selected = true;
 
     const femaleOption = this.createElement('option', {
-      textContent: LanguageService.t('tools.character.female') || 'Female',
+      textContent: LanguageService.t('tools.character.female'),
       attributes: { value: 'Female' },
     }) as HTMLOptionElement;
     if (this.gender === 'Female') femaleOption.selected = true;
@@ -610,38 +610,38 @@ export class SwatchTool extends BaseComponent {
     }) as HTMLSelectElement;
 
     const categories: Array<{ value: ColorCategory; label: string }> = [
-      { value: 'eyeColors', label: LanguageService.t('tools.character.eyeColors') || 'Eye Colors' },
+      { value: 'eyeColors', label: LanguageService.t('tools.character.eyeColors') },
       {
         value: 'hairColors',
-        label: LanguageService.t('tools.character.hairColors') || 'Hair Colors',
+        label: LanguageService.t('tools.character.hairColors'),
       },
       {
         value: 'skinColors',
-        label: LanguageService.t('tools.character.skinColors') || 'Skin Colors',
+        label: LanguageService.t('tools.character.skinColors'),
       },
       {
         value: 'highlightColors',
-        label: LanguageService.t('tools.character.highlightColors') || 'Highlight Colors',
+        label: LanguageService.t('tools.character.highlightColors'),
       },
       {
         value: 'lipColorsDark',
-        label: LanguageService.t('tools.character.lipColorsDark') || 'Lip Colors (Dark)',
+        label: LanguageService.t('tools.character.lipColorsDark'),
       },
       {
         value: 'lipColorsLight',
-        label: LanguageService.t('tools.character.lipColorsLight') || 'Lip Colors (Light)',
+        label: LanguageService.t('tools.character.lipColorsLight'),
       },
       {
         value: 'tattooColors',
-        label: LanguageService.t('tools.character.tattooColors') || 'Tattoo/Limbal Colors',
+        label: LanguageService.t('tools.character.tattooColors'),
       },
       {
         value: 'facePaintColorsDark',
-        label: LanguageService.t('tools.character.facePaintDark') || 'Face Paint (Dark)',
+        label: LanguageService.t('tools.character.facePaintDark'),
       },
       {
         value: 'facePaintColorsLight',
-        label: LanguageService.t('tools.character.facePaintLight') || 'Face Paint (Light)',
+        label: LanguageService.t('tools.character.facePaintLight'),
       },
     ];
 
@@ -824,7 +824,7 @@ export class SwatchTool extends BaseComponent {
     });
     const selectedTitle = this.createElement('span', {
       className: 'section-title',
-      textContent: LanguageService.t('tools.character.selectedColor') || 'Selected Color',
+      textContent: LanguageService.t('tools.character.selectedColor'),
     });
     selectedHeader.appendChild(selectedTitle);
     selectedSection.appendChild(selectedHeader);
@@ -863,7 +863,7 @@ export class SwatchTool extends BaseComponent {
     });
     const matchTitle = this.createElement('span', {
       className: 'section-title',
-      textContent: LanguageService.t('tools.character.matchingDyes') || 'Matching Dyes',
+      textContent: LanguageService.t('tools.character.matchingDyes'),
     });
     matchHeader.appendChild(matchTitle);
     matchSection.appendChild(matchHeader);
@@ -1212,11 +1212,11 @@ export class SwatchTool extends BaseComponent {
       .writeText(info)
       .then(() => {
         ToastService.success(
-          LanguageService.t('actions.copiedToClipboard') || 'Copied to clipboard'
+          LanguageService.t('actions.copiedToClipboard')
         );
       })
       .catch(() => {
-        ToastService.error(LanguageService.t('actions.copyFailed') || 'Failed to copy');
+        ToastService.error(LanguageService.t('actions.copyFailed'));
       });
   }
 
@@ -1289,7 +1289,7 @@ export class SwatchTool extends BaseComponent {
             detail: { toolId: 'comparison', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToComparison') || 'Added to comparison');
+        ToastService.success(LanguageService.t('toast.addedToComparison'));
         break;
 
       case 'add-mixer':
@@ -1298,7 +1298,7 @@ export class SwatchTool extends BaseComponent {
             detail: { toolId: 'mixer', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToMixer') || 'Added to mixer');
+        ToastService.success(LanguageService.t('toast.addedToMixer'));
         break;
 
       case 'add-accessibility':
@@ -1308,7 +1308,7 @@ export class SwatchTool extends BaseComponent {
           })
         );
         ToastService.success(
-          LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check'
+          LanguageService.t('toast.addedToAccessibility')
         );
         break;
 
@@ -1331,7 +1331,7 @@ export class SwatchTool extends BaseComponent {
       case 'copy-hex':
         void navigator.clipboard.writeText(dye.hex).then(() => {
           ToastService.success(
-            LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard'
+            LanguageService.t('toast.copiedToClipboard')
           );
         });
         break;
@@ -1350,7 +1350,7 @@ export class SwatchTool extends BaseComponent {
     const raceContainer = this.createElement('div');
     drawer.appendChild(raceContainer);
     this.mobileRacePanel = new CollapsiblePanel(raceContainer, {
-      title: LanguageService.t('tools.character.selectSubrace') || 'Select Subrace',
+      title: LanguageService.t('tools.character.selectSubrace'),
       storageKey: 'v3_character_mobile_race_panel',
       defaultOpen: true,
       icon: ICON_TOOL_CHARACTER,
@@ -1364,7 +1364,7 @@ export class SwatchTool extends BaseComponent {
     const categoryContainer = this.createElement('div');
     drawer.appendChild(categoryContainer);
     this.mobileCategoryPanel = new CollapsiblePanel(categoryContainer, {
-      title: LanguageService.t('tools.character.colorCategory') || 'Color Category',
+      title: LanguageService.t('tools.character.colorCategory'),
       storageKey: 'v3_character_mobile_category_panel',
       defaultOpen: true,
       icon: ICON_PALETTE,
@@ -1378,7 +1378,7 @@ export class SwatchTool extends BaseComponent {
     const marketContainer = this.createElement('div');
     drawer.appendChild(marketContainer);
     this.mobileMarketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'v3_character_mobile_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -1429,7 +1429,7 @@ export class SwatchTool extends BaseComponent {
     const subraceGroup = this.createElement('div', { className: 'space-y-2' });
     const subraceLabel = this.createElement('label', {
       className: 'block text-sm font-medium',
-      textContent: LanguageService.t('tools.character.selectSubrace') || 'Subrace',
+      textContent: LanguageService.t('tools.character.selectSubrace'),
       attributes: { style: 'color: var(--theme-text);' },
     });
     subraceGroup.appendChild(subraceLabel);
@@ -1480,7 +1480,7 @@ export class SwatchTool extends BaseComponent {
     const genderGroup = this.createElement('div', { className: 'space-y-2' });
     const genderLabel = this.createElement('label', {
       className: 'block text-sm font-medium',
-      textContent: LanguageService.t('tools.character.selectGender') || 'Gender',
+      textContent: LanguageService.t('tools.character.selectGender'),
       attributes: { style: 'color: var(--theme-text);' },
     });
     genderGroup.appendChild(genderLabel);
@@ -1494,13 +1494,13 @@ export class SwatchTool extends BaseComponent {
     }) as HTMLSelectElement;
 
     const maleOption = this.createElement('option', {
-      textContent: LanguageService.t('tools.character.male') || 'Male',
+      textContent: LanguageService.t('tools.character.male'),
       attributes: { value: 'Male' },
     }) as HTMLOptionElement;
     if (this.gender === 'Male') maleOption.selected = true;
 
     const femaleOption = this.createElement('option', {
-      textContent: LanguageService.t('tools.character.female') || 'Female',
+      textContent: LanguageService.t('tools.character.female'),
       attributes: { value: 'Female' },
     }) as HTMLOptionElement;
     if (this.gender === 'Female') femaleOption.selected = true;
@@ -1539,38 +1539,38 @@ export class SwatchTool extends BaseComponent {
     }) as HTMLSelectElement;
 
     const categories: Array<{ value: ColorCategory; label: string }> = [
-      { value: 'eyeColors', label: LanguageService.t('tools.character.eyeColors') || 'Eye Colors' },
+      { value: 'eyeColors', label: LanguageService.t('tools.character.eyeColors') },
       {
         value: 'hairColors',
-        label: LanguageService.t('tools.character.hairColors') || 'Hair Colors',
+        label: LanguageService.t('tools.character.hairColors'),
       },
       {
         value: 'skinColors',
-        label: LanguageService.t('tools.character.skinColors') || 'Skin Colors',
+        label: LanguageService.t('tools.character.skinColors'),
       },
       {
         value: 'highlightColors',
-        label: LanguageService.t('tools.character.highlightColors') || 'Highlight Colors',
+        label: LanguageService.t('tools.character.highlightColors'),
       },
       {
         value: 'lipColorsDark',
-        label: LanguageService.t('tools.character.lipColorsDark') || 'Lip Colors (Dark)',
+        label: LanguageService.t('tools.character.lipColorsDark'),
       },
       {
         value: 'lipColorsLight',
-        label: LanguageService.t('tools.character.lipColorsLight') || 'Lip Colors (Light)',
+        label: LanguageService.t('tools.character.lipColorsLight'),
       },
       {
         value: 'tattooColors',
-        label: LanguageService.t('tools.character.tattooColors') || 'Tattoo/Limbal Colors',
+        label: LanguageService.t('tools.character.tattooColors'),
       },
       {
         value: 'facePaintColorsDark',
-        label: LanguageService.t('tools.character.facePaintDark') || 'Face Paint (Dark)',
+        label: LanguageService.t('tools.character.facePaintDark'),
       },
       {
         value: 'facePaintColorsLight',
-        label: LanguageService.t('tools.character.facePaintLight') || 'Face Paint (Light)',
+        label: LanguageService.t('tools.character.facePaintLight'),
       },
     ];
 
@@ -1779,17 +1779,17 @@ export class SwatchTool extends BaseComponent {
   private getCategoryDisplayName(category: ColorCategory): string {
     const key = `tools.character.${category.replace(/Colors?$/, 'Colors')}`;
     const labels: Record<ColorCategory, string> = {
-      eyeColors: LanguageService.t('tools.character.eyeColors') || 'Eye Colors',
-      hairColors: LanguageService.t('tools.character.hairColors') || 'Hair Colors',
-      skinColors: LanguageService.t('tools.character.skinColors') || 'Skin Colors',
-      highlightColors: LanguageService.t('tools.character.highlightColors') || 'Highlight Colors',
-      lipColorsDark: LanguageService.t('tools.character.lipColorsDark') || 'Lip Colors (Dark)',
-      lipColorsLight: LanguageService.t('tools.character.lipColorsLight') || 'Lip Colors (Light)',
-      tattooColors: LanguageService.t('tools.character.tattooColors') || 'Tattoo/Limbal Colors',
+      eyeColors: LanguageService.t('tools.character.eyeColors'),
+      hairColors: LanguageService.t('tools.character.hairColors'),
+      skinColors: LanguageService.t('tools.character.skinColors'),
+      highlightColors: LanguageService.t('tools.character.highlightColors'),
+      lipColorsDark: LanguageService.t('tools.character.lipColorsDark'),
+      lipColorsLight: LanguageService.t('tools.character.lipColorsLight'),
+      tattooColors: LanguageService.t('tools.character.tattooColors'),
       facePaintColorsDark:
-        LanguageService.t('tools.character.facePaintDark') || 'Face Paint (Dark)',
+        LanguageService.t('tools.character.facePaintDark'),
       facePaintColorsLight:
-        LanguageService.t('tools.character.facePaintLight') || 'Face Paint (Light)',
+        LanguageService.t('tools.character.facePaintLight'),
     };
     return labels[category];
   }
