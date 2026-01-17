@@ -844,11 +844,11 @@ export class HarmonyTool extends BaseComponent {
     setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForDisplayedDyes(), {
       onPricesToggled: () => {
         this.generateHarmonies();
-        if (this.showPrices) this.fetchPricesForDisplayedDyes();
+        // Note: generateHarmonies() already calls fetchPricesForDisplayedDyes() internally
       },
       onServerChanged: () => {
         if (this.selectedDye) this.generateHarmonies();
-        if (this.showPrices) this.fetchPricesForDisplayedDyes();
+        // Note: generateHarmonies() already calls fetchPricesForDisplayedDyes() internally
       },
     });
 
@@ -1355,11 +1355,11 @@ export class HarmonyTool extends BaseComponent {
     setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForDisplayedDyes(), {
       onPricesToggled: () => {
         this.generateHarmonies();
-        if (this.showPrices) this.fetchPricesForDisplayedDyes();
+        // Note: generateHarmonies() already calls fetchPricesForDisplayedDyes() internally
       },
       onServerChanged: () => {
         if (this.selectedDye) this.generateHarmonies();
-        if (this.showPrices) this.fetchPricesForDisplayedDyes();
+        // Note: generateHarmonies() already calls fetchPricesForDisplayedDyes() internally
       },
     });
 
@@ -1804,12 +1804,11 @@ export class HarmonyTool extends BaseComponent {
     try {
       const prices = await this.marketBoardService.fetchPricesForDyes(dyesToFetch);
 
-      // If prices were returned (not discarded as stale), update UI
-      if (prices.size > 0) {
-        this.updateHarmonyDisplayPrices();
-        this.updateV4ResultCardPrices();
-        logger.info(`[HarmonyTool] Fetched prices for ${prices.size} dyes`);
-      }
+      // Always update UI after fetch completes (even if empty/stale)
+      // This ensures cards reflect current state when server changes
+      this.updateHarmonyDisplayPrices();
+      this.updateV4ResultCardPrices();
+      logger.info(`[HarmonyTool] Fetched prices for ${prices.size} dyes`);
     } catch (error) {
       logger.error('[HarmonyTool] Failed to fetch prices:', error);
     }

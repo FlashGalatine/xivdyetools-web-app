@@ -1844,9 +1844,10 @@ export class MixerTool extends BaseComponent {
 
     try {
       const prices = await this.marketBoardService.fetchPricesForDyes(dyes);
-      if (prices.size > 0) {
-        this.renderResultsGrid();
-      }
+      // Always re-render after fetch completes (even if empty/stale)
+      // This ensures cards reflect current state when server changes
+      this.renderResultsGrid();
+      logger.info(`[MixerTool] Fetched prices for ${prices.size} dyes`);
     } catch (error) {
       logger.error('[MixerTool] Failed to fetch prices:', error);
     }
