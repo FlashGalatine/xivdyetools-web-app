@@ -43,7 +43,8 @@ export class ThemeSwitcher extends BaseComponent {
     // Create button to toggle dropdown
     const button = this.createElement('button', {
       id: 'theme-switcher-btn',
-      className: 'p-2 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
+      className:
+        'p-2 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
       attributes: {
         'aria-label': ariaLabel,
         'aria-haspopup': 'true',

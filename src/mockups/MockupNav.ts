@@ -85,7 +85,8 @@ export function getLocalizedMockupTools(): MockupNavTool[] {
       name: LanguageService.t('tools.budget.title') || 'Budget',
       shortName: LanguageService.t('tools.budget.shortName') || 'Budget',
       icon: ICON_TOOL_BUDGET,
-      description: LanguageService.t('tools.budget.description') || 'Find affordable dye alternatives',
+      description:
+        LanguageService.t('tools.budget.description') || 'Find affordable dye alternatives',
     },
   ];
 }
@@ -159,7 +160,8 @@ export class MockupNav extends BaseComponent {
       const isActive = tool.id === this.activeToolId;
 
       const btn = this.createElement('button', {
-        className: 'w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 hover:brightness-95',
+        className:
+          'w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 hover:brightness-95',
         attributes: {
           style: isActive
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'

@@ -1,92 +1,106 @@
-import { MarketBoard } from '../components/market-board';
-import { PriceData } from '@shared/types';
-import { BaseComponent } from '../components/base-component';
+import type { MarketBoard } from '../components/market-board';
+import type { PriceData } from '@shared/types';
 
 export interface PricingState {
   showPrices: boolean;
   priceData: Map<number, PriceData>;
   marketBoard: MarketBoard | null;
+  drawerMarketBoard?: MarketBoard | null;
   onPricesLoaded?: () => void;
-  initMarketBoard(container: HTMLElement): Promise<void>;
-  setupMarketBoardListeners(container: HTMLElement): void;
-  fetchPrices(): Promise<void>;
-  cleanupMarketBoard(): void;
 }
 
-export const PricingMixin = {
-  async initMarketBoard(this: BaseComponent & PricingState, container: HTMLElement): Promise<void> {
-    if (!this.marketBoard) {
-      this.marketBoard = new MarketBoard(container);
-      await this.marketBoard.loadServerData();
-      if (this.marketBoard) {
-        this.marketBoard.init?.();
-      }
-      this.setupMarketBoardListeners(container);
+/**
+ * Options for setting up Market Board event listeners
+ */
+export interface MarketBoardListenerOptions {
+  /**
+   * Called when prices are toggled on/off via showPricesChanged event
+   * If not provided, defaults to fetching prices when enabled
+   */
+  onPricesToggled?: () => void;
 
-      // Get initial showPrices state (defensive in test envs)
-      this.showPrices = typeof this.marketBoard?.getShowPrices === 'function'
-        ? this.marketBoard.getShowPrices()
-        : false;
+  /**
+   * Called when the server is changed
+   * If not provided, defaults to fetching prices if showPrices is true
+   */
+  onServerChanged?: () => void;
+
+  /**
+   * Called when price categories change
+   * If not provided, defaults to fetching prices if showPrices is true
+   */
+  onCategoriesChanged?: () => void;
+
+  /**
+   * Called when user requests a refresh
+   * If not provided, defaults to fetching prices if showPrices is true
+   */
+  onRefreshRequested?: () => void;
+}
+
+/**
+ * Sets up standard Market Board event listeners on a container element.
+ * This is a utility function that handles the common pattern of listening for
+ * market board events and fetching prices when needed.
+ *
+ * @param container - The DOM element containing the MarketBoard component
+ * @param shouldFetchPrices - Function that returns whether prices should be fetched (e.g., () => this.showPrices)
+ * @param fetchPrices - Function to call to fetch/update prices
+ * @param options - Optional callbacks for custom behavior on each event
+ *
+ * @example
+ * // Basic usage - just fetch prices on all events
+ * setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForMatches());
+ *
+ * @example
+ * // With custom callbacks
+ * setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForMatches(), {
+ *   onServerChanged: () => {
+ *     this.regenerateResults(); // Custom behavior
+ *     if (this.showPrices) this.fetchPricesForMatches();
+ *   }
+ * });
+ */
+export function setupMarketBoardListeners(
+  container: HTMLElement,
+  shouldFetchPrices: () => boolean,
+  fetchPrices: () => void | Promise<void>,
+  options: MarketBoardListenerOptions = {}
+): void {
+  // Price toggle - showPricesChanged event
+  container.addEventListener('showPricesChanged', (() => {
+    if (options.onPricesToggled) {
+      options.onPricesToggled();
+    } else if (shouldFetchPrices()) {
+      void fetchPrices();
     }
-  },
+  }) as EventListener);
 
-  setupMarketBoardListeners(this: BaseComponent & PricingState, container: HTMLElement): void {
-    container.addEventListener('toggle-prices', (event: Event) => {
-      const customEvent = event as CustomEvent;
-      this.showPrices = customEvent.detail?.showPrices ?? false;
-      if (this.showPrices) {
-        void this.fetchPrices();
-      } else {
-        this.priceData.clear();
-        this.onPricesLoaded?.();
-      }
-    });
-
-    container.addEventListener('server-changed', () => {
-      if (this.showPrices) {
-        void this.fetchPrices();
-      }
-    });
-
-    container.addEventListener('categories-changed', () => {
-      if (this.showPrices) {
-        void this.fetchPrices();
-      }
-    });
-
-    container.addEventListener('refresh-requested', () => {
-      if (this.showPrices) {
-        void this.fetchPrices();
-      }
-    });
-  },
-
-  async fetchPrices(this: BaseComponent & PricingState): Promise<void> {
-    // This method should be overridden or implemented by the component
-    // to fetch prices for the specific items it cares about.
-    // However, since the logic varies (matchedDyes vs selectedDyes),
-    // we might need to make this abstract or expect the component to implement a specific method.
-
-    // Let's assume the component implements a method to fetch prices
-    // or we can emit an event or call a callback.
-
-    // Actually, looking at the tools:
-    // ColorMatcherTool: fetchPricesForMatchedDyes()
-    // HarmonyGeneratorTool: fetchPricesForCurrentDyes()
-    // DyeComparisonTool: fetchPricesForSelectedDyes()
-
-    // We can define a standard method name like `updatePrices()` that the component must implement.
-    const self = this as BaseComponent & PricingState & { updatePrices?: () => Promise<void> };
-    if (typeof self.updatePrices === 'function') {
-      await self.updatePrices();
+  // Server changed
+  container.addEventListener('server-changed', (() => {
+    if (options.onServerChanged) {
+      options.onServerChanged();
+    } else if (shouldFetchPrices()) {
+      void fetchPrices();
     }
-  },
+  }) as EventListener);
 
-  cleanupMarketBoard(this: BaseComponent & PricingState): void {
-    if (this.marketBoard) {
-      this.marketBoard.destroy();
-      this.marketBoard = null;
+  // Categories changed
+  container.addEventListener('categories-changed', (() => {
+    if (options.onCategoriesChanged) {
+      options.onCategoriesChanged();
+    } else if (shouldFetchPrices()) {
+      void fetchPrices();
     }
-    this.priceData.clear();
-  },
-};
+  }) as EventListener);
+
+  // Refresh requested
+  container.addEventListener('refresh-requested', (() => {
+    if (options.onRefreshRequested) {
+      options.onRefreshRequested();
+    } else if (shouldFetchPrices()) {
+      void fetchPrices();
+    }
+  }) as EventListener);
+}
+

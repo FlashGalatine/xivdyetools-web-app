@@ -29,6 +29,7 @@ yarn-error.log*
 *.tmp
 *.temp
 *.cache
+tmpclaude*
 
 # Backup Files
 *.bak

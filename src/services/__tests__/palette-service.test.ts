@@ -139,13 +139,7 @@ describe('PaletteService', () => {
     it('should use default name if empty', () => {
       (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue([]);
 
-      const result = PaletteService.savePalette(
-        '',
-        '#FF0000',
-        'Dalamud Red',
-        'complementary',
-        []
-      );
+      const result = PaletteService.savePalette('', '#FF0000', 'Dalamud Red', 'complementary', []);
 
       expect(result?.name).toContain('Palette');
     });
@@ -457,10 +451,7 @@ describe('PaletteService', () => {
       const dataWithInvalid: PaletteExportData = {
         version: '1.0.0',
         exportedAt: '2024-01-01T00:00:00.000Z',
-        palettes: [
-          mockPalette,
-          { invalid: true } as unknown as SavedPalette,
-        ],
+        palettes: [mockPalette, { invalid: true } as unknown as SavedPalette],
       };
       (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue([]);
 

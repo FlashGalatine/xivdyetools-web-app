@@ -6,7 +6,12 @@
 
 import { vi } from 'vitest';
 import { LanguageService } from '@services/language-service';
+import { ThemeService } from '@services/theme-service';
 import { server } from './mocks/server';
+
+// Initialize ThemeService to ensure it's available for component tests
+// This prevents "ThemeService.getCurrentTheme is not a function" errors
+ThemeService.setTheme('standard-light');
 
 // Mock window.matchMedia for tests that need it
 Object.defineProperty(window, 'matchMedia', {

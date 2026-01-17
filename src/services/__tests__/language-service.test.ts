@@ -959,13 +959,13 @@ describe('LanguageService getCurrentLocaleDisplay fallback', () => {
     // The fallback is defensive and shouldn't normally trigger since
     // all valid locales are in LOCALE_DISPLAY_INFO
     const display = LanguageService.getCurrentLocaleDisplay();
-    
+
     // Verify it always returns a valid display object
     expect(display).toHaveProperty('code');
     expect(display).toHaveProperty('name');
     expect(display).toHaveProperty('flag');
     expect(display).toHaveProperty('englishName');
-    
+
     // The fallback path would return LOCALE_DISPLAY_INFO[0] which is 'en'
     // This branch is hard to trigger since currentLocale is always validated
     expect(LOCALE_DISPLAY_INFO[0].code).toBe('en');
@@ -981,7 +981,7 @@ describe('LanguageService setLocale error propagation', () => {
     // Mock LocalizationService.setLocale to throw
     const { LocalizationService } = await import('@xivdyetools/core');
     const originalSetLocale = LocalizationService.setLocale;
-    
+
     vi.spyOn(LocalizationService, 'setLocale').mockRejectedValueOnce(
       new Error('Core localization failed')
     );
@@ -1014,10 +1014,10 @@ describe('LanguageService initialize branches', () => {
     // Service is already initialized from prior tests
     // This tests the early return in initialize()
     expect(LanguageService.isReady()).toBe(true);
-    
+
     // Call initialize again - should return immediately
     await LanguageService.initialize();
-    
+
     // Still works after calling initialize twice
     expect(LanguageService.isReady()).toBe(true);
   });
@@ -1025,15 +1025,15 @@ describe('LanguageService initialize branches', () => {
   it('should use saved locale preference when valid', async () => {
     // Set up a saved locale
     StorageService.setItem(STORAGE_KEYS.LOCALE, 'fr');
-    
+
     // Clear and reinitialize cannot be done since isInitialized is private
     // Instead, verify the storage roundtrip works
     const saved = StorageService.getItem<LocaleCode>(STORAGE_KEYS.LOCALE);
     expect(saved).toBe('fr');
-    
+
     // Verify the validation path
     expect(LanguageService.isValidLocale(saved)).toBe(true);
-    
+
     // Clean up
     await LanguageService.setLocale('en');
   });
@@ -1041,11 +1041,11 @@ describe('LanguageService initialize branches', () => {
   it('should reject invalid saved locale and detect browser locale', async () => {
     // Set an invalid saved locale
     StorageService.setItem(STORAGE_KEYS.LOCALE, 'invalid-locale');
-    
+
     // Verify validation rejects it
     const saved = StorageService.getItem<string>(STORAGE_KEYS.LOCALE);
     expect(LanguageService.isValidLocale(saved)).toBe(false);
-    
+
     // Clean up
     await LanguageService.setLocale('en');
   });

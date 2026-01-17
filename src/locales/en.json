@@ -14,11 +14,16 @@
     "tools": "Tools",
     "theme": "Theme",
     "language": "Language",
-    "about": "About XIV Dye Tools"
+    "about": "About XIV Dye Tools",
+    "languageSelector": "Select Language",
+    "languageOptions": "Available languages",
+    "themeSelector": "Select Theme",
+    "themeOptions": "Available themes"
   },
   "about": {
     "title": "About XIV Dye Tools",
-    "connect": "Connect"
+    "connect": "Connect",
+    "builtWith": "Built with TypeScript, Vite, and Tailwind CSS"
   },
   "common": {
     "close": "Close"
@@ -39,7 +44,7 @@
     },
     "matcher": {
       "title": "Color Matcher",
-      "shortName": "Matcher",
+      "shortName": "Extractor",
       "description": "Match colors from images",
       "subtitle": "Upload an image or select a color to find the closest matching FFXIV dyes."
     },
@@ -55,17 +60,26 @@
       "description": "Compare up to 4 dyes",
       "subtitle": "Compare dyes side-by-side to see color differences and find the perfect match."
     },
+    "gradient": {
+      "title": "Gradient Builder",
+      "shortName": "Gradient",
+      "description": "Create color transitions",
+      "subtitle": "Build smooth color gradients between dyes and find intermediate options."
+    },
     "mixer": {
       "title": "Dye Mixer",
       "shortName": "Mixer",
-      "description": "Find intermediate dyes",
-      "subtitle": "Create smooth color gradients between two dyes and discover intermediate options."
+      "description": "Blend colors together",
+      "subtitle": "Blend two dyes together to find FFXIV dyes that match the mixed color."
     },
     "presets": {
       "title": "Preset Palettes",
       "shortName": "Presets",
       "description": "Browse themed palettes",
       "subtitle": "Explore curated dye palettes for jobs, seasons, events, and more.",
+      "communityTitle": "Community Presets",
+      "communityDescription": "Discover and share color palettes created by the FFXIV community",
+      "searchPlaceholder": "Search presets...",
       "allCategories": "All",
       "noPresets": "No presets found",
       "dyes": "dyes",
@@ -83,7 +97,7 @@
     },
     "character": {
       "title": "Character Matcher",
-      "shortName": "Character",
+      "shortName": "Swatch",
       "description": "Match dyes to character colors",
       "subtitle": "Find FFXIV dyes that match your character's hair, eyes, skin, and other customization colors.",
       "selectSubrace": "Select Subrace",
@@ -133,11 +147,141 @@
     "loading": "Loading...",
     "showMore": "Show More",
     "showLess": "Show Less",
-    "selectDye": "Select a dye",
+    "selectDye": "Select Dye",
     "noDyeSelected": "No dye selected",
     "download": "Download",
     "slot": "Slot",
-    "replace": "Replace"
+    "replace": "Replace",
+    "technical": "Technical",
+    "acquisition": "Acquisition",
+    "source": "Source",
+    "recommended": "Recommended",
+    "original": "Original",
+    "match": "Match",
+    "cost": "Cost",
+    "market": "Market",
+    "closeModal": "Close modal",
+    "full": "Full"
+  },
+  "config": {
+    "harmonyType": "Harmony Type",
+    "complementary": "Complementary",
+    "analogous": "Analogous",
+    "triadic": "Triadic",
+    "splitComplementary": "Split-Complementary",
+    "tetradic": "Tetradic",
+    "square": "Square",
+    "monochromatic": "Monochromatic",
+    "compound": "Compound",
+    "shades": "Shades",
+    "matchingAlgorithm": "Matching Algorithm",
+    "perceptualMatching": "Perceptual Matching",
+    "perceptualMatchingDesc": "Uses DeltaE for perceptually accurate color matching",
+    "hueMatchingDesc": "Uses hue angles for artistic color harmony",
+    "colorFormats": "Color Formats",
+    "hexCodes": "Hex Codes",
+    "rgbValues": "RGB Values",
+    "hsvValues": "HSV Values",
+    "labValues": "LAB Values",
+    "resultDetails": "Result Details",
+    "showPrices": "Show Prices",
+    "showDeltaE": "Show Delta-E",
+    "showAcquisition": "Show Acquisition",
+    "marketBoard": "Market Board",
+    "enableMarketBoard": "Enable Market Board",
+    "pricesFetchedFrom": "Prices fetched from Universalis for {server}",
+    "loadingServers": "Loading servers...",
+    "allWorlds": "All Worlds",
+    "extractionSettings": "Extraction Settings",
+    "vibrancyBoost": "Vibrancy Boost",
+    "maxColors": "Max Colors",
+    "dragThreshold": "Selection Sensitivity",
+    "dragThresholdTooltip": "Lower values make dragging easier, higher values make clicking easier",
+    "visionTypes": "Vision Types",
+    "deuteranopia": "Deuteranopia",
+    "protanopia": "Protanopia",
+    "tritanopia": "Tritanopia",
+    "achromatopsia": "Achromatopsia",
+    "simulationDisplay": "Simulation Display",
+    "showLabels": "Show Labels",
+    "showHexValues": "Show Hex Values",
+    "highContrastMode": "High Contrast Mode",
+    "gradientSteps": "Gradient Steps",
+    "count": "Count",
+    "colorSpace": "Color Space",
+    "hsvHueBased": "HSV (Hue-based)",
+    "rgbDirect": "RGB (Direct)",
+    "mixingMode": "Mixing Mode",
+    "mixingRyb": "RYB (Paint Mixing)",
+    "mixingLab": "LAB (Perceptual)",
+    "mixingRgb": "RGB (Light)",
+    "mixingRybDesc": "Subtractive paint mixing. Blue + Yellow = Green.",
+    "mixingLabDesc": "Perceptually uniform blending in LAB color space.",
+    "mixingRgbDesc": "Additive light mixing. Blue + Yellow = Gray.",
+    "resultSettings": "Result Settings",
+    "maxResults": "Max Results",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "jobs": "Jobs",
+    "grandCompanies": "Grand Companies",
+    "seasons": "Seasons",
+    "events": "Events",
+    "aesthetics": "Aesthetics",
+    "community": "Community",
+    "sortBy": "Sort By",
+    "mostPopular": "Most Popular",
+    "mostRecent": "Most Recent",
+    "alphabetical": "Alphabetical",
+    "filters": "Filters",
+    "showMyPresetsOnly": "Show My Presets Only",
+    "showFavorites": "Show Favorites",
+    "budgetLimit": "Budget Limit",
+    "maxPrice": "Max Price",
+    "colorDistance": "Color Distance",
+    "maxDeltaE": "Max Delta-E",
+    "colorSheet": "Color Sheet",
+    "eyeColors": "Eye Colors",
+    "hairColors": "Hair Colors",
+    "skinColors": "Skin Colors",
+    "highlightColors": "Highlight Colors",
+    "lipColorsDark": "Lip Colors (Dark)",
+    "lipColorsLight": "Lip Colors (Light)",
+    "tattooColors": "Tattoo/Limbal Colors",
+    "facePaintDark": "Face Paint (Dark)",
+    "facePaintLight": "Face Paint (Light)",
+    "character": "Character",
+    "searchSettings": "Search Settings",
+    "displayOptions": "Display Options",
+    "account": "Account",
+    "via": "via {provider}",
+    "loginToSubmit": "Login to Submit",
+    "loginWithDiscord": "Login with Discord",
+    "loginWithXIVAuth": "Login with XIVAuth",
+    "submitPreset": "Submit Preset",
+    "logout": "Logout"
+  },
+  "colorPalette": {
+    "title": "Color Palette",
+    "searchPlaceholder": "Search dyes...",
+    "all": "All",
+    "metallic": "Metallic",
+    "pastel": "Pastel",
+    "dark": "Dark",
+    "vibrant": "Vibrant",
+    "favorites": "Favorites",
+    "neutral": "Neutral",
+    "reds": "Reds",
+    "browns": "Browns",
+    "yellows": "Yellows",
+    "oranges": "Oranges",
+    "greens": "Greens",
+    "blues": "Blues",
+    "purples": "Purples",
+    "pinks": "Pinks",
+    "whites": "Whites",
+    "blacks": "Blacks",
+    "grays": "Grays",
+    "noDyesFound": "No dyes found"
   },
   "harmony": {
     "suggestionMode": "Suggestion Mode",
@@ -153,6 +297,7 @@
     "selectDye": "Select a dye",
     "selectDyePrompt": "Select a base dye to generate color harmonies",
     "noDyeSelected": "No dye selected",
+    "noColorSelected": "No Color Selected",
     "selectBaseColor": "Select a base color to generate harmonies",
     "generatingHarmonies": "Generating harmonies...",
     "noMatchingDyes": "No matching dyes found",
@@ -269,7 +414,10 @@
     "imageLoaded": "Image loaded successfully",
     "imageTooLarge": "Image too large to save for later",
     "noColorSelected": "No color selected",
-    "selectedColor": "Selected Color"
+    "selectedColor": "Selected Color",
+    "dropImageHere": "Drop image here or click to upload",
+    "extractedPalette": "Extracted Palette",
+    "exportCss": "Export CSS"
   },
   "accessibility": {
     "inspectDyes": "Inspect Dyes",
@@ -280,6 +428,7 @@
     "showLabels": "Show Labels",
     "highContrastMode": "High Contrast Mode",
     "selectDyes": "Select Dyes",
+    "selectedDyes": "Selected Dyes",
     "selectUpTo": "Select up to {count} dyes to check accessibility",
     "selectDyesToSeeAnalysis": "Select dyes to see accessibility analysis",
     "visionSimulation": "Vision Simulations",
@@ -307,9 +456,11 @@
     "achromatopsiaWarning": "May be hard to see for total colorblindness",
     "dyesSelected": "dyes selected",
     "visionTypesEnabled": "vision types enabled",
-    "selectTwoDyes": "Select at least 2 dyes to see comparisons"
+    "selectTwoDyes": "Select at least 2 dyes to see comparisons",
+    "addDye": "Add Dye"
   },
   "comparison": {
+    "selectedDyes": "Selected Dyes",
     "selectDyes": "Select Dyes",
     "selectUpTo": "Select up to {count} dyes",
     "selectToSeeAnalysis": "Select 2 or more dyes to see analysis",
@@ -415,10 +566,32 @@
     "interpolationPreview": "Interpolation Preview",
     "intermediateDyeMatches": "Intermediate Dye Matches",
     "selectDye": "Select a dye",
+    "selectColor": "Select Color",
     "selectStartEndDyes": "Select start and end dyes to create a color transition",
     "targetColor": "Target Color",
     "bestMatch": "Best Match",
-    "exportPalette": "Export Palette"
+    "exportPalette": "Export Palette",
+    "selectTwoDyesToMix": "Select two dyes to blend and find matching colors",
+    "dye1": "Dye 1",
+    "dye2": "Dye 2",
+    "maxResults": "Max Results",
+    "matchingDyes": "Matching Dyes",
+    "blend": "Blend",
+    "mixSettings": "Mix Settings",
+    "slotsFullReplacing": "Both slots full. Replacing first dye.",
+    "replacedSlot1": "Replaced Slot 1",
+    "replacedSlot2": "Replaced Slot 2",
+    "replaceSlot": "Replace Slot"
+  },
+  "gradient": {
+    "selectColor": "Select Color",
+    "setStartAndEnd": "Set a start and end color to generate gradient steps",
+    "clickPlusButtons": "Select dyes from the Color Palette to set gradient colors",
+    "clickToSelectStart": "Click to select start color",
+    "clickToSelectEnd": "Click to select end color",
+    "gradientResults": "Gradient Results",
+    "noMatchesFound": "No matching dyes found",
+    "sameDyeWarning": "Start and end dyes are the same. Select different dyes for a gradient."
   },
   "dyeSelector": {
     "searchPlaceholder": "Search dyes by name...",
@@ -496,6 +669,7 @@
     "loading": "Loading alternatives...",
     "marketPrice": "Market Price",
     "alternativesWithinBudget": "alternatives within budget",
+    "alternativeWithinBudget": "alternative within budget",
     "sortedBy": "Sorted by",
     "sortMatch": "Best Match",
     "sortMatchDesc": "Closest color first",
@@ -517,7 +691,9 @@
     "distanceDesc": "Higher values show more alternatives, lower values show closer matches",
     "fetchingPrices": "Fetching prices",
     "maxResults": "Max Results",
-    "showingXOfY": "Showing {showing} of {total}"
+    "showingXOfY": "Showing {showing} of {total}",
+    "selectedDye": "Selected Dye",
+    "currentlySelected": "Currently Selected"
   },
   "export": {
     "title": "Export Palette",
@@ -545,7 +721,12 @@
     "imageTooLarge": "Image file is too large. Maximum size is 10MB.",
     "unsupportedFormat": "Unsupported file format.",
     "clipboardFailed": "Failed to copy to clipboard.",
-    "storageFailed": "Failed to save settings. Storage may be full."
+    "storageFailed": "Failed to save settings. Storage may be full.",
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred",
+    "tryAgain": "Try Again",
+    "resetComponent": "Reset Component",
+    "retryAttempts": "Retry attempts: {count}/{max}"
   },
   "success": {
     "copiedToClipboard": "Copied to clipboard!",
@@ -556,6 +737,7 @@
   "themes": {
     "standardLight": "Standard (Light)",
     "standardDark": "Standard (Dark)",
+    "premiumDark": "Premium Dark",
     "hydaelynLight": "Hydaelyn",
     "ogClassicDark": "OG Classic",
     "parchmentLight": "Parchment",
@@ -807,7 +989,8 @@
     "tab": "Tab",
     "edit": "Edit",
     "delete": "Delete",
-    "confirmDelete": "Are you sure you want to delete this preset?",
+    "deleteTitle": "Delete Preset",
+    "confirmDelete": "Are you sure you want to delete this preset? This action cannot be undone.",
     "categories": {
       "all": "All",
       "jobs": "Jobs",
@@ -821,11 +1004,82 @@
       "popular": "Most Popular",
       "recent": "Most Recent",
       "name": "Alphabetical"
-    }
+    },
+    "editPreset": "Edit Preset",
+    "saveChanges": "Save Changes",
+    "loginToVote": "Login with Discord or XIVAuth to vote for this preset"
   },
   "auth": {
     "logout": "Logout",
     "loggedInAs": "Logged in as",
-    "notLoggedIn": "Not logged in"
+    "notLoggedIn": "Not logged in",
+    "loginWithDiscord": "Login with Discord",
+    "loginWithXIVAuth": "Login with XIVAuth",
+    "userMenu": "User menu",
+    "verified": "Verified"
+  },
+  "emptyStates": {
+    "noSearchResults": {
+      "title": "No dyes match \"{query}\"",
+      "description": "Try checking your spelling or search for a category like \"purple\" or \"red\".",
+      "action": "Clear search"
+    },
+    "filteredOut": {
+      "title": "All suggestions were filtered out",
+      "description": "Your current filters are hiding all matching dyes. Try adjusting your filter settings.",
+      "action": "Reset filters"
+    },
+    "noPrice": {
+      "description": "This dye may not be tradeable or Universalis doesn't have recent data for this server.",
+      "action": "Try different server"
+    },
+    "noHarmony": {
+      "title": "No harmony suggestions",
+      "description": "Select a base dye to generate color harmony suggestions.",
+      "action": "Select a dye"
+    },
+    "noImage": {
+      "title": "No image loaded",
+      "description": "Upload an image to start matching colors from it.",
+      "action": "Upload image"
+    },
+    "loading": {
+      "title": "Loading...",
+      "description": "Please wait while we fetch the data."
+    }
+  },
+  "aria": {
+    "headerNavigation": "Header navigation",
+    "closeSidebar": "Close sidebar",
+    "toggleConfigSidebar": "Toggle configuration sidebar",
+    "showColorPalette": "Show color palette",
+    "selectRandomDye": "Select random dye",
+    "clearAllDyes": "Clear all dyes",
+    "closePalette": "Close palette",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "moreActions": "More actions",
+    "slider": "Slider",
+    "toggle": "Toggle"
+  },
+  "resultCard": {
+    "inspectDyeIn": "Inspect Dye in...",
+    "transformDyeIn": "Transform Dye in...",
+    "openInBrowser": "Open in browser...",
+    "sentToBudget": "Sent to Budget Suggestions",
+    "dyeAlreadyIn": "Dye already added",
+    "addedTo": "Added successfully",
+    "slotsFull": "All slots are full. Select one to replace:",
+    "selectSlotToReplace": "Select Slot to Replace",
+    "addingDye": "Adding",
+    "replacedInTool": "Replaced successfully",
+    "tools": {
+      "harmony": "Harmony Explorer",
+      "budget": "Budget Suggestions",
+      "accessibility": "Accessibility Checker",
+      "comparison": "Dye Comparison",
+      "gradient": "Gradient Builder",
+      "mixer": "Dye Mixer"
+    }
   }
 }

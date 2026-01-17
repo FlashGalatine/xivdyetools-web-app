@@ -49,7 +49,8 @@ export class CollapsiblePanel extends BaseComponent {
 
     // Header (clickable to toggle)
     const header = this.createElement('button', {
-      className: 'w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:brightness-95',
+      className:
+        'w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:brightness-95',
       attributes: {
         style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
         'aria-expanded': String(this.isOpen),
@@ -94,9 +95,7 @@ export class CollapsiblePanel extends BaseComponent {
     this.contentSlot = this.createElement('div', {
       className: 'collapsible-content overflow-hidden transition-all duration-200',
       attributes: {
-        style: this.isOpen
-          ? 'max-height: 1000px; opacity: 1;'
-          : 'max-height: 0; opacity: 0;',
+        style: this.isOpen ? 'max-height: 1000px; opacity: 1;' : 'max-height: 0; opacity: 0;',
       },
     });
 

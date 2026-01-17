@@ -198,7 +198,8 @@ export class DyePreviewOverlay extends BaseComponent {
     const sampledSwatch = document.createElement('div');
     sampledSwatch.className = 'flex-1 text-center';
     const sampledColorBox = document.createElement('div');
-    sampledColorBox.className = 'w-10 h-10 mx-auto rounded border border-gray-300 dark:border-gray-600 shadow-inner';
+    sampledColorBox.className =
+      'w-10 h-10 mx-auto rounded border border-gray-300 dark:border-gray-600 shadow-inner';
     sampledColorBox.style.backgroundColor = config.sampledColor;
     const sampledLabel = document.createElement('div');
     sampledLabel.className = 'text-xs text-gray-500 dark:text-gray-400 mt-1';
@@ -216,7 +217,8 @@ export class DyePreviewOverlay extends BaseComponent {
     const dyeSwatch = document.createElement('div');
     dyeSwatch.className = 'flex-1 text-center';
     const dyeColorBox = document.createElement('div');
-    dyeColorBox.className = 'w-10 h-10 mx-auto rounded border-2 border-gray-400 dark:border-gray-500 shadow-inner';
+    dyeColorBox.className =
+      'w-10 h-10 mx-auto rounded border-2 border-gray-400 dark:border-gray-500 shadow-inner';
     dyeColorBox.style.backgroundColor = config.dye.hex;
     const dyeLabel = document.createElement('div');
     dyeLabel.className = 'text-xs text-gray-500 dark:text-gray-400 mt-1 truncate';

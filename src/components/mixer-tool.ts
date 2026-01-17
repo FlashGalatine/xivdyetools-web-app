@@ -1,11 +1,17 @@
 /**
- * XIV Dye Tools v3.0.0 - Mixer Tool Component
+ * XIV Dye Tools v4.0.0 - Mixer Tool Component (Dye Mixer)
  *
- * Phase 6: Dye Mixer migration to v3 two-panel layout.
- * Orchestrates color interpolation between two dyes with intermediate matches.
+ * V4 NEW: Dye Mixer - Blend two dyes together to find matching FFXIV dyes.
+ * This is a completely different tool from the old Mixer (now Gradient Builder).
  *
- * Left Panel: Start/End dye selectors, steps slider, color space toggle, filters, market board
- * Right Panel: Gradient preview, intermediate dye matches, export options
+ * Features:
+ * - Crafting-style interface with two input slots
+ * - RGB averaging to create blended color
+ * - Find closest matching FFXIV dyes to the blend
+ * - Configurable number of results (3-8)
+ *
+ * Left Panel: Dye selection, mix settings, filters, market board
+ * Right Panel: Crafting UI with slots, matched dye results grid
  *
  * @module components/tools/mixer-tool
  */
@@ -16,20 +22,31 @@ import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import { createDyeActionDropdown } from '@components/dye-action-dropdown';
-import { ColorService, dyeService, LanguageService, StorageService, ToastService } from '@services/index';
-import { ICON_TOOL_MIXER } from '@shared/tool-icons';
+import {
+  ColorService,
+  dyeService,
+  LanguageService,
+  StorageService,
+  ToastService,
+  MarketBoardService,
+} from '@services/index';
+import { ConfigController } from '@services/config-controller';
+import { setupMarketBoardListeners } from '@services/pricing-mixin';
+import { ICON_TOOL_DYE_MIXER } from '@shared/tool-icons';
 import {
   ICON_FILTER,
   ICON_MARKET,
-  ICON_EXPORT,
-  ICON_TEST_TUBE,
-  ICON_BEAKER_PIPE,
-  ICON_STAIRS,
   ICON_PALETTE,
+  ICON_BEAKER,
+  ICON_SLIDERS,
 } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
+import type { MixerConfig, DisplayOptionsConfig, MixingMode } from '@shared/tool-config-types';
+import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
+import '@components/v4/result-card';
+import type { ResultCardData, ContextAction } from '@components/v4/result-card';
 
 // ============================================================================
 // Types and Constants
@@ -42,62 +59,57 @@ export interface MixerToolOptions {
 }
 
 /**
- * Interpolation step with dye match
+ * Mixed color result with matched dye
  */
-interface InterpolationStep {
-  position: number; // 0-1
-  theoreticalColor: string;
-  matchedDye: Dye | null;
+interface MixedColorResult {
+  blendedHex: string;
+  matchedDye: Dye;
   distance: number;
 }
 
 /**
- * Storage keys for v3 mixer tool
+ * Storage keys for Dye Mixer tool
  */
 const STORAGE_KEYS = {
-  stepCount: 'v3_mixer_steps',
-  colorSpace: 'v3_mixer_color_space',
-  selectedDyes: 'v3_mixer_selected_dyes',
-  // Legacy keys for migration
-  startDyeId: 'v3_mixer_start_dye_id',
-  endDyeId: 'v3_mixer_end_dye_id',
+  selectedDyes: 'v4_mixer_selected_dyes',
 } as const;
 
 /**
- * Default values
+ * Slot dimensions in pixels
  */
-const DEFAULTS = {
-  stepCount: 5,
-  colorSpace: 'hsv' as const,
-};
+const SLOT_SIZE = {
+  input: 100, // 100x100px for input slots
+  result: 120, // 120x120px for result slot
+} as const;
 
 // ============================================================================
-// MixerTool Component
+// Component
 // ============================================================================
 
 /**
- * Mixer Tool - v3 Two-Panel Layout
+ * Dye Mixer Tool - v4 New Tool
  *
- * Creates smooth color transitions between two dyes with intermediate matches.
+ * Blend two dyes together to find matching FFXIV dyes.
  */
 export class MixerTool extends BaseComponent {
   private options: MixerToolOptions;
 
-  // State - selectedDyes[0] = start, selectedDyes[1] = end
-  private selectedDyes: Dye[] = [];
-  private stepCount: number;
-  private colorSpace: 'rgb' | 'hsv';
-  private currentSteps: InterpolationStep[] = [];
-  private showPrices: boolean = false;
-  private priceData: Map<number, PriceData> = new Map();
+  // State
+  private selectedDyes: [Dye | null, Dye | null] = [null, null];
+  private blendedColor: string | null = null;
+  private matchedResults: MixedColorResult[] = [];
+  private maxResults: number = 5;
+  private mixingMode: MixingMode = 'ryb';
 
-  // Computed getters for backward compatibility
-  private get startDye(): Dye | null {
-    return this.selectedDyes[0] || null;
+  // Market Board Service (shared price cache with race condition protection)
+  private marketBoardService: MarketBoardService;
+
+  // Getters for service state
+  private get showPrices(): boolean {
+    return this.marketBoardService.getShowPrices();
   }
-
-  private get endDye(): Dye | null {
-    return this.selectedDyes[1] || null;
+  private get priceData(): Map<number, PriceData> {
+    return this.marketBoardService.getAllPrices();
   }
 
   // Child components (desktop)
@@ -117,67 +129,65 @@ export class MixerTool extends BaseComponent {
   private mobileDyeSelector: DyeSelector | null = null;
   private mobileDyeFilters: DyeFilters | null = null;
   private mobileMarketBoard: MarketBoard | null = null;
-  private mobileStepValueDisplay: HTMLElement | null = null;
+  private mobileMaxResultsDisplay: HTMLElement | null = null;
 
   // DOM References
   private selectedDyesContainer: HTMLElement | null = null;
   private mobileSelectedDyesContainer: HTMLElement | null = null;
-  private stepValueDisplay: HTMLElement | null = null;
+  private maxResultsValueDisplay: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
-  private gradientContainer: HTMLElement | null = null;
-  private matchesContainer: HTMLElement | null = null;
-  private exportContainer: HTMLElement | null = null;
+  private craftingContainer: HTMLElement | null = null;
+  private resultsSection: HTMLElement | null = null;
+  private resultsGridContainer: HTMLElement | null = null;
+  private slot1Element: HTMLElement | null = null;
+  private slot2Element: HTMLElement | null = null;
+  private resultSlotElement: HTMLElement | null = null;
+  private emptyStateMessage: HTMLElement | null = null;
+  private emptyStateIcon: HTMLElement | null = null;
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
+
+  // Display options (from ConfigController)
+  private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
 
   constructor(container: HTMLElement, options: MixerToolOptions) {
     super(container);
     this.options = options;
 
-    // Load persisted settings
-    this.stepCount = StorageService.getItem<number>(STORAGE_KEYS.stepCount) ?? DEFAULTS.stepCount;
-    this.colorSpace = StorageService.getItem<'rgb' | 'hsv'>(STORAGE_KEYS.colorSpace) ?? DEFAULTS.colorSpace;
+    // Initialize MarketBoardService (shared price cache)
+    this.marketBoardService = MarketBoardService.getInstance();
 
-    // Load persisted dye selections (with migration from old format)
+    // Load config from ConfigController (v4 unified config)
+    const config = ConfigController.getInstance().getConfig('mixer');
+    this.maxResults = config.maxResults;
+    this.mixingMode = config.mixingMode ?? 'ryb';
+    this.displayOptions = config.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
+
+    // Load persisted dye selections
     this.loadSelectedDyes();
+
+    logger.info('[MixerTool] Initializing Dye Mixer');
   }
 
   /**
-   * Load selected dyes from storage, migrating from old format if needed
+   * Load selected dyes from storage
    */
   private loadSelectedDyes(): void {
-    // Try new storage format first
-    const savedDyeIds = StorageService.getItem<number[]>(STORAGE_KEYS.selectedDyes);
+    const savedDyeIds = StorageService.getItem<[number | null, number | null]>(
+      STORAGE_KEYS.selectedDyes
+    );
 
-    if (savedDyeIds && savedDyeIds.length > 0) {
-      // Load from new format
-      this.selectedDyes = savedDyeIds
-        .map((id) => dyeService.getDyeById(id))
-        .filter((dye): dye is Dye => dye !== null);
-    } else {
-      // Migrate from old format (separate start/end dye IDs)
-      const startDyeId = StorageService.getItem<number>(STORAGE_KEYS.startDyeId);
-      const endDyeId = StorageService.getItem<number>(STORAGE_KEYS.endDyeId);
+    if (savedDyeIds) {
+      this.selectedDyes = [
+        savedDyeIds[0] ? (dyeService.getDyeById(savedDyeIds[0]) ?? null) : null,
+        savedDyeIds[1] ? (dyeService.getDyeById(savedDyeIds[1]) ?? null) : null,
+      ];
 
-      const dyes: Dye[] = [];
-      if (startDyeId) {
-        const startDye = dyeService.getDyeById(startDyeId);
-        if (startDye) dyes.push(startDye);
-      }
-      if (endDyeId) {
-        const endDye = dyeService.getDyeById(endDyeId);
-        if (endDye) dyes.push(endDye);
-      }
-
-      if (dyes.length > 0) {
-        this.selectedDyes = dyes;
-        // Save to new format
-        this.saveSelectedDyes();
-        // Clean up old keys
-        StorageService.removeItem(STORAGE_KEYS.startDyeId);
-        StorageService.removeItem(STORAGE_KEYS.endDyeId);
-        logger.info('[MixerTool] Migrated dye selection from old storage format');
+      // Recalculate blend if both dyes present
+      if (this.selectedDyes[0] && this.selectedDyes[1]) {
+        this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
       }
     }
   }
@@ -186,8 +196,108 @@ export class MixerTool extends BaseComponent {
    * Save selected dyes to storage
    */
   private saveSelectedDyes(): void {
-    const dyeIds = this.selectedDyes.map((d) => d.id);
-    StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+    const ids: [number | null, number | null] = [
+      this.selectedDyes[0]?.id ?? null,
+      this.selectedDyes[1]?.id ?? null,
+    ];
+    StorageService.setItem(STORAGE_KEYS.selectedDyes, ids);
+  }
+
+  // ============================================================================
+  // Color Blending Logic
+  // ============================================================================
+
+  /**
+   * Blend two hex colors using the selected mixing algorithm
+   */
+  private blendColors(hex1: string, hex2: string): string {
+    switch (this.mixingMode) {
+      case 'ryb':
+        return this.blendColorsRyb(hex1, hex2);
+      case 'lab':
+        return this.blendColorsLab(hex1, hex2);
+      case 'rgb':
+      default:
+        return this.blendColorsRgb(hex1, hex2);
+    }
+  }
+
+  /**
+   * Blend colors using RYB (Red-Yellow-Blue) subtractive mixing
+   * Produces paint-like results: Blue + Yellow = Green
+   */
+  private blendColorsRyb(hex1: string, hex2: string): string {
+    return ColorService.mixColorsRyb(hex1, hex2, 0.5);
+  }
+
+  /**
+   * Blend colors using LAB perceptually uniform color space
+   */
+  private blendColorsLab(hex1: string, hex2: string): string {
+    const lab1 = ColorService.hexToLab(hex1);
+    const lab2 = ColorService.hexToLab(hex2);
+
+    return ColorService.labToHex(
+      (lab1.L + lab2.L) / 2,
+      (lab1.a + lab2.a) / 2,
+      (lab1.b + lab2.b) / 2
+    );
+  }
+
+  /**
+   * Blend colors using RGB averaging (additive light mixing)
+   */
+  private blendColorsRgb(hex1: string, hex2: string): string {
+    const rgb1 = ColorService.hexToRgb(hex1);
+    const rgb2 = ColorService.hexToRgb(hex2);
+
+    const r = Math.round((rgb1.r + rgb2.r) / 2);
+    const g = Math.round((rgb1.g + rgb2.g) / 2);
+    const b = Math.round((rgb1.b + rgb2.b) / 2);
+
+    return ColorService.rgbToHex(r, g, b);
+  }
+
+  /**
+   * Find the closest matching dyes to the blended color
+   */
+  private findMatchingDyes(): void {
+    if (!this.blendedColor) {
+      this.matchedResults = [];
+      return;
+    }
+
+    // Get exclude IDs (the two input dyes)
+    const excludeIds = this.selectedDyes
+      .filter((dye): dye is Dye => dye !== null)
+      .map((dye) => dye.id);
+
+    // Get all dyes and calculate distances
+    const allDyes = dyeService.getAllDyes();
+    const results: MixedColorResult[] = [];
+
+    for (const dye of allDyes) {
+      // Skip input dyes and Facewear
+      if (excludeIds.includes(dye.id) || dye.category === 'Facewear') {
+        continue;
+      }
+
+      // Apply filters if available
+      if (this.dyeFilters?.isDyeExcluded(dye)) {
+        continue;
+      }
+
+      const distance = ColorService.getColorDistance(this.blendedColor, dye.hex);
+      results.push({
+        blendedHex: this.blendedColor,
+        matchedDye: dye,
+        distance,
+      });
+    }
+
+    // Sort by distance and take top maxResults
+    results.sort((a, b) => a.distance - b.distance);
+    this.matchedResults = results.slice(0, this.maxResults);
   }
 
   // ============================================================================
@@ -210,15 +320,23 @@ export class MixerTool extends BaseComponent {
   }
 
   onMount(): void {
-    // Subscribe to language changes (only in onMount, NOT bindEvents - avoids infinite loop)
+    // Subscribe to language changes
     this.languageUnsubscribe = LanguageService.subscribe(() => {
       this.update();
     });
 
-    // If dyes were loaded from storage, calculate interpolation
-    if (this.startDye && this.endDye) {
-      this.updateInterpolation();
-      this.updateDrawerContent();
+    // Subscribe to config changes from v4 sidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('mixer', (config) => {
+      this.setConfig(config);
+    });
+
+    // If dyes were loaded from storage, calculate blend and matches
+    if (this.selectedDyes[0] && this.selectedDyes[1]) {
+      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+      this.findMatchingDyes();
+      this.showEmptyState(false);
+      this.updateCraftingUI();
+      this.renderResultsGrid();
     }
 
     logger.info('[MixerTool] Mounted');
@@ -226,6 +344,7 @@ export class MixerTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
 
     // Destroy desktop components
     this.dyeSelector?.destroy();
@@ -245,11 +364,193 @@ export class MixerTool extends BaseComponent {
     this.mobileFiltersPanel?.destroy();
     this.mobileMarketPanel?.destroy();
 
-    this.selectedDyes = [];
-    this.currentSteps = [];
+    this.selectedDyes = [null, null];
+    this.matchedResults = [];
 
     super.destroy();
     logger.info('[MixerTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.selectedDyes = [null, null];
+    this.blendedColor = null;
+    this.matchedResults = [];
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.selectedDyes);
+    logger.info('[MixerTool] All dyes cleared');
+
+    // Update dye selectors
+    this.dyeSelector?.setSelectedDyes([]);
+    this.mobileDyeSelector?.setSelectedDyes([]);
+
+    // Clear results grid
+    if (this.resultsGridContainer) {
+      clearContainer(this.resultsGridContainer);
+    }
+
+    // Update UI to show empty slots with plus signs
+    this.showEmptyState(true);
+    this.updateCraftingUI();
+    this.updateDrawerContent();
+  }
+
+  /**
+   * Select a dye from the Color Palette drawer
+   * Adds to first empty slot, or shifts dyes if both slots are full
+   */
+  public selectDye(dye: Dye): void {
+    if (!dye) return;
+
+    // Don't add duplicates
+    if (this.selectedDyes.some((d) => d?.id === dye.id)) {
+      return;
+    }
+
+    // Add to first empty slot, or shift if both full
+    if (!this.selectedDyes[0]) {
+      this.selectedDyes[0] = dye;
+    } else if (!this.selectedDyes[1]) {
+      this.selectedDyes[1] = dye;
+    } else {
+      // Both slots full - shift dye 2 to dye 1, add new as dye 2
+      this.selectedDyes[0] = this.selectedDyes[1];
+      this.selectedDyes[1] = dye;
+    }
+
+    // Update selectors
+    const selectedDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
+    this.dyeSelector?.setSelectedDyes(selectedDyes);
+    this.mobileDyeSelector?.setSelectedDyes(selectedDyes);
+
+    // Save and update
+    this.saveSelectedDyes();
+    this.updateSelectedDyesDisplay();
+
+    // Calculate blend if both dyes selected
+    if (this.selectedDyes[0] && this.selectedDyes[1]) {
+      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+      this.findMatchingDyes();
+      this.showEmptyState(false);
+      this.updateCraftingUI();
+      this.renderResultsGrid();
+      if (this.showPrices) {
+        void this.fetchPricesForDisplayedDyes();
+      }
+    } else {
+      this.updateCraftingUI();
+    }
+
+    this.updateDrawerContent();
+    logger.info(`[MixerTool] Selected dye from palette: ${dye.name}`);
+  }
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   * Handles both tool-specific config (maxResults, displayOptions) and
+   * shared market config (showPrices, selectedServer)
+   * Note: Market state is managed by MarketBoardService
+   */
+  public setConfig(
+    config: Partial<MixerConfig> & { _tool?: string; showPrices?: boolean; selectedServer?: string }
+  ): void {
+    let needsUpdate = false;
+    let needsRerender = false;
+    let needsPriceFetch = false;
+
+    // Handle market config changes (_tool === 'market')
+    // Note: MarketBoardService handles state persistence and cache clearing
+    if (config._tool === 'market') {
+      if (config.showPrices !== undefined) {
+        logger.info(`[MixerTool] setConfig: showPrices -> ${config.showPrices}`);
+        if (config.showPrices) {
+          needsPriceFetch = true;
+        } else {
+          needsRerender = true;
+        }
+      }
+
+      if (config.selectedServer !== undefined) {
+        logger.info(`[MixerTool] setConfig: selectedServer -> ${config.selectedServer}`);
+        // Service clears cache on server change
+        needsRerender = true;
+        if (this.showPrices && this.matchedResults.length > 0) {
+          needsPriceFetch = true;
+        }
+      }
+    }
+
+    // Handle tool-specific config
+    if (config.maxResults !== undefined && config.maxResults !== this.maxResults) {
+      this.maxResults = config.maxResults;
+      needsUpdate = true;
+      logger.info(`[MixerTool] setConfig: maxResults -> ${config.maxResults}`);
+
+      // Update slider displays
+      if (this.maxResultsValueDisplay) {
+        this.maxResultsValueDisplay.textContent = String(this.maxResults);
+      }
+      if (this.mobileMaxResultsDisplay) {
+        this.mobileMaxResultsDisplay.textContent = String(this.maxResults);
+      }
+    }
+
+    // Handle mixing mode changes
+    if (config.mixingMode !== undefined && config.mixingMode !== this.mixingMode) {
+      this.mixingMode = config.mixingMode;
+      needsUpdate = true;
+      logger.info(`[MixerTool] setConfig: mixingMode -> ${config.mixingMode}`);
+
+      // Recalculate blended color if both dyes are selected
+      if (this.selectedDyes[0] && this.selectedDyes[1]) {
+        this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+        this.updateCraftingUI();
+      }
+    }
+
+    // Handle display options changes
+    if (config.displayOptions) {
+      const newOpts = config.displayOptions;
+      const oldOpts = this.displayOptions;
+      if (
+        newOpts.showHex !== oldOpts.showHex ||
+        newOpts.showRgb !== oldOpts.showRgb ||
+        newOpts.showHsv !== oldOpts.showHsv ||
+        newOpts.showLab !== oldOpts.showLab ||
+        newOpts.showPrice !== oldOpts.showPrice ||
+        newOpts.showDeltaE !== oldOpts.showDeltaE ||
+        newOpts.showAcquisition !== oldOpts.showAcquisition
+      ) {
+        this.displayOptions = newOpts;
+        needsRerender = true;
+        logger.info('[MixerTool] setConfig: displayOptions updated');
+      }
+    }
+
+    // Apply updates
+    if (needsUpdate && this.blendedColor) {
+      this.findMatchingDyes();
+      this.renderResultsGrid();
+      if (this.showPrices) {
+        void this.fetchPricesForDisplayedDyes();
+      }
+    } else if (needsRerender && this.blendedColor) {
+      // Only re-render cards (no need to recalculate matches)
+      this.renderResultsGrid();
+    }
+
+    // Fetch prices if needed (after render so cards exist)
+    if (needsPriceFetch && this.blendedColor && this.matchedResults.length > 0) {
+      void this.fetchPricesForDisplayedDyes();
+    }
   }
 
   // ============================================================================
@@ -260,12 +561,12 @@ export class MixerTool extends BaseComponent {
     const left = this.options.leftPanel;
     clearContainer(left);
 
-    // Section 1: Dye Selection (consolidated - select 2 dyes)
+    // Section 1: Dye Selection
     const dyeSelectionContainer = this.createElement('div');
     left.appendChild(dyeSelectionContainer);
     this.dyeSelectionPanel = new CollapsiblePanel(dyeSelectionContainer, {
       title: LanguageService.t('mixer.dyeSelection') || 'Dye Selection',
-      storageKey: 'v3_mixer_dye_selection_panel',
+      storageKey: 'v4_mixer_dye_selection_panel',
       defaultOpen: true,
       icon: ICON_PALETTE,
     });
@@ -274,14 +575,14 @@ export class MixerTool extends BaseComponent {
     this.renderDyeSelector(dyeSelectionContent);
     this.dyeSelectionPanel.setContent(dyeSelectionContent);
 
-    // Section 2: Interpolation Settings (collapsible)
+    // Section 2: Mix Settings
     const settingsContainer = this.createElement('div');
     left.appendChild(settingsContainer);
     this.settingsPanel = new CollapsiblePanel(settingsContainer, {
-      title: LanguageService.t('mixer.interpolationSettings') || 'Interpolation Settings',
-      storageKey: 'v3_mixer_settings_panel',
+      title: LanguageService.t('mixer.mixSettings') || 'Mix Settings',
+      storageKey: 'v4_mixer_settings_panel',
       defaultOpen: true,
-      icon: ICON_STAIRS,
+      icon: ICON_SLIDERS,
     });
     this.settingsPanel.init();
     const settingsContent = this.createElement('div', { className: 'p-4' });
@@ -293,7 +594,7 @@ export class MixerTool extends BaseComponent {
     left.appendChild(filtersContainer);
     this.filtersPanel = new CollapsiblePanel(filtersContainer, {
       title: LanguageService.t('filters.advancedFilters') || 'Advanced Dye Filters',
-      storageKey: 'v3_mixer_filters',
+      storageKey: 'v4_mixer_filters',
       defaultOpen: false,
       icon: ICON_FILTER,
     });
@@ -301,10 +602,14 @@ export class MixerTool extends BaseComponent {
 
     const filtersContent = this.createElement('div');
     this.dyeFilters = new DyeFilters(filtersContent, {
-      storageKeyPrefix: 'v3_mixer',
+      storageKeyPrefix: 'v4_mixer',
       hideHeader: true,
       onFilterChange: () => {
-        this.updateInterpolation();
+        this.findMatchingDyes();
+        this.renderResultsGrid();
+        if (this.showPrices) {
+          void this.fetchPricesForDisplayedDyes();
+        }
       },
     });
     this.dyeFilters.render();
@@ -316,85 +621,45 @@ export class MixerTool extends BaseComponent {
     left.appendChild(marketContainer);
     this.marketPanel = new CollapsiblePanel(marketContainer, {
       title: LanguageService.t('marketBoard.title') || 'Market Board',
-      storageKey: 'v3_mixer_market',
+      storageKey: 'v4_mixer_market',
       defaultOpen: false,
       icon: ICON_MARKET,
     });
     this.marketPanel.init();
 
+    // Create market board content
+    // Note: MarketBoard delegates to MarketBoardService for state management
     const marketContent = this.createElement('div');
     this.marketBoard = new MarketBoard(marketContent);
     this.marketBoard.init();
 
-    // Listen for price toggle changes
-    marketContent.addEventListener('showPricesChanged', ((event: Event) => {
-      const customEvent = event as CustomEvent<{ showPrices: boolean }>;
-      this.showPrices = customEvent.detail.showPrices;
-      if (this.showPrices) {
-        // Fetch prices - this will update displays after fetching
-        void this.fetchPricesForDisplayedDyes();
-      } else {
-        // Prices disabled - clear price data and update displays to remove prices
-        this.priceData.clear();
-        this.updateSelectedDyesDisplay();
-        this.renderIntermediateMatches();
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      marketContent,
+      () => this.showPrices,
+      () => this.fetchPricesForDisplayedDyes(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          } else {
+            this.renderResultsGrid();
+          }
+        },
+        onServerChanged: () => {
+          this.renderResultsGrid();
+          if (this.showPrices && this.matchedResults.length > 0) {
+            void this.fetchPricesForDisplayedDyes();
+          }
+        },
       }
-    }) as EventListener);
-
-    // Listen for server changes
-    marketContent.addEventListener('server-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for category changes
-    marketContent.addEventListener('categories-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for refresh requests
-    marketContent.addEventListener('refresh-requested', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
+    );
 
     this.marketPanel.setContent(marketContent);
   }
 
   /**
-   * Create a section with label
-   */
-  private createSection(label: string): HTMLElement {
-    const section = this.createElement('div', {
-      className: 'p-4 border-b',
-      attributes: { style: 'border-color: var(--theme-border);' },
-    });
-    const sectionLabel = this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
-      textContent: label,
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    section.appendChild(sectionLabel);
-    return section;
-  }
-
-  /**
-   * Create a header for right panel sections
-   */
-  private createHeader(text: string): HTMLElement {
-    return this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
-      textContent: text,
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-  }
-
-  /**
-   * Render consolidated dye selector section (select 2 dyes: start and end)
+   * Render dye selector section
    */
   private renderDyeSelector(container: HTMLElement): void {
     const dyeContainer = this.createElement('div', { className: 'space-y-3' });
@@ -402,7 +667,7 @@ export class MixerTool extends BaseComponent {
     // Instruction text
     const instruction = this.createElement('p', {
       className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to create a gradient (first = start, second = end)',
+      textContent: LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to blend together',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     dyeContainer.appendChild(instruction);
@@ -429,7 +694,7 @@ export class MixerTool extends BaseComponent {
       excludeFacewear: true,
       showFavorites: true,
       compactMode: true,
-      hideSelectedChips: true, // We show selections above with Start/End labels
+      hideSelectedChips: true, // We show selections above with Dye 1/Dye 2 labels
     });
     selector.init();
 
@@ -438,33 +703,63 @@ export class MixerTool extends BaseComponent {
 
     // Listen for selection changes
     selectorContainer.addEventListener('selection-changed', () => {
-      this.selectedDyes = selector.getSelectedDyes();
-      this.saveSelectedDyes();
-      this.updateSelectedDyesDisplay();
-      this.updateInterpolation();
-      this.updateDrawerContent();
+      const selectedDyes = selector.getSelectedDyes();
+      this.handleDyeSelection(selectedDyes);
     });
 
     // Set initial selection if dyes were loaded from storage
-    if (this.selectedDyes.length > 0) {
-      selector.setSelectedDyes(this.selectedDyes);
+    const initialDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
+    if (initialDyes.length > 0) {
+      selector.setSelectedDyes(initialDyes);
     }
 
     container.appendChild(dyeContainer);
   }
 
   /**
-   * Update the selected dyes display with Start/End labels and remove buttons
+   * Handle dye selection from DyeSelector
+   */
+  private handleDyeSelection(dyes: Dye[]): void {
+    // Update selectedDyes array (limit to 2)
+    this.selectedDyes = [dyes[0] ?? null, dyes[1] ?? null];
+
+    this.saveSelectedDyes();
+    this.updateSelectedDyesDisplay();
+
+    // Calculate blend if both dyes selected
+    if (this.selectedDyes[0] && this.selectedDyes[1]) {
+      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+      this.findMatchingDyes();
+      this.showEmptyState(false);
+      this.updateCraftingUI();
+      this.renderResultsGrid();
+      if (this.showPrices) {
+        void this.fetchPricesForDisplayedDyes();
+      }
+    } else {
+      this.blendedColor = null;
+      this.matchedResults = [];
+      this.showEmptyState(true);
+      this.updateCraftingUI();
+    }
+
+    this.updateDrawerContent();
+  }
+
+  /**
+   * Update the selected dyes display with Dye 1/Dye 2 labels and remove buttons
    */
   private updateSelectedDyesDisplay(): void {
     if (!this.selectedDyesContainer) return;
     clearContainer(this.selectedDyesContainer);
 
-    if (this.selectedDyes.length === 0) {
+    const filledSlots = this.selectedDyes.filter((d): d is Dye => d !== null);
+
+    if (filledSlots.length === 0) {
       // Empty state - dashed border placeholder
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('mixer.selectDyes') || 'Select dyes below',
+        textContent: LanguageService.t('mixer.selectDyes') || 'Select dyes below to blend',
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -475,12 +770,14 @@ export class MixerTool extends BaseComponent {
 
     // Display each selected dye with role label
     const labels = [
-      LanguageService.t('mixer.startDye') || 'Start',
-      LanguageService.t('mixer.endDye') || 'End',
+      LanguageService.t('mixer.dye1') || 'Dye 1',
+      LanguageService.t('mixer.dye2') || 'Dye 2',
     ];
 
-    for (let i = 0; i < this.selectedDyes.length; i++) {
+    for (let i = 0; i < 2; i++) {
       const dye = this.selectedDyes[i];
+      if (!dye) continue;
+
       const label = labels[i];
 
       const card = this.createElement('div', {
@@ -536,20 +833,15 @@ export class MixerTool extends BaseComponent {
         className: 'w-8 h-8 flex items-center justify-center rounded-full transition-colors',
         textContent: '\u00D7',
         attributes: {
-          style: 'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
+          style:
+            'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
           title: LanguageService.t('common.remove') || 'Remove',
         },
       });
 
+      const slotIndex = i;
       this.on(removeBtn, 'click', () => {
-        // Remove this dye from selection
-        const newSelection = this.selectedDyes.filter((d) => d.id !== dye.id);
-        this.selectedDyes = newSelection;
-        this.dyeSelector?.setSelectedDyes(newSelection);
-        this.saveSelectedDyes();
-        this.updateSelectedDyesDisplay();
-        this.updateInterpolation();
-        this.updateDrawerContent();
+        this.handleSlotRemove(slotIndex as 0 | 1);
       });
 
       card.appendChild(removeBtn);
@@ -558,107 +850,95 @@ export class MixerTool extends BaseComponent {
   }
 
   /**
-   * Render interpolation settings
+   * Handle removing a dye from a slot
+   */
+  private handleSlotRemove(index: 0 | 1): void {
+    this.selectedDyes[index] = null;
+    this.saveSelectedDyes();
+
+    // Update DyeSelector
+    const remainingDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
+    this.dyeSelector?.setSelectedDyes(remainingDyes);
+    this.mobileDyeSelector?.setSelectedDyes(remainingDyes);
+
+    // Recalculate
+    if (this.selectedDyes[0] && this.selectedDyes[1]) {
+      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+      this.findMatchingDyes();
+      this.showEmptyState(false);
+    } else {
+      this.blendedColor = null;
+      this.matchedResults = [];
+      this.showEmptyState(true);
+    }
+
+    this.updateSelectedDyesDisplay();
+    this.updateCraftingUI();
+    this.renderResultsGrid();
+    this.updateDrawerContent();
+  }
+
+  /**
+   * Render mix settings (maxResults slider)
    */
   private renderSettings(container: HTMLElement): void {
     const settingsContainer = this.createElement('div', { className: 'space-y-4' });
 
-    // Steps slider
-    const stepsGroup = this.createElement('div');
-    const stepsLabel = this.createElement('label', {
+    // Max Results slider (3-8 range)
+    const sliderGroup = this.createElement('div');
+    const sliderLabel = this.createElement('label', {
       className: 'flex items-center justify-between text-sm mb-2',
     });
-    const stepsText = this.createElement('span', {
-      textContent: LanguageService.t('mixer.steps') || 'Steps',
+
+    const labelText = this.createElement('span', {
+      textContent: LanguageService.t('mixer.maxResults') || 'Max Results',
       attributes: { style: 'color: var(--theme-text);' },
     });
-    this.stepValueDisplay = this.createElement('span', {
+
+    this.maxResultsValueDisplay = this.createElement('span', {
       className: 'number',
-      textContent: String(this.stepCount),
+      textContent: String(this.maxResults),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
-    stepsLabel.appendChild(stepsText);
-    stepsLabel.appendChild(this.stepValueDisplay);
-    stepsGroup.appendChild(stepsLabel);
 
-    const stepsInput = this.createElement('input', {
-      className: 'w-full',
+    sliderLabel.appendChild(labelText);
+    sliderLabel.appendChild(this.maxResultsValueDisplay);
+    sliderGroup.appendChild(sliderLabel);
+
+    const slider = this.createElement('input', {
       attributes: {
         type: 'range',
-        min: '2',
-        max: '10',
-        value: String(this.stepCount),
-        style: 'accent-color: var(--theme-primary);',
+        min: '3',
+        max: '8',
+        value: String(this.maxResults),
+        style: 'width: 100%; accent-color: var(--theme-primary);',
       },
     }) as HTMLInputElement;
 
-    this.on(stepsInput, 'input', () => {
-      this.stepCount = parseInt(stepsInput.value, 10);
-      if (this.stepValueDisplay) {
-        this.stepValueDisplay.textContent = String(this.stepCount);
+    this.on(slider, 'input', () => {
+      this.maxResults = parseInt(slider.value, 10);
+      if (this.maxResultsValueDisplay) {
+        this.maxResultsValueDisplay.textContent = String(this.maxResults);
       }
-      StorageService.setItem(STORAGE_KEYS.stepCount, this.stepCount);
-      this.updateInterpolation();
+      if (this.mobileMaxResultsDisplay) {
+        this.mobileMaxResultsDisplay.textContent = String(this.maxResults);
+      }
+    });
+
+    this.on(slider, 'change', () => {
+      // Update ConfigController for v4 sidebar sync
+      ConfigController.getInstance().setConfig('mixer', { maxResults: this.maxResults });
+
+      this.findMatchingDyes();
+      this.renderResultsGrid();
+      if (this.showPrices) {
+        void this.fetchPricesForDisplayedDyes();
+      }
       this.updateDrawerContent();
     });
 
-    stepsGroup.appendChild(stepsInput);
-    settingsContainer.appendChild(stepsGroup);
-
-    // Color space toggle
-    const colorSpaceGroup = this.createElement('div');
-    const colorSpaceLabel = this.createElement('label', {
-      className: 'block text-sm mb-2',
-      textContent: LanguageService.t('mixer.colorSpace') || 'Color Space',
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-    colorSpaceGroup.appendChild(colorSpaceLabel);
-
-    const buttonContainer = this.createElement('div', { className: 'flex gap-2' });
-
-    const rgbBtn = this.createElement('button', {
-      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: 'RGB',
-      attributes: {
-        style: this.colorSpace === 'rgb'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
-    });
-
-    const hsvBtn = this.createElement('button', {
-      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: 'HSV',
-      attributes: {
-        style: this.colorSpace === 'hsv'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
-    });
-
-    this.on(rgbBtn, 'click', () => {
-      this.colorSpace = 'rgb';
-      StorageService.setItem(STORAGE_KEYS.colorSpace, 'rgb');
-      rgbBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
-      hsvBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
-      this.updateInterpolation();
-      this.updateDrawerContent();
-    });
-
-    this.on(hsvBtn, 'click', () => {
-      this.colorSpace = 'hsv';
-      StorageService.setItem(STORAGE_KEYS.colorSpace, 'hsv');
-      hsvBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
-      rgbBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
-      this.updateInterpolation();
-      this.updateDrawerContent();
-    });
-
-    buttonContainer.appendChild(rgbBtn);
-    buttonContainer.appendChild(hsvBtn);
-    colorSpaceGroup.appendChild(buttonContainer);
-    settingsContainer.appendChild(colorSpaceGroup);
-
+    sliderGroup.appendChild(slider);
+    settingsContainer.appendChild(sliderGroup);
     container.appendChild(settingsContainer);
   }
 
@@ -668,30 +948,76 @@ export class MixerTool extends BaseComponent {
 
   private renderRightPanel(): void {
     const right = this.options.rightPanel;
+    // In V4, leftPanel and rightPanel are the same element.
+    // Clear to remove leftPanel content (V4 uses ConfigSidebar instead).
     clearContainer(right);
 
-    // Empty state (shown when dyes not selected)
-    this.emptyStateContainer = this.createElement('div');
+    // Apply flex styling to the right panel for proper layout
+    right.setAttribute(
+      'style',
+      `
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: 32px;
+      gap: 32px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    `
+    );
+
+    // Content wrapper with max-width to prevent over-expansion on ultrawide monitors
+    const contentWrapper = this.createElement('div', {
+      attributes: {
+        style: 'max-width: 1200px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 32px;',
+      },
+    });
+
+    // Empty state (hidden - replaced by crafting UI with empty slots)
+    this.emptyStateContainer = this.createElement('div', {
+      attributes: { style: 'display: none; width: 100%; justify-content: center;' },
+    });
     this.renderEmptyState();
-    right.appendChild(this.emptyStateContainer);
+    contentWrapper.appendChild(this.emptyStateContainer);
 
-    // Gradient Preview section
-    const gradientSection = this.createElement('div', { className: 'mb-6 hidden' });
-    gradientSection.appendChild(this.createHeader(LanguageService.t('mixer.interpolationPreview') || 'Interpolation Preview'));
-    this.gradientContainer = this.createElement('div');
-    gradientSection.appendChild(this.gradientContainer);
-    right.appendChild(gradientSection);
+    // Crafting UI section (shown by default with empty slots)
+    this.craftingContainer = this.createElement('div', {
+      className: 'mb-6',
+      attributes: { style: 'display: block; width: 100%;' },
+    });
+    this.renderCraftingUI();
+    contentWrapper.appendChild(this.craftingContainer);
 
-    // Intermediate Matches section
-    const matchesSection = this.createElement('div', { className: 'mb-6 hidden' });
-    matchesSection.appendChild(this.createHeader(LanguageService.t('mixer.intermediateDyeMatches') || 'Intermediate Dye Matches'));
-    this.matchesContainer = this.createElement('div');
-    matchesSection.appendChild(this.matchesContainer);
-    right.appendChild(matchesSection);
+    // Results grid section (hidden initially)
+    this.resultsSection = this.createElement('div', {
+      attributes: { style: 'display: none; width: 100%;' },
+    });
+    // Results header (using consistent section-header/section-title pattern from other tools)
+    const resultsHeader = this.createElement('div', {
+      className: 'section-header',
+    });
+    const resultsTitle = this.createElement('span', {
+      className: 'section-title',
+      textContent: LanguageService.t('mixer.matchingDyes') || 'Matching Dyes',
+    });
+    resultsHeader.appendChild(resultsTitle);
+    this.resultsSection.appendChild(resultsHeader);
+    this.resultsGridContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 16px;
+          --v4-result-card-width: 280px;
+        `,
+      },
+    });
+    this.resultsSection.appendChild(this.resultsGridContainer);
+    contentWrapper.appendChild(this.resultsSection);
 
-    // Export section
-    this.exportContainer = this.createElement('div', { className: 'hidden' });
-    right.appendChild(this.exportContainer);
+    right.appendChild(contentWrapper);
   }
 
   /**
@@ -702,409 +1028,517 @@ export class MixerTool extends BaseComponent {
     clearContainer(this.emptyStateContainer);
 
     const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+      className: 'flex flex-col items-center justify-center text-center',
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: 'min-height: 400px; padding: 3rem 2rem;',
       },
     });
 
     empty.innerHTML = `
-      <span class="inline-block w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);">${ICON_TOOL_MIXER}</span>
-      <p style="color: var(--theme-text);">${LanguageService.t('mixer.selectStartEndDyes') || 'Select start and end dyes to create a color transition'}</p>
+      <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_DYE_MIXER}</span>
+      <p style="color: var(--theme-text); font-size: 1.125rem;">${LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors'}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);
   }
 
   /**
-   * Update all results
+   * Render the crafting UI with slots
    */
-  private updateInterpolation(): void {
-    if (!this.startDye || !this.endDye) {
-      this.showEmptyState(true);
-      this.currentSteps = [];
-      return;
+  private renderCraftingUI(): void {
+    if (!this.craftingContainer) return;
+    clearContainer(this.craftingContainer);
+
+    // Main container with centered layout
+    const craftingArea = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 24px 0;
+          gap: 16px;
+        `,
+      },
+    });
+
+    // Equation row: [Slot1] + [Slot2] → [Result]
+    const equationRow = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 24px;
+        `,
+      },
+    });
+
+    // Slot 1
+    this.slot1Element = this.createDyeSlot(0);
+    equationRow.appendChild(this.slot1Element);
+
+    // Plus sign
+    const plusSign = this.createElement('span', {
+      className: 'mixer-operator',
+      textContent: '+',
+      attributes: {
+        style: 'font-size: 28px; font-weight: bold; color: var(--theme-text-muted);',
+      },
+    });
+    equationRow.appendChild(plusSign);
+
+    // Slot 2
+    this.slot2Element = this.createDyeSlot(1);
+    equationRow.appendChild(this.slot2Element);
+
+    // Arrow
+    const arrow = this.createElement('span', {
+      className: 'mixer-operator',
+      textContent: '→',
+      attributes: {
+        style: 'font-size: 28px; font-weight: bold; color: var(--theme-primary);',
+      },
+    });
+    equationRow.appendChild(arrow);
+
+    // Result slot
+    this.resultSlotElement = this.createResultSlot();
+    equationRow.appendChild(this.resultSlotElement);
+
+    craftingArea.appendChild(equationRow);
+
+    // Tool icon (shown when no dyes selected, between equation and message)
+    const hasDyes = this.selectedDyes[0] !== null || this.selectedDyes[1] !== null;
+    this.emptyStateIcon = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 150px;
+          height: 150px;
+          margin-top: 24px;
+          opacity: 0.25;
+          color: var(--theme-text);
+          display: ${hasDyes ? 'none' : 'block'};
+        `,
+      },
+    });
+    this.emptyStateIcon.innerHTML = ICON_TOOL_DYE_MIXER;
+    craftingArea.appendChild(this.emptyStateIcon);
+
+    // Empty state message (shown when no dyes selected)
+    this.emptyStateMessage = this.createElement('p', {
+      textContent: LanguageService.t('mixer.selectTwoDyesToMix') || 'Select two dyes to blend and find matching colors',
+      attributes: {
+        style: `
+          color: var(--theme-text-muted);
+          font-size: 1rem;
+          margin-top: 16px;
+          text-align: center;
+          display: ${hasDyes ? 'none' : 'block'};
+        `,
+      },
+    });
+    craftingArea.appendChild(this.emptyStateMessage);
+
+    this.craftingContainer.appendChild(craftingArea);
+  }
+
+  /**
+   * Create a dye input slot (100x100px)
+   */
+  private createDyeSlot(index: 0 | 1): HTMLElement {
+    const dye = this.selectedDyes[index];
+    const size = SLOT_SIZE.input;
+
+    const slot = this.createElement('div', {
+      className: 'mixer-dye-slot',
+      attributes: {
+        'data-slot-index': String(index),
+        style: `
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 12px;
+          background: ${dye ? dye.hex : 'var(--v4-glass-bg, rgba(30, 30, 30, 0.7))'};
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 2px ${dye ? 'solid' : 'dashed'} var(--v4-glass-border, rgba(255, 255, 255, 0.1));
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+          position: relative;
+          overflow: hidden;
+          flex-shrink: 0;
+        `,
+      },
+    });
+
+    if (dye) {
+      // Dye name label
+      const label = this.createElement('span', {
+        className: 'mixer-slot-label',
+        textContent: LanguageService.getDyeName(dye.itemID) || dye.name,
+        attributes: {
+          style: `
+            font-size: 10px;
+            font-weight: 500;
+            color: ${this.getContrastColor(dye.hex)};
+            text-align: center;
+            padding: 4px 6px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: absolute;
+            bottom: 6px;
+          `,
+        },
+      });
+      slot.appendChild(label);
+
+      // Slot number at top
+      const slotNumber = this.createElement('span', {
+        textContent: String(index + 1),
+        attributes: {
+          style: `
+            font-size: 12px;
+            font-weight: 600;
+            color: ${this.getContrastColor(dye.hex)};
+            position: absolute;
+            top: 6px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          `,
+        },
+      });
+      slot.appendChild(slotNumber);
+    } else {
+      // Empty slot placeholder with plus sign (matching Gradient Tool style)
+      const plusSign = this.createElement('span', {
+        textContent: '+',
+        attributes: {
+          style: `
+            font-size: 32px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.4);
+          `,
+        },
+      });
+      slot.appendChild(plusSign);
     }
 
-    this.showEmptyState(false);
-    this.calculateInterpolation();
-    this.renderGradientPreview();
-    this.renderIntermediateMatches();
-    this.renderExportOptions();
+    // Hover effect
+    this.on(slot, 'mouseenter', () => {
+      slot.style.transform = 'scale(1.03)';
+      slot.style.boxShadow = 'var(--v4-shadow-soft, 0 4px 24px rgba(0, 0, 0, 0.3))';
+    });
+    this.on(slot, 'mouseleave', () => {
+      slot.style.transform = 'scale(1)';
+      slot.style.boxShadow = 'none';
+    });
+
+    return slot;
+  }
+
+  /**
+   * Create the result slot (120x120px)
+   */
+  private createResultSlot(): HTMLElement {
+    const size = SLOT_SIZE.result;
+
+    const slot = this.createElement('div', {
+      className: 'mixer-result-slot',
+      attributes: {
+        style: `
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 16px;
+          background: ${this.blendedColor || 'var(--v4-glass-bg, rgba(30, 30, 30, 0.5))'};
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 3px solid var(--theme-primary, #d4af37);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+          position: relative;
+          flex-shrink: 0;
+        `,
+      },
+    });
+
+    if (this.blendedColor) {
+      // "Blend" label at top
+      const blendLabel = this.createElement('span', {
+        textContent: LanguageService.t('mixer.blend') || 'Blend',
+        attributes: {
+          style: `
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: ${this.getContrastColor(this.blendedColor)};
+            position: absolute;
+            top: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 8px;
+            border-radius: 4px;
+          `,
+        },
+      });
+      slot.appendChild(blendLabel);
+
+      // Hex value at bottom
+      const hexLabel = this.createElement('span', {
+        className: 'number',
+        textContent: this.blendedColor.toUpperCase(),
+        attributes: {
+          style: `
+            font-size: 12px;
+            font-weight: 600;
+            color: ${this.getContrastColor(this.blendedColor)};
+            background: rgba(0, 0, 0, 0.5);
+            padding: 4px 10px;
+            border-radius: 4px;
+            position: absolute;
+            bottom: 8px;
+          `,
+        },
+      });
+      slot.appendChild(hexLabel);
+    } else {
+      // Empty state with question mark (indicates result will appear here)
+      const placeholder = this.createElement('span', {
+        textContent: '?',
+        attributes: {
+          style: `
+            font-size: 36px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.4);
+          `,
+        },
+      });
+      slot.appendChild(placeholder);
+    }
+
+    return slot;
+  }
+
+  /**
+   * Update the crafting UI slots
+   */
+  private updateCraftingUI(): void {
+    if (!this.craftingContainer) return;
+
+    // Re-render the crafting UI
+    this.renderCraftingUI();
   }
 
   /**
    * Show/hide empty state
    */
   private showEmptyState(show: boolean): void {
+    // Hide old icon+text empty state (replaced by slots with plus signs)
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.classList.toggle('hidden', !show);
+      this.emptyStateContainer.style.display = 'none';
     }
 
-    // Toggle all result sections
-    const rightPanel = this.options.rightPanel;
-    const sections = rightPanel.querySelectorAll(':scope > div:not(:first-child)');
-    sections.forEach((section) => {
-      section.classList.toggle('hidden', show);
-    });
+    // Always show crafting UI (slots visible with "+" when empty)
+    if (this.craftingContainer) {
+      this.craftingContainer.style.display = 'block';
+    }
+
+    // Show/hide the empty state icon above the slots
+    if (this.emptyStateIcon) {
+      this.emptyStateIcon.style.display = show ? 'block' : 'none';
+    }
+
+    // Show/hide the empty state message below the slots
+    if (this.emptyStateMessage) {
+      this.emptyStateMessage.style.display = show ? 'block' : 'none';
+    }
+
+    // Only show results section when we have matching dyes
+    if (this.resultsSection) {
+      this.resultsSection.style.display = show ? 'none' : 'block';
+    }
   }
 
   /**
-   * Calculate interpolation steps
+   * Render the results grid with v4-result-cards
    */
-  private calculateInterpolation(): void {
-    if (!this.startDye || !this.endDye) {
-      this.currentSteps = [];
+  private renderResultsGrid(): void {
+    if (!this.resultsGridContainer) return;
+    clearContainer(this.resultsGridContainer);
+
+    if (this.matchedResults.length === 0) {
       return;
     }
 
-    const result: InterpolationStep[] = [];
-    const steps = this.stepCount;
+    for (const result of this.matchedResults) {
+      // Create v4-result-card
+      const card = document.createElement('v4-result-card') as HTMLElement;
+      card.setAttribute('show-actions', 'true');
+      card.setAttribute('show-slot-picker', 'true');
+      card.setAttribute('primary-action-label', LanguageService.t('mixer.replaceSlot') || 'Replace Slot');
 
-    for (let i = 0; i < steps; i++) {
-      const t = steps === 1 ? 0 : i / (steps - 1);
+      // Set data property (ResultCardData interface)
+      // Get price data to resolve both price and world name
+      const priceDataForDye = this.priceData.get(result.matchedDye.itemID);
+      const cardData: ResultCardData = {
+        dye: result.matchedDye,
+        originalColor: result.blendedHex,
+        matchedColor: result.matchedDye.hex,
+        deltaE: result.distance,
+        // Resolve worldId to actual world name (e.g., "Balmung" instead of "Crystal")
+        marketServer: this.marketBoardService.getWorldNameForPrice(priceDataForDye),
+        price: priceDataForDye?.currentMinPrice,
+      };
+      (card as unknown as { data: ResultCardData }).data = cardData;
 
-      let theoreticalColor: string;
+      // Set display options from tool state
+      (card as unknown as { showHex: boolean }).showHex = this.displayOptions.showHex;
+      (card as unknown as { showRgb: boolean }).showRgb = this.displayOptions.showRgb;
+      (card as unknown as { showHsv: boolean }).showHsv = this.displayOptions.showHsv;
+      (card as unknown as { showLab: boolean }).showLab = this.displayOptions.showLab;
+      (card as unknown as { showDeltaE: boolean }).showDeltaE = this.displayOptions.showDeltaE;
+      (card as unknown as { showPrice: boolean }).showPrice = this.displayOptions.showPrice;
+      (card as unknown as { showAcquisition: boolean }).showAcquisition =
+        this.displayOptions.showAcquisition;
 
-      if (this.colorSpace === 'rgb') {
-        // RGB interpolation (linear)
-        const startRgb = ColorService.hexToRgb(this.startDye.hex);
-        const endRgb = ColorService.hexToRgb(this.endDye.hex);
+      // Listen for context actions
+      card.addEventListener('context-action', ((
+        e: CustomEvent<{ action: ContextAction; dye: Dye }>
+      ) => {
+        this.handleContextAction(e.detail.action, e.detail.dye);
+      }) as EventListener);
 
-        const r = Math.round(startRgb.r + (endRgb.r - startRgb.r) * t);
-        const g = Math.round(startRgb.g + (endRgb.g - startRgb.g) * t);
-        const b = Math.round(startRgb.b + (endRgb.b - startRgb.b) * t);
-
-        theoreticalColor = ColorService.rgbToHex(r, g, b);
-      } else {
-        // HSV interpolation (perceptual, with hue wraparound)
-        const startHsv = ColorService.hexToHsv(this.startDye.hex);
-        const endHsv = ColorService.hexToHsv(this.endDye.hex);
-
-        // Handle hue wraparound
-        let hueDiff = endHsv.h - startHsv.h;
-        if (hueDiff > 180) hueDiff -= 360;
-        if (hueDiff < -180) hueDiff += 360;
-
-        const h = (startHsv.h + hueDiff * t + 360) % 360;
-        const s = startHsv.s + (endHsv.s - startHsv.s) * t;
-        const v = startHsv.v + (endHsv.v - startHsv.v) * t;
-
-        theoreticalColor = ColorService.hsvToHex(h, s, v);
-      }
-
-      // Find closest dye (excluding start and end)
-      const excludeIds = [this.startDye.id, this.endDye.id];
-      let matchedDye = dyeService.findClosestDye(theoreticalColor, excludeIds);
-
-      // Apply filters if available
-      if (this.dyeFilters && matchedDye && this.dyeFilters.isDyeExcluded(matchedDye)) {
-        // Find next closest non-excluded dye
-        const allDyes = dyeService.getAllDyes();
-        const filteredDyes = this.dyeFilters
-          .filterDyes(allDyes)
-          .filter((dye) => !excludeIds.includes(dye.id) && dye.category !== 'Facewear');
-        matchedDye = filteredDyes.length > 0
-          ? filteredDyes.reduce((best, dye) => {
-              const bestDist = ColorService.getColorDistance(theoreticalColor, best.hex);
-              const dyeDist = ColorService.getColorDistance(theoreticalColor, dye.hex);
-              return dyeDist < bestDist ? dye : best;
-            })
-          : null;
-      }
-
-      const distance = matchedDye
-        ? ColorService.getColorDistance(theoreticalColor, matchedDye.hex)
-        : Infinity;
-
-      result.push({
-        position: t,
-        theoreticalColor,
-        matchedDye: matchedDye || null,
-        distance: distance === Infinity ? 0 : distance,
-      });
+      this.resultsGridContainer.appendChild(card);
     }
-
-    this.currentSteps = result;
   }
 
   /**
-   * Render gradient preview with step markers
+   * Handle context menu actions from result cards
    */
-  private renderGradientPreview(): void {
-    if (!this.gradientContainer || !this.startDye || !this.endDye) return;
-    clearContainer(this.gradientContainer);
+  private handleContextAction(action: ContextAction, dye: Dye): void {
+    switch (action) {
+      case 'add-comparison':
+        // Navigate to comparison tool with this dye
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'comparison', dye },
+          })
+        );
+        ToastService.success(LanguageService.t('toast.addedToComparison') || 'Added to comparison');
+        break;
 
-    const card = this.createElement('div', {
-      className: 'p-4 rounded-lg',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
-    });
-
-    // Gradient bar
-    const gradient = this.createElement('div', {
-      className: 'h-16 rounded-lg mb-3',
-      attributes: { style: `background: linear-gradient(to right, ${this.startDye.hex}, ${this.endDye.hex});` },
-    });
-    card.appendChild(gradient);
-
-    // Step markers
-    const markers = this.createElement('div', { className: 'flex justify-between' });
-    for (let i = 0; i < this.currentSteps.length; i++) {
-      const step = this.currentSteps[i];
-      const marker = this.createElement('div', { className: 'text-center' });
-      marker.innerHTML = `
-        <div class="w-8 h-8 rounded mx-auto mb-1" style="background: ${step.theoreticalColor}; border: 1px solid var(--theme-border);"></div>
-        <span class="text-xs number" style="color: var(--theme-text-muted);">${i}</span>
-      `;
-      markers.appendChild(marker);
-    }
-    card.appendChild(markers);
-
-    this.gradientContainer.appendChild(card);
-  }
-
-  /**
-   * Render intermediate dye matches list
-   */
-  private renderIntermediateMatches(): void {
-    if (!this.matchesContainer) return;
-    clearContainer(this.matchesContainer);
-
-    const container = this.createElement('div', { className: 'space-y-2' });
-
-    // Only show intermediate steps (skip first and last which are the start/end dyes)
-    for (let i = 1; i < this.currentSteps.length - 1; i++) {
-      const step = this.currentSteps[i];
-      const row = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
-      });
-
-      // Step number
-      const stepNum = this.createElement('span', {
-        className: 'w-6 text-center font-medium',
-        textContent: String(i),
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      row.appendChild(stepNum);
-
-      // Theoretical color swatch
-      const theoreticalSwatch = this.createElement('div', {
-        className: 'w-10 h-10 rounded border',
-        attributes: {
-          style: `background: ${step.theoreticalColor}; border-color: var(--theme-border);`,
-          title: LanguageService.t('mixer.targetColor') || 'Target',
-        },
-      });
-      row.appendChild(theoreticalSwatch);
-
-      // Arrow
-      const arrow = this.createElement('span', {
-        textContent: '\u2192',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      row.appendChild(arrow);
-
-      // Matched dye swatch
-      if (step.matchedDye) {
-        const matchedSwatch = this.createElement('div', {
-          className: 'w-10 h-10 rounded',
-          attributes: {
-            style: `background: ${step.matchedDye.hex};`,
-            title: LanguageService.t('mixer.bestMatch') || 'Best Match',
-          },
-        });
-        row.appendChild(matchedSwatch);
-
-        // Dye info
-        const info = this.createElement('div', { className: 'flex-1' });
-        const dyeName = this.createElement('p', {
-          className: 'text-sm font-medium',
-          textContent: LanguageService.getDyeName(step.matchedDye.itemID) || step.matchedDye.name,
-          attributes: { style: 'color: var(--theme-text);' },
-        });
-        const distance = this.createElement('p', {
-          className: 'text-xs number',
-          textContent: `${LanguageService.t('mixer.distance') || 'Distance'}: ${step.distance.toFixed(1)}`,
-          attributes: { style: 'color: var(--theme-text-muted);' },
-        });
-        info.appendChild(dyeName);
-        info.appendChild(distance);
-
-        // Add price if enabled
-        const priceText = this.formatPrice(step.matchedDye);
-        if (priceText) {
-          const price = this.createElement('p', {
-            className: 'text-xs number',
-            textContent: priceText,
-            attributes: { style: 'color: var(--theme-text-muted);' },
-          });
-          info.appendChild(price);
+      case 'add-mixer':
+        // Add to this tool's selection (if slot available)
+        if (!this.selectedDyes[0]) {
+          this.selectedDyes[0] = dye;
+        } else if (!this.selectedDyes[1]) {
+          this.selectedDyes[1] = dye;
+        } else {
+          ToastService.warning(
+            LanguageService.t('mixer.slotsFullReplacing') || 'Both slots full. Replacing first dye.'
+          );
+          this.selectedDyes[0] = this.selectedDyes[1];
+          this.selectedDyes[1] = dye;
         }
+        this.handleDyeSelection(this.selectedDyes.filter((d): d is Dye => d !== null));
+        break;
 
-        row.appendChild(info);
+      case 'add-mixer-slot-1':
+        // Explicitly replace Slot 1
+        this.selectedDyes[0] = dye;
+        this.handleDyeSelection(this.selectedDyes.filter((d): d is Dye => d !== null));
+        ToastService.success(
+          LanguageService.t('mixer.replacedSlot1') || 'Replaced Slot 1'
+        );
+        break;
 
-        // Action dropdown menu
-        const dropdown = createDyeActionDropdown(step.matchedDye);
-        row.appendChild(dropdown);
-      } else {
-        // No match found
-        const noMatch = this.createElement('span', {
-          className: 'text-sm italic',
-          textContent: LanguageService.t('mixer.noMatchFound') || 'No match found',
-          attributes: { style: 'color: var(--theme-text-muted);' },
+      case 'add-mixer-slot-2':
+        // Explicitly replace Slot 2
+        this.selectedDyes[1] = dye;
+        this.handleDyeSelection(this.selectedDyes.filter((d): d is Dye => d !== null));
+        ToastService.success(
+          LanguageService.t('mixer.replacedSlot2') || 'Replaced Slot 2'
+        );
+        break;
+
+      case 'add-accessibility':
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'accessibility', dye },
+          })
+        );
+        ToastService.success(
+          LanguageService.t('toast.addedToAccessibility') || 'Added to accessibility check'
+        );
+        break;
+
+      case 'see-harmonies':
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'harmony', dye },
+          })
+        );
+        break;
+
+      case 'budget':
+        window.dispatchEvent(
+          new CustomEvent('navigate-to-tool', {
+            detail: { toolId: 'budget', dye },
+          })
+        );
+        break;
+
+      case 'copy-hex':
+        void navigator.clipboard.writeText(dye.hex).then(() => {
+          ToastService.success(
+            LanguageService.t('toast.copiedToClipboard') || 'Copied to clipboard'
+          );
         });
-        row.appendChild(noMatch);
-      }
-
-      container.appendChild(row);
+        break;
     }
-
-    // If no intermediate steps (only 2 steps total)
-    if (this.currentSteps.length <= 2) {
-      const noSteps = this.createElement('div', {
-        className: 'p-4 text-center text-sm',
-        textContent: LanguageService.t('mixer.increaseSteps') || 'Increase steps to see intermediate matches',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      container.appendChild(noSteps);
-    }
-
-    this.matchesContainer.appendChild(container);
-  }
-
-  /**
-   * Render export options
-   */
-  private renderExportOptions(): void {
-    if (!this.exportContainer) return;
-    clearContainer(this.exportContainer);
-
-    const card = this.createElement('div', {
-      className: 'p-4 rounded-lg flex items-center justify-between',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
-    });
-
-    const label = this.createElement('span', {
-      className: 'text-sm font-medium',
-      textContent: LanguageService.t('mixer.exportPalette') || 'Export Palette',
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-    card.appendChild(label);
-
-    const buttonGroup = this.createElement('div', { className: 'flex gap-2' });
-
-    // Copy button
-    const copyBtn = this.createElement('button', {
-      className: 'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors',
-      attributes: { style: 'background: var(--theme-background-secondary); color: var(--theme-text);' },
-    });
-    const copyIcon = this.createElement('span', { className: 'w-4 h-4' });
-    copyIcon.innerHTML = ICON_EXPORT;
-    copyBtn.appendChild(copyIcon);
-    copyBtn.appendChild(document.createTextNode(LanguageService.t('common.copy') || 'Copy'));
-
-    this.on(copyBtn, 'click', () => this.copyPalette());
-    buttonGroup.appendChild(copyBtn);
-
-    // Download button
-    const downloadBtn = this.createElement('button', {
-      className: 'flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors',
-      attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);' },
-    });
-    const downloadIcon = this.createElement('span', { className: 'w-4 h-4' });
-    downloadIcon.innerHTML = ICON_EXPORT;
-    downloadBtn.appendChild(downloadIcon);
-    downloadBtn.appendChild(document.createTextNode(LanguageService.t('common.download') || 'Download'));
-
-    this.on(downloadBtn, 'click', () => this.downloadPalette());
-    buttonGroup.appendChild(downloadBtn);
-
-    card.appendChild(buttonGroup);
-    this.exportContainer.appendChild(card);
-  }
-
-  /**
-   * Copy palette to clipboard
-   */
-  private copyPalette(): void {
-    if (!this.startDye || !this.endDye) return;
-
-    const lines: string[] = [
-      `Start: ${this.startDye.name} (${this.startDye.hex})`,
-      `End: ${this.endDye.name} (${this.endDye.hex})`,
-      `Steps: ${this.stepCount}, Color Space: ${this.colorSpace.toUpperCase()}`,
-      '',
-      'Intermediate Matches:',
-    ];
-
-    for (let i = 1; i < this.currentSteps.length - 1; i++) {
-      const step = this.currentSteps[i];
-      if (step.matchedDye) {
-        lines.push(`  ${i}. ${step.matchedDye.name} (${step.matchedDye.hex}) - Distance: ${step.distance.toFixed(1)}`);
-      }
-    }
-
-    navigator.clipboard.writeText(lines.join('\n'))
-      .then(() => {
-        ToastService.success(LanguageService.t('common.copied') || 'Copied to clipboard');
-      })
-      .catch(() => {
-        ToastService.error(LanguageService.t('common.copyFailed') || 'Failed to copy');
-      });
-  }
-
-  /**
-   * Download palette as JSON
-   */
-  private downloadPalette(): void {
-    if (!this.startDye || !this.endDye) return;
-
-    const data = {
-      startDye: { name: this.startDye.name, hex: this.startDye.hex, id: this.startDye.id },
-      endDye: { name: this.endDye.name, hex: this.endDye.hex, id: this.endDye.id },
-      stepCount: this.stepCount,
-      colorSpace: this.colorSpace,
-      intermediates: this.currentSteps.slice(1, -1).map((step, i) => ({
-        index: i + 1,
-        theoreticalColor: step.theoreticalColor,
-        matchedDye: step.matchedDye ? {
-          name: step.matchedDye.name,
-          hex: step.matchedDye.hex,
-          id: step.matchedDye.id,
-        } : null,
-        distance: step.distance,
-      })),
-      generatedAt: new Date().toISOString(),
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `dye-gradient-${this.startDye.name}-to-${this.endDye.name}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    ToastService.success(LanguageService.t('common.downloaded') || 'Downloaded');
   }
 
   // ============================================================================
-  // Mobile Drawer Content
+  // Mobile Drawer
   // ============================================================================
 
+  /**
+   * Render mobile drawer content
+   */
   private renderDrawerContent(): void {
-    if (!this.options.drawerContent) return;
-
     const drawer = this.options.drawerContent;
-    clearContainer(drawer);
+    if (!drawer) return;
 
-    // Section 1: Dye Selection (consolidated - select 2 dyes)
+    // Preserve any existing nav
+    const existingNav = drawer.querySelector('[data-drawer-nav]');
+    clearContainer(drawer);
+    if (existingNav) {
+      drawer.appendChild(existingNav);
+    }
+
+    // Section 1: Dye Selection
     const dyeSelectionContainer = this.createElement('div');
     drawer.appendChild(dyeSelectionContainer);
     this.mobileDyeSelectionPanel = new CollapsiblePanel(dyeSelectionContainer, {
       title: LanguageService.t('mixer.dyeSelection') || 'Dye Selection',
-      storageKey: 'v3_mixer_mobile_dye_selection_panel',
+      storageKey: 'v4_mixer_mobile_dye_selection_panel',
       defaultOpen: true,
       icon: ICON_PALETTE,
     });
@@ -1113,26 +1547,26 @@ export class MixerTool extends BaseComponent {
     this.renderMobileDyeSelector(mobileDyeSelectionContent);
     this.mobileDyeSelectionPanel.setContent(mobileDyeSelectionContent);
 
-    // Section 2: Interpolation Settings (collapsible)
+    // Section 2: Mix Settings
     const settingsContainer = this.createElement('div');
     drawer.appendChild(settingsContainer);
     this.mobileSettingsPanel = new CollapsiblePanel(settingsContainer, {
-      title: LanguageService.t('mixer.interpolationSettings') || 'Interpolation Settings',
-      storageKey: 'v3_mixer_mobile_settings_panel',
+      title: LanguageService.t('mixer.mixSettings') || 'Mix Settings',
+      storageKey: 'v4_mixer_mobile_settings_panel',
       defaultOpen: true,
-      icon: ICON_STAIRS,
+      icon: ICON_SLIDERS,
     });
     this.mobileSettingsPanel.init();
     const mobileSettingsContent = this.createElement('div', { className: 'p-4' });
     this.renderMobileSettings(mobileSettingsContent);
     this.mobileSettingsPanel.setContent(mobileSettingsContent);
 
-    // Section 3: Dye Filters (collapsible)
+    // Section 3: Filters
     const filtersContainer = this.createElement('div');
     drawer.appendChild(filtersContainer);
     this.mobileFiltersPanel = new CollapsiblePanel(filtersContainer, {
       title: LanguageService.t('filters.advancedFilters') || 'Advanced Dye Filters',
-      storageKey: 'v3_mixer_mobile_filters',
+      storageKey: 'v4_mixer_mobile_filters',
       defaultOpen: false,
       icon: ICON_FILTER,
     });
@@ -1140,97 +1574,91 @@ export class MixerTool extends BaseComponent {
 
     const mobileFiltersContent = this.createElement('div');
     this.mobileDyeFilters = new DyeFilters(mobileFiltersContent, {
-      storageKeyPrefix: 'v3_mixer', // Share filter state with desktop
+      storageKeyPrefix: 'v4_mixer_mobile',
       hideHeader: true,
       onFilterChange: () => {
-        this.updateInterpolation();
+        this.findMatchingDyes();
+        this.renderResultsGrid();
+        if (this.showPrices) {
+          void this.fetchPricesForDisplayedDyes();
+        }
       },
     });
     this.mobileDyeFilters.render();
     this.mobileDyeFilters.bindEvents();
     this.mobileFiltersPanel.setContent(mobileFiltersContent);
 
-    // Section 4: Market Board (collapsible)
+    // Section 4: Market Board
     const marketContainer = this.createElement('div');
     drawer.appendChild(marketContainer);
     this.mobileMarketPanel = new CollapsiblePanel(marketContainer, {
       title: LanguageService.t('marketBoard.title') || 'Market Board',
-      storageKey: 'v3_mixer_mobile_market',
+      storageKey: 'v4_mixer_mobile_market',
       defaultOpen: false,
       icon: ICON_MARKET,
     });
     this.mobileMarketPanel.init();
 
+    // Create mobile market board content
+    // Note: MarketBoard delegates to MarketBoardService for state management
     const mobileMarketContent = this.createElement('div');
     this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
     this.mobileMarketBoard.init();
 
-    // Listen for price toggle changes (mobile)
-    mobileMarketContent.addEventListener('showPricesChanged', ((event: Event) => {
-      const customEvent = event as CustomEvent<{ showPrices: boolean }>;
-      this.showPrices = customEvent.detail.showPrices;
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      } else {
-        this.priceData.clear();
-        this.updateSelectedDyesDisplay();
-        this.updateMobileSelectedDyesDisplay();
-        this.renderIntermediateMatches();
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      mobileMarketContent,
+      () => this.showPrices,
+      () => this.fetchPricesForDisplayedDyes(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          } else {
+            this.renderResultsGrid();
+          }
+        },
+        onServerChanged: () => {
+          this.renderResultsGrid();
+          if (this.showPrices && this.matchedResults.length > 0) {
+            void this.fetchPricesForDisplayedDyes();
+          }
+        },
       }
-    }) as EventListener);
-
-    // Listen for server changes (mobile)
-    mobileMarketContent.addEventListener('server-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for category changes (mobile)
-    mobileMarketContent.addEventListener('categories-changed', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
-
-    // Listen for refresh requests (mobile)
-    mobileMarketContent.addEventListener('refresh-requested', (() => {
-      if (this.showPrices) {
-        this.fetchPricesForDisplayedDyes();
-      }
-    }) as EventListener);
+    );
 
     this.mobileMarketPanel.setContent(mobileMarketContent);
   }
 
   /**
-   * Render consolidated mobile dye selector section (select 2 dyes: start and end)
+   * Render mobile dye selector
    */
   private renderMobileDyeSelector(container: HTMLElement): void {
     const dyeContainer = this.createElement('div', { className: 'space-y-3' });
 
-    // Instruction text
+    // Instruction
     const instruction = this.createElement('p', {
       className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to create a gradient',
+      textContent: LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to blend together',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     dyeContainer.appendChild(instruction);
 
     // Selected dyes display
     const displayContainer = this.createElement('div', {
-      className: 'mobile-selected-dyes-display space-y-2',
+      className: 'selected-dyes-display space-y-2',
     });
     dyeContainer.appendChild(displayContainer);
     this.mobileSelectedDyesContainer = displayContainer;
 
+    // Mirror the desktop display
     this.updateMobileSelectedDyesDisplay();
 
-    // Dye selector component
+    // Dye selector
     const selectorContainer = this.createElement('div', { className: 'mt-3' });
     dyeContainer.appendChild(selectorContainer);
 
-    const selector = new DyeSelector(selectorContainer, {
+    this.mobileDyeSelector = new DyeSelector(selectorContainer, {
       maxSelections: 2,
       allowMultiple: true,
       allowDuplicates: false,
@@ -1239,44 +1667,39 @@ export class MixerTool extends BaseComponent {
       excludeFacewear: true,
       showFavorites: true,
       compactMode: true,
-      hideSelectedChips: true, // We show selections above with Start/End labels
+      hideSelectedChips: true,
     });
-    selector.init();
+    this.mobileDyeSelector.init();
 
-    // Store reference
-    this.mobileDyeSelector = selector;
-
-    // Listen for selection changes
+    // Sync with desktop
     selectorContainer.addEventListener('selection-changed', () => {
-      this.selectedDyes = selector.getSelectedDyes();
-      this.saveSelectedDyes();
-      // Sync to desktop selector
-      this.dyeSelector?.setSelectedDyes(this.selectedDyes);
-      this.updateSelectedDyesDisplay();
-      this.updateMobileSelectedDyesDisplay();
-      this.updateInterpolation();
+      const selectedDyes = this.mobileDyeSelector!.getSelectedDyes();
+      this.handleDyeSelection(selectedDyes);
+      this.dyeSelector?.setSelectedDyes(selectedDyes);
     });
 
-    // Set initial selection if dyes were loaded from storage
-    if (this.selectedDyes.length > 0) {
-      selector.setSelectedDyes(this.selectedDyes);
+    // Set initial selection
+    const initialDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
+    if (initialDyes.length > 0) {
+      this.mobileDyeSelector.setSelectedDyes(initialDyes);
     }
 
     container.appendChild(dyeContainer);
   }
 
   /**
-   * Update mobile selected dyes display with Start/End labels and remove buttons
+   * Update mobile selected dyes display
    */
   private updateMobileSelectedDyesDisplay(): void {
     if (!this.mobileSelectedDyesContainer) return;
     clearContainer(this.mobileSelectedDyesContainer);
 
-    if (this.selectedDyes.length === 0) {
-      // Empty state - dashed border placeholder
+    const filledSlots = this.selectedDyes.filter((d): d is Dye => d !== null);
+
+    if (filledSlots.length === 0) {
       const placeholder = this.createElement('div', {
-        className: 'p-2 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('mixer.selectDyes') || 'Select dyes below',
+        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
+        textContent: LanguageService.t('mixer.selectDyes') || 'Select dyes below to blend',
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -1285,22 +1708,21 @@ export class MixerTool extends BaseComponent {
       return;
     }
 
-    // Display each selected dye with role label
+    // Same display as desktop
     const labels = [
-      LanguageService.t('mixer.startDye') || 'Start',
-      LanguageService.t('mixer.endDye') || 'End',
+      LanguageService.t('mixer.dye1') || 'Dye 1',
+      LanguageService.t('mixer.dye2') || 'Dye 2',
     ];
 
-    for (let i = 0; i < this.selectedDyes.length; i++) {
+    for (let i = 0; i < 2; i++) {
       const dye = this.selectedDyes[i];
-      const label = labels[i];
+      if (!dye) continue;
 
       const card = this.createElement('div', {
-        className: 'flex items-center gap-2 p-2 rounded-lg',
+        className: 'flex items-center gap-3 p-3 rounded-lg',
         attributes: { style: 'background: var(--theme-background-secondary);' },
       });
 
-      // Color swatch
       const swatch = this.createElement('div', {
         className: 'w-8 h-8 rounded border',
         attributes: {
@@ -1309,264 +1731,134 @@ export class MixerTool extends BaseComponent {
       });
       card.appendChild(swatch);
 
-      // Info section
       const info = this.createElement('div', { className: 'flex-1 min-w-0' });
-
-      // Role label and dye name on same line for mobile
-      const labelAndName = this.createElement('div', { className: 'flex items-center gap-2' });
-      const roleLabel = this.createElement('span', {
-        className: 'text-xs font-semibold uppercase',
-        textContent: label,
-        attributes: { style: 'color: var(--theme-primary);' },
-      });
-      const name = this.createElement('span', {
-        className: 'text-sm font-medium truncate',
-        textContent: LanguageService.getDyeName(dye.itemID) || dye.name,
-        attributes: { style: 'color: var(--theme-text);' },
-      });
-      labelAndName.appendChild(roleLabel);
-      labelAndName.appendChild(name);
-      info.appendChild(labelAndName);
-
+      info.innerHTML = `
+        <p class="text-xs font-semibold uppercase tracking-wider" style="color: var(--theme-primary);">${labels[i]}</p>
+        <p class="font-medium truncate text-sm" style="color: var(--theme-text);">${LanguageService.getDyeName(dye.itemID) || dye.name}</p>
+      `;
       card.appendChild(info);
 
-      // Remove button
-      const removeBtn = this.createElement('button', {
-        className: 'w-6 h-6 flex items-center justify-center rounded-full transition-colors',
-        textContent: '\u00D7',
-        attributes: {
-          style: 'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1rem;',
-          title: LanguageService.t('common.remove') || 'Remove',
-        },
-      });
-
-      this.on(removeBtn, 'click', () => {
-        // Remove this dye from selection
-        const newSelection = this.selectedDyes.filter((d) => d.id !== dye.id);
-        this.selectedDyes = newSelection;
-        this.mobileDyeSelector?.setSelectedDyes(newSelection);
-        this.dyeSelector?.setSelectedDyes(newSelection);
-        this.saveSelectedDyes();
-        this.updateSelectedDyesDisplay();
-        this.updateMobileSelectedDyesDisplay();
-        this.updateInterpolation();
-      });
-
-      card.appendChild(removeBtn);
       this.mobileSelectedDyesContainer.appendChild(card);
     }
   }
 
   /**
-   * Render mobile interpolation settings
+   * Render mobile settings
    */
   private renderMobileSettings(container: HTMLElement): void {
     const settingsContainer = this.createElement('div', { className: 'space-y-4' });
 
-    // Steps slider
-    const stepsGroup = this.createElement('div');
-    const stepsLabel = this.createElement('label', {
+    const sliderGroup = this.createElement('div');
+    const sliderLabel = this.createElement('label', {
       className: 'flex items-center justify-between text-sm mb-2',
     });
-    const stepsText = this.createElement('span', {
-      textContent: LanguageService.t('mixer.steps') || 'Steps',
+
+    const labelText = this.createElement('span', {
+      textContent: LanguageService.t('mixer.maxResults') || 'Max Results',
       attributes: { style: 'color: var(--theme-text);' },
     });
-    this.mobileStepValueDisplay = this.createElement('span', {
+
+    this.mobileMaxResultsDisplay = this.createElement('span', {
       className: 'number',
-      textContent: String(this.stepCount),
+      textContent: String(this.maxResults),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
-    stepsLabel.appendChild(stepsText);
-    stepsLabel.appendChild(this.mobileStepValueDisplay);
-    stepsGroup.appendChild(stepsLabel);
 
-    const stepsInput = this.createElement('input', {
-      className: 'w-full',
+    sliderLabel.appendChild(labelText);
+    sliderLabel.appendChild(this.mobileMaxResultsDisplay);
+    sliderGroup.appendChild(sliderLabel);
+
+    const slider = this.createElement('input', {
       attributes: {
         type: 'range',
-        min: '2',
-        max: '10',
-        value: String(this.stepCount),
-        style: 'accent-color: var(--theme-primary);',
+        min: '3',
+        max: '8',
+        value: String(this.maxResults),
+        style: 'width: 100%; accent-color: var(--theme-primary);',
       },
     }) as HTMLInputElement;
 
-    this.on(stepsInput, 'input', () => {
-      this.stepCount = parseInt(stepsInput.value, 10);
-      // Update both displays
-      if (this.mobileStepValueDisplay) {
-        this.mobileStepValueDisplay.textContent = String(this.stepCount);
+    this.on(slider, 'input', () => {
+      this.maxResults = parseInt(slider.value, 10);
+      if (this.mobileMaxResultsDisplay) {
+        this.mobileMaxResultsDisplay.textContent = String(this.maxResults);
       }
-      if (this.stepValueDisplay) {
-        this.stepValueDisplay.textContent = String(this.stepCount);
+      if (this.maxResultsValueDisplay) {
+        this.maxResultsValueDisplay.textContent = String(this.maxResults);
       }
-      StorageService.setItem(STORAGE_KEYS.stepCount, this.stepCount);
-      this.updateInterpolation();
     });
 
-    stepsGroup.appendChild(stepsInput);
-    settingsContainer.appendChild(stepsGroup);
-
-    // Color space toggle
-    const colorSpaceGroup = this.createElement('div');
-    const colorSpaceLabel = this.createElement('label', {
-      className: 'block text-sm mb-2',
-      textContent: LanguageService.t('mixer.colorSpace') || 'Color Space',
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-    colorSpaceGroup.appendChild(colorSpaceLabel);
-
-    const buttonContainer = this.createElement('div', { className: 'flex gap-2' });
-
-    const rgbBtn = this.createElement('button', {
-      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: 'RGB',
-      attributes: {
-        style: this.colorSpace === 'rgb'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
+    this.on(slider, 'change', () => {
+      ConfigController.getInstance().setConfig('mixer', { maxResults: this.maxResults });
+      this.findMatchingDyes();
+      this.renderResultsGrid();
+      if (this.showPrices) {
+        void this.fetchPricesForDisplayedDyes();
+      }
     });
 
-    const hsvBtn = this.createElement('button', {
-      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: 'HSV',
-      attributes: {
-        style: this.colorSpace === 'hsv'
-          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-          : 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
-    });
-
-    this.on(rgbBtn, 'click', () => {
-      this.colorSpace = 'rgb';
-      StorageService.setItem(STORAGE_KEYS.colorSpace, 'rgb');
-      rgbBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
-      hsvBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
-      this.updateInterpolation();
-    });
-
-    this.on(hsvBtn, 'click', () => {
-      this.colorSpace = 'hsv';
-      StorageService.setItem(STORAGE_KEYS.colorSpace, 'hsv');
-      hsvBtn.setAttribute('style', 'background: var(--theme-primary); color: var(--theme-text-header);');
-      rgbBtn.setAttribute('style', 'background: var(--theme-background-secondary); color: var(--theme-text);');
-      this.updateInterpolation();
-    });
-
-    buttonContainer.appendChild(rgbBtn);
-    buttonContainer.appendChild(hsvBtn);
-    colorSpaceGroup.appendChild(buttonContainer);
-    settingsContainer.appendChild(colorSpaceGroup);
-
+    sliderGroup.appendChild(slider);
+    settingsContainer.appendChild(sliderGroup);
     container.appendChild(settingsContainer);
   }
 
   /**
-   * Update drawer content (called when state changes from desktop)
-   * Syncs mobile selector with current state
+   * Update drawer content (called when state changes)
    */
   private updateDrawerContent(): void {
-    // Sync mobile selector with current state (if it exists)
-    if (this.mobileDyeSelector && this.selectedDyes.length > 0) {
-      this.mobileDyeSelector.setSelectedDyes(this.selectedDyes);
-    }
-    // Update the mobile display
     this.updateMobileSelectedDyesDisplay();
+
+    // Sync mobile DyeSelector with desktop
+    const selectedDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
+    this.mobileDyeSelector?.setSelectedDyes(selectedDyes);
+
+    // Sync slider
+    if (this.mobileMaxResultsDisplay) {
+      this.mobileMaxResultsDisplay.textContent = String(this.maxResults);
+    }
   }
 
   // ============================================================================
-  // Market Board Integration
+  // Utilities
   // ============================================================================
-
-  /**
-   * Get an active MarketBoard instance that has showPrices enabled.
-   * This handles the case where prices are enabled on mobile vs desktop.
-   */
-  private getActiveMarketBoard(): MarketBoard | null {
-    // Check desktop MarketBoard first
-    if (this.marketBoard?.getShowPrices()) {
-      return this.marketBoard;
-    }
-    // Fall back to mobile MarketBoard
-    if (this.mobileMarketBoard?.getShowPrices()) {
-      return this.mobileMarketBoard;
-    }
-    // If showPrices is enabled but neither MarketBoard reports it,
-    // use desktop as fallback (this handles the case where the event
-    // was just fired and the MarketBoard state is in sync)
-    if (this.showPrices && this.marketBoard) {
-      return this.marketBoard;
-    }
-    if (this.showPrices && this.mobileMarketBoard) {
-      return this.mobileMarketBoard;
-    }
-    return null;
-  }
-
-  /**
-   * Fetch prices for all displayed dyes (start, end, and intermediate matches)
-   */
-  private async fetchPricesForDisplayedDyes(): Promise<void> {
-    if (!this.showPrices) {
-      return;
-    }
-
-    // Get whichever MarketBoard instance is active (desktop or mobile)
-    const activeMarketBoard = this.getActiveMarketBoard();
-    if (!activeMarketBoard) {
-      logger.warn('[MixerTool] No active MarketBoard found for price fetching');
-      return;
-    }
-
-    const dyesToFetch: Dye[] = [];
-
-    // Add start dye if selected
-    if (this.startDye && activeMarketBoard.shouldFetchPrice(this.startDye)) {
-      dyesToFetch.push(this.startDye);
-    }
-
-    // Add end dye if selected
-    if (this.endDye && activeMarketBoard.shouldFetchPrice(this.endDye)) {
-      dyesToFetch.push(this.endDye);
-    }
-
-    // Add intermediate dyes from interpolation steps
-    for (const step of this.currentSteps) {
-      if (step.matchedDye && activeMarketBoard.shouldFetchPrice(step.matchedDye)) {
-        // Avoid duplicates
-        if (!dyesToFetch.some((d) => d.id === step.matchedDye!.id)) {
-          dyesToFetch.push(step.matchedDye);
-        }
-      }
-    }
-
-    if (dyesToFetch.length > 0) {
-      try {
-        const prices = await activeMarketBoard.fetchPricesForDyes(dyesToFetch);
-        this.priceData = prices;
-        logger.info(`[MixerTool] Fetched prices for ${prices.size} dyes`);
-      } catch (error) {
-        logger.error('[MixerTool] Failed to fetch prices:', error);
-      }
-    }
-
-    // Always update displays (even if no prices were fetched)
-    this.updateSelectedDyesDisplay();
-    this.updateMobileSelectedDyesDisplay();
-    this.renderIntermediateMatches();
-  }
 
   /**
    * Format price for display
    */
   private formatPrice(dye: Dye): string | null {
     if (!this.showPrices) return null;
-
     const price = this.priceData.get(dye.itemID);
-    if (!price) return null;
+    if (!price?.currentMinPrice) return null;
+    return `${price.currentMinPrice.toLocaleString()} gil`;
+  }
 
-    return MarketBoard.formatPrice(price.currentMinPrice);
+  /**
+   * Fetch prices for displayed dyes
+   * Delegates to MarketBoardService with race condition protection
+   */
+  private async fetchPricesForDisplayedDyes(): Promise<void> {
+    if (!this.showPrices) return;
+
+    const dyes = this.matchedResults.map((r) => r.matchedDye);
+    if (dyes.length === 0) return;
+
+    try {
+      const prices = await this.marketBoardService.fetchPricesForDyes(dyes);
+      if (prices.size > 0) {
+        this.renderResultsGrid();
+      }
+    } catch (error) {
+      logger.error('[MixerTool] Failed to fetch prices:', error);
+    }
+  }
+
+  /**
+   * Get contrasting text color for a background
+   */
+  private getContrastColor(hex: string): string {
+    const rgb = ColorService.hexToRgb(hex);
+    // Calculate luminance
+    const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+    return luminance > 0.5 ? '#000000' : '#ffffff';
   }
 }

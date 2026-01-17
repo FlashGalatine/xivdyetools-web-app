@@ -66,7 +66,7 @@ export interface HarmonyMockupOptions {
  */
 export class HarmonyMockup extends BaseComponent {
   private options: HarmonyMockupOptions;
-  private selectedDye: typeof SAMPLE_DYES[0] | null = SAMPLE_DYES[1]; // Default to Dalamud Red
+  private selectedDye: (typeof SAMPLE_DYES)[0] | null = SAMPLE_DYES[1]; // Default to Dalamud Red
   private selectedHarmonyType: string = 'complementary';
   private companionCount: number = 5;
   private filtersPanel: CollapsiblePanel | null = null;
@@ -153,7 +153,8 @@ export class HarmonyMockup extends BaseComponent {
     const exportBtn = this.createElement('button', {
       className: 'flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-colors',
       attributes: {
-        style: 'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
+        style:
+          'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
       },
       innerHTML: `<span class="w-4 h-4">${ICON_PALETTE}</span> Export`,
     });
@@ -191,7 +192,9 @@ export class HarmonyMockup extends BaseComponent {
       });
       const swatch = this.createElement('div', {
         className: 'w-10 h-10 rounded-lg border',
-        attributes: { style: `background: ${this.selectedDye.hex}; border-color: var(--theme-border);` },
+        attributes: {
+          style: `background: ${this.selectedDye.hex}; border-color: var(--theme-border);`,
+        },
       });
       const info = this.createElement('div');
       info.innerHTML = `
@@ -208,7 +211,7 @@ export class HarmonyMockup extends BaseComponent {
       className: 'text-sm',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
-    const selectedType = HARMONY_TYPES.find(t => t.id === this.selectedHarmonyType);
+    const selectedType = HARMONY_TYPES.find((t) => t.id === this.selectedHarmonyType);
     harmonyInfo.textContent = `Harmony: ${selectedType?.name ?? this.selectedHarmonyType}`;
     content.appendChild(harmonyInfo);
 
@@ -258,7 +261,7 @@ export class HarmonyMockup extends BaseComponent {
       className: 'grid grid-cols-3 gap-2',
     });
 
-    SAMPLE_DYES.forEach(dye => {
+    SAMPLE_DYES.forEach((dye) => {
       const btn = this.createElement('button', {
         className: 'p-2 rounded-lg text-center transition-all hover:scale-105',
         attributes: {
@@ -293,12 +296,15 @@ export class HarmonyMockup extends BaseComponent {
 
   // Create harmony type selector
   private createHarmonyTypeSelector(): HTMLElement {
-    const container = this.createElement('div', { className: 'space-y-1 max-h-48 overflow-y-auto' });
+    const container = this.createElement('div', {
+      className: 'space-y-1 max-h-48 overflow-y-auto',
+    });
 
-    HARMONY_TYPES.forEach(type => {
+    HARMONY_TYPES.forEach((type) => {
       const isSelected = this.selectedHarmonyType === type.id;
       const btn = this.createElement('button', {
-        className: 'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
+        className:
+          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
         attributes: {
           style: isSelected
             ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -358,7 +364,7 @@ export class HarmonyMockup extends BaseComponent {
     const container = this.createElement('div', { className: 'space-y-2' });
     const filters = ['Exclude Metallic', 'Exclude Pastel', 'Exclude Expensive'];
 
-    filters.forEach(filter => {
+    filters.forEach((filter) => {
       const label = this.createElement('label', {
         className: 'flex items-center gap-2 cursor-pointer',
       });
@@ -392,7 +398,10 @@ export class HarmonyMockup extends BaseComponent {
     });
     const dcSelect = this.createElement('select', {
       className: 'w-full p-2 rounded text-sm',
-      attributes: { style: 'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style:
+          'background: var(--theme-background-secondary); color: var(--theme-text); border: 1px solid var(--theme-border);',
+      },
     });
     dcSelect.innerHTML = '<option>Aether</option><option>Primal</option><option>Crystal</option>';
     dcGroup.appendChild(dcLabel);
@@ -431,7 +440,7 @@ export class HarmonyMockup extends BaseComponent {
 
     // Create SVG color wheel
     const baseHue = this.selectedDye ? this.getHueFromHex(this.selectedDye.hex) : 0;
-    const harmonyType = HARMONY_TYPES.find(t => t.id === this.selectedHarmonyType);
+    const harmonyType = HARMONY_TYPES.find((t) => t.id === this.selectedHarmonyType);
     const degrees = harmonyType?.degrees ?? [];
 
     wheel.innerHTML = `
@@ -440,7 +449,7 @@ export class HarmonyMockup extends BaseComponent {
         <defs>
           <linearGradient id="wheelGrad">
             ${Array.from({ length: 12 }, (_, i) => {
-              const hue = (i * 30);
+              const hue = i * 30;
               return `<stop offset="${(i / 12) * 100}%" stop-color="hsl(${hue}, 70%, 50%)" />`;
             }).join('')}
           </linearGradient>
@@ -451,19 +460,25 @@ export class HarmonyMockup extends BaseComponent {
         <circle cx="50" cy="50" r="35" fill="var(--theme-card-background)" stroke="var(--theme-border)" stroke-width="1" />
 
         <!-- Base color marker -->
-        ${this.selectedDye ? `
-          <circle cx="${50 + 40 * Math.cos((baseHue - 90) * Math.PI / 180)}"
-                  cy="${50 + 40 * Math.sin((baseHue - 90) * Math.PI / 180)}"
+        ${
+          this.selectedDye
+            ? `
+          <circle cx="${50 + 40 * Math.cos(((baseHue - 90) * Math.PI) / 180)}"
+                  cy="${50 + 40 * Math.sin(((baseHue - 90) * Math.PI) / 180)}"
                   r="6" fill="${this.selectedDye.hex}" stroke="white" stroke-width="2" />
-        ` : ''}
+        `
+            : ''
+        }
 
         <!-- Harmony markers -->
-        ${degrees.map(deg => {
-          const angle = (baseHue + deg - 90) * Math.PI / 180;
-          return `<circle cx="${50 + 40 * Math.cos(angle)}"
+        ${degrees
+          .map((deg) => {
+            const angle = ((baseHue + deg - 90) * Math.PI) / 180;
+            return `<circle cx="${50 + 40 * Math.cos(angle)}"
                           cy="${50 + 40 * Math.sin(angle)}"
                           r="4" fill="var(--theme-primary)" stroke="white" stroke-width="1.5" />`;
-        }).join('')}
+          })
+          .join('')}
 
         <!-- Center text -->
         <text x="50" y="48" text-anchor="middle" font-size="6" fill="var(--theme-text)">${harmonyType?.name ?? ''}</text>
@@ -479,17 +494,22 @@ export class HarmonyMockup extends BaseComponent {
   private createHarmonyCards(container: HTMLElement): void {
     if (!this.selectedDye) return;
 
-    const harmonyType = HARMONY_TYPES.find(t => t.id === this.selectedHarmonyType);
+    const harmonyType = HARMONY_TYPES.find((t) => t.id === this.selectedHarmonyType);
     const degrees = harmonyType?.degrees ?? [];
 
     // Generate harmony colors
     const baseHue = this.getHueFromHex(this.selectedDye.hex);
-    const colors = [this.selectedDye.hex, ...degrees.map(deg => this.hueToHex((baseHue + deg) % 360))];
+    const colors = [
+      this.selectedDye.hex,
+      ...degrees.map((deg) => this.hueToHex((baseHue + deg) % 360)),
+    ];
 
     colors.forEach((color, index) => {
       const card = this.createElement('div', {
         className: 'p-4 rounded-lg',
-        attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+        attributes: {
+          style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        },
       });
 
       // Card header
@@ -504,7 +524,9 @@ export class HarmonyMockup extends BaseComponent {
       const hexBadge = this.createElement('span', {
         className: 'text-xs font-mono px-2 py-0.5 rounded',
         textContent: color.toUpperCase(),
-        attributes: { style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);' },
+        attributes: {
+          style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);',
+        },
       });
       header.appendChild(title);
       header.appendChild(hexBadge);
@@ -540,7 +562,9 @@ export class HarmonyMockup extends BaseComponent {
         const more = this.createElement('span', {
           className: 'w-6 h-6 flex items-center justify-center text-xs rounded',
           textContent: `+${this.companionCount - 4}`,
-          attributes: { style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);' },
+          attributes: {
+            style: 'background: var(--theme-background-secondary); color: var(--theme-text-muted);',
+          },
         });
         matchedGrid.appendChild(more);
       }
@@ -554,7 +578,9 @@ export class HarmonyMockup extends BaseComponent {
   private createEmptyState(): HTMLElement {
     const empty = this.createElement('div', {
       className: 'col-span-full p-8 rounded-lg border-2 border-dashed text-center',
-      attributes: { style: 'border-color: var(--theme-border); background: var(--theme-card-background);' },
+      attributes: {
+        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+      },
     });
     empty.innerHTML = `
       <svg class="w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -576,9 +602,15 @@ export class HarmonyMockup extends BaseComponent {
     if (max !== min) {
       const d = max - min;
       switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
+        case r:
+          h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+          break;
+        case g:
+          h = ((b - r) / d + 2) / 6;
+          break;
+        case b:
+          h = ((r - g) / d + 4) / 6;
+          break;
       }
     }
     return Math.round(h * 360);
@@ -591,18 +623,18 @@ export class HarmonyMockup extends BaseComponent {
     const l = 0.5;
     const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
     const p = 2 * l - q;
-    const r = Math.round(this.hue2rgb(p, q, h + 1/3) * 255);
+    const r = Math.round(this.hue2rgb(p, q, h + 1 / 3) * 255);
     const g = Math.round(this.hue2rgb(p, q, h) * 255);
-    const b = Math.round(this.hue2rgb(p, q, h - 1/3) * 255);
-    return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+    const b = Math.round(this.hue2rgb(p, q, h - 1 / 3) * 255);
+    return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
   }
 
   private hue2rgb(p: number, q: number, t: number): number {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
-    if (t < 1/6) return p + (q - p) * 6 * t;
-    if (t < 1/2) return q;
-    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
     return p;
   }
 
@@ -611,7 +643,7 @@ export class HarmonyMockup extends BaseComponent {
     const r = Math.min(255, Math.max(0, parseInt(hex.slice(1, 3), 16) + offset));
     const g = Math.min(255, Math.max(0, parseInt(hex.slice(3, 5), 16) + offset));
     const b = Math.min(255, Math.max(0, parseInt(hex.slice(5, 7), 16) - offset));
-    return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+    return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
   }
 
   bindEvents(): void {

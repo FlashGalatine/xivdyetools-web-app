@@ -28,10 +28,10 @@
  * Theme Switcher icon - Paint palette
  */
 export const ICON_THEME = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M 12 2 C 6.5 2 2 6.5 2 12 C 2 14.5 3 16.5 4.5 18 C 5 18.5 6 18.5 6.5 18 C 7 17.5 7 16.5 6.5 15.5 C 6 14.5 6 13 6 12 C 6 8.7 8.7 6 12 6 C 15.3 6 18 8.7 18 12 C 18 15.3 15.3 18 12 18 L 10 18 C 9 18 8 19 8 20 C 8 21 9 22 10 22 L 12 22 C 17.5 22 22 17.5 22 12 C 22 6.5 17.5 2 12 2 Z" />
-  <circle cx="8.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" opacity="0.6" />
-  <circle cx="12" cy="8" r="1.5" fill="currentColor" stroke="none" opacity="0.8" />
-  <circle cx="15.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" opacity="0.4" />
+  <path d="M 12 2 C 6.5 2 2 6.5 2 12 C 2 14.5 3 16.5 4.5 18 C 5 18.5 6 18.5 6.5 18 C 7 17.5 7 16.5 6.5 15.5 C 6 14.5 6 13 6 12 C 6 8.7 8.7 6 12 6 C 15.3 6 18 8.7 18 12 C 18 15.3 15.3 18 12 18 L 10 18 C 9 18 8 19 8 20 C 8 21 9 22 10 22 L 12 22 C 17.5 22 22 17.5 22 12 C 22 6.5 17.5 2 12 2 Z" fill="none"/>
+  <circle cx="8.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" opacity="0.6"/>
+  <circle cx="12" cy="8" r="1.5" fill="currentColor" stroke="none" opacity="0.8"/>
+  <circle cx="15.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" opacity="0.4"/>
 </svg>`;
 
 /**
@@ -161,6 +161,14 @@ export const ICON_BROOM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
   <path d="M9 10L15 10L17 22L7 22L9 10Z" />
   <path d="M9 14L15 14" opacity="0.5" />
   <path d="M8 18L16 18" opacity="0.5" />
+</svg>`;
+
+/**
+ * Close icon - X shape for closing dialogs/panels
+ */
+export const ICON_CLOSE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M18 6L6 18" />
+  <path d="M6 6l12 12" />
 </svg>`;
 
 /**
@@ -351,12 +359,133 @@ export const ICON_IMAGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 </svg>`;
 
 /**
- * Info icon - Circle with "i" (for about/information)
+ * Info icon - Circle with "i" (for information)
  */
 export const ICON_INFO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="10"/>
   <line x1="12" y1="16" x2="12" y2="12"/>
   <circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/>
+</svg>`;
+
+/**
+ * About icon - Triangle warning sign with question mark (for about modals)
+ */
+export const ICON_ABOUT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 2L2 20h20L12 2Z" fill="none"/>
+  <path d="M12 9c-1 0-1.5 0.5-1.5 1.5s0.5 1 1 1.5c0.5 0.5 0.5 1 0.5 1.5" fill="none"/>
+  <circle cx="12" cy="16" r="0.5" fill="currentColor" stroke="none"/>
+</svg>`;
+
+/**
+ * Context menu icon - Vertical three dots (kebab menu)
+ * Used for ResultCard action menus and dropdown triggers
+ */
+export const ICON_CONTEXT_MENU = `<svg viewBox="0 0 24 24" fill="currentColor">
+  <circle cx="12" cy="5" r="2"/>
+  <circle cx="12" cy="12" r="2"/>
+  <circle cx="12" cy="19" r="2"/>
+</svg>`;
+
+/**
+ * Globe icon - Language/internationalization selector
+ */
+export const ICON_GLOBE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10" fill="none"/>
+  <line x1="2" y1="12" x2="22" y2="12"/>
+  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" fill="none"/>
+</svg>`;
+
+/**
+ * Logo icon - XIV Dye Tools paint bucket with brush (branding)
+ */
+export const ICON_LOGO = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" opacity="0.3"/>
+  <path d="M7 14v4c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-4"/>
+  <path d="M7 14c0-2 1-3 2.5-3.5"/>
+  <path d="M17 14c0-2-1-3-2.5-3.5"/>
+  <ellipse cx="12" cy="10" rx="3" ry="1.5" fill="currentColor" stroke="none" opacity="0.5"/>
+  <path d="M12 3v4" stroke-width="2"/>
+  <path d="M10 3h4" stroke-width="2"/>
+  <circle cx="12" cy="14" r="2" fill="currentColor" stroke="none" opacity="0.7"/>
+</svg>`;
+
+/**
+ * Link icon - Chain link for copy/share URLs
+ * Replaces: 🔗 emoji
+ */
+export const ICON_LINK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M10 13a4 4 0 005.66 0l3-3a4 4 0 00-5.66-5.66l-1.5 1.5"/>
+  <path d="M14 11a4 4 0 00-5.66 0l-3 3a4 4 0 105.66 5.66l1.5-1.5"/>
+</svg>`;
+
+/**
+ * Document icon - For submissions/write actions
+ * Replaces: 📝 emoji
+ */
+export const ICON_DOCUMENT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14 3v4a1 1 0 001 1h4"/>
+  <path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/>
+  <path d="M9 9h1M9 13h6M9 17h6"/>
+</svg>`;
+
+/**
+ * Locked icon - Padlock for auth required states
+ * Replaces: 🔐 emoji
+ */
+export const ICON_LOCKED = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="5" y="11" width="14" height="10" rx="2"/>
+  <path d="M8 11V7a4 4 0 018 0v4"/>
+  <circle cx="12" cy="16" r="1" fill="currentColor"/>
+</svg>`;
+
+/**
+ * Lock icon - Security indicator
+ * Replaces: 🔒 emoji
+ */
+export const ICON_LOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="5" y="11" width="14" height="10" rx="2"/>
+  <path d="M8 11V7a4 4 0 018 0v4"/>
+  <circle cx="12" cy="16" r="1" fill="currentColor"/>
+</svg>`;
+
+/**
+ * Network icon - Antenna for connection status
+ * Replaces: 📡 emoji
+ */
+export const ICON_NETWORK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 20v-4"/>
+  <path d="M12 12V8"/>
+  <path d="M12 4l6 4-6 4-6-4 6-4z"/>
+  <path d="M6 8v4l6 4 6-4V8"/>
+  <circle cx="12" cy="20" r="2"/>
+</svg>`;
+
+/**
+ * Book icon - Tutorial/guide documentation
+ * Replaces: 📚 emoji
+ */
+export const ICON_BOOK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+  <path d="M8 7h8M8 11h8M8 15h5"/>
+</svg>`;
+
+/**
+ * Success icon - Checkmark for success states
+ * Replaces: ✅ emoji
+ */
+export const ICON_SUCCESS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M8 12l3 3 5-6"/>
+</svg>`;
+
+/**
+ * Error icon - X for error states
+ * Replaces: ❌ emoji
+ */
+export const ICON_ERROR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M15 9l-6 6M9 9l6 6"/>
 </svg>`;
 
 /**
@@ -401,6 +530,20 @@ export const UI_ICONS: Record<string, string> = {
   trash: ICON_TRASH,
   image: ICON_IMAGE,
   info: ICON_INFO,
+  about: ICON_ABOUT,
+  globe: ICON_GLOBE,
+  logo: ICON_LOGO,
+  'context-menu': ICON_CONTEXT_MENU,
+  close: ICON_CLOSE,
+  // Emoji replacement icons
+  link: ICON_LINK,
+  document: ICON_DOCUMENT,
+  locked: ICON_LOCKED,
+  lock: ICON_LOCK,
+  network: ICON_NETWORK,
+  book: ICON_BOOK,
+  success: ICON_SUCCESS,
+  error: ICON_ERROR,
 };
 
 /**

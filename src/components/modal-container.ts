@@ -65,8 +65,7 @@ export class ModalContainer extends BaseComponent {
       }
     });
 
-    // Listen for Escape key to close modals
-    this.on(document, 'keydown', this.handleKeyDown);
+    // Note: Document keydown listener is now in bindEvents() to survive updates
   }
 
   /**
@@ -360,7 +359,9 @@ export class ModalContainer extends BaseComponent {
 
     // Update z-index and backdrop styling for all modals (order might have changed)
     this.modals.forEach((modal, index) => {
-      const modalWrapper = this.element?.querySelector(`[data-modal-id="${modal.id}"]`) as HTMLElement;
+      const modalWrapper = this.element?.querySelector(
+        `[data-modal-id="${modal.id}"]`
+      ) as HTMLElement;
       if (modalWrapper) {
         const isTopModal = index === this.modals.length - 1;
         modalWrapper.style.zIndex = String(50 + index);
@@ -422,6 +423,9 @@ export class ModalContainer extends BaseComponent {
    * Bind event listeners
    */
   bindEvents(): void {
-    // Events are bound in createModalElement
+    // Document-level keyboard listener for Escape key
+    // Must be re-added here since unbindAllEvents() is called during update()
+    this.on(document, 'keydown', this.handleKeyDown);
+    // Element-specific events are bound in createModalElement
   }
 }

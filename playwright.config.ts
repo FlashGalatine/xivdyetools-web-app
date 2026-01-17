@@ -3,10 +3,21 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Playwright E2E Test Configuration
  * @see https://playwright.dev/docs/test-configuration
+ *
+ * Coverage collection is enabled via the 'chromium-coverage' project.
+ * Run with: npx playwright test --project=chromium-coverage
+ *
+ * Projects:
+ * - chromium: Standard E2E tests (fast)
+ * - chromium-coverage: E2E tests with V8 coverage collection
+ * - mobile-chrome: Mobile viewport tests
  */
 export default defineConfig({
   // Test directory
   testDir: './e2e',
+
+  // Global teardown for coverage merging
+  globalTeardown: './e2e/global-teardown.ts',
 
   // Run tests in parallel
   fullyParallel: true,
@@ -40,6 +51,19 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    // Coverage-enabled project (Chromium only - uses CDP for V8 coverage)
+    {
+      name: 'chromium-coverage',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Coverage is collected via fixtures in e2e/fixtures/coverage.ts
+      },
+    },
+    // Mobile viewport project for testing responsive behavior
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'] },
     },
     // Uncomment to test on more browsers
     // {

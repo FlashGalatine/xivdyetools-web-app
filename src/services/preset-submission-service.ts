@@ -67,7 +67,7 @@ export interface EditResult {
  * Presets API URL
  */
 const PRESETS_API_URL =
-  import.meta.env.VITE_PRESETS_API_URL || 'https://api.xivdyetools.projectgalatine.com';
+  import.meta.env.VITE_PRESETS_API_URL || 'https://api.xivdyetools.app';
 
 /**
  * Valid categories for submissions
@@ -314,7 +314,11 @@ class PresetSubmissionServiceImpl {
   /**
    * Get remaining submissions for today
    */
-  async getRemainingSubmissions(): Promise<{ remaining: number; limit: number; resetAt: Date | null }> {
+  async getRemainingSubmissions(): Promise<{
+    remaining: number;
+    limit: number;
+    resetAt: Date | null;
+  }> {
     if (!authService.isAuthenticated()) {
       return { remaining: 10, limit: 10, resetAt: null };
     }
@@ -411,9 +415,15 @@ class PresetSubmissionServiceImpl {
 
     if (updates.description !== undefined) {
       if (updates.description.trim().length < 10) {
-        errors.push({ field: 'description', message: 'Description must be at least 10 characters' });
+        errors.push({
+          field: 'description',
+          message: 'Description must be at least 10 characters',
+        });
       } else if (updates.description.length > 200) {
-        errors.push({ field: 'description', message: 'Description must be 200 characters or less' });
+        errors.push({
+          field: 'description',
+          message: 'Description must be 200 characters or less',
+        });
       }
     }
 

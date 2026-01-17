@@ -21,7 +21,7 @@ vi.mock('../auth-service', () => ({
 import { CommunityPresetService } from '../community-preset-service';
 import { authService } from '../auth-service';
 
-const API_URL = 'https://api.xivdyetools.projectgalatine.com';
+const API_URL = 'https://api.xivdyetools.app';
 
 describe('CommunityPresetService Integration Tests', () => {
   let service: CommunityPresetService;
@@ -277,10 +277,7 @@ describe('CommunityPresetService Integration Tests', () => {
 
         server.use(
           http.post(`${API_URL}/api/v1/votes/:presetId`, () => {
-            return HttpResponse.json(
-              { new_vote_count: 42, already_voted: true },
-              { status: 409 }
-            );
+            return HttpResponse.json({ new_vote_count: 42, already_voted: true }, { status: 409 });
           })
         );
 

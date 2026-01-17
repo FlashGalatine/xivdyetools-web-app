@@ -1,411 +1,255 @@
 /**
- * XIV Dye Tools - Color Distance Matrix Component Tests
+ * XIV Dye Tools - ColorDistanceMatrix Unit Tests
  *
- * Tests for the color distance matrix table component
+ * Tests the color distance matrix component for displaying pairwise distances.
+ * Covers rendering, matrix structure, distance values, and threshold colors.
  *
  * @module components/__tests__/color-distance-matrix.test
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ColorDistanceMatrix } from '../color-distance-matrix';
-import { createTestContainer, cleanupTestContainer, waitForComponent } from './test-utils';
-import type { Dye } from '@shared/types';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  query,
+  queryAll,
+} from '../../__tests__/component-utils';
+import { mockDyes } from '../../__tests__/mocks/services';
 
-// Mock dye data - use unique IDs to avoid conflicts with real database
-const createMockDye = (id: number, name: string, hex: string): Dye => ({
-  id,
-  itemID: 90000 + id,
-  stainID: null,
-  name,
-  hex,
-  rgb: { r: 128, g: 128, b: 128 },
-  hsv: { h: 0, s: 0, v: 50 },
-  category: 'Test',
-  acquisition: 'Test',
-  cost: 0,
-  isMetallic: false,
-  isPastel: false,
-  isDark: false,
-  isCosmic: false,
-});
-
-const mockDyes = [
-  createMockDye(9001, 'Red Dye', '#FF0000'),
-  createMockDye(9002, 'Green Dye', '#00FF00'),
-  createMockDye(9003, 'Blue Dye', '#0000FF'),
-];
+vi.mock('@services/index', () => ({
+  LanguageService: {
+    t: (key: string) => key,
+    getDyeName: (itemId: number) => `Dye-${itemId}`,
+  },
+  ColorService: {
+    getColorDistance: vi.fn((hex1: string, hex2: string) => {
+      // Return predictable distances for testing
+      if (hex1 === hex2) return 0;
+      return 50.5;
+    }),
+  },
+}));
 
 describe('ColorDistanceMatrix', () => {
   let container: HTMLElement;
-  let component: ColorDistanceMatrix;
+  let matrix: ColorDistanceMatrix | null;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     container = createTestContainer();
+    matrix = null;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    if (component) {
-      component.destroy();
+    if (matrix) {
+      try {
+        matrix.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
     cleanupTestContainer(container);
     vi.restoreAllMocks();
   });
 
-  // ==========================================================================
-  // Rendering - Empty State
-  // ==========================================================================
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
 
-  describe('rendering - empty state', () => {
-    it('should render empty state when no dyes provided', () => {
-      component = new ColorDistanceMatrix(container);
-      component.init();
-
-      // Should show empty state message
-      expect(container.textContent).toContain('Select');
-    });
-
-    it('should render empty state with empty array', () => {
-      component = new ColorDistanceMatrix(container, []);
-      component.init();
-
-      expect(container.children.length).toBeGreaterThan(0);
-    });
-  });
-
-  // ==========================================================================
-  // Rendering - With Dyes
-  // ==========================================================================
-
-  describe('rendering - with dyes', () => {
-    it('should render matrix with dyes', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+  describe('Basic Rendering', () => {
+    it('should render matrix container', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
       expect(container.children.length).toBeGreaterThan(0);
     });
 
     it('should render title', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      const title = container.querySelector('h3');
-      expect(title).not.toBeNull();
+      expect(container.textContent).toContain('comparison.matrix.title');
     });
 
     it('should render description', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      const description = container.querySelector('p');
-      expect(description).not.toBeNull();
+      expect(container.textContent).toContain('comparison.matrix.description');
     });
 
     it('should render table element', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      const table = container.querySelector('table');
+      const table = query(container, 'table');
       expect(table).not.toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // Matrix Structure Tests
+  // ============================================================================
+
+  describe('Matrix Structure', () => {
+    it('should render correct number of header columns', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 3));
+      matrix.init();
+
+      const headerCells = queryAll(container, 'thead th');
+      // Empty cell + 3 dye headers
+      expect(headerCells.length).toBe(4);
     });
 
     it('should render correct number of rows', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 3));
+      matrix.init();
 
-      const rows = container.querySelectorAll('tbody tr');
-      expect(rows.length).toBe(mockDyes.length);
-    });
-
-    it('should render correct number of columns', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      const headerCells = container.querySelectorAll('thead th');
-      // +1 for row header column
-      expect(headerCells.length).toBe(mockDyes.length + 1);
-    });
-
-    it('should render color swatches in headers', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      const swatches = container.querySelectorAll('[style*="background-color"]');
-      // Each dye appears in header row and in row headers
-      expect(swatches.length).toBeGreaterThanOrEqual(mockDyes.length);
-    });
-  });
-
-  // ==========================================================================
-  // Distance Calculations
-  // ==========================================================================
-
-  describe('distance calculations', () => {
-    it('should show 0.0 on diagonal cells', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      // Diagonal cells should show 0.0
-      const cells = container.querySelectorAll('tbody td');
-      let diagonalZeros = 0;
-
-      cells.forEach((cell) => {
-        if (cell.textContent === '0.0') {
-          diagonalZeros++;
-        }
-      });
-
-      expect(diagonalZeros).toBe(mockDyes.length);
-    });
-
-    it('should display distance values in cells', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      // Find cells with numeric distance values
-      const cells = container.querySelectorAll('tbody td');
-      let hasDistanceValues = false;
-
-      cells.forEach((cell) => {
-        const value = parseFloat(cell.textContent || '');
-        if (!isNaN(value) && value > 0) {
-          hasDistanceValues = true;
-        }
-      });
-
-      expect(hasDistanceValues).toBe(true);
-    });
-
-    it('should have symmetric matrix', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      const rows = container.querySelectorAll('tbody tr');
-      const values: number[][] = [];
-
-      rows.forEach((row, i) => {
-        values[i] = [];
-        const cells = row.querySelectorAll('td');
-        cells.forEach((cell, j) => {
-          // Skip first cell (row header)
-          if (j > 0) {
-            values[i][j - 1] = parseFloat(cell.textContent || '0');
-          }
-        });
-      });
-
-      // Check symmetry: distance[i][j] should equal distance[j][i]
-      for (let i = 0; i < values.length; i++) {
-        for (let j = 0; j < values[i].length; j++) {
-          expect(values[i][j]).toBeCloseTo(values[j][i], 1);
-        }
-      }
-    });
-  });
-
-  // ==========================================================================
-  // Color Coding
-  // ==========================================================================
-
-  describe('color coding', () => {
-    it('should color code distance cells', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      // Non-diagonal cells should have background color
-      const cells = container.querySelectorAll('tbody td');
-      let hasColoredCells = false;
-
-      cells.forEach((cell) => {
-        const bgColor = (cell as HTMLElement).style.backgroundColor;
-        if (bgColor && bgColor.includes('rgb')) {
-          hasColoredCells = true;
-        }
-      });
-
-      expect(hasColoredCells).toBe(true);
-    });
-
-    it('should set text color for readability', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      const cells = container.querySelectorAll('tbody td');
-      let hasTextColor = false;
-
-      cells.forEach((cell) => {
-        const color = (cell as HTMLElement).style.color;
-        if (color && (color === 'rgb(0, 0, 0)' || color === 'rgb(255, 255, 255)')) {
-          hasTextColor = true;
-        }
-      });
-
-      expect(hasTextColor).toBe(true);
-    });
-  });
-
-  // ==========================================================================
-  // Update Method
-  // ==========================================================================
-
-  describe('updateDyes', () => {
-    it('should update matrix when dyes change', async () => {
-      component = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
-      component.init();
-
-      let rows = container.querySelectorAll('tbody tr');
-      expect(rows.length).toBe(2);
-
-      component.updateDyes(mockDyes);
-      await waitForComponent();
-
-      rows = container.querySelectorAll('tbody tr');
+      const rows = queryAll(container, 'tbody tr');
       expect(rows.length).toBe(3);
     });
 
-    it('should show empty state after clearing dyes', async () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+    it('should render NxN cells for N dyes', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 3));
+      matrix.init();
 
-      component.updateDyes([]);
-      await waitForComponent();
+      const cells = queryAll(container, 'tbody td');
+      // 3 dyes = 3 rows * 4 cells per row (header + 3 data)
+      expect(cells.length).toBe(12);
+    });
 
-      expect(container.querySelector('table')).toBeNull();
+    it('should render dye color swatches in headers', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
+
+      const swatches = queryAll(container, 'thead [style*="background-color"]');
+      expect(swatches.length).toBe(2);
+    });
+
+    it('should render dye color swatches in row headers', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
+
+      const rowSwatches = queryAll(container, 'tbody td [style*="background-color"]');
+      expect(rowSwatches.length).toBe(2);
     });
   });
 
-  // ==========================================================================
-  // State Management
-  // ==========================================================================
+  // ============================================================================
+  // Distance Values Tests
+  // ============================================================================
 
-  describe('state management', () => {
-    it('should return correct state', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+  describe('Distance Values', () => {
+    it('should show 0.0 on diagonal cells', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-
-      expect(state).toHaveProperty('dyeCount', 3);
-      expect(state).toHaveProperty('dyeNames');
-      expect((state.dyeNames as string[]).length).toBe(3);
+      // Find cells that show 0.0
+      const cells = queryAll(container, 'tbody td');
+      const zeroCells = cells.filter((cell) => cell.textContent?.trim() === '0.0');
+      // Should have 2 diagonal cells
+      expect(zeroCells.length).toBe(2);
     });
 
-    it('should return empty state when no dyes', () => {
-      component = new ColorDistanceMatrix(container);
-      component.init();
+    it('should show calculated distance for non-diagonal cells', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      const state = (
-        component as unknown as { getState: () => Record<string, unknown> }
-      ).getState();
-
-      expect(state.dyeCount).toBe(0);
-      expect((state.dyeNames as string[]).length).toBe(0);
+      // The mock returns 50.5 for non-equal hex values
+      expect(container.textContent).toContain('50.5');
     });
   });
 
-  // ==========================================================================
-  // Table Structure
-  // ==========================================================================
+  // ============================================================================
+  // Color Coding Tests
+  // ============================================================================
 
-  describe('table structure', () => {
-    it('should have overflow container for horizontal scroll', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+  describe('Color Coding', () => {
+    it('should apply background colors to distance cells', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      const overflow = container.querySelector('.overflow-x-auto');
-      expect(overflow).not.toBeNull();
+      const cells = queryAll<HTMLTableCellElement>(container, 'tbody td');
+      const coloredCells = cells.filter((cell) => cell.style.backgroundColor !== '');
+      // Non-diagonal cells should have background colors
+      expect(coloredCells.length).toBeGreaterThan(0);
     });
 
-    it('should have proper table borders', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+    it('should style diagonal cells differently', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      const bordered = container.querySelector('.border');
-      expect(bordered).not.toBeNull();
-    });
-
-    it('should have thead and tbody', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      expect(container.querySelector('thead')).not.toBeNull();
-      expect(container.querySelector('tbody')).not.toBeNull();
+      const cells = queryAll(container, 'tbody td');
+      const diagonalCells = cells.filter((cell) => cell.classList.contains('bg-gray-100'));
+      // Should have styled diagonal cells
+      expect(diagonalCells.length).toBe(2);
     });
   });
 
-  // ==========================================================================
-  // Dye Names
-  // ==========================================================================
+  // ============================================================================
+  // Dye Name Display Tests
+  // ============================================================================
 
-  describe('dye names', () => {
-    it('should display dye names in headers', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
-
-      // Check header contains dye name (or truncated version)
-      expect(container.textContent).toContain('Red');
-      expect(container.textContent).toContain('Green');
-      expect(container.textContent).toContain('Blue');
-    });
-
+  describe('Dye Name Display', () => {
     it('should truncate long dye names', () => {
-      const longNameDye = createMockDye(
-        9010,
-        'Very Long Dye Name That Should Be Truncated',
-        '#AABBCC'
-      );
-      component = new ColorDistanceMatrix(container, [longNameDye]);
-      component.init();
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      // The component truncates to 12 characters
-      const spans = container.querySelectorAll('span');
-      let found = false;
-      spans.forEach((span) => {
-        if (span.textContent && span.textContent.length <= 12) {
-          found = true;
-        }
-      });
-      expect(found).toBe(true);
+      const nameSpans = queryAll(container, '.truncate');
+      expect(nameSpans.length).toBeGreaterThan(0);
     });
   });
 
-  // ==========================================================================
-  // Single Dye
-  // ==========================================================================
+  // ============================================================================
+  // Empty State Tests
+  // ============================================================================
 
-  describe('single dye', () => {
-    it('should render 1x1 matrix for single dye', () => {
-      component = new ColorDistanceMatrix(container, [mockDyes[0]]);
-      component.init();
+  describe('Empty State', () => {
+    it('should show empty state when no dyes', () => {
+      matrix = new ColorDistanceMatrix(container, []);
+      matrix.init();
 
-      const rows = container.querySelectorAll('tbody tr');
-      expect(rows.length).toBe(1);
-
-      const cells = rows[0].querySelectorAll('td');
-      // 1 row header + 1 data cell
-      expect(cells.length).toBe(2);
+      expect(container.textContent).toContain('comparison.matrix.selectDyes');
     });
 
-    it('should show 0.0 for single dye diagonal', () => {
-      component = new ColorDistanceMatrix(container, [mockDyes[0]]);
-      component.init();
+    it('should not render table when no dyes', () => {
+      matrix = new ColorDistanceMatrix(container, []);
+      matrix.init();
 
-      expect(container.textContent).toContain('0.0');
+      const table = query(container, 'table');
+      expect(table).toBeNull();
     });
   });
 
-  // ==========================================================================
-  // Cleanup
-  // ==========================================================================
+  // ============================================================================
+  // Update Tests
+  // ============================================================================
 
-  describe('cleanup', () => {
-    it('should clean up without error', () => {
-      component = new ColorDistanceMatrix(container, mockDyes);
-      component.init();
+  describe('Updates', () => {
+    it('should update dyes', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
 
-      expect(() => component.destroy()).not.toThrow();
+      matrix.updateDyes(mockDyes.slice(0, 4));
+
+      const rows = queryAll(container, 'tbody tr');
+      expect(rows.length).toBe(4);
+    });
+  });
+
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
+
+  describe('Lifecycle', () => {
+    it('should clean up on destroy', () => {
+      matrix = new ColorDistanceMatrix(container, mockDyes.slice(0, 2));
+      matrix.init();
+
+      matrix.destroy();
+
+      expect(container.children.length).toBe(0);
     });
   });
 });

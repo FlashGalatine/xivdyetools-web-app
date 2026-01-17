@@ -6,7 +6,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { IndexedDBService, indexedDBService as defaultIndexedDBService, STORES } from '../indexeddb-service';
+import {
+  IndexedDBService,
+  indexedDBService as defaultIndexedDBService,
+  STORES,
+} from '../indexeddb-service';
 
 describe('IndexedDBService', () => {
   let indexedDBService: IndexedDBService;

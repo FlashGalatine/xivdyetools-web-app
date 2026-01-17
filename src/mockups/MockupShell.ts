@@ -22,7 +22,14 @@ import {
 import { MobileDrawer } from './MobileDrawer';
 import { getLocalizedMockupTools } from './MockupNav';
 
-export type MockupToolId = 'harmony' | 'matcher' | 'accessibility' | 'comparison' | 'mixer' | 'presets' | 'budget';
+export type MockupToolId =
+  | 'harmony'
+  | 'matcher'
+  | 'accessibility'
+  | 'comparison'
+  | 'mixer'
+  | 'presets'
+  | 'budget';
 
 // Map tool IDs to their v2.x SVG icons
 const TOOL_ICONS: Record<MockupToolId, string> = {
@@ -124,7 +131,8 @@ export class MockupShell extends BaseComponent {
       attributes: { style: 'border-color: var(--theme-border);' },
     });
     this.collapseBtn = this.createElement('button', {
-      className: 'w-full flex items-center justify-center gap-2 p-2 rounded-lg transition-colors hover:brightness-90',
+      className:
+        'w-full flex items-center justify-center gap-2 p-2 rounded-lg transition-colors hover:brightness-90',
       attributes: {
         style: 'background: var(--theme-background-secondary); color: var(--theme-text);',
         'aria-label': this.isCollapsed ? 'Expand sidebar' : 'Collapse sidebar',
@@ -172,7 +180,7 @@ export class MockupShell extends BaseComponent {
       className: 'flex items-center gap-2 flex-1',
     });
     const tools = getLocalizedMockupTools();
-    const activeTool = tools.find(t => t.id === this.activeToolId);
+    const activeTool = tools.find((t) => t.id === this.activeToolId);
     mobileToolDisplay.innerHTML = `
       <span class="w-5 h-5" style="color: var(--theme-primary);">${TOOL_ICONS[this.activeToolId]}</span>
       <span class="font-medium" style="color: var(--theme-text);">${activeTool?.name ?? this.activeToolId}</span>
@@ -233,14 +241,13 @@ export class MockupShell extends BaseComponent {
       className: 'flex items-center justify-around py-2 px-1',
     });
 
-    tools.forEach(tool => {
+    tools.forEach((tool) => {
       const isActive = this.activeToolId === tool.id;
       const btn = this.createElement('button', {
-        className: 'flex flex-col items-center justify-center px-2 py-1 rounded-lg transition-colors min-w-[48px]',
+        className:
+          'flex flex-col items-center justify-center px-2 py-1 rounded-lg transition-colors min-w-[48px]',
         attributes: {
-          style: isActive
-            ? 'color: var(--theme-primary);'
-            : 'color: var(--theme-text-muted);',
+          style: isActive ? 'color: var(--theme-primary);' : 'color: var(--theme-text-muted);',
           'aria-label': tool.name,
           ...(isActive && { 'aria-current': 'page' }),
           type: 'button',
@@ -274,10 +281,11 @@ export class MockupShell extends BaseComponent {
 
     if (this.isCollapsed) {
       // Icon-only mode
-      this.toolNavContainer.className = 'flex-shrink-0 border-b flex flex-col items-center py-2 gap-1';
+      this.toolNavContainer.className =
+        'flex-shrink-0 border-b flex flex-col items-center py-2 gap-1';
       this.toolNavContainer.innerHTML = '';
 
-      tools.forEach(tool => {
+      tools.forEach((tool) => {
         const isActive = this.activeToolId === tool.id;
         const btn = this.createElement('button', {
           className: 'w-10 h-10 flex items-center justify-center rounded-lg transition-colors',
@@ -301,10 +309,11 @@ export class MockupShell extends BaseComponent {
       this.toolNavContainer.className = 'flex-shrink-0 border-b p-2 space-y-1';
       this.toolNavContainer.innerHTML = '';
 
-      tools.forEach(tool => {
+      tools.forEach((tool) => {
         const isActive = this.activeToolId === tool.id;
         const btn = this.createElement('button', {
-          className: 'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm',
+          className:
+            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm',
           attributes: {
             style: isActive
               ? 'background: var(--theme-primary); color: var(--theme-text-header);'
@@ -369,13 +378,17 @@ export class MockupShell extends BaseComponent {
     navSection.setAttribute('style', 'border-color: var(--theme-border);');
 
     const tools = getLocalizedMockupTools();
-    tools.forEach(tool => {
+    tools.forEach((tool) => {
       const isActive = this.activeToolId === tool.id;
       const btn = document.createElement('button');
-      btn.className = 'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm mb-1';
-      btn.setAttribute('style', isActive
-        ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-        : 'background: transparent; color: var(--theme-text);');
+      btn.className =
+        'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm mb-1';
+      btn.setAttribute(
+        'style',
+        isActive
+          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+          : 'background: transparent; color: var(--theme-text);'
+      );
       btn.innerHTML = `
         <span class="w-5 h-5 flex-shrink-0">${TOOL_ICONS[tool.id as MockupToolId]}</span>
         <span class="truncate">${tool.name}</span>
@@ -439,7 +452,7 @@ export class MockupShell extends BaseComponent {
     const mobileToolDisplay = this.rightPanel?.querySelector('.md\\:hidden .flex-1');
     if (mobileToolDisplay) {
       const tools = getLocalizedMockupTools();
-      const activeTool = tools.find(t => t.id === toolId);
+      const activeTool = tools.find((t) => t.id === toolId);
       mobileToolDisplay.innerHTML = `
         <span class="w-5 h-5" style="color: var(--theme-primary);">${TOOL_ICONS[toolId]}</span>
         <span class="font-medium" style="color: var(--theme-text);">${activeTool?.name ?? toolId}</span>

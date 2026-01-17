@@ -76,7 +76,7 @@ export interface VoteCheckResponse {
 /**
  * Default API URL - can be overridden via environment or config
  */
-const DEFAULT_API_URL = 'https://api.xivdyetools.projectgalatine.com';
+const DEFAULT_API_URL = 'https://api.xivdyetools.app';
 
 /**
  * Cache TTL in milliseconds (5 minutes)
@@ -149,7 +149,8 @@ export class CommunityPresetService {
   private constructor() {
     // Try to get API URL from environment or use default
     this.apiUrl =
-      (typeof window !== 'undefined' && (window as unknown as { PRESET_API_URL?: string }).PRESET_API_URL) ||
+      (typeof window !== 'undefined' &&
+        (window as unknown as { PRESET_API_URL?: string }).PRESET_API_URL) ||
       DEFAULT_API_URL;
     this.cache = new SimpleCache(CACHE_TTL);
   }
@@ -182,7 +183,10 @@ export class CommunityPresetService {
       });
 
       const timeoutPromise = new Promise<Response>((_, reject) =>
-        setTimeout(() => reject(new Error('Health check timeout (fallback)')), REQUEST_TIMEOUT + 1000)
+        setTimeout(
+          () => reject(new Error('Health check timeout (fallback)')),
+          REQUEST_TIMEOUT + 1000
+        )
       );
 
       const response = await Promise.race([healthCheckPromise, timeoutPromise]);
@@ -477,12 +481,15 @@ export class CommunityPresetService {
     }
 
     try {
-      const response = await this.fetchWithTimeout(`${this.apiUrl}/api/v1/votes/${presetId}/check`, {
-        method: 'GET',
-        headers: {
-          ...authService.getAuthHeaders(),
-        },
-      });
+      const response = await this.fetchWithTimeout(
+        `${this.apiUrl}/api/v1/votes/${presetId}/check`,
+        {
+          method: 'GET',
+          headers: {
+            ...authService.getAuthHeaders(),
+          },
+        }
+      );
 
       if (!response.ok) {
         return { has_voted: false, vote_count: 0 };

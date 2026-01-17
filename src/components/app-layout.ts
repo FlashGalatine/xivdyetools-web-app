@@ -12,10 +12,16 @@ import { ThemeSwitcher } from './theme-switcher';
 import { LanguageSelector } from './language-selector';
 import { ToastContainer } from './toast-container';
 import { ModalContainer } from './modal-container';
-import { ThemeService, LanguageService, AnnouncerService, KeyboardService, ColorService } from '@services/index';
+import {
+  ThemeService,
+  LanguageService,
+  AnnouncerService,
+  KeyboardService,
+  ColorService,
+} from '@services/index';
 import { APP_VERSION } from '@shared/constants';
 import { clearContainer } from '@shared/utils';
-import { ICON_INFO } from '@shared/ui-icons';
+import { ICON_ABOUT } from '@shared/ui-icons';
 import { showAboutModal } from './about-modal';
 import { LOGO_SPARKLES } from '@shared/app-logo';
 
@@ -40,7 +46,8 @@ export class AppLayout extends BaseComponent {
     const app = this.createElement('div', {
       // Mobile: min-h-screen allows normal page scrolling
       // Desktop (md+): h-screen + overflow-hidden forces internal scrolling for sticky to work
-      className: 'app-shell flex flex-col min-h-screen md:h-screen md:overflow-hidden transition-colors',
+      className:
+        'app-shell flex flex-col min-h-screen md:h-screen md:overflow-hidden transition-colors',
     });
 
     // Header - sticky positioning for top navigation
@@ -348,8 +355,8 @@ export class AppLayout extends BaseComponent {
       },
     });
 
-    // Add info icon
-    button.innerHTML = `<span class="inline-block w-5 h-5" aria-hidden="true">${ICON_INFO}</span>`;
+    // Add about icon (exclamation point)
+    button.innerHTML = `<span class="inline-block w-5 h-5" aria-hidden="true">${ICON_ABOUT}</span>`;
 
     // Add hover effect using theme colors
     button.addEventListener('mouseenter', () => {

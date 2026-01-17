@@ -459,13 +459,15 @@ export class DyeSelector extends BaseComponent {
   private createFavoritesPanel(): HTMLElement {
     const panel = this.createElement('div', {
       id: 'favorites-panel',
-      className: 'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden',
+      className:
+        'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden',
     });
 
     // Header (clickable to toggle)
     const header = this.createElement('button', {
       id: 'favorites-header',
-      className: 'w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors',
+      className:
+        'w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors',
       attributes: { type: 'button' },
     });
 
@@ -497,7 +499,8 @@ export class DyeSelector extends BaseComponent {
     // Manage Collections button
     const manageBtn = this.createElement('button', {
       id: 'manage-collections-btn',
-      className: 'text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors',
+      className:
+        'text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors',
       textContent: LanguageService.t('collections.manageCollections') || 'Manage Collections',
       attributes: { type: 'button' },
     });
@@ -531,7 +534,9 @@ export class DyeSelector extends BaseComponent {
         className: 'text-center py-4 text-gray-500 dark:text-gray-400',
       });
       const emptyText = this.createElement('p', {
-        textContent: LanguageService.t('collections.favoritesEmptyHint') || 'Click the ★ on any dye to add it to your favorites',
+        textContent:
+          LanguageService.t('collections.favoritesEmptyHint') ||
+          'Click the ★ on any dye to add it to your favorites',
         className: 'text-sm',
       });
       emptyState.appendChild(emptyText);
@@ -621,7 +626,9 @@ export class DyeSelector extends BaseComponent {
           className: 'text-center py-4 text-gray-500 dark:text-gray-400',
         });
         const emptyText = this.createElement('p', {
-          textContent: LanguageService.t('collections.favoritesEmptyHint') || 'Click the ★ on any dye to add it to your favorites',
+          textContent:
+            LanguageService.t('collections.favoritesEmptyHint') ||
+            'Click the ★ on any dye to add it to your favorites',
           className: 'text-sm',
         });
         emptyState.appendChild(emptyText);

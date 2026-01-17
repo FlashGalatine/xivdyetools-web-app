@@ -14,11 +14,16 @@
     "tools": "Outils",
     "theme": "Thème",
     "language": "Langue",
-    "about": "À propos de Outils de Teinture XIV"
+    "about": "À propos de Outils de Teinture XIV",
+    "languageSelector": "Sélectionner la langue",
+    "languageOptions": "Langues disponibles",
+    "themeSelector": "Sélectionner le thème",
+    "themeOptions": "Thèmes disponibles"
   },
   "about": {
     "title": "À propos de Outils de Teinture XIV",
-    "connect": "Connecter"
+    "connect": "Connecter",
+    "builtWith": "Construit avec TypeScript, Vite et Tailwind CSS"
   },
   "common": {
     "close": "Fermer"
@@ -55,17 +60,26 @@
       "description": "Comparer jusqu'à 4 teintures",
       "subtitle": "Comparez les teintures côte à côte pour voir les différences de couleur et trouver la correspondance parfaite."
     },
+    "gradient": {
+      "title": "Constructeur de Dégradé",
+      "shortName": "Dégradé",
+      "description": "Créer des transitions de couleur",
+      "subtitle": "Construisez des transitions de couleur douces entre les teintures et trouvez des options intermédiaires."
+    },
     "mixer": {
       "title": "Mélangeur de Teintures",
       "shortName": "Mélangeur",
-      "description": "Trouver des teintures intermédiaires",
-      "subtitle": "Créez des dégradés de couleurs fluides entre deux teintures et découvrez des options intermédiaires."
+      "description": "Mélanger les couleurs",
+      "subtitle": "Mélangez deux teintures pour trouver les teintures FFXIV correspondant à la couleur mélangée."
     },
     "presets": {
       "title": "Palettes Prédéfinies",
       "shortName": "Palettes",
       "description": "Parcourir les palettes thématiques",
       "subtitle": "Explorez des palettes de teintures sélectionnées pour les jobs, saisons, événements et plus encore.",
+      "communityTitle": "Palettes Communautaires",
+      "communityDescription": "Découvrez et partagez des palettes de couleurs créées par la communauté FFXIV",
+      "searchPlaceholder": "Rechercher des palettes...",
       "allCategories": "Tous",
       "noPresets": "Aucune palette trouvée",
       "dyes": "teintures",
@@ -83,7 +97,7 @@
     },
     "character": {
       "title": "Correspondance Personnage",
-      "shortName": "Personnage",
+      "shortName": "Palette",
       "description": "Associer les teintures aux couleurs du personnage",
       "subtitle": "Trouvez les teintures FFXIV qui correspondent aux cheveux, yeux, peau et autres couleurs de personnalisation de votre personnage.",
       "selectSubrace": "Sélectionner l'ethnie",
@@ -137,7 +151,137 @@
     "noDyeSelected": "Aucune teinture sélectionnée",
     "download": "Télécharger",
     "slot": "Emplacement",
-    "replace": "Remplacer"
+    "replace": "Remplacer",
+    "technical": "Technique",
+    "acquisition": "Acquisition",
+    "source": "Source",
+    "recommended": "Recommandé",
+    "original": "Original",
+    "match": "Correspondance",
+    "cost": "Coût",
+    "market": "Marché",
+    "closeModal": "Fermer la fenêtre",
+    "full": "Complet"
+  },
+  "config": {
+    "harmonyType": "Type d'harmonie",
+    "complementary": "Complémentaire",
+    "analogous": "Analogue",
+    "triadic": "Triadique",
+    "splitComplementary": "Complémentaire divisé",
+    "tetradic": "Tétradique",
+    "square": "Carré",
+    "monochromatic": "Monochromatique",
+    "compound": "Composé",
+    "shades": "Nuances",
+    "matchingAlgorithm": "Algorithme de correspondance",
+    "perceptualMatching": "Correspondance perceptuelle",
+    "perceptualMatchingDesc": "Utilise DeltaE pour une correspondance de couleur perceptuellement précise",
+    "hueMatchingDesc": "Utilise les angles de teinte pour une harmonie artistique",
+    "colorFormats": "Formats de couleur",
+    "hexCodes": "Codes Hex",
+    "rgbValues": "Valeurs RGB",
+    "hsvValues": "Valeurs HSV",
+    "labValues": "Valeurs LAB",
+    "resultDetails": "Détails des résultats",
+    "showPrices": "Afficher les prix",
+    "showDeltaE": "Afficher Delta-E",
+    "showAcquisition": "Afficher l'acquisition",
+    "marketBoard": "Tableau des marchés",
+    "enableMarketBoard": "Activer le tableau des marchés",
+    "pricesFetchedFrom": "Prix récupérés depuis Universalis pour {server}",
+    "loadingServers": "Chargement des serveurs...",
+    "allWorlds": "Tous les mondes",
+    "extractionSettings": "Paramètres d'extraction",
+    "vibrancyBoost": "Boost de vivacité",
+    "maxColors": "Couleurs maximum",
+    "dragThreshold": "Sensibilité de sélection",
+    "dragThresholdTooltip": "Des valeurs plus basses facilitent le glissement, des valeurs plus hautes facilitent le clic",
+    "visionTypes": "Types de vision",
+    "deuteranopia": "Deutéranopie",
+    "protanopia": "Protanopie",
+    "tritanopia": "Tritanopie",
+    "achromatopsia": "Achromatopsie",
+    "simulationDisplay": "Affichage de simulation",
+    "showLabels": "Afficher les étiquettes",
+    "showHexValues": "Afficher les valeurs Hex",
+    "highContrastMode": "Mode contraste élevé",
+    "gradientSteps": "Étapes de dégradé",
+    "count": "Nombre",
+    "colorSpace": "Espace colorimétrique",
+    "hsvHueBased": "HSV (basé sur la teinte)",
+    "rgbDirect": "RGB (direct)",
+    "mixingMode": "Mode de mélange",
+    "mixingRyb": "RYB (Mélange de peinture)",
+    "mixingLab": "LAB (Perceptuel)",
+    "mixingRgb": "RGB (Lumière)",
+    "mixingRybDesc": "Mélange soustractif de peinture. Bleu + Jaune = Vert.",
+    "mixingLabDesc": "Mélange perceptuellement uniforme dans l'espace colorimétrique LAB.",
+    "mixingRgbDesc": "Mélange additif de lumière. Bleu + Jaune = Gris.",
+    "resultSettings": "Paramètres de résultat",
+    "maxResults": "Résultats maximum",
+    "category": "Catégorie",
+    "allCategories": "Toutes les catégories",
+    "jobs": "Métiers",
+    "grandCompanies": "Grandes compagnies",
+    "seasons": "Saisons",
+    "events": "Événements",
+    "aesthetics": "Esthétiques",
+    "community": "Communauté",
+    "sortBy": "Trier par",
+    "mostPopular": "Plus populaire",
+    "mostRecent": "Plus récent",
+    "alphabetical": "Alphabétique",
+    "filters": "Filtres",
+    "showMyPresetsOnly": "Afficher uniquement mes préréglages",
+    "showFavorites": "Afficher les favoris",
+    "budgetLimit": "Limite de budget",
+    "maxPrice": "Prix maximum",
+    "colorDistance": "Distance de couleur",
+    "maxDeltaE": "Delta-E maximum",
+    "colorSheet": "Feuille de couleurs",
+    "eyeColors": "Couleurs des yeux",
+    "hairColors": "Couleurs de cheveux",
+    "skinColors": "Couleurs de peau",
+    "highlightColors": "Couleurs de surbrillance",
+    "lipColorsDark": "Couleurs des lèvres (foncé)",
+    "lipColorsLight": "Couleurs des lèvres (clair)",
+    "tattooColors": "Couleurs de tatouage/limbal",
+    "facePaintDark": "Peinture faciale (foncé)",
+    "facePaintLight": "Peinture faciale (clair)",
+    "character": "Personnage",
+    "searchSettings": "Paramètres de recherche",
+    "displayOptions": "Options d'affichage",
+    "account": "Compte",
+    "via": "via {provider}",
+    "loginToSubmit": "Connectez-vous pour soumettre",
+    "loginWithDiscord": "Se connecter avec Discord",
+    "loginWithXIVAuth": "Se connecter avec XIVAuth",
+    "submitPreset": "Soumettre un préréglage",
+    "logout": "Déconnexion"
+  },
+  "colorPalette": {
+    "title": "Palette de couleurs",
+    "searchPlaceholder": "Rechercher des teintures...",
+    "all": "Tout",
+    "metallic": "Métallique",
+    "pastel": "Pastel",
+    "dark": "Sombre",
+    "vibrant": "Vif",
+    "favorites": "Favoris",
+    "neutral": "Neutre",
+    "reds": "Rouges",
+    "browns": "Marrons",
+    "yellows": "Jaunes",
+    "oranges": "Oranges",
+    "greens": "Verts",
+    "blues": "Bleus",
+    "purples": "Violets",
+    "pinks": "Roses",
+    "whites": "Blancs",
+    "blacks": "Noirs",
+    "grays": "Gris",
+    "noDyesFound": "Aucune teinture trouvée"
   },
   "harmony": {
     "suggestionMode": "Mode de Suggestion",
@@ -153,6 +297,7 @@
     "selectDye": "Sélectionner une teinture",
     "selectDyePrompt": "Sélectionnez une teinture de base pour générer des harmonies de couleurs",
     "noDyeSelected": "Aucune teinture sélectionnée",
+    "noColorSelected": "Aucune couleur sélectionnée",
     "selectBaseColor": "Sélectionnez une couleur de base pour générer des harmonies",
     "generatingHarmonies": "Génération des harmonies...",
     "noMatchingDyes": "Aucune teinture correspondante trouvée",
@@ -269,7 +414,10 @@
     "imageLoaded": "Image chargée avec succès",
     "imageTooLarge": "Image trop grande pour être sauvegardée",
     "noColorSelected": "Aucune couleur sélectionnée",
-    "selectedColor": "Couleur sélectionnée"
+    "selectedColor": "Couleur sélectionnée",
+    "dropImageHere": "Déposez une image ici ou cliquez pour télécharger",
+    "extractedPalette": "Palette extraite",
+    "exportCss": "Exporter CSS"
   },
   "accessibility": {
     "inspectDyes": "Inspecter les Teintures",
@@ -280,6 +428,7 @@
     "showLabels": "Afficher les Étiquettes",
     "highContrastMode": "Mode Contraste Élevé",
     "selectDyes": "Sélectionner des Teintures",
+    "selectedDyes": "Teintures sélectionnées",
     "selectUpTo": "Sélectionnez jusqu'à {count} teintures pour vérifier l'accessibilité",
     "selectDyesToSeeAnalysis": "Sélectionnez des teintures pour voir l'analyse d'accessibilité",
     "visionSimulation": "Simulation de Vision",
@@ -307,9 +456,11 @@
     "achromatopsiaWarning": "Peut être difficile à voir pour le daltonisme total",
     "dyesSelected": "teintures sélectionnées",
     "visionTypesEnabled": "types de vision activés",
-    "selectTwoDyes": "Sélectionnez au moins 2 teintures pour voir les comparaisons"
+    "selectTwoDyes": "Sélectionnez au moins 2 teintures pour voir les comparaisons",
+    "addDye": "Ajouter une Teinture"
   },
   "comparison": {
+    "selectedDyes": "Teintures sélectionnées",
     "selectDyes": "Sélectionner des Teintures à Comparer",
     "selectUpTo": "Sélectionnez jusqu'à {count} teintures",
     "selectToSeeAnalysis": "Sélectionnez 2 teintures ou plus pour voir l'analyse",
@@ -415,10 +566,32 @@
     "interpolationPreview": "Aperçu de l'interpolation",
     "intermediateDyeMatches": "Correspondances de teintures intermédiaires",
     "selectDye": "Sélectionner une teinture",
+    "selectColor": "Sélectionner une Couleur",
     "selectStartEndDyes": "Sélectionnez les teintures de départ et de fin pour créer une transition de couleur",
     "targetColor": "Couleur Cible",
     "bestMatch": "Meilleure Correspondance",
-    "exportPalette": "Exporter la Palette"
+    "exportPalette": "Exporter la Palette",
+    "selectTwoDyesToMix": "Sélectionnez deux teintures à mélanger pour trouver des couleurs correspondantes",
+    "dye1": "Teinture 1",
+    "dye2": "Teinture 2",
+    "maxResults": "Résultats max",
+    "matchingDyes": "Teintures correspondantes",
+    "blend": "Mélanger",
+    "mixSettings": "Paramètres de mélange",
+    "slotsFullReplacing": "Les deux emplacements sont pleins. Remplacement de la première teinture.",
+    "replacedSlot1": "Emplacement 1 remplacé",
+    "replacedSlot2": "Emplacement 2 remplacé",
+    "replaceSlot": "Remplacer l'emplacement"
+  },
+  "gradient": {
+    "selectColor": "Sélectionner une Couleur",
+    "setStartAndEnd": "Définissez une couleur de début et de fin pour générer les étapes du dégradé",
+    "clickPlusButtons": "Sélectionnez des teintures depuis la Palette de Couleurs pour définir les couleurs du dégradé",
+    "clickToSelectStart": "Cliquez pour sélectionner la couleur de début",
+    "clickToSelectEnd": "Cliquez pour sélectionner la couleur de fin",
+    "gradientResults": "Résultats du Dégradé",
+    "noMatchesFound": "Aucune teinture correspondante trouvée",
+    "sameDyeWarning": "Les teintures de début et de fin sont identiques. Sélectionnez des teintures différentes pour un dégradé."
   },
   "dyeSelector": {
     "searchPlaceholder": "Rechercher des teintures par nom...",
@@ -496,6 +669,7 @@
     "loading": "Chargement des alternatives...",
     "marketPrice": "Prix du tableau des ventes",
     "alternativesWithinBudget": "alternatives dans le budget",
+    "alternativeWithinBudget": "alternative dans le budget",
     "sortedBy": "Trié par",
     "sortMatch": "Meilleure correspondance",
     "sortMatchDesc": "Couleur la plus proche d'abord",
@@ -517,7 +691,9 @@
     "distanceDesc": "Des valeurs plus élevées affichent plus d'alternatives, des valeurs plus basses affichent des couleurs plus proches",
     "fetchingPrices": "Récupération des prix",
     "maxResults": "Résultats max",
-    "showingXOfY": "Affichage de {showing} sur {total}"
+    "showingXOfY": "Affichage de {showing} sur {total}",
+    "selectedDye": "Teinture sélectionnée",
+    "currentlySelected": "Actuellement sélectionnée"
   },
   "export": {
     "title": "Exporter la Palette",
@@ -545,7 +721,12 @@
     "imageTooLarge": "Le fichier image est trop volumineux. Taille maximale : 10 Mo.",
     "unsupportedFormat": "Format de fichier non supporté.",
     "clipboardFailed": "Échec de la copie dans le presse-papiers.",
-    "storageFailed": "Échec de l'enregistrement des paramètres. Le stockage est peut-être plein."
+    "storageFailed": "Échec de l'enregistrement des paramètres. Le stockage est peut-être plein.",
+    "somethingWentWrong": "Une erreur s'est produite",
+    "unexpectedError": "Une erreur inattendue s'est produite",
+    "tryAgain": "Réessayer",
+    "resetComponent": "Réinitialiser le composant",
+    "retryAttempts": "Tentatives: {count}/{max}"
   },
   "success": {
     "copiedToClipboard": "Copié dans le presse-papiers !",
@@ -556,6 +737,7 @@
   "themes": {
     "standardLight": "Standard (Clair)",
     "standardDark": "Standard (Sombre)",
+    "premiumDark": "Premium sombre",
     "hydaelynLight": "Hydaelyn",
     "ogClassicDark": "OG Classique",
     "parchmentLight": "Parchemin",
@@ -768,7 +950,8 @@
     "tab": "Onglet",
     "edit": "Modifier",
     "delete": "Supprimer",
-    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce préréglage?",
+    "deleteTitle": "Supprimer le preset",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce preset ? Cette action est irréversible.",
     "categories": {
       "all": "Tous",
       "jobs": "Classes",
@@ -782,12 +965,19 @@
       "popular": "Plus populaires",
       "recent": "Plus récents",
       "name": "Alphabétique"
-    }
+    },
+    "editPreset": "Modifier le préréglage",
+    "saveChanges": "Enregistrer les modifications",
+    "loginToVote": "Connectez-vous avec Discord ou XIVAuth pour voter pour ce préréglage"
   },
   "auth": {
     "logout": "Déconnexion",
     "loggedInAs": "Connecté en tant que",
-    "notLoggedIn": "Non connecté"
+    "notLoggedIn": "Non connecté",
+    "loginWithDiscord": "Connexion avec Discord",
+    "loginWithXIVAuth": "Connexion avec XIVAuth",
+    "userMenu": "Menu utilisateur",
+    "verified": "Vérifié"
   },
   "collections": {
     "favorites": "Favoris",
@@ -827,5 +1017,69 @@
     "invalidFormat": "Format de fichier invalide",
     "confirmDelete": "Supprimer cette collection ?",
     "manageCollections": "Gérer les collections"
+  },
+  "emptyStates": {
+    "noSearchResults": {
+      "title": "Aucune teinture ne correspond à \"{query}\"",
+      "description": "Vérifiez l'orthographe ou recherchez une catégorie comme \"violet\" ou \"rouge\".",
+      "action": "Effacer la recherche"
+    },
+    "filteredOut": {
+      "title": "Toutes les suggestions ont été filtrées",
+      "description": "Vos filtres actuels masquent toutes les teintures correspondantes. Essayez d'ajuster vos paramètres de filtre.",
+      "action": "Réinitialiser les filtres"
+    },
+    "noPrice": {
+      "description": "Cette teinture peut ne pas être échangeable ou Universalis n'a pas de données récentes pour ce serveur.",
+      "action": "Essayer un autre serveur"
+    },
+    "noHarmony": {
+      "title": "Aucune suggestion d'harmonie",
+      "description": "Sélectionnez une teinture de base pour générer des suggestions d'harmonie.",
+      "action": "Sélectionner une teinture"
+    },
+    "noImage": {
+      "title": "Aucune image chargée",
+      "description": "Téléchargez une image pour commencer à faire correspondre les couleurs.",
+      "action": "Télécharger une image"
+    },
+    "loading": {
+      "title": "Chargement...",
+      "description": "Veuillez patienter pendant que nous récupérons les données."
+    }
+  },
+  "aria": {
+    "headerNavigation": "Navigation d'en-tête",
+    "closeSidebar": "Fermer la barre latérale",
+    "toggleConfigSidebar": "Basculer la barre de configuration",
+    "showColorPalette": "Afficher la palette de couleurs",
+    "selectRandomDye": "Sélectionner une teinture aléatoire",
+    "clearAllDyes": "Effacer toutes les teintures",
+    "closePalette": "Fermer la palette",
+    "addToFavorites": "Ajouter aux favoris",
+    "removeFromFavorites": "Retirer des favoris",
+    "moreActions": "Plus d'actions",
+    "slider": "Curseur",
+    "toggle": "Basculer"
+  },
+  "resultCard": {
+    "inspectDyeIn": "Inspecter la teinture dans...",
+    "transformDyeIn": "Transformer la teinture dans...",
+    "openInBrowser": "Ouvrir dans le navigateur...",
+    "sentToBudget": "Envoyé aux Suggestions de Budget",
+    "dyeAlreadyIn": "Teinture déjà ajoutée",
+    "addedTo": "Ajouté avec succès",
+    "slotsFull": "Tous les emplacements sont pleins. Sélectionnez-en un à remplacer :",
+    "selectSlotToReplace": "Sélectionner l'emplacement à remplacer",
+    "addingDye": "Ajout",
+    "replacedInTool": "Remplacé avec succès",
+    "tools": {
+      "harmony": "Explorateur d'Harmonie",
+      "budget": "Suggestions de Budget",
+      "accessibility": "Vérificateur d'Accessibilité",
+      "comparison": "Comparaison de Teintures",
+      "gradient": "Créateur de Dégradé",
+      "mixer": "Mélangeur de Teintures"
+    }
   }
 }

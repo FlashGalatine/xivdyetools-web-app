@@ -5,7 +5,7 @@
 import { http, HttpResponse } from 'msw';
 
 // API base URL - must match the URL in community-preset-service.ts
-const API_URL = 'https://api.xivdyetools.projectgalatine.com';
+const API_URL = 'https://api.xivdyetools.app';
 
 // ============================================
 // Mock Data

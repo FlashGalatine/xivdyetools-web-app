@@ -457,7 +457,9 @@ describe('AuthService', () => {
       await authService.initialize();
 
       const user = authService.getUser();
-      expect(user?.avatar_url).toBe('https://cdn.discordapp.com/avatars/123456789/a_animated123.gif');
+      expect(user?.avatar_url).toBe(
+        'https://cdn.discordapp.com/avatars/123456789/a_animated123.gif'
+      );
     });
 
     it('should return null avatar_url when no avatar', async () => {

@@ -7,6 +7,217 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.0] - 2026-01-17
+
+### 🎨 Major UI Overhaul: Lit.js Migration & Glassmorphism Redesign
+
+**Status**: ✅ RELEASE
+**Focus**: Complete UI redesign with Lit.js web components, glassmorphism aesthetic, new Dye Mixer tool, and 92 commits of improvements across all 9 tools.
+
+#### Breaking Changes ⚠️
+
+**Tool Renames (4 tools)**
+
+| Previous Name (v3) | New Name (v4) |
+|-------------------|---------------|
+| Color Matcher | **Palette Extractor** |
+| Dye Mixer | **Gradient Builder** |
+| Character Color Matcher | **Swatch Matcher** |
+| Preset Browser | **Community Presets** |
+
+**License Change**
+- Changed from ISC to MIT license for broader compatibility
+
+**Layout Architecture**
+- Removed v3 double-header layout system
+- New single-header architecture with unified navigation
+
+#### New Features ✅
+
+**New Tool: Dye Mixer**
+- Brand new crafting-style UI with two input slots + result slot
+- RGB color blending of two dyes
+- Smart matching to find closest FFXIV dyes
+- Adjustable result count (3-8 dyes)
+- Full market board pricing integration
+- Slot picker functionality for dye replacement
+
+**Framework Migration: Lit.js Web Components**
+- Migrated from vanilla TypeScript to Lit.js (^3.1.0)
+- Better component encapsulation with Shadow DOM support
+- Built-in reactivity patterns
+- Native web component standards
+- Improved testability through component testing utilities
+
+**Glassmorphism UI Design System**
+- New visual design with translucent panel effects
+- Enhanced visual hierarchy with improved spacing
+- 12 theme variants with WCAG 2.1 AA compliance
+- Improved responsive design (375px-1920px+)
+
+**V4 Layout Components**
+- `V4LayoutShell` - Main container managing all layout regions
+- `V4AppHeader` - Brand, theme selector, user menu
+- `ToolBanner` - Horizontal navigation with tool icons
+- `ConfigSidebar` - Left panel for tool settings and filters
+- `DyePaletteDrawer` - Right panel for dye selection with Random Dye and Clear All buttons
+
+**New UI Components**
+- `GlassPanel` - Reusable glassmorphism container
+- `RangeSliderV4` - Modern range slider component
+- `ToggleSwitchV4` - Updated toggle switch
+- `ResultCard` - Unified result display component (280px width)
+- `V4ColorWheel` - Interactive color wheel visualization
+
+**ConfigController Service**
+- Centralized tool configuration management
+- `setConfig()` methods added to all tools for external configuration
+- Supports: HarmonyTool, BudgetTool, GradientTool, ExtractorTool, SwatchTool, AccessibilityTool, PresetTool, ComparisonTool
+
+**SEO Enhancements**
+- Structured data for rich snippets in index.html
+- sitemap.xml creation for search engine indexing
+- robots.txt configuration
+- Updated browser configuration (browserconfig.xml)
+- Windows tile icons (mstile-150x150.png)
+
+**Visual & Icon Updates**
+- New app logo: "The Crossed Artisan" with rainbow gradient
+- Updated tool icons with new designs
+- About icon added
+- Context menu icon (ICON_CONTEXT_MENU)
+- Close icon for better UX
+- Globe icon for LanguageSelector
+- Replaced emoji with SVG icons for cross-platform consistency
+
+#### Tool-Specific Enhancements ✅
+
+**Palette Extractor (formerly Color Matcher)**
+- Export CSS button for sampled colors
+- Clear image functionality
+- Display options and zoom controls
+- Auto-fit image loading
+- Vibrancy boost configuration
+
+**Gradient Builder (formerly Dye Mixer)**
+- Improved card layout and header styling
+- Enhanced empty state UX
+- Better gradient visualization
+
+**Swatch Matcher (formerly Character Color Matcher)**
+- V4 layout refactoring
+- Fixed container sizing
+- Improved UI presentation
+- Max results configuration
+
+**Budget Suggestions**
+- Color Formats controls (Hex, RGB, HSV, etc.)
+- Global display options integration
+- Result Details options wired to cards
+
+**Color Harmony Explorer**
+- LAB values display
+- Perceptual matching
+- Resolved UI bugs
+- Enhanced vision simulation descriptions
+
+**Community Presets (formerly Preset Browser)**
+- Edit/delete functionality for v4 preset detail view
+- Proper delete confirmation modal
+- Toast notifications for delete actions
+- Fixed ownership checking logic
+- Show favorites configuration
+
+**Accessibility Checker**
+- Enhanced testing coverage
+- Improved contrast analysis display
+
+**Dye Comparison**
+- Display options integration
+- Consolidated comparison configuration
+
+#### Changed ✅
+
+**Dependencies**
+- `@xivdyetools/core`: 1.7.0 → 1.10.1
+- `@xivdyetools/types`: 1.3.0 → 1.5.0
+- Added: `lit@^3.1.0`
+- Removed: `selenium` (replaced by Playwright)
+
+**Code Quality & Refactoring**
+- Removed v3 layout components
+- Cleaned up v3 CSS variables
+- Extracted shared event listener utility (market-board)
+- Extracted shared display options component
+- Test assertions formatting for consistency
+
+#### Fixed 🐛
+
+**Authentication & User Experience**
+- Fixed XIVAuth button calling wrong login method
+- Fixed double-click logout issue in ConfigSidebar
+- Fixed return path after login
+- Fixed showMyPresetsOnly toggle behavior
+
+**Display & UX**
+- Improved toast notifications styling
+- Better color value formatting in result cards
+- Consistent section header positioning (ultrawide displays)
+- Singular/plural handling for alternatives count
+
+#### Testing ✅
+
+**Comprehensive Test Suite**
+- **92%+ code coverage** achieved
+- Unit tests for all components
+- E2E tests with Playwright:
+  - Accessibility checker tests
+  - Budget tool tests
+  - Dye comparison coverage
+  - Extractor tool tests
+  - Gradient builder tests
+- Coverage reporting via Playwright
+- Mobile testing (mobile-chrome project)
+- New test utilities in `src/__tests__/component-utils.ts`
+
+**Test Infrastructure**
+- Migrated from old test pattern to new component utils
+- New mock services for testing
+- Tutorial service tests
+- Router service tests
+- World service tests
+- Config controller tests
+- Market board service tests
+
+#### Localization ✅
+
+**6-Language Support** (EN, DE, FR, JA, KO, ZH)
+- Comprehensive localization of all V4 components
+- Added Community Presets tool header localization
+- Gradient tool translations for multiple languages
+- Delete confirmation modal text localization
+- 5 new localization keys added
+- Consistent 664 keys per locale file
+
+#### Files Modified (100+ files)
+
+**Key Structural Changes**
+- `src/components/v4/` - New V4 component directory
+- `src/services/config-controller.ts` - New configuration service
+- Custom Vite plugins for async CSS loading and changelog parsing
+- TypeScript strict mode with full type safety
+
+#### Statistics
+
+- **Commits**: 92 commits since v3.3.0
+- **Insertions**: ~17,831 lines
+- **Deletions**: ~21,918 lines
+- **Tools**: 9 tools (1 new, 4 renamed, 4 enhanced)
+- **Test Coverage**: 92%+
+- **Themes**: 12 WCAG 2.1 AA compliant variants
+
+---
+
 ## [3.3.0] - 2026-01-08
 
 ### Added

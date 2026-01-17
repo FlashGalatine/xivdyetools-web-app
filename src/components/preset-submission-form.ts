@@ -15,6 +15,7 @@ import {
   presetSubmissionService,
   validateSubmission,
 } from '@services/index';
+import { getCategoryIcon } from '@shared/category-icons';
 import type { Dye } from '@shared/types';
 import type { PresetCategory } from '@xivdyetools/core';
 import type { PresetSubmission, SubmissionResult } from '@services/preset-submission-service';
@@ -37,13 +38,13 @@ type OnSubmitCallback = (result: SubmissionResult) => void;
 // Configuration
 // ============================================
 
-const CATEGORIES: { id: PresetCategory; label: string; icon: string }[] = [
-  { id: 'jobs', label: 'Jobs', icon: '⚔️' },
-  { id: 'grand-companies', label: 'Grand Companies', icon: '🏰' },
-  { id: 'seasons', label: 'Seasons', icon: '🌸' },
-  { id: 'events', label: 'Events', icon: '🎉' },
-  { id: 'aesthetics', label: 'Aesthetics', icon: '✨' },
-  { id: 'community', label: 'Community', icon: '🎨' },
+const CATEGORIES: { id: PresetCategory; label: string }[] = [
+  { id: 'jobs', label: 'Jobs' },
+  { id: 'grand-companies', label: 'Grand Companies' },
+  { id: 'seasons', label: 'Seasons' },
+  { id: 'events', label: 'Events' },
+  { id: 'aesthetics', label: 'Aesthetics' },
+  { id: 'community', label: 'Community' },
 ];
 
 const MIN_NAME_LENGTH = 2;
@@ -239,7 +240,7 @@ function createCategorySelector(state: FormState): HTMLElement {
         'background-color: var(--theme-card-background); color: var(--theme-text); border-color: var(--theme-border);';
     }
 
-    btn.innerHTML = `<span>${cat.icon}</span><span>${cat.label}</span>`;
+    btn.innerHTML = `<span class="w-4 h-4 inline-block">${getCategoryIcon(cat.id)}</span><span>${cat.label}</span>`;
 
     btn.addEventListener('click', () => {
       state.category = cat.id;
@@ -374,7 +375,8 @@ function createDyeSelector(state: FormState): HTMLElement {
 
   // Dye grid
   const dyeGrid = document.createElement('div');
-  dyeGrid.className = 'grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-48 overflow-y-auto p-2 rounded-lg border';
+  dyeGrid.className =
+    'grid grid-cols-6 sm:grid-cols-8 gap-1 max-h-48 overflow-y-auto p-2 rounded-lg border';
   dyeGrid.style.cssText =
     'background-color: var(--theme-card-background); border-color: var(--theme-border);';
 
@@ -556,7 +558,9 @@ function createSubmitButton(state: FormState, onSubmit?: OnSubmitCallback): HTML
           if (result.duplicate.id) {
             sessionStorage.setItem('pendingPresetId', result.duplicate.id);
             // Dispatch event to notify preset browser to switch and show the preset
-            window.dispatchEvent(new CustomEvent('navigate-to-preset', { detail: { presetId: result.duplicate.id } }));
+            window.dispatchEvent(
+              new CustomEvent('navigate-to-preset', { detail: { presetId: result.duplicate.id } })
+            );
           }
 
           onSubmit?.(result);

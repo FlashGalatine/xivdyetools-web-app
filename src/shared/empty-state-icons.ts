@@ -81,6 +81,16 @@ export const ICON_FOLDER = `<svg viewBox="0 0 24 24" fill="none" stroke="current
 </svg>`;
 
 /**
+ * Empty inbox icon for no submissions/content
+ * Replaces: 📭 emoji
+ */
+export const ICON_EMPTY_INBOX = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M3 9l9-6 9 6v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+  <path d="M3 9l9 6 9-6"/>
+  <path d="M12 15v-3" stroke-dasharray="2 2"/>
+</svg>`;
+
+/**
  * Map of icon names to SVG strings for easy lookup
  */
 export const EMPTY_STATE_ICONS: Record<string, string> = {
@@ -92,6 +102,7 @@ export const EMPTY_STATE_ICONS: Record<string, string> = {
   warning: ICON_WARNING,
   loading: ICON_LOADING,
   folder: ICON_FOLDER,
+  'empty-inbox': ICON_EMPTY_INBOX,
 };
 
 /**

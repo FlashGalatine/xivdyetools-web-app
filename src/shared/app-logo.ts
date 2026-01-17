@@ -1,16 +1,17 @@
 /**
  * XIV Dye Tools - App Logo SVG
  *
- * Inline SVG logo using currentColor for theme adaptation
- * Features a rainbow crystal with paintbrush and sparkles
+ * Inline SVG logo using rainbow gradient for case and currentColor for brush
+ * Features "The Crossed Artisan" design - a supply case with crossed brush
  *
  * @module shared/app-logo
  */
 
 /**
- * XIV Dye Tools logo - Sparkles (Crystal + Paintbrush)
+ * XIV Dye Tools logo - The Crossed Artisan (Supply case with crossed brush)
+ * Rainbow gradient on case body, currentColor on brush for theme adaptation
  */
-export const LOGO_SPARKLES = `<svg viewBox="0 0 138.77071 192.24226" xmlns="http://www.w3.org/2000/svg">
+export const LOGO_SPARKLES = `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="rainbowGradient" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#ff0000"/>
@@ -22,102 +23,33 @@ export const LOGO_SPARKLES = `<svg viewBox="0 0 138.77071 192.24226" xmlns="http
       <stop offset="100%" stop-color="#8000ff"/>
     </linearGradient>
     <linearGradient id="rainbowHighlight" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff6666" stop-opacity="0.7"/>
-      <stop offset="33%" stop-color="#ffff99" stop-opacity="0.7"/>
-      <stop offset="67%" stop-color="#66ffcc" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#cc99ff" stop-opacity="0.7"/>
-    </linearGradient>
-    <linearGradient id="rainbowShadow" x1="1" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#990000"/>
-      <stop offset="33%" stop-color="#999900"/>
-      <stop offset="67%" stop-color="#009966"/>
-      <stop offset="100%" stop-color="#660099"/>
-    </linearGradient>
-    <linearGradient id="lg33" x1="93.333336" y1="210" x2="123.33333" y2="240" gradientTransform="scale(1.5,0.66666667)" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff0000"/>
-      <stop offset="17%" stop-color="#ff8000"/>
-      <stop offset="33%" stop-color="#ffff00"/>
-      <stop offset="50%" stop-color="#00ff00"/>
-      <stop offset="67%" stop-color="#0080ff"/>
-      <stop offset="83%" stop-color="#4000ff"/>
-      <stop offset="100%" stop-color="#8000ff"/>
-    </linearGradient>
-    <linearGradient id="lg2" x1="145.29663" y1="27.529888" x2="79.913147" y2="92.913368" gradientTransform="scale(0.6882472,1.4529663)" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#990000"/>
-      <stop offset="33%" stop-color="#999900"/>
-      <stop offset="67%" stop-color="#009966"/>
-      <stop offset="100%" stop-color="#660099"/>
-    </linearGradient>
-    <linearGradient id="lg3" x1="145.29663" y1="27.529888" x2="210.68011" y2="92.913368" gradientTransform="scale(0.6882472,1.4529663)" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff6666" stop-opacity="0.7"/>
-      <stop offset="33%" stop-color="#ffff99" stop-opacity="0.7"/>
-      <stop offset="67%" stop-color="#66ffcc" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#cc99ff" stop-opacity="0.7"/>
-    </linearGradient>
-    <linearGradient id="lg4" x1="77.781746" y1="63.63961" x2="141.42136" y2="127.27922" gradientTransform="scale(0.70710678,1.4142136)" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff0000"/>
-      <stop offset="17%" stop-color="#ff8000"/>
-      <stop offset="33%" stop-color="#ffff00"/>
-      <stop offset="50%" stop-color="#00ff00"/>
-      <stop offset="67%" stop-color="#0080ff"/>
-      <stop offset="83%" stop-color="#4000ff"/>
-      <stop offset="100%" stop-color="#8000ff"/>
-    </linearGradient>
-    <linearGradient id="lg5" x1="141.42136" y1="63.63961" x2="205.06097" y2="127.27922" gradientTransform="scale(0.70710678,1.4142136)" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff6666" stop-opacity="0.7"/>
-      <stop offset="33%" stop-color="#ffff99" stop-opacity="0.7"/>
-      <stop offset="67%" stop-color="#66ffcc" stop-opacity="0.7"/>
-      <stop offset="100%" stop-color="#cc99ff" stop-opacity="0.7"/>
-    </linearGradient>
-    <linearGradient id="lg6" x1="145.29663" y1="92.913368" x2="79.913147" y2="158.29686" gradientTransform="scale(0.6882472,1.4529663)" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#990000"/>
-      <stop offset="33%" stop-color="#999900"/>
-      <stop offset="67%" stop-color="#009966"/>
-      <stop offset="100%" stop-color="#660099"/>
-    </linearGradient>
-    <linearGradient id="lg7" x1="145.29663" y1="92.913368" x2="210.68011" y2="158.29686" gradientTransform="scale(0.6882472,1.4529663)" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff0000"/>
-      <stop offset="17%" stop-color="#ff8000"/>
-      <stop offset="33%" stop-color="#ffff00"/>
-      <stop offset="50%" stop-color="#00ff00"/>
-      <stop offset="67%" stop-color="#0080ff"/>
-      <stop offset="83%" stop-color="#4000ff"/>
-      <stop offset="100%" stop-color="#8000ff"/>
+      <stop offset="0%" stop-color="#ff6666" stop-opacity="0.6"/>
+      <stop offset="33%" stop-color="#ffff99" stop-opacity="0.6"/>
+      <stop offset="67%" stop-color="#66ffcc" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#cc99ff" stop-opacity="0.6"/>
     </linearGradient>
   </defs>
-  <g transform="translate(-25.229287,-38.878865)">
-    <g id="crystal">
-      <polygon points="100,135 100,40 55,90" fill="url(#lg2)" opacity="0.85"/>
-      <polygon points="100,135 100,40 145,90" fill="url(#lg3)" opacity="0.95"/>
-      <polygon points="100,135 55,90 55,180" fill="url(#lg4)" opacity="0.75"/>
-      <polygon points="100,135 145,90 145,180" fill="url(#lg5)" opacity="0.9"/>
-      <polygon points="100,135 55,180 100,230" fill="url(#lg6)" opacity="0.7"/>
-      <polygon points="100,135 145,180 100,230" fill="url(#lg7)" opacity="0.85"/>
-      <polygon points="145,180 100,230 55,180 55,90 100,40 145,90" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.5"/>
-      <line x1="100" y1="40" x2="100" y2="230" stroke="#ffffff" stroke-width="0.5" opacity="0.4"/>
-      <line x1="55" y1="90" x2="145" y2="180" stroke="#ffffff" stroke-width="0.5" opacity="0.3"/>
-      <line x1="145" y1="90" x2="55" y2="180" stroke="#ffffff" stroke-width="0.5" opacity="0.3"/>
-    </g>
-    <g id="paintbrush" transform="rotate(-45,172.15716,325.63023)">
-      <rect x="200" y="140" width="120" height="20" rx="3" ry="3" fill="currentColor"/>
-      <rect x="310" y="138" width="15" height="24" rx="4" ry="4" fill="currentColor"/>
-      <line x1="290" y1="142" x2="290" y2="158" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
-      <line x1="295" y1="142" x2="295" y2="158" stroke="#ffffff" stroke-width="1" opacity="0.3"/>
-      <rect x="185" y="137" width="20" height="26" rx="2" fill="#888888"/>
-      <rect x="188" y="137" width="3" height="26" fill="#aaaaaa"/>
-      <rect x="200" y="137" width="2" height="26" fill="#666666"/>
-      <path d="m 185,140 q -25,5 -40,10 -5,0 -5,0 0,5 5,0 15,5 40,10 z" fill="url(#lg33)"/>
-      <line x1="182" y1="143" x2="148" y2="148" stroke="#ffffff" stroke-width="0.5" opacity="0.4"/>
-      <line x1="182" y1="147" x2="143" y2="150" stroke="#ffffff" stroke-width="0.5" opacity="0.3"/>
-      <line x1="182" y1="151" x2="143" y2="150" stroke="#ffffff" stroke-width="0.5" opacity="0.3"/>
-      <line x1="182" y1="155" x2="148" y2="152" stroke="#ffffff" stroke-width="0.5" opacity="0.4"/>
-    </g>
-    <g id="sparkles" fill="#ffffff">
-      <polygon points="33,75 38,75 40,70 42,75 47,75 43,78 45,83 40,80 35,83 37,78" opacity="0.7"/>
-      <polygon points="156,78 159,78 160,75 161,78 164,78 162,80 163,83 160,81 157,83 158,80" opacity="0.5"/>
-      <circle cx="45" cy="200" r="2" opacity="0.6"/>
-      <circle cx="155" cy="120" r="1.5" opacity="0.5"/>
-      <circle cx="50" cy="130" r="1" opacity="0.4"/>
-    </g>
+
+  <!-- Case Body with Rainbow Fill -->
+  <rect x="28" y="38" width="72" height="64" rx="4" fill="url(#rainbowGradient)" fill-opacity="0.25" stroke="url(#rainbowGradient)" stroke-width="3"/>
+
+  <!-- Case Divider Lines -->
+  <path d="M28 60 H100" stroke="url(#rainbowHighlight)" stroke-width="2"/>
+  <path d="M28 80 H100" stroke="url(#rainbowHighlight)" stroke-width="2"/>
+
+  <!-- Case Handle/Latch -->
+  <rect x="58" y="32" width="12" height="8" rx="1" stroke="url(#rainbowGradient)" stroke-width="2" fill="none"/>
+
+  <!-- Crossed Brush (currentColor for theme adaptation) -->
+  <g transform="rotate(-45 64 64)">
+    <!-- Brush Handle -->
+    <path d="M60 10 L60 80" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>
+    <!-- Ferrule -->
+    <path d="M60 80 L54 90 H66 L60 80" fill="currentColor"/>
+    <!-- Bristles -->
+    <path d="M54 90 C 54 90, 54 110, 60 118 C 66 110, 66 90, 66 90 Z" fill="currentColor" fill-opacity="0.6"/>
   </g>
+
+  <!-- Sparkle (currentColor for theme adaptation) -->
+  <path d="M96 28 L99 36 L106 38 L99 40 L96 48 L93 40 L86 38 L93 36 Z" fill="currentColor"/>
 </svg>`;

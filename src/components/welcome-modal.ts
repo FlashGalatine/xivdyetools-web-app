@@ -17,6 +17,10 @@ import {
   ICON_TOOL_COMPARISON,
   ICON_TOOL_MIXER,
   ICON_TOOL_ACCESSIBILITY,
+  ICON_TOOL_DYE_MIXER,
+  ICON_TOOL_PRESETS,
+  ICON_TOOL_BUDGET,
+  ICON_TOOL_CHARACTER,
 } from '@shared/tool-icons';
 
 // ============================================================================
@@ -35,31 +39,55 @@ const TOOLS: ToolInfo[] = [
     id: 'harmony',
     icon: ICON_TOOL_HARMONY,
     nameKey: 'tools.harmony.shortName',
-    descriptionKey: 'welcome.tools.harmony',
+    descriptionKey: 'tools.harmony.description',
   },
   {
-    id: 'matcher',
+    id: 'extractor',
     icon: ICON_TOOL_MATCHER,
     nameKey: 'tools.matcher.shortName',
-    descriptionKey: 'welcome.tools.matcher',
+    descriptionKey: 'tools.matcher.description',
   },
   {
     id: 'comparison',
     icon: ICON_TOOL_COMPARISON,
     nameKey: 'tools.comparison.shortName',
-    descriptionKey: 'welcome.tools.comparison',
+    descriptionKey: 'tools.comparison.description',
+  },
+  {
+    id: 'gradient',
+    icon: ICON_TOOL_MIXER,
+    nameKey: 'tools.gradient.shortName',
+    descriptionKey: 'tools.gradient.description',
   },
   {
     id: 'mixer',
-    icon: ICON_TOOL_MIXER,
+    icon: ICON_TOOL_DYE_MIXER,
     nameKey: 'tools.mixer.shortName',
-    descriptionKey: 'welcome.tools.mixer',
+    descriptionKey: 'tools.mixer.description',
+  },
+  {
+    id: 'presets',
+    icon: ICON_TOOL_PRESETS,
+    nameKey: 'tools.presets.shortName',
+    descriptionKey: 'tools.presets.description',
+  },
+  {
+    id: 'budget',
+    icon: ICON_TOOL_BUDGET,
+    nameKey: 'tools.budget.shortName',
+    descriptionKey: 'tools.budget.description',
+  },
+  {
+    id: 'swatch',
+    icon: ICON_TOOL_CHARACTER,
+    nameKey: 'tools.character.shortName',
+    descriptionKey: 'tools.character.description',
   },
   {
     id: 'accessibility',
     icon: ICON_TOOL_ACCESSIBILITY,
     nameKey: 'tools.accessibility.shortName',
-    descriptionKey: 'welcome.tools.accessibility',
+    descriptionKey: 'tools.accessibility.description',
   },
 ];
 
@@ -149,7 +177,7 @@ export class WelcomeModal {
 
     // Tools grid
     const toolsGrid = document.createElement('div');
-    toolsGrid.className = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6';
+    toolsGrid.className = 'grid grid-cols-3 gap-3 mb-6';
 
     TOOLS.forEach((tool) => {
       const toolCard = this.createToolCard(tool);

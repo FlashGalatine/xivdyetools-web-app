@@ -69,7 +69,8 @@ export function showAddToCollectionMenu(options: AddToCollectionMenuOptions): vo
 
   // Header
   const header = document.createElement('div');
-  header.className = 'px-3 py-2 text-sm font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700';
+  header.className =
+    'px-3 py-2 text-sm font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700';
   header.textContent = LanguageService.t('collections.addToCollection');
   menu.appendChild(header);
 

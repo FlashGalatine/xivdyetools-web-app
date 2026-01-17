@@ -359,9 +359,7 @@ function addToComparison(dye: Dye): void {
   if (currentDyes.length < MAX_SLOTS.comparison) {
     currentDyes.push(dye.id);
     StorageService.setItem(STORAGE_KEYS.comparison, currentDyes);
-    ToastService.success(
-      LanguageService.t('harmony.addedToComparison') || 'Added to Comparison'
-    );
+    ToastService.success(LanguageService.t('harmony.addedToComparison') || 'Added to Comparison');
     RouterService.navigateTo('comparison');
     return;
   }
@@ -378,9 +376,7 @@ function addToMixer(dye: Dye): void {
 
   // Check if dye already exists
   if (currentDyes.includes(dye.id)) {
-    ToastService.info(
-      LanguageService.t('harmony.dyeAlreadyInMixer') || 'Dye already in Mixer'
-    );
+    ToastService.info(LanguageService.t('harmony.dyeAlreadyInMixer') || 'Dye already in Mixer');
     return;
   }
 
@@ -406,7 +402,8 @@ function addToAccessibility(dye: Dye): void {
   // Check if dye already exists
   if (currentDyes.includes(dye.id)) {
     ToastService.info(
-      LanguageService.t('harmony.dyeAlreadyInAccessibility') || 'Dye already in Accessibility Checker'
+      LanguageService.t('harmony.dyeAlreadyInAccessibility') ||
+        'Dye already in Accessibility Checker'
     );
     return;
   }
@@ -439,7 +436,9 @@ function setAsBudgetTarget(dye: Dye): void {
  * Uses itemID for localization-safe deep linking
  */
 function navigateToHarmony(dye: Dye): void {
-  logger.info(`[DyeActionDropdown] navigateToHarmony called - dye: "${dye.name}", itemID: ${dye.itemID}`);
+  logger.info(
+    `[DyeActionDropdown] navigateToHarmony called - dye: "${dye.name}", itemID: ${dye.itemID}`
+  );
   RouterService.navigateTo('harmony', { dyeId: String(dye.itemID) });
 }
 
@@ -470,9 +469,7 @@ function showSlotSelectionModal(
           LanguageService.t('mixer.startDye') || 'Start Dye',
           LanguageService.t('mixer.endDye') || 'End Dye',
         ]
-      : currentDyeIds.map(
-          (_, i) => `${LanguageService.t('common.slot') || 'Slot'} ${i + 1}`
-        );
+      : currentDyeIds.map((_, i) => `${LanguageService.t('common.slot') || 'Slot'} ${i + 1}`);
 
   // Build slot buttons HTML
   const slotsHtml = currentDyeIds
@@ -516,9 +513,7 @@ function showSlotSelectionModal(
 
   const modalId = ModalService.show({
     type: 'custom',
-    title:
-      LanguageService.t('harmony.selectSlotToReplace') ||
-      `Select Slot to Replace`,
+    title: LanguageService.t('harmony.selectSlotToReplace') || `Select Slot to Replace`,
     content: content,
     size: 'sm',
     closable: true,
@@ -540,8 +535,7 @@ function showSlotSelectionModal(
 
         ModalService.dismiss(modalId);
         ToastService.success(
-          LanguageService.t('harmony.replacedInTool') ||
-            `Replaced in ${toolName}`
+          LanguageService.t('harmony.replacedInTool') || `Replaced in ${toolName}`
         );
         RouterService.navigateTo(tool);
       });
@@ -551,8 +545,7 @@ function showSlotSelectionModal(
         (btn as HTMLElement).style.backgroundColor = 'var(--theme-card-hover)';
       });
       btn.addEventListener('mouseleave', () => {
-        (btn as HTMLElement).style.backgroundColor =
-          'var(--theme-card-background)';
+        (btn as HTMLElement).style.backgroundColor = 'var(--theme-card-background)';
       });
     });
   }, 50);

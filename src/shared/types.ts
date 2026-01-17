@@ -19,7 +19,14 @@
  * @deprecated Import directly from '@xivdyetools/types' instead.
  * These re-exports will be removed in the next major version.
  */
-export type { RGB, HSV, HexColor, VisionType, Matrix3x3, ColorblindMatrices } from '@xivdyetools/types';
+export type {
+  RGB,
+  HSV,
+  HexColor,
+  VisionType,
+  Matrix3x3,
+  ColorblindMatrices,
+} from '@xivdyetools/types';
 /**
  * @deprecated Import directly from '@xivdyetools/types' instead.
  * These re-exports will be removed in the next major version.
@@ -68,6 +75,7 @@ export type { Result, AsyncResult, Nullable, Optional } from '@xivdyetools/types
 export type ThemeName =
   | 'standard-light'
   | 'standard-dark'
+  | 'premium-dark'
   | 'hydaelyn-light'
   | 'og-classic-dark'
   | 'parchment-light'
@@ -80,8 +88,10 @@ export type ThemeName =
 
 /**
  * Color palette for a theme
+ * V4: Extended with glassmorphism, gradients, and shadow properties
  */
 export interface ThemePalette {
+  // ===== V3 Core Properties =====
   primary: string;
   background: string;
   text: string;
@@ -91,6 +101,38 @@ export interface ThemePalette {
   cardBackground: string;
   cardHover: string;
   textMuted: string;
+
+  // ===== V4 Extensions (optional for backward compatibility) =====
+
+  /** Glassmorphism background color, e.g., "rgba(245, 245, 245, 0.9)" */
+  bgGlass?: string;
+
+  /** Muted header text, e.g., "rgba(255, 255, 255, 0.7)" */
+  textHeaderMuted?: string;
+
+  /** Hover state for accent/primary color */
+  accentHover?: string;
+
+  /** RGB triplet for rgba() operations, e.g., "139, 26, 26" */
+  accentRgb?: string;
+
+  /** Soft shadow value, e.g., "0 4px 6px rgba(0, 0, 0, 0.1)" */
+  shadowSoft?: string;
+
+  /** Glow effect for accent elements */
+  shadowGlow?: string;
+
+  /** Gradient start color for backgrounds */
+  gradientStart?: string;
+
+  /** Gradient end color for backgrounds */
+  gradientEnd?: string;
+
+  /** Card-specific gradient end color */
+  cardGradientEnd?: string;
+
+  /** Disable backdrop blur for high-contrast themes */
+  disableBlur?: boolean;
 }
 
 /**

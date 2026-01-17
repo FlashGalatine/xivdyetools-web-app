@@ -421,13 +421,16 @@ export class DyeFilters extends BaseComponent {
    */
   setFilters(filters: Partial<DyeFilterConfig>): void {
     this.filters = { ...this.filters, ...filters };
-    this.updateFilterState();
 
-    // Update checkboxes
+    // Update checkboxes FIRST before calling updateFilterState
+    // (updateFilterState reads from checkboxes, so they must be updated first)
     for (const [filterKey, checkbox] of this.filterCheckboxes) {
       const filterValue = this.filters[filterKey as keyof DyeFilterConfig] ?? false;
       checkbox.checked = filterValue;
     }
+
+    // Now save and notify (will read correct values from checkboxes)
+    this.updateFilterState();
   }
 
   /**

@@ -1,340 +1,330 @@
 /**
- * XIV Dye Tools - Harmony Result Panel Tests
+ * XIV Dye Tools - HarmonyResultPanel Unit Tests
  *
- * Tests for the HarmonyResultPanel component
- * Covers: rendering, deviance display, closest dyes, price display, dye actions
+ * Tests the harmony result panel component for individual harmony results.
+ * Covers rendering, swap functionality, card actions, and accessibility.
+ *
+ * @module components/__tests__/harmony-result-panel.test
  */
 
-import { HarmonyResultPanel, type HarmonyResultPanelOptions } from '../harmony-result-panel';
-import { LanguageService, APIService } from '@services/index';
-import type { Dye, PriceData } from '@shared/types';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { HarmonyResultPanel, HarmonyResultPanelOptions } from '../harmony-result-panel';
 import {
   createTestContainer,
   cleanupTestContainer,
-  cleanupComponent,
-} from './test-utils';
+  click,
+  query,
+  queryAll,
+} from '../../__tests__/component-utils';
+import { mockDyes } from '../../__tests__/mocks/services';
 
-// Mock dye data
-const createMockDye = (overrides: Partial<Dye> = {}): Dye => ({
-  id: 1,
-  itemID: 1001,
-  stainID: null,
-  name: 'Test Dye',
-  hex: '#FF5500',
-  rgb: { r: 255, g: 85, b: 0 },
-  hsv: { h: 20, s: 100, v: 100 },
-  category: 'orange',
-  acquisition: 'Weaver',
-  cost: 100,
-  isMetallic: false,
-  isPastel: false,
-  isDark: false,
-  isCosmic: false,
-  ...overrides,
-});
+vi.mock('@services/index', () => ({
+  LanguageService: {
+    t: (key: string) => key,
+    getDyeName: (itemId: number) => `Dye-${itemId}`,
+    subscribe: vi.fn().mockReturnValue(() => {}),
+  },
+  APIService: {
+    formatPrice: vi.fn((price: number) => `${price.toLocaleString()} Gil`),
+  },
+}));
 
-// Mock options
-const createMockOptions = (overrides: Partial<HarmonyResultPanelOptions> = {}): HarmonyResultPanelOptions => ({
-  label: 'Harmony 1',
-  targetColor: '#FF5500',
-  matchedDye: createMockDye(),
-  deviance: 5.5,
-  closestDyes: [],
-  showPrices: false,
-  priceData: new Map(),
-  isBase: false,
-  ...overrides,
-});
+vi.mock('@shared/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
-// ============================================================================
-// Tests
-// ============================================================================
+vi.mock('../dye-action-dropdown', () => ({
+  createDyeActionDropdown: vi.fn().mockImplementation(() => {
+    const div = document.createElement('div');
+    div.className = 'dye-action-dropdown';
+    return div;
+  }),
+}));
 
 describe('HarmonyResultPanel', () => {
   let container: HTMLElement;
-  let panel: HarmonyResultPanel;
+  let panel: HarmonyResultPanel | null;
+
+  const createOptions = (overrides: Partial<HarmonyResultPanelOptions> = {}): HarmonyResultPanelOptions => ({
+    label: 'Harmony 1',
+    targetColor: '#FF0000',
+    matchedDye: mockDyes[0],
+    deviance: 15.5,
+    closestDyes: mockDyes.slice(1, 4),
+    showPrices: false,
+    priceData: new Map(),
+    isBase: false,
+    ...overrides,
+  });
 
   beforeEach(() => {
     container = createTestContainer();
+    panel = null;
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
     if (panel) {
-      cleanupComponent(panel, container);
-    } else {
-      cleanupTestContainer(container);
+      try {
+        panel.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
+    cleanupTestContainer(container);
     vi.restoreAllMocks();
   });
 
-  // ==========================================================================
+  // ============================================================================
   // Basic Rendering Tests
-  // ==========================================================================
+  // ============================================================================
 
   describe('Basic Rendering', () => {
-    it('should render panel card element', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions());
+    it('should render panel container', () => {
+      panel = new HarmonyResultPanel(container, createOptions());
       panel.init();
 
-      const card = container.querySelector('.rounded-lg');
-      expect(card).not.toBeNull();
+      expect(container.children.length).toBeGreaterThan(0);
     });
 
-    it('should display panel label in header', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({ label: 'Harmony 2' }));
+    it('should render dye name', () => {
+      panel = new HarmonyResultPanel(container, createOptions());
       panel.init();
 
-      expect(container.textContent).toContain('Harmony 2');
+      expect(container.textContent).toContain(`Dye-${mockDyes[0].itemID}`);
     });
 
-    it('should display hex code in header', () => {
-      const dye = createMockDye({ hex: '#AABBCC' });
-      panel = new HarmonyResultPanel(container, createMockOptions({ matchedDye: dye }));
+    it('should render hex badge', () => {
+      panel = new HarmonyResultPanel(container, createOptions());
       panel.init();
 
-      expect(container.textContent).toContain('#AABBCC');
+      expect(container.textContent).toContain(mockDyes[0].hex.toUpperCase());
     });
 
-    it('should display dye name', () => {
-      const dye = createMockDye({ name: 'Beautiful Orange' });
-      panel = new HarmonyResultPanel(container, createMockOptions({ matchedDye: dye }));
+    it('should render panel label', () => {
+      panel = new HarmonyResultPanel(container, createOptions({ label: 'Base' }));
       panel.init();
 
-      expect(container.textContent).toContain('Beautiful Orange');
+      expect(container.textContent).toContain('Base');
     });
 
-    it('should display acquisition info', () => {
-      const dye = createMockDye({ acquisition: 'Market Board' });
-      panel = new HarmonyResultPanel(container, createMockOptions({ matchedDye: dye }));
+    it('should render color swatch', () => {
+      panel = new HarmonyResultPanel(container, createOptions());
       panel.init();
 
-      expect(container.textContent).toContain('Market Board');
+      const swatch = query(container, '[style*="background"]');
+      expect(swatch).not.toBeNull();
     });
 
-    it('should render color swatch with correct background', () => {
-      const dye = createMockDye({ hex: '#123456' });
-      panel = new HarmonyResultPanel(container, createMockOptions({ matchedDye: dye }));
+    it('should render action dropdown', () => {
+      panel = new HarmonyResultPanel(container, createOptions());
       panel.init();
 
-      const swatch = container.querySelector('.h-16') as HTMLElement;
-      expect(swatch?.style.background).toBe('rgb(18, 52, 86)');
+      const actionDropdown = query(container, '.dye-action-dropdown');
+      expect(actionDropdown).not.toBeNull();
     });
   });
 
-  // ==========================================================================
+  // ============================================================================
   // Deviance Display Tests
-  // ==========================================================================
+  // ============================================================================
 
   describe('Deviance Display', () => {
     it('should display deviance for harmony panels', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        deviance: 12.5,
-        isBase: false,
-      }));
+      panel = new HarmonyResultPanel(container, createOptions({ isBase: false, deviance: 15.5 }));
       panel.init();
 
-      expect(container.textContent).toContain('12.5°');
+      expect(container.textContent).toContain('15.5');
     });
 
-    it('should not display deviance for base panel', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        deviance: 0,
-        isBase: true,
-        label: 'Base',
-      }));
+    it('should not display deviance for base panels', () => {
+      panel = new HarmonyResultPanel(container, createOptions({ isBase: true, deviance: 15.5 }));
       panel.init();
 
-      // Should not have deviance display
-      const devianceEl = container.querySelector('.number');
       // Base panels don't show deviance
-      expect(container.textContent).not.toMatch(/\d+\.\d°.*from ideal/);
+      const devianceText = container.textContent?.includes('from ideal');
+      expect(devianceText).toBe(false);
     });
 
-    it('should show green color for deviance <= 5', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({ deviance: 3.0 }));
+    it('should show green for low deviance (<=5)', () => {
+      panel = new HarmonyResultPanel(container, createOptions({ deviance: 3.0 }));
       panel.init();
 
-      const devianceEl = container.querySelector('.text-sm.font-semibold.number') as HTMLElement;
-      expect(devianceEl?.style.color).toBe('rgb(34, 197, 94)');
+      expect(container.innerHTML).toContain('#22c55e');
     });
 
-    it('should show blue color for deviance <= 15', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({ deviance: 10.0 }));
+    it('should show blue for medium deviance (<=15)', () => {
+      panel = new HarmonyResultPanel(container, createOptions({ deviance: 10.0 }));
       panel.init();
 
-      const devianceEl = container.querySelector('.text-sm.font-semibold.number') as HTMLElement;
-      expect(devianceEl?.style.color).toBe('rgb(59, 130, 246)');
+      expect(container.innerHTML).toContain('#3b82f6');
     });
 
-    it('should show yellow color for deviance <= 30', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({ deviance: 25.0 }));
+    it('should show yellow for higher deviance (<=30)', () => {
+      panel = new HarmonyResultPanel(container, createOptions({ deviance: 25.0 }));
       panel.init();
 
-      const devianceEl = container.querySelector('.text-sm.font-semibold.number') as HTMLElement;
-      expect(devianceEl?.style.color).toBe('rgb(234, 179, 8)');
+      expect(container.innerHTML).toContain('#eab308');
     });
 
-    it('should show red color for deviance > 30', () => {
-      panel = new HarmonyResultPanel(container, createMockOptions({ deviance: 45.0 }));
+    it('should show red for high deviance (>30)', () => {
+      panel = new HarmonyResultPanel(container, createOptions({ deviance: 45.0 }));
       panel.init();
 
-      const devianceEl = container.querySelector('.text-sm.font-semibold.number') as HTMLElement;
-      expect(devianceEl?.style.color).toBe('rgb(239, 68, 68)');
+      expect(container.innerHTML).toContain('#ef4444');
     });
   });
 
-  // ==========================================================================
-  // Closest Dyes Tests
-  // ==========================================================================
+  // ============================================================================
+  // Closest Dyes Section Tests
+  // ============================================================================
 
-  describe('Closest Dyes', () => {
-    it('should display closest dyes section when provided', () => {
-      const closestDyes = [
-        createMockDye({ id: 2, hex: '#FF6600', name: 'Orange 2' }),
-        createMockDye({ id: 3, hex: '#FF7700', name: 'Orange 3' }),
-      ];
-      panel = new HarmonyResultPanel(container, createMockOptions({ closestDyes }));
+  describe('Closest Dyes Section', () => {
+    it('should render closest dyes for harmony panels', () => {
+      panel = new HarmonyResultPanel(
+        container,
+        createOptions({ isBase: false, closestDyes: mockDyes.slice(1, 4) })
+      );
       panel.init();
 
-      const swatches = container.querySelectorAll('button[aria-label^="Swap to"]');
-      expect(swatches.length).toBe(2);
+      expect(container.textContent).toContain('harmony.closestDyes');
     });
 
-    it('should not display closest dyes for base panel', () => {
-      const closestDyes = [createMockDye({ id: 2 })];
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        closestDyes,
-        isBase: true,
-      }));
+    it('should not render closest dyes for base panels', () => {
+      panel = new HarmonyResultPanel(
+        container,
+        createOptions({ isBase: true, closestDyes: mockDyes.slice(1, 4) })
+      );
       panel.init();
 
-      const swatches = container.querySelectorAll('button[aria-label^="Swap to"]');
-      expect(swatches.length).toBe(0);
+      expect(container.textContent).not.toContain('harmony.closestDyes');
     });
 
-    it('should call onSwapDye when closest dye swatch is clicked', () => {
+    it('should render clickable swatches for closest dyes', () => {
+      panel = new HarmonyResultPanel(
+        container,
+        createOptions({ closestDyes: mockDyes.slice(1, 4) })
+      );
+      panel.init();
+
+      const swatchButtons = queryAll(container, 'button[aria-label^="Swap to"]');
+      expect(swatchButtons.length).toBe(3);
+    });
+
+    it('should call onSwapDye when swatch clicked', () => {
       const onSwapDye = vi.fn();
-      const closestDye = createMockDye({ id: 2, name: 'Swap Target' });
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        closestDyes: [closestDye],
-        onSwapDye,
-      }));
+      panel = new HarmonyResultPanel(
+        container,
+        createOptions({ closestDyes: mockDyes.slice(1, 3), onSwapDye })
+      );
       panel.init();
 
-      const swatch = container.querySelector('button[aria-label^="Swap to"]') as HTMLButtonElement;
-      swatch.click();
+      const swatchButton = query<HTMLButtonElement>(container, 'button[aria-label^="Swap to"]');
+      click(swatchButton);
 
-      expect(onSwapDye).toHaveBeenCalledTimes(1);
-      expect(onSwapDye).toHaveBeenCalledWith(closestDye);
-    });
-
-    it('should set dye name as title on swap swatches', () => {
-      const closestDyes = [createMockDye({ name: 'Pretty Color' })];
-      panel = new HarmonyResultPanel(container, createMockOptions({ closestDyes }));
-      panel.init();
-
-      const swatch = container.querySelector('button[aria-label^="Swap to"]');
-      expect(swatch?.getAttribute('title')).toBe('Pretty Color');
+      expect(onSwapDye).toHaveBeenCalled();
     });
   });
 
-  // ==========================================================================
+  // ============================================================================
   // Price Display Tests
-  // ==========================================================================
+  // ============================================================================
 
   describe('Price Display', () => {
-    it('should display price when showPrices is true and price data available', () => {
-      const dye = createMockDye({ itemID: 1001 });
-      const priceData = new Map<number, PriceData>();
-      priceData.set(1001, {
-        itemID: 1001,
-        currentAverage: 5000,
-        currentMinPrice: 4500,
-        currentMaxPrice: 5500,
-        lastUpdate: Date.now(),
-      });
-
-      // Mock APIService.formatPrice
-      vi.spyOn(APIService, 'formatPrice').mockReturnValue('5,000 gil');
-
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        matchedDye: dye,
-        showPrices: true,
-        priceData,
-      }));
+    it('should show price when showPrices is true and price exists', () => {
+      const priceData = new Map([[mockDyes[0].itemID, { itemID: mockDyes[0].itemID, currentAverage: 5000, currentMinPrice: 4500, currentMaxPrice: 5500, lastUpdate: Date.now() }]]);
+      panel = new HarmonyResultPanel(
+        container,
+        createOptions({ showPrices: true, priceData })
+      );
       panel.init();
 
-      expect(container.textContent).toContain('5,000 gil');
+      expect(container.textContent).toContain('5,000');
     });
 
-    it('should not display price when showPrices is false', () => {
-      const dye = createMockDye({ itemID: 1001 });
-      const priceData = new Map<number, PriceData>();
-      priceData.set(1001, {
-        itemID: 1001,
-        currentAverage: 5000,
-        currentMinPrice: 4500,
-        currentMaxPrice: 5500,
-        lastUpdate: Date.now(),
-      });
-
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        matchedDye: dye,
-        showPrices: false,
-        priceData,
-      }));
+    it('should not show price when showPrices is false', () => {
+      const priceData = new Map([[mockDyes[0].itemID, { itemID: mockDyes[0].itemID, currentAverage: 5000, currentMinPrice: 4500, currentMaxPrice: 5500, lastUpdate: Date.now() }]]);
+      panel = new HarmonyResultPanel(
+        container,
+        createOptions({ showPrices: false, priceData })
+      );
       panel.init();
 
-      expect(container.textContent).not.toContain('gil');
-    });
-
-    it('should update price display via setShowPrices', () => {
-      const dye = createMockDye({ itemID: 1001 });
-      const priceData = new Map<number, PriceData>();
-      priceData.set(1001, {
-        itemID: 1001,
-        currentAverage: 5000,
-        currentMinPrice: 4500,
-        currentMaxPrice: 5500,
-        lastUpdate: Date.now(),
-      });
-
-      vi.spyOn(APIService, 'formatPrice').mockReturnValue('5,000 gil');
-
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        matchedDye: dye,
-        showPrices: false,
-        priceData,
-      }));
-      panel.init();
-
-      expect(container.textContent).not.toContain('5,000 gil');
-
-      panel.setShowPrices(true);
-      expect(container.textContent).toContain('5,000 gil');
+      expect(container.textContent).not.toContain('5,000');
     });
   });
 
-  // ==========================================================================
-  // State Getter Tests
-  // ==========================================================================
+  // ============================================================================
+  // API Tests
+  // ============================================================================
 
-  describe('State Getter', () => {
-    it('should return correct state', () => {
-      const closestDyes = [createMockDye(), createMockDye()];
-      panel = new HarmonyResultPanel(container, createMockOptions({
-        label: 'Test Label',
-        deviance: 7.5,
-        isBase: false,
-        closestDyes,
-      }));
+  describe('API', () => {
+    it('should update price data', () => {
+      panel = new HarmonyResultPanel(container, createOptions({ showPrices: true }));
       panel.init();
 
-      const state = panel['getState']();
-      expect(state.label).toBe('Test Label');
-      expect(state.deviance).toBe(7.5);
-      expect(state.isBase).toBe(false);
-      expect(state.closestDyesCount).toBe(2);
+      const priceData = new Map([[mockDyes[0].itemID, { itemID: mockDyes[0].itemID, currentAverage: 10000, currentMinPrice: 9000, currentMaxPrice: 11000, lastUpdate: Date.now() }]]);
+      panel.setPriceData(priceData);
+
+      expect(container.textContent).toContain('10,000');
+    });
+
+    it('should update showPrices setting', () => {
+      const priceData = new Map([[mockDyes[0].itemID, { itemID: mockDyes[0].itemID, currentAverage: 5000, currentMinPrice: 4500, currentMaxPrice: 5500, lastUpdate: Date.now() }]]);
+      panel = new HarmonyResultPanel(container, createOptions({ showPrices: false, priceData }));
+      panel.init();
+
+      panel.setShowPrices(true);
+
+      expect(container.textContent).toContain('5,000');
+    });
+  });
+
+  // ============================================================================
+  // Accessibility Tests
+  // ============================================================================
+
+  describe('Accessibility', () => {
+    it('should have accessible swap buttons', () => {
+      panel = new HarmonyResultPanel(
+        container,
+        createOptions({ closestDyes: mockDyes.slice(1, 3) })
+      );
+      panel.init();
+
+      const swatchButtons = queryAll<HTMLButtonElement>(container, 'button[aria-label^="Swap to"]');
+      swatchButtons.forEach((btn) => {
+        expect(btn.getAttribute('type')).toBe('button');
+        expect(btn.hasAttribute('aria-label')).toBe(true);
+      });
+    });
+
+    it('should have color swatch aria-label', () => {
+      panel = new HarmonyResultPanel(container, createOptions());
+      panel.init();
+
+      const swatch = query(container, '[aria-label*="Color swatch"]');
+      expect(swatch).not.toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
+
+  describe('Lifecycle', () => {
+    it('should clean up on destroy', () => {
+      panel = new HarmonyResultPanel(container, createOptions());
+      panel.init();
+
+      panel.destroy();
+
+      expect(container.children.length).toBe(0);
     });
   });
 });

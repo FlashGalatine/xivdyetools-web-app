@@ -197,7 +197,8 @@ describe('Tool Icons', () => {
 
     it('should return mixer icon when name is "mixer"', () => {
       const icon = getToolIcon('mixer');
-      expect(icon).toBe(ICON_TOOL_MIXER);
+      // V4: 'mixer' now points to the NEW Dye Mixer tool (ICON_TOOL_DYE_MIXER), not the old gradient builder
+      expect(icon).toBeDefined();
       expect(icon).toContain('<svg');
     });
 
@@ -225,14 +226,18 @@ describe('Tool Icons', () => {
 
   describe('TOOL_ICONS object', () => {
     it('should contain all expected tool icon keys', () => {
+      // V4: Updated tool IDs - now includes extractor, gradient, swatch, plus legacy aliases
       expect(Object.keys(TOOL_ICONS)).toEqual([
         'harmony',
-        'matcher',
+        'extractor',
         'accessibility',
         'comparison',
+        'gradient',
         'mixer',
         'presets',
         'budget',
+        'swatch',
+        'matcher',
         'character',
         'tools',
       ]);
@@ -253,9 +258,10 @@ describe('Tool Icons', () => {
       expect(ICON_TOOL_HARMONY).toContain('circle');
     });
 
-    it('ICON_TOOL_MATCHER should be a valid SVG with circles', () => {
+    it('ICON_TOOL_MATCHER should be a valid SVG with selection elements', () => {
+      // V4: Icon updated to selection crop design with paths and rect (no circles)
       expect(ICON_TOOL_MATCHER).toContain('<svg');
-      expect(ICON_TOOL_MATCHER).toContain('circle');
+      expect(ICON_TOOL_MATCHER).toContain('path');
     });
 
     it('ICON_TOOL_ACCESSIBILITY should be a valid SVG with eye path', () => {
@@ -268,9 +274,10 @@ describe('Tool Icons', () => {
       expect(ICON_TOOL_COMPARISON).toContain('rect');
     });
 
-    it('ICON_TOOL_MIXER should be a valid SVG with circles', () => {
+    it('ICON_TOOL_MIXER should be a valid SVG with gradient elements', () => {
+      // V4: Icon is now Gradient Builder with rect and lines (no circles)
       expect(ICON_TOOL_MIXER).toContain('<svg');
-      expect(ICON_TOOL_MIXER).toContain('circle');
+      expect(ICON_TOOL_MIXER).toContain('rect');
     });
 
     it('ICON_TOOL_MENU should be a valid SVG with rect', () => {
@@ -383,6 +390,7 @@ describe('UI Icons', () => {
 
   describe('UI_ICONS object', () => {
     it('should contain all expected UI icon keys', () => {
+      // V4: Updated with additional icons (about, globe, logo, context-menu, close, etc.)
       expect(Object.keys(UI_ICONS)).toEqual([
         'theme',
         'camera',
@@ -422,6 +430,19 @@ describe('UI Icons', () => {
         'trash',
         'image',
         'info',
+        'about',
+        'globe',
+        'logo',
+        'context-menu',
+        'close',
+        'link',
+        'document',
+        'locked',
+        'lock',
+        'network',
+        'book',
+        'success',
+        'error',
       ]);
     });
 

@@ -49,10 +49,7 @@ export {
 } from './dye-action-dropdown';
 export { TutorialSpotlight, initializeTutorialSpotlight } from './tutorial-spotlight';
 export { offlineBanner } from './offline-banner';
-export {
-  showCollectionManagerModal,
-  showCreateCollectionDialog,
-} from './collection-manager-modal';
+export { showCollectionManagerModal, showCreateCollectionDialog } from './collection-manager-modal';
 export {
   showAddToCollectionMenu,
   closeAddToCollectionMenu,
@@ -67,18 +64,16 @@ export { PresetCard, type PresetCardCallback } from './preset-card';
 export { PresetDetailView, type PresetDetailViewCallbacks } from './preset-detail-view';
 export { FeaturedPresetsSection, type FeaturedPresetCallback } from './featured-presets-section';
 
-// V3 Two-Panel Layout Components
-export { TwoPanelShell, type TwoPanelShellOptions } from './two-panel-shell';
-export { MobileDrawer } from './mobile-drawer';
+// Shared utility components (used by tools in both v3 and v4 layouts)
 export { CollapsiblePanel, type CollapsiblePanelOptions } from './collapsible-panel';
-export { getLocalizedTools, TOOL_ICONS, type NavTool } from './tool-nav';
-export { initializeV3Layout, destroyV3Layout } from './v3-layout';
 
-// V3 Tool Components
+// V4 Tool Components
 export { HarmonyTool, type HarmonyToolOptions } from './harmony-tool';
-export { MatcherTool, type MatcherToolOptions } from './matcher-tool';
+export { ExtractorTool, type ExtractorToolOptions } from './extractor-tool'; // Was MatcherTool
 export { AccessibilityTool, type AccessibilityToolOptions } from './accessibility-tool';
 export { ComparisonTool, type ComparisonToolOptions } from './comparison-tool';
-export { MixerTool, type MixerToolOptions } from './mixer-tool';
+export { GradientTool, type GradientToolOptions } from './gradient-tool'; // Was MixerTool
 export { PresetTool, type PresetToolOptions } from './preset-tool';
 export { BudgetTool, type BudgetToolOptions } from './budget-tool';
+export { SwatchTool, type SwatchToolOptions } from './swatch-tool'; // Was CharacterTool
+export { MixerTool, type MixerToolOptions } from './mixer-tool'; // V4 NEW - Dye Mixer

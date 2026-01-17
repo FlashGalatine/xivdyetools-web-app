@@ -33,14 +33,14 @@ describe('Logger Module', () => {
 
   beforeEach(() => {
     // Mock console methods
-    consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => { });
-    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => { });
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-    consoleGroupSpy = vi.spyOn(console, 'group').mockImplementation(() => { });
-    consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
-    consoleTableSpy = vi.spyOn(console, 'table').mockImplementation(() => { });
+    consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleGroupSpy = vi.spyOn(console, 'group').mockImplementation(() => {});
+    consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
+    consoleTableSpy = vi.spyOn(console, 'table').mockImplementation(() => {});
 
     // Clear performance metrics between tests
     perf.clearMetrics();
@@ -355,8 +355,8 @@ describe('Logger Module', () => {
 
 describe('Performance Metrics Edge Cases', () => {
   beforeEach(() => {
-    vi.spyOn(console, 'debug').mockImplementation(() => { });
-    vi.spyOn(console, 'warn').mockImplementation(() => { });
+    vi.spyOn(console, 'debug').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     perf.clearMetrics();
   });
 
@@ -419,9 +419,9 @@ describe('Error Tracker Integration', () => {
 
   beforeEach(() => {
     // Mock console methods
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
-    vi.spyOn(console, 'info').mockImplementation(() => { });
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
 
     // Set up mock error tracker
     mockTracker = {
@@ -508,12 +508,12 @@ describe('Dev Mode Logging Behavior', () => {
   let consoleTableSpy: MockInstance;
 
   beforeEach(() => {
-    consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => { });
-    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => { });
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-    consoleGroupSpy = vi.spyOn(console, 'group').mockImplementation(() => { });
-    consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
-    consoleTableSpy = vi.spyOn(console, 'table').mockImplementation(() => { });
+    consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleGroupSpy = vi.spyOn(console, 'group').mockImplementation(() => {});
+    consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
+    consoleTableSpy = vi.spyOn(console, 'table').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -563,10 +563,10 @@ describe('Performance Monitoring Dev Mode', () => {
   let consoleGroupEndSpy: MockInstance;
 
   beforeEach(() => {
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-    consoleGroupSpy = vi.spyOn(console, 'group').mockImplementation(() => { });
-    consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation(() => { });
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleGroupSpy = vi.spyOn(console, 'group').mockImplementation(() => {});
+    consoleGroupEndSpy = vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
     perf.clearMetrics();
   });
 
@@ -626,9 +626,9 @@ describe('Production Mode Error Tracking', () => {
     __setTestEnvironment({ isDev: false, isProd: true });
 
     // Mock console methods
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
-    vi.spyOn(console, 'info').mockImplementation(() => { });
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
 
     // Set up mock error tracker
     mockTracker = {
@@ -750,7 +750,7 @@ describe('__setTestEnvironment', () => {
   });
 
   it('should allow overriding to production mode', () => {
-    const consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => { });
+    const consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
     // First verify dev mode works (default)
     __setTestEnvironment({ isDev: true, isProd: false });
@@ -767,7 +767,7 @@ describe('__setTestEnvironment', () => {
   });
 
   it('should restore normal behavior when set to null', () => {
-    const consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => { });
+    const consoleDebugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
     // Override to production
     __setTestEnvironment({ isDev: false, isProd: true });

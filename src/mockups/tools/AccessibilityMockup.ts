@@ -105,12 +105,17 @@ export class AccessibilityMockup extends BaseComponent {
   }
 
   private createSection(label: string): HTMLElement {
-    const section = this.createElement('div', { className: 'p-4 border-b', attributes: { style: 'border-color: var(--theme-border);' } });
-    section.appendChild(this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
-      textContent: label,
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    }));
+    const section = this.createElement('div', {
+      className: 'p-4 border-b',
+      attributes: { style: 'border-color: var(--theme-border);' },
+    });
+    section.appendChild(
+      this.createElement('h3', {
+        className: 'text-sm font-semibold uppercase tracking-wider mb-3',
+        textContent: label,
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      })
+    );
     return section;
   }
 
@@ -153,9 +158,11 @@ export class AccessibilityMockup extends BaseComponent {
   private createVisionToggles(): HTMLElement {
     const container = this.createElement('div', { className: 'space-y-2' });
 
-    VISION_TYPES.forEach(type => {
+    VISION_TYPES.forEach((type) => {
       const isEnabled = this.enabledVisionTypes.has(type.id);
-      const label = this.createElement('label', { className: 'flex items-center gap-3 cursor-pointer' });
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-3 cursor-pointer',
+      });
       label.innerHTML = `
         <input type="checkbox" ${isEnabled ? 'checked' : ''} class="w-4 h-4 rounded">
         <div class="flex-1">
@@ -171,8 +178,10 @@ export class AccessibilityMockup extends BaseComponent {
 
   private createDisplayOptions(): HTMLElement {
     const container = this.createElement('div', { className: 'space-y-2' });
-    ['Show Labels', 'Show Hex Values', 'High Contrast Mode'].forEach(opt => {
-      const label = this.createElement('label', { className: 'flex items-center gap-2 cursor-pointer' });
+    ['Show Labels', 'Show Hex Values', 'High Contrast Mode'].forEach((opt) => {
+      const label = this.createElement('label', {
+        className: 'flex items-center gap-2 cursor-pointer',
+      });
       label.innerHTML = `<input type="checkbox" class="w-4 h-4 rounded"><span class="text-sm" style="color: var(--theme-text);">${opt}</span>`;
       container.appendChild(label);
     });
@@ -180,17 +189,21 @@ export class AccessibilityMockup extends BaseComponent {
   }
 
   private createVisionSimulations(): HTMLElement {
-    const grid = this.createElement('div', { className: 'grid gap-4 md:grid-cols-2 lg:grid-cols-3' });
+    const grid = this.createElement('div', {
+      className: 'grid gap-4 md:grid-cols-2 lg:grid-cols-3',
+    });
 
-    VISION_TYPES.filter(t => this.enabledVisionTypes.has(t.id)).forEach(type => {
+    VISION_TYPES.filter((t) => this.enabledVisionTypes.has(t.id)).forEach((type) => {
       const card = this.createElement('div', {
         className: 'p-4 rounded-lg',
-        attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+        attributes: {
+          style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        },
       });
       card.innerHTML = `
         <p class="text-sm font-medium mb-3" style="color: var(--theme-text);">${type.name}</p>
         <div class="flex gap-2 mb-2">
-          ${this.selectedDyes.map(d => `<div class="w-10 h-10 rounded" style="background: ${d.hex};" title="${d.name}"></div>`).join('')}
+          ${this.selectedDyes.map((d) => `<div class="w-10 h-10 rounded" style="background: ${d.hex};" title="${d.name}"></div>`).join('')}
         </div>
         <p class="text-xs" style="color: var(--theme-text-muted);">${type.prevalence}</p>
       `;
@@ -203,7 +216,9 @@ export class AccessibilityMockup extends BaseComponent {
   private createContrastTable(): HTMLElement {
     const table = this.createElement('div', {
       className: 'rounded-lg overflow-hidden',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
 
     table.innerHTML = `
@@ -212,7 +227,9 @@ export class AccessibilityMockup extends BaseComponent {
           <span>Dye</span><span>vs White</span><span>vs Black</span>
         </div>
       </div>
-      ${this.selectedDyes.map(dye => `
+      ${this.selectedDyes
+        .map(
+          (dye) => `
         <div class="p-3 border-b last:border-b-0" style="border-color: var(--theme-border);">
           <div class="grid grid-cols-3 gap-2 items-center text-sm">
             <div class="flex items-center gap-2">
@@ -229,7 +246,9 @@ export class AccessibilityMockup extends BaseComponent {
             </div>
           </div>
         </div>
-      `).join('')}
+      `
+        )
+        .join('')}
     `;
 
     return table;
@@ -238,12 +257,14 @@ export class AccessibilityMockup extends BaseComponent {
   private createDistinguishabilityMatrix(): HTMLElement {
     const matrix = this.createElement('div', {
       className: 'rounded-lg p-4',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+      },
     });
 
     let html = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th></th>';
     // Column headers with swatch + name
-    this.selectedDyes.forEach(d => {
+    this.selectedDyes.forEach((d) => {
       html += `<th class="p-2 text-center">
         <div class="w-6 h-6 rounded mx-auto mb-1" style="background: ${d.hex};"></div>
         <span class="text-xs font-normal block truncate max-w-20" style="color: var(--theme-text-muted);">${d.name}</span>
@@ -278,5 +299,7 @@ export class AccessibilityMockup extends BaseComponent {
   }
 
   bindEvents(): void {}
-  destroy(): void { super.destroy(); }
+  destroy(): void {
+    super.destroy();
+  }
 }

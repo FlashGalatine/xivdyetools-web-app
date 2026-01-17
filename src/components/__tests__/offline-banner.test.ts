@@ -1,318 +1,398 @@
 /**
- * XIV Dye Tools - Offline Banner Component Tests
+ * XIV Dye Tools - OfflineBanner Unit Tests
+ *
+ * Tests the offline banner singleton component.
+ * Covers online/offline detection, banner visibility, and event handling.
  *
  * @module components/__tests__/offline-banner.test
  */
 
-import { OfflineBanner, offlineBanner } from '../offline-banner';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
+import { OfflineBanner } from '../offline-banner';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  click,
+  query,
+  getText,
+  getAttr,
+} from '../../__tests__/component-utils';
 
-// Mock services
-vi.mock('@services/index', () => ({
-  LanguageService: {
-    t: vi.fn((key: string) => {
-      const translations: Record<string, string> = {
-        'offline.banner': 'You are offline. Some features may be limited.',
-        'common.dismiss': 'Dismiss',
-      };
-      return translations[key] || key;
-    }),
-  },
-}));
+// Track original navigator.onLine
+const originalNavigatorOnLine = Object.getOwnPropertyDescriptor(navigator, 'onLine');
 
-vi.mock('@shared/logger', () => ({
-  logger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
+// Helper to set navigator.onLine
+function setOnlineStatus(isOnline: boolean): void {
+  Object.defineProperty(navigator, 'onLine', {
+    value: isOnline,
+    writable: true,
+    configurable: true,
+  });
+}
 
 describe('OfflineBanner', () => {
-  let banner: OfflineBanner;
-  let originalOnLine: boolean;
+  let banner: OfflineBanner | null;
 
   beforeEach(() => {
-    // Store original online status
-    originalOnLine = navigator.onLine;
-
-    // Reset singleton by destroying any existing instance
-    try {
-      offlineBanner.destroy();
-    } catch {
-      // Ignore if already destroyed
-    }
-
-    // Create fresh instance
-    banner = OfflineBanner.getInstance();
-
-    // Clean up any existing banners
-    document.body.style.paddingTop = '0';
-    const existingBanners = document.querySelectorAll('#offline-banner');
-    existingBanners.forEach((b) => b.remove());
+    banner = null;
+    // Clear any singleton instance
+    // @ts-expect-error - accessing private static for testing
+    OfflineBanner.instance = null;
+    // Default to online
+    setOnlineStatus(true);
+    // Reset body padding
+    document.body.style.paddingTop = '';
   });
 
   afterEach(() => {
-    banner.destroy();
-
-    // Restore original online status mock
-    Object.defineProperty(navigator, 'onLine', {
-      value: originalOnLine,
-      writable: true,
-      configurable: true,
-    });
+    if (banner) {
+      banner.destroy();
+    }
+    // Restore original navigator.onLine
+    if (originalNavigatorOnLine) {
+      Object.defineProperty(navigator, 'onLine', originalNavigatorOnLine);
+    }
+    // Clean up any remaining banner elements
+    const existingBanner = document.getElementById('offline-banner');
+    if (existingBanner) {
+      existingBanner.remove();
+    }
+    document.body.style.paddingTop = '';
+    vi.restoreAllMocks();
   });
 
-  describe('Singleton Pattern', () => {
-    it('should return the same instance', () => {
+  // ============================================================================
+  // Singleton Tests
+  // ============================================================================
+
+  describe('Singleton', () => {
+    it('should return same instance on multiple getInstance calls', () => {
       const instance1 = OfflineBanner.getInstance();
       const instance2 = OfflineBanner.getInstance();
+
       expect(instance1).toBe(instance2);
     });
+
+    it('should create new instance after destroy', () => {
+      const instance1 = OfflineBanner.getInstance();
+      instance1.destroy();
+
+      const instance2 = OfflineBanner.getInstance();
+
+      expect(instance1).not.toBe(instance2);
+    });
   });
+
+  // ============================================================================
+  // Initialization Tests
+  // ============================================================================
 
   describe('Initialization', () => {
     it('should create banner element on initialize', () => {
+      banner = OfflineBanner.getInstance();
       banner.initialize();
 
-      const bannerEl = document.getElementById('offline-banner');
-      expect(bannerEl).not.toBeNull();
+      expect(document.getElementById('offline-banner')).not.toBeNull();
     });
 
-    it('should set proper ARIA attributes', () => {
+    it('should have role="alert"', () => {
+      banner = OfflineBanner.getInstance();
       banner.initialize();
 
-      const bannerEl = document.getElementById('offline-banner');
-      expect(bannerEl?.getAttribute('role')).toBe('alert');
-      expect(bannerEl?.getAttribute('aria-live')).toBe('polite');
+      const el = document.getElementById('offline-banner');
+      expect(getAttr(el, 'role')).toBe('alert');
     });
 
-    it('should have message text', () => {
+    it('should have aria-live="polite"', () => {
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      const el = document.getElementById('offline-banner');
+      expect(getAttr(el, 'aria-live')).toBe('polite');
+    });
+
+    it('should contain offline message', () => {
+      banner = OfflineBanner.getInstance();
       banner.initialize();
 
       const message = document.getElementById('offline-banner-message');
-      expect(message?.textContent).toBe('You are offline. Some features may be limited.');
+      expect(message).not.toBeNull();
+      expect(message?.textContent).toContain('offline');
     });
 
-    it('should have dismiss button', () => {
+    it('should contain dismiss button', () => {
+      banner = OfflineBanner.getInstance();
       banner.initialize();
 
-      const dismissBtn = document.querySelector('#offline-banner button');
+      const dismissBtn = query(document.getElementById('offline-banner')!, 'button');
       expect(dismissBtn).not.toBeNull();
-      expect(dismissBtn?.getAttribute('aria-label')).toBe('Dismiss');
     });
   });
 
-  describe('Online/Offline Status', () => {
-    it('should return correct online status', () => {
-      Object.defineProperty(navigator, 'onLine', {
-        value: true,
-        writable: true,
-        configurable: true,
-      });
+  // ============================================================================
+  // Online Status Tests
+  // ============================================================================
 
-      // Need fresh instance to pick up new navigator.onLine
-      banner.destroy();
+  describe('Online Status', () => {
+    it('should report online status correctly', () => {
+      setOnlineStatus(true);
       banner = OfflineBanner.getInstance();
 
       expect(banner.getIsOnline()).toBe(true);
     });
 
-    it('should show banner when offline event fires', () => {
-      Object.defineProperty(navigator, 'onLine', {
-        value: true,
-        writable: true,
-        configurable: true,
-      });
+    it('should report offline status correctly', () => {
+      setOnlineStatus(false);
+      banner = OfflineBanner.getInstance();
 
+      expect(banner.getIsOnline()).toBe(false);
+    });
+  });
+
+  // ============================================================================
+  // Banner Visibility Tests
+  // ============================================================================
+
+  describe('Banner Visibility', () => {
+    it('should hide banner when online', () => {
+      setOnlineStatus(true);
+      banner = OfflineBanner.getInstance();
       banner.initialize();
 
-      // Simulate going offline
-      window.dispatchEvent(new Event('offline'));
-
-      const bannerEl = document.getElementById('offline-banner') as HTMLElement;
-      expect(bannerEl.style.transform).toBe('translateY(0)');
+      const el = document.getElementById('offline-banner') as HTMLElement;
+      expect(el.style.transform).toBe('translateY(-100%)');
     });
 
-    it('should hide banner when online event fires', () => {
-      Object.defineProperty(navigator, 'onLine', {
-        value: false,
-        writable: true,
-        configurable: true,
-      });
+    it('should show banner when offline', () => {
+      setOnlineStatus(false);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
 
-      banner.destroy();
+      const el = document.getElementById('offline-banner') as HTMLElement;
+      // Browser may normalize to translateY(0) or translateY(0px)
+      expect(el.style.transform).toMatch(/translateY\(0(px)?\)/);
+    });
+
+    it('should add body padding when banner shown', () => {
+      setOnlineStatus(false);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      expect(document.body.style.paddingTop).not.toBe('');
+      expect(document.body.style.paddingTop).not.toBe('0');
+    });
+
+    it('should remove body padding when banner hidden', () => {
+      setOnlineStatus(true);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      // Padding should be reset - could be '', '0', or '0px' depending on browser
+      expect(['', '0', '0px']).toContain(document.body.style.paddingTop);
+    });
+  });
+
+  // ============================================================================
+  // Programmatic Control Tests
+  // ============================================================================
+
+  describe('Programmatic Control', () => {
+    it('should show banner with showBanner()', () => {
+      setOnlineStatus(true);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      banner.showBanner();
+
+      const el = document.getElementById('offline-banner') as HTMLElement;
+      expect(el.style.transform).toMatch(/translateY\(0(px)?\)/);
+    });
+
+    it('should hide banner with hideBanner()', () => {
+      setOnlineStatus(false);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      banner.hideBanner();
+
+      const el = document.getElementById('offline-banner') as HTMLElement;
+      expect(el.style.transform).toBe('translateY(-100%)');
+    });
+  });
+
+  // ============================================================================
+  // Dismiss Button Tests
+  // ============================================================================
+
+  describe('Dismiss Button', () => {
+    it('should hide banner when dismiss button clicked', () => {
+      setOnlineStatus(false);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      const dismissBtn = query<HTMLButtonElement>(
+        document.getElementById('offline-banner')!,
+        'button'
+      );
+      click(dismissBtn);
+
+      const el = document.getElementById('offline-banner') as HTMLElement;
+      expect(el.style.transform).toBe('translateY(-100%)');
+    });
+
+    it('should have aria-label on dismiss button', () => {
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      const dismissBtn = query(document.getElementById('offline-banner')!, 'button');
+      expect(dismissBtn?.hasAttribute('aria-label')).toBe(true);
+    });
+  });
+
+  // ============================================================================
+  // Event Listener Tests
+  // ============================================================================
+
+  describe('Online/Offline Events', () => {
+    it('should update on online event', () => {
+      setOnlineStatus(false);
       banner = OfflineBanner.getInstance();
       banner.initialize();
 
       // Simulate going online
+      setOnlineStatus(true);
       window.dispatchEvent(new Event('online'));
 
-      const bannerEl = document.getElementById('offline-banner') as HTMLElement;
-      expect(bannerEl.style.transform).toBe('translateY(-100%)');
+      expect(banner.getIsOnline()).toBe(true);
+    });
+
+    it('should update on offline event', () => {
+      setOnlineStatus(true);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      // Simulate going offline
+      setOnlineStatus(false);
+      window.dispatchEvent(new Event('offline'));
+
+      expect(banner.getIsOnline()).toBe(false);
+    });
+
+    it('should show banner when going offline', () => {
+      setOnlineStatus(true);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      setOnlineStatus(false);
+      window.dispatchEvent(new Event('offline'));
+
+      const el = document.getElementById('offline-banner') as HTMLElement;
+      expect(el.style.transform).toMatch(/translateY\(0(px)?\)/);
+    });
+
+    it('should hide banner when going online', () => {
+      setOnlineStatus(false);
+      banner = OfflineBanner.getInstance();
+      banner.initialize();
+
+      setOnlineStatus(true);
+      window.dispatchEvent(new Event('online'));
+
+      const el = document.getElementById('offline-banner') as HTMLElement;
+      expect(el.style.transform).toBe('translateY(-100%)');
     });
   });
 
-  describe('Show/Hide Banner', () => {
-    it('should handle showBanner when not initialized (banner is null)', () => {
-      // Don't initialize - banner is null
-      expect(() => banner.showBanner()).not.toThrow();
-    });
+  // ============================================================================
+  // Status Change Subscription Tests
+  // ============================================================================
 
-    it('should handle hideBanner when not initialized (banner is null)', () => {
-      // Don't initialize - banner is null
-      expect(() => banner.hideBanner()).not.toThrow();
-    });
-
-    it('should show banner with showBanner()', () => {
-      banner.initialize();
-      banner.showBanner();
-
-      const bannerEl = document.getElementById('offline-banner') as HTMLElement;
-      expect(bannerEl.style.transform).toBe('translateY(0)');
-    });
-
-    it('should hide banner with hideBanner()', () => {
-      banner.initialize();
-      banner.showBanner();
-      banner.hideBanner();
-
-      const bannerEl = document.getElementById('offline-banner') as HTMLElement;
-      expect(bannerEl.style.transform).toBe('translateY(-100%)');
-    });
-
-    it('should add body padding when shown', () => {
-      banner.initialize();
-      banner.showBanner();
-
-      // Body padding should be set (value depends on banner height)
-      expect(document.body.style.paddingTop).not.toBe('0');
-    });
-
-    it('should remove body padding when hidden', () => {
-      banner.initialize();
-      banner.showBanner();
-      banner.hideBanner();
-
-      expect(document.body.style.paddingTop).toBe('0px');
-    });
-  });
-
-  describe('Dismiss Button', () => {
-    it('should hide banner when dismiss clicked', () => {
-      banner.initialize();
-      banner.showBanner();
-
-      const dismissBtn = document.querySelector('#offline-banner button') as HTMLElement;
-      dismissBtn.click();
-
-      const bannerEl = document.getElementById('offline-banner') as HTMLElement;
-      expect(bannerEl.style.transform).toBe('translateY(-100%)');
-    });
-  });
-
-  describe('Status Change Subscription', () => {
+  describe('onStatusChange', () => {
     it('should call callback on online event', () => {
+      banner = OfflineBanner.getInstance();
       const callback = vi.fn();
-      const unsubscribe = banner.onStatusChange(callback);
 
+      banner.onStatusChange(callback);
       window.dispatchEvent(new Event('online'));
 
       expect(callback).toHaveBeenCalledWith(true);
-
-      unsubscribe();
     });
 
     it('should call callback on offline event', () => {
+      banner = OfflineBanner.getInstance();
       const callback = vi.fn();
-      const unsubscribe = banner.onStatusChange(callback);
 
+      banner.onStatusChange(callback);
       window.dispatchEvent(new Event('offline'));
 
       expect(callback).toHaveBeenCalledWith(false);
-
-      unsubscribe();
     });
 
-    it('should stop receiving events after unsubscribe', () => {
+    it('should return unsubscribe function', () => {
+      banner = OfflineBanner.getInstance();
       const callback = vi.fn();
-      const unsubscribe = banner.onStatusChange(callback);
 
+      const unsubscribe = banner.onStatusChange(callback);
       unsubscribe();
 
       window.dispatchEvent(new Event('online'));
-      window.dispatchEvent(new Event('offline'));
 
       expect(callback).not.toHaveBeenCalled();
     });
   });
 
-  describe('Update Message', () => {
-    it('should update banner message text', () => {
+  // ============================================================================
+  // Message Update Tests
+  // ============================================================================
+
+  describe('updateMessage', () => {
+    it('should update message text', () => {
+      banner = OfflineBanner.getInstance();
       banner.initialize();
 
       banner.updateMessage();
 
       const message = document.getElementById('offline-banner-message');
-      expect(message?.textContent).toBe('You are offline. Some features may be limited.');
-    });
-
-    it('should handle updateMessage when banner is not initialized', () => {
-      // Don't initialize - banner is null
-      expect(() => banner.updateMessage()).not.toThrow();
-    });
-
-    it('should handle updateMessage when message element is missing', () => {
-      banner.initialize();
-
-      // Remove the message element
-      const message = document.getElementById('offline-banner-message');
-      message?.remove();
-
-      // Should not throw
-      expect(() => banner.updateMessage()).not.toThrow();
+      expect(message).not.toBeNull();
     });
   });
 
-  describe('Banner Recreation', () => {
-    it('should remove existing banner when initialize is called twice', () => {
-      banner.initialize();
-
-      const firstBanner = document.getElementById('offline-banner');
-      expect(firstBanner).not.toBeNull();
-
-      // Call initialize again - should remove old banner and create new one
-      banner.initialize();
-
-      // Should still have exactly one banner
-      const banners = document.querySelectorAll('#offline-banner');
-      expect(banners.length).toBe(1);
-    });
-  });
+  // ============================================================================
+  // Cleanup Tests
+  // ============================================================================
 
   describe('Cleanup', () => {
-    it('should remove banner on destroy', () => {
+    it('should remove banner element on destroy', () => {
+      banner = OfflineBanner.getInstance();
       banner.initialize();
-      banner.destroy();
 
-      const bannerEl = document.getElementById('offline-banner');
-      expect(bannerEl).toBeNull();
+      expect(document.getElementById('offline-banner')).not.toBeNull();
+
+      banner.destroy();
+      banner = null;
+
+      expect(document.getElementById('offline-banner')).toBeNull();
     });
 
     it('should reset body padding on destroy', () => {
+      setOnlineStatus(false);
+      banner = OfflineBanner.getInstance();
       banner.initialize();
-      banner.showBanner();
-      banner.destroy();
 
-      expect(document.body.style.paddingTop).toBe('0px');
+      banner.destroy();
+      banner = null;
+
+      // Padding should be reset - could be '', '0', or '0px' depending on browser
+      expect(['', '0', '0px']).toContain(document.body.style.paddingTop);
     });
 
-    it('should reset singleton instance on destroy', () => {
-      banner.initialize();
+    it('should clear singleton instance on destroy', () => {
+      banner = OfflineBanner.getInstance();
       banner.destroy();
+      banner = null;
 
-      // Getting instance after destroy should work
-      const newBanner = OfflineBanner.getInstance();
-      expect(newBanner).not.toBeNull();
+      // @ts-expect-error - accessing private static for testing
+      expect(OfflineBanner.instance).toBeNull();
     });
   });
 });

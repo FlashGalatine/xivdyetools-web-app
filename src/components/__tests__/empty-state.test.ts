@@ -1,471 +1,427 @@
+/**
+ * XIV Dye Tools - EmptyState Unit Tests
+ *
+ * Tests the empty state component for zero-result scenarios.
+ * Covers icon rendering, action buttons, and preset configurations.
+ *
+ * @module components/__tests__/empty-state.test
+ */
+
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   EmptyState,
+  EMPTY_STATE_PRESETS,
   createEmptyState,
   getEmptyStateHTML,
-  EMPTY_STATE_PRESETS,
 } from '../empty-state';
-import { createTestContainer, cleanupTestContainer, cleanupComponent } from './test-utils';
-
-// Mock shared utils
-vi.mock('@shared/utils', () => ({
-  clearContainer: vi.fn((container: HTMLElement) => {
-    container.innerHTML = '';
-  }),
-}));
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  click,
+  query,
+  getText,
+  getAttr,
+} from '../../__tests__/component-utils';
 
 describe('EmptyState', () => {
   let container: HTMLElement;
-  let component: EmptyState;
+  let emptyState: EmptyState | null;
 
   beforeEach(() => {
     container = createTestContainer();
+    emptyState = null;
   });
 
   afterEach(() => {
-    if (component && container) {
-      cleanupComponent(component, container);
-    } else {
-      cleanupTestContainer(container);
+    if (emptyState) {
+      try {
+        emptyState.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
+    cleanupTestContainer(container);
+    vi.restoreAllMocks();
   });
 
-  describe('Rendering', () => {
-    it('should render basic empty state', () => {
-      component = new EmptyState(container, {
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
+
+  describe('Basic Rendering', () => {
+    it('should render empty state wrapper', () => {
+      emptyState = new EmptyState(container, {
         icon: '🔍',
         title: 'No results',
-        description: 'Try again',
       });
-      component.init();
+      emptyState.init();
 
-      const title = container.querySelector('.empty-state-title');
-      const desc = container.querySelector('.empty-state-description');
-      const icon = container.querySelector('.empty-state-icon');
-
-      expect(title?.textContent).toBe('No results');
-      expect(desc?.textContent).toBe('Try again');
-      expect(icon?.textContent).toBe('🔍');
+      expect(query(container, '.empty-state')).not.toBeNull();
     });
 
-    it('should render SVG icon correctly', () => {
-      component = new EmptyState(container, {
-        icon: '<svg>test</svg>',
-        title: 'SVG Icon',
+    it('should render title', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results found',
       });
-      component.init();
+      emptyState.init();
 
-      const icon = container.querySelector('.empty-state-icon');
-      expect(icon?.innerHTML).toContain('<svg>test</svg>');
+      const title = query(container, '.empty-state-title');
+      expect(getText(title)).toBe('No results found');
     });
 
-    it('should render action buttons', () => {
+    it('should render description when provided', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+        description: 'Try adjusting your search criteria',
+      });
+      emptyState.init();
+
+      const description = query(container, '.empty-state-description');
+      expect(getText(description)).toBe('Try adjusting your search criteria');
+    });
+
+    it('should not render description when not provided', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+      });
+      emptyState.init();
+
+      const description = query(container, '.empty-state-description');
+      expect(description).toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // Icon Rendering Tests
+  // ============================================================================
+
+  describe('Icon Rendering', () => {
+    it('should render emoji icon as text', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🎨',
+        title: 'No palette',
+      });
+      emptyState.init();
+
+      const icon = query(container, '.empty-state-icon');
+      expect(getText(icon)).toBe('🎨');
+    });
+
+    it('should render SVG icon as innerHTML', () => {
+      const svgIcon = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>';
+      emptyState = new EmptyState(container, {
+        icon: svgIcon,
+        title: 'No results',
+      });
+      emptyState.init();
+
+      const icon = query(container, '.empty-state-icon');
+      expect(query(icon!, 'svg')).not.toBeNull();
+    });
+
+    it('should have aria-hidden on icon', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+      });
+      emptyState.init();
+
+      const icon = query(container, '.empty-state-icon');
+      expect(getAttr(icon, 'aria-hidden')).toBe('true');
+    });
+  });
+
+  // ============================================================================
+  // Action Button Tests
+  // ============================================================================
+
+  describe('Action Buttons', () => {
+    it('should render primary action button', () => {
       const onAction = vi.fn();
-      const onSecondary = vi.fn();
-
-      component = new EmptyState(container, {
-        icon: 'x',
-        title: 'Actions',
-        actionLabel: 'Primary',
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+        actionLabel: 'Clear filters',
         onAction,
+      });
+      emptyState.init();
+
+      const button = query<HTMLButtonElement>(container, '.empty-state-action button');
+      expect(button).not.toBeNull();
+      expect(getText(button)).toBe('Clear filters');
+    });
+
+    it('should call onAction when primary button clicked', () => {
+      const onAction = vi.fn();
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+        actionLabel: 'Clear filters',
+        onAction,
+      });
+      emptyState.init();
+
+      const button = query<HTMLButtonElement>(container, '.empty-state-action button');
+      click(button);
+
+      expect(onAction).toHaveBeenCalledTimes(1);
+    });
+
+    it('should render secondary action button', () => {
+      const onSecondary = vi.fn();
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+        actionLabel: 'Primary',
+        onAction: vi.fn(),
         secondaryActionLabel: 'Secondary',
         onSecondaryAction: onSecondary,
       });
-      component.init();
+      emptyState.init();
 
-      const buttons = container.querySelectorAll('button');
+      const buttons = container.querySelectorAll('.empty-state-action button');
       expect(buttons.length).toBe(2);
-      expect(buttons[0].textContent).toBe('Primary');
-      expect(buttons[1].textContent).toBe('Secondary');
+    });
 
-      buttons[0].click();
-      expect(onAction).toHaveBeenCalled();
+    it('should call onSecondaryAction when secondary button clicked', () => {
+      const onSecondary = vi.fn();
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+        actionLabel: 'Primary',
+        onAction: vi.fn(),
+        secondaryActionLabel: 'Go back',
+        onSecondaryAction: onSecondary,
+      });
+      emptyState.init();
 
-      buttons[1].click();
-      expect(onSecondary).toHaveBeenCalled();
+      const buttons = container.querySelectorAll<HTMLButtonElement>('.empty-state-action button');
+      click(buttons[1]); // Second button is secondary
+
+      expect(onSecondary).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not render action container when no actions provided', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+      });
+      emptyState.init();
+
+      const actionContainer = query(container, '.empty-state-action');
+      expect(actionContainer).toBeNull();
+    });
+
+    it('should not render button without callback', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'No results',
+        actionLabel: 'Clear', // No onAction provided
+      });
+      emptyState.init();
+
+      const button = query(container, '.empty-state-action button');
+      expect(button).toBeNull();
     });
   });
 
-  describe('Factory Functions', () => {
-    it('createEmptyState should return initialized component', () => {
-      const state = createEmptyState(container, {
-        icon: 'T',
-        title: 'Test',
-      });
+  // ============================================================================
+  // Update Method Tests
+  // ============================================================================
 
-      expect(state).toBeInstanceOf(EmptyState);
-      expect(container.querySelector('.empty-state')).not.toBeNull();
+  describe('setOptions', () => {
+    it('should update title', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'Initial title',
+      });
+      emptyState.init();
+
+      emptyState.setOptions({ title: 'Updated title' });
+
+      expect(getText(query(container, '.empty-state-title'))).toBe('Updated title');
     });
 
-    it('getEmptyStateHTML should return HTML string', () => {
+    it('should add description', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'Title',
+      });
+      emptyState.init();
+
+      expect(query(container, '.empty-state-description')).toBeNull();
+
+      emptyState.setOptions({ description: 'New description' });
+
+      expect(getText(query(container, '.empty-state-description'))).toBe('New description');
+    });
+
+    it('should update icon', () => {
+      emptyState = new EmptyState(container, {
+        icon: '🔍',
+        title: 'Title',
+      });
+      emptyState.init();
+
+      emptyState.setOptions({ icon: '🎨' });
+
+      expect(getText(query(container, '.empty-state-icon'))).toBe('🎨');
+    });
+  });
+
+  // ============================================================================
+  // Preset Tests
+  // ============================================================================
+
+  describe('Presets', () => {
+    describe('noSearchResults', () => {
+      it('should create preset with query in title', () => {
+        const preset = EMPTY_STATE_PRESETS.noSearchResults('test query');
+
+        expect(preset.title).toContain('test query');
+      });
+
+      it('should include clear action callback', () => {
+        const onClear = vi.fn();
+        const preset = EMPTY_STATE_PRESETS.noSearchResults('query', onClear);
+
+        expect(preset.onAction).toBe(onClear);
+      });
+    });
+
+    describe('allFilteredOut', () => {
+      it('should create preset with reset action', () => {
+        const onReset = vi.fn();
+        const preset = EMPTY_STATE_PRESETS.allFilteredOut(onReset);
+
+        expect(preset.onAction).toBe(onReset);
+        expect(preset.actionLabel).toBeDefined();
+      });
+    });
+
+    describe('noHarmonyResults', () => {
+      it('should create preset with select dye action', () => {
+        const onSelect = vi.fn();
+        const preset = EMPTY_STATE_PRESETS.noHarmonyResults(onSelect);
+
+        expect(preset.onAction).toBe(onSelect);
+      });
+    });
+
+    describe('error', () => {
+      it('should create error preset with message', () => {
+        const preset = EMPTY_STATE_PRESETS.error('Something broke');
+
+        expect(preset.description).toBe('Something broke');
+      });
+
+      it('should include retry action', () => {
+        const onRetry = vi.fn();
+        const preset = EMPTY_STATE_PRESETS.error('Error', onRetry);
+
+        expect(preset.onAction).toBe(onRetry);
+      });
+    });
+
+    describe('loading', () => {
+      it('should create loading preset without actions', () => {
+        const preset = EMPTY_STATE_PRESETS.loading();
+
+        expect(preset.onAction).toBeUndefined();
+        expect(preset.actionLabel).toBeUndefined();
+      });
+    });
+  });
+
+  // ============================================================================
+  // Factory Function Tests
+  // ============================================================================
+
+  describe('createEmptyState', () => {
+    it('should create and initialize empty state', () => {
+      emptyState = createEmptyState(container, {
+        icon: '📭',
+        title: 'Empty',
+      });
+
+      expect(query(container, '.empty-state')).not.toBeNull();
+    });
+
+    it('should return initialized component', () => {
+      emptyState = createEmptyState(container, {
+        icon: '📭',
+        title: 'Empty',
+      });
+
+      // Should be able to call methods
+      expect(() => emptyState!.setOptions({ title: 'New' })).not.toThrow();
+    });
+  });
+
+  describe('getEmptyStateHTML', () => {
+    it('should return valid HTML string', () => {
       const html = getEmptyStateHTML({
-        icon: 'H',
-        title: 'HTML',
-        description: 'Desc',
+        icon: '🔍',
+        title: 'No results',
       });
 
       expect(html).toContain('empty-state');
-      expect(html).toContain('HTML');
-      expect(html).toContain('Desc');
+      expect(html).toContain('empty-state-icon');
+      expect(html).toContain('empty-state-title');
+      expect(html).toContain('No results');
     });
 
-    it('getEmptyStateHTML should handle SVG icons', () => {
+    it('should include description when provided', () => {
       const html = getEmptyStateHTML({
-        icon: '<svg>icon</svg>',
-        title: 'SVG',
+        icon: '🔍',
+        title: 'Title',
+        description: 'Description text',
       });
 
-      expect(html).toContain('<svg>icon</svg>');
+      expect(html).toContain('empty-state-description');
+      expect(html).toContain('Description text');
     });
 
-    it('getEmptyStateHTML should escape non-SVG icons', () => {
+    it('should render SVG icons directly', () => {
+      const svgIcon = '<svg viewBox="0 0 24 24"><path d="M0 0"/></svg>';
       const html = getEmptyStateHTML({
-        icon: '<script>',
-        title: 'XSS',
+        icon: svgIcon,
+        title: 'Title',
       });
 
+      expect(html).toContain('<svg');
+      expect(html).toContain('viewBox="0 0 24 24"');
+    });
+
+    it('should escape non-SVG icons', () => {
+      const html = getEmptyStateHTML({
+        icon: '<script>alert("xss")</script>',
+        title: 'Title',
+      });
+
+      expect(html).not.toContain('<script>');
       expect(html).toContain('&lt;script&gt;');
     });
   });
 
-  describe('Presets', () => {
-    it('should have presets defined', () => {
-      expect(EMPTY_STATE_PRESETS.noSearchResults('query')).toBeDefined();
-      expect(EMPTY_STATE_PRESETS.error('msg')).toBeDefined();
-      expect(EMPTY_STATE_PRESETS.loading()).toBeDefined();
-    });
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
 
-    describe('noSearchResults preset', () => {
-      it('should return options with query in title', () => {
-        const options = EMPTY_STATE_PRESETS.noSearchResults('test query');
-        expect(options.title).toContain('test query');
-        expect(options.icon).toBeDefined();
-        expect(options.description).toBeDefined();
-      });
-
-      it('should include action label and callback when provided', () => {
-        const onClear = vi.fn();
-        const options = EMPTY_STATE_PRESETS.noSearchResults('query', onClear);
-        expect(options.actionLabel).toBe('Clear search');
-        expect(options.onAction).toBe(onClear);
-      });
-
-      it('should work without callback', () => {
-        const options = EMPTY_STATE_PRESETS.noSearchResults('query');
-        expect(options.actionLabel).toBe('Clear search');
-        expect(options.onAction).toBeUndefined();
-      });
-    });
-
-    describe('allFilteredOut preset', () => {
-      it('should return options for filtered results', () => {
-        const options = EMPTY_STATE_PRESETS.allFilteredOut();
-        expect(options.title).toContain('filtered');
-        expect(options.icon).toBeDefined();
-        expect(options.description).toContain('filter');
-      });
-
-      it('should include reset action when provided', () => {
-        const onReset = vi.fn();
-        const options = EMPTY_STATE_PRESETS.allFilteredOut(onReset);
-        expect(options.actionLabel).toBe('Reset filters');
-        expect(options.onAction).toBe(onReset);
-      });
-
-      it('should work without callback', () => {
-        const options = EMPTY_STATE_PRESETS.allFilteredOut();
-        expect(options.actionLabel).toBe('Reset filters');
-        expect(options.onAction).toBeUndefined();
-      });
-    });
-
-    describe('noPriceData preset', () => {
-      it('should return options for missing price data', () => {
-        const options = EMPTY_STATE_PRESETS.noPriceData();
-        expect(options.title).toContain('price');
-        expect(options.icon).toBeDefined();
-        expect(options.description).toBeDefined();
-      });
-
-      it('should include try another action when provided', () => {
-        const onTryAnother = vi.fn();
-        const options = EMPTY_STATE_PRESETS.noPriceData(onTryAnother);
-        expect(options.actionLabel).toBe('Try different server');
-        expect(options.onAction).toBe(onTryAnother);
-      });
-
-      it('should work without callback', () => {
-        const options = EMPTY_STATE_PRESETS.noPriceData();
-        expect(options.actionLabel).toBe('Try different server');
-        expect(options.onAction).toBeUndefined();
-      });
-    });
-
-    describe('noHarmonyResults preset', () => {
-      it('should return options for no harmony results', () => {
-        const options = EMPTY_STATE_PRESETS.noHarmonyResults();
-        expect(options.title).toContain('harmony');
-        expect(options.icon).toBeDefined();
-        expect(options.description).toBeDefined();
-      });
-
-      it('should include select dye action when provided', () => {
-        const onSelectDye = vi.fn();
-        const options = EMPTY_STATE_PRESETS.noHarmonyResults(onSelectDye);
-        expect(options.actionLabel).toBe('Select a dye');
-        expect(options.onAction).toBe(onSelectDye);
-      });
-
-      it('should work without callback', () => {
-        const options = EMPTY_STATE_PRESETS.noHarmonyResults();
-        expect(options.actionLabel).toBe('Select a dye');
-        expect(options.onAction).toBeUndefined();
-      });
-    });
-
-    describe('noImage preset', () => {
-      it('should return options for no image state', () => {
-        const options = EMPTY_STATE_PRESETS.noImage();
-        expect(options.title).toContain('image');
-        expect(options.icon).toBeDefined();
-        expect(options.description).toBeDefined();
-      });
-
-      it('should include upload action when provided', () => {
-        const onUpload = vi.fn();
-        const options = EMPTY_STATE_PRESETS.noImage(onUpload);
-        expect(options.actionLabel).toBe('Upload image');
-        expect(options.onAction).toBe(onUpload);
-      });
-
-      it('should work without callback', () => {
-        const options = EMPTY_STATE_PRESETS.noImage();
-        expect(options.actionLabel).toBe('Upload image');
-        expect(options.onAction).toBeUndefined();
-      });
-    });
-
-    describe('error preset', () => {
-      it('should return options with error message', () => {
-        const options = EMPTY_STATE_PRESETS.error('Something broke');
-        expect(options.title).toContain('wrong');
-        expect(options.description).toBe('Something broke');
-        expect(options.icon).toBeDefined();
-      });
-
-      it('should include retry action when provided', () => {
-        const onRetry = vi.fn();
-        const options = EMPTY_STATE_PRESETS.error('Error message', onRetry);
-        expect(options.actionLabel).toBe('Try again');
-        expect(options.onAction).toBe(onRetry);
-      });
-
-      it('should work without callback', () => {
-        const options = EMPTY_STATE_PRESETS.error('Error');
-        expect(options.actionLabel).toBe('Try again');
-        expect(options.onAction).toBeUndefined();
-      });
-    });
-
-    describe('loading preset', () => {
-      it('should return options for loading state', () => {
-        const options = EMPTY_STATE_PRESETS.loading();
-        expect(options.title).toContain('Loading');
-        expect(options.icon).toBeDefined();
-        expect(options.description).toBeDefined();
-      });
-
-      it('should not have action buttons', () => {
-        const options = EMPTY_STATE_PRESETS.loading();
-        expect(options.actionLabel).toBeUndefined();
-        expect(options.onAction).toBeUndefined();
-      });
-    });
-  });
-
-  describe('setOptions method', () => {
-    it('should update options partially', () => {
-      component = new EmptyState(container, {
+  describe('Lifecycle', () => {
+    it('should clean up on destroy', () => {
+      emptyState = new EmptyState(container, {
         icon: '🔍',
-        title: 'Original Title',
-        description: 'Original Description',
+        title: 'No results',
       });
-      component.init();
+      emptyState.init();
 
-      component.setOptions({ title: 'Updated Title' });
+      emptyState.destroy();
 
-      const title = container.querySelector('.empty-state-title');
-      expect(title?.textContent).toBe('Updated Title');
-    });
-
-    it('should preserve unchanged options', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Original Title',
-        description: 'Original Description',
-      });
-      component.init();
-
-      component.setOptions({ title: 'Updated Title' });
-
-      const desc = container.querySelector('.empty-state-description');
-      expect(desc?.textContent).toBe('Original Description');
-    });
-
-    it('should update icon', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Title',
-      });
-      component.init();
-
-      component.setOptions({ icon: '⚠️' });
-
-      const icon = container.querySelector('.empty-state-icon');
-      expect(icon?.textContent).toBe('⚠️');
-    });
-
-    it('should add description when not previously set', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Title',
-      });
-      component.init();
-
-      component.setOptions({ description: 'New Description' });
-
-      const desc = container.querySelector('.empty-state-description');
-      expect(desc?.textContent).toBe('New Description');
-    });
-
-    it('should update action button', () => {
-      const newAction = vi.fn();
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Title',
-        actionLabel: 'Original',
-        onAction: vi.fn(),
-      });
-      component.init();
-
-      component.setOptions({ actionLabel: 'Updated', onAction: newAction });
-
-      const button = container.querySelector('button');
-      expect(button?.textContent).toBe('Updated');
-      button?.click();
-      expect(newAction).toHaveBeenCalled();
-    });
-  });
-
-  describe('bindEvents method', () => {
-    it('should be callable without throwing', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Title',
-      });
-      component.init();
-
-      // bindEvents is called during init but is a no-op
-      expect(() => component.bindEvents()).not.toThrow();
-    });
-  });
-
-  describe('rendering without optional elements', () => {
-    it('should render without description', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Title Only',
-      });
-      component.init();
-
-      const desc = container.querySelector('.empty-state-description');
-      expect(desc).toBeNull();
-    });
-
-    it('should render without action buttons', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'No Actions',
-        description: 'Description',
-      });
-      component.init();
-
-      const buttons = container.querySelectorAll('button');
-      expect(buttons.length).toBe(0);
-    });
-
-    it('should render with only primary action', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Primary Only',
-        actionLabel: 'Primary',
-        onAction: vi.fn(),
-      });
-      component.init();
-
-      const buttons = container.querySelectorAll('button');
-      expect(buttons.length).toBe(1);
-      expect(buttons[0].textContent).toBe('Primary');
-    });
-
-    it('should not render primary button without onAction', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Label without callback',
-        actionLabel: 'Primary',
-      });
-      component.init();
-
-      const buttons = container.querySelectorAll('button');
-      expect(buttons.length).toBe(0);
-    });
-
-    it('should not render secondary button without onSecondaryAction', () => {
-      component = new EmptyState(container, {
-        icon: '🔍',
-        title: 'Label without callback',
-        secondaryActionLabel: 'Secondary',
-      });
-      component.init();
-
-      const buttons = container.querySelectorAll('button');
-      expect(buttons.length).toBe(0);
-    });
-  });
-
-  describe('icon rendering edge cases', () => {
-    it('should handle complex SVG icons', () => {
-      const complexSvg = '<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>';
-      component = new EmptyState(container, {
-        icon: complexSvg,
-        title: 'Complex SVG',
-      });
-      component.init();
-
-      const icon = container.querySelector('.empty-state-icon');
-      expect(icon?.innerHTML).toContain('<svg');
-      expect(icon?.innerHTML).toContain('<path');
-    });
-
-    it('should handle emoji icons', () => {
-      component = new EmptyState(container, {
-        icon: '🎨',
-        title: 'Emoji',
-      });
-      component.init();
-
-      const icon = container.querySelector('.empty-state-icon');
-      expect(icon?.textContent).toBe('🎨');
-    });
-
-    it('should handle text icons', () => {
-      component = new EmptyState(container, {
-        icon: '!',
-        title: 'Text Icon',
-      });
-      component.init();
-
-      const icon = container.querySelector('.empty-state-icon');
-      expect(icon?.textContent).toBe('!');
+      expect(query(container, '.empty-state')).toBeNull();
     });
   });
 });

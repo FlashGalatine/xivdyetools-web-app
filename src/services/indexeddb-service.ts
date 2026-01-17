@@ -29,9 +29,7 @@ export type StoreName = (typeof STORES)[keyof typeof STORES];
 /**
  * BUG-013 FIX: Result type for get operations with error context
  */
-export type GetResult<T> =
-  | { found: true; value: T }
-  | { found: false; error?: Error };
+export type GetResult<T> = { found: true; value: T } | { found: false; error?: Error };
 
 /**
  * IndexedDB Service

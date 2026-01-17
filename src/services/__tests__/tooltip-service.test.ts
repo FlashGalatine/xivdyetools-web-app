@@ -12,7 +12,7 @@ describe('TooltipService', () => {
 
   beforeEach(async () => {
     vi.useFakeTimers();
-    
+
     // Reset the module to get a fresh TooltipService with no container
     vi.resetModules();
     const module = await import('../tooltip-service');

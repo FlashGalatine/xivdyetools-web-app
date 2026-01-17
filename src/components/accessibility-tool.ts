@@ -12,11 +12,21 @@
 
 import { BaseComponent } from '@components/base-component';
 import { DyeSelector } from '@components/dye-selector';
-import { CollapsiblePanel } from '@mockups/CollapsiblePanel';
-import { ColorService, LanguageService, StorageService, dyeService } from '@services/index';
+import { CollapsiblePanel } from '@components/collapsible-panel';
+import { ResultCard } from '@components/v4/result-card';
+import type { ResultCardData, ContextAction } from '@components/v4/result-card';
+import {
+  ColorService,
+  ConfigController,
+  LanguageService,
+  StorageService,
+  dyeService,
+} from '@services/index';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye } from '@shared/types';
+import type { AccessibilityConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
+import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import { ICON_TOOL_ACCESSIBILITY } from '@shared/tool-icons';
 import { ICON_WARNING, ICON_BEAKER, ICON_EYE, ICON_SLIDERS } from '@shared/ui-icons';
 
@@ -92,11 +102,36 @@ interface DisplayOptions {
  * Vision type configuration
  */
 const VISION_TYPES = [
-  { id: 'normal', localeKey: 'normal', prevalence: '~92%' },
-  { id: 'deuteranopia', localeKey: 'deuteranopia', prevalence: '~6% males' },
-  { id: 'protanopia', localeKey: 'protanopia', prevalence: '~2% males' },
-  { id: 'tritanopia', localeKey: 'tritanopia', prevalence: '~0.01%' },
-  { id: 'achromatopsia', localeKey: 'achromatopsia', prevalence: '~0.003%' },
+  {
+    id: 'normal',
+    localeKey: 'normal',
+    prevalence: '~92%',
+    description: 'Standard Color Perception',
+  },
+  {
+    id: 'deuteranopia',
+    localeKey: 'deuteranopia',
+    prevalence: '~6% males',
+    description: 'Red-Green Colorblindness',
+  },
+  {
+    id: 'protanopia',
+    localeKey: 'protanopia',
+    prevalence: '~2% males',
+    description: 'Red-Green Colorblindness',
+  },
+  {
+    id: 'tritanopia',
+    localeKey: 'tritanopia',
+    prevalence: '~0.01%',
+    description: 'Blue-Yellow Colorblindness',
+  },
+  {
+    id: 'achromatopsia',
+    localeKey: 'achromatopsia',
+    prevalence: '~0.003%',
+    description: 'Total Colorblindness',
+  },
 ] as const;
 
 type VisionTypeId = (typeof VISION_TYPES)[number]['id'];
@@ -111,14 +146,20 @@ const STORAGE_KEYS = {
 } as const;
 
 /**
- * Default enabled vision types
+ * Default enabled vision types (all four colorblindness types plus normal vision)
  */
-const DEFAULT_VISION_TYPES: VisionTypeId[] = ['normal', 'deuteranopia', 'protanopia'];
+const DEFAULT_VISION_TYPES: VisionTypeId[] = [
+  'normal',
+  'deuteranopia',
+  'protanopia',
+  'tritanopia',
+  'achromatopsia',
+];
 
 /**
- * Default display options
+ * Default simulation display options (for vision simulation cards)
  */
-const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
+const DEFAULT_SIMULATION_OPTIONS: DisplayOptions = {
   showLabels: true,
   showHexValues: false,
   highContrastMode: false,
@@ -141,6 +182,7 @@ export class AccessibilityTool extends BaseComponent {
   private selectedDyes: Dye[] = [];
   private enabledVisionTypes: Set<VisionTypeId>;
   private displayOptions: DisplayOptions;
+  private cardDisplayOptions: DisplayOptionsConfig;
   private dyeResults: DyeAccessibilityResult[] = [];
   private pairResults: DyePairResult[] = [];
 
@@ -159,24 +201,44 @@ export class AccessibilityTool extends BaseComponent {
   // DOM References
   private visionTogglesContainer: HTMLElement | null = null;
   private displayOptionsContainer: HTMLElement | null = null;
+  private selectedDyesSection: HTMLElement | null = null;
+  private selectedDyesContainer: HTMLElement | null = null;
+  private visionSimSection: HTMLElement | null = null;
   private visionSimulationsContainer: HTMLElement | null = null;
+  private contrastSection: HTMLElement | null = null;
   private contrastTableContainer: HTMLElement | null = null;
+  private matrixSection: HTMLElement | null = null;
   private matrixContainer: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
 
+  // V4 Result Card references for selected dyes display
+  private v4ResultCards: ResultCard[] = [];
+
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: AccessibilityToolOptions) {
     super(container);
     this.options = options;
 
     // Load persisted state
-    const savedVisionTypes = StorageService.getItem<VisionTypeId[]>(STORAGE_KEYS.enabledVisionTypes);
+    const savedVisionTypes = StorageService.getItem<VisionTypeId[]>(
+      STORAGE_KEYS.enabledVisionTypes
+    );
     this.enabledVisionTypes = new Set(savedVisionTypes ?? DEFAULT_VISION_TYPES);
 
-    this.displayOptions =
-      StorageService.getItem<DisplayOptions>(STORAGE_KEYS.displayOptions) ?? { ...DEFAULT_DISPLAY_OPTIONS };
+    this.displayOptions = StorageService.getItem<DisplayOptions>(STORAGE_KEYS.displayOptions) ?? {
+      ...DEFAULT_SIMULATION_OPTIONS,
+    };
+
+    // Initialize card display options (for v4-result-cards)
+    this.cardDisplayOptions = {
+      ...DEFAULT_DISPLAY_OPTIONS,
+      showPrice: false,
+      showDeltaE: false,
+      showAcquisition: false,
+    };
   }
 
   // ============================================================================
@@ -204,11 +266,18 @@ export class AccessibilityTool extends BaseComponent {
       this.update();
     });
 
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('accessibility', (config) => {
+      this.setConfig(config);
+    });
+
     // If dyes were restored from localStorage, update results now that containers exist
     if (this.selectedDyes.length > 0) {
       this.updateResults();
       this.updateDrawerContent();
-      logger.info(`[AccessibilityTool] Populated results for ${this.selectedDyes.length} restored dyes`);
+      logger.info(
+        `[AccessibilityTool] Populated results for ${this.selectedDyes.length} restored dyes`
+      );
     }
 
     logger.info('[AccessibilityTool] Mounted');
@@ -216,6 +285,7 @@ export class AccessibilityTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
 
     // Destroy desktop components
     this.dyeSelector?.destroy();
@@ -235,6 +305,195 @@ export class AccessibilityTool extends BaseComponent {
 
     super.destroy();
     logger.info('[AccessibilityTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.selectedDyes = [];
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.selectedDyes);
+    logger.info('[AccessibilityTool] All dyes cleared');
+
+    // Update dye selectors
+    this.dyeSelector?.setSelectedDyes([]);
+    this.drawerDyeSelector?.setSelectedDyes([]);
+
+    // Clear UI containers
+    if (this.selectedDyesContainer) {
+      clearContainer(this.selectedDyesContainer);
+    }
+
+    // Show empty state and hide other sections
+    this.showEmptyState(true);
+    this.updateDrawerContent();
+  }
+
+  /**
+   * Select a dye from the Color Palette drawer
+   * Adds to the selection if there's room (max 4 dyes)
+   */
+  public selectDye(dye: Dye): void {
+    if (!dye) return;
+
+    // Don't add duplicates
+    if (this.selectedDyes.some((d) => d.id === dye.id)) {
+      return;
+    }
+
+    // Check max selection limit
+    if (this.selectedDyes.length >= 4) {
+      // Remove oldest dye and add new one
+      this.selectedDyes.shift();
+    }
+
+    // Add the dye
+    this.selectedDyes.push(dye);
+
+    // Save to storage
+    const dyeIds = this.selectedDyes.map((d) => d.id);
+    StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+
+    // Update selectors
+    this.dyeSelector?.setSelectedDyes(this.selectedDyes);
+    this.drawerDyeSelector?.setSelectedDyes(this.selectedDyes);
+
+    // Update displays
+    this.updateResults();
+    this.updateDrawerContent();
+
+    logger.info(`[AccessibilityTool] Selected dye from palette: ${dye.name}`);
+  }
+
+  /**
+   * Alias for selectDye - some tools use addDye naming
+   */
+  public addDye(dye: Dye): void {
+    this.selectDye(dye);
+  }
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   */
+  public setConfig(config: Partial<AccessibilityConfig>): void {
+    let needsRerender = false;
+
+    // Map config properties to vision type IDs
+    const visionTypeMap: Record<string, VisionTypeId> = {
+      normalVision: 'normal',
+      deuteranopia: 'deuteranopia',
+      protanopia: 'protanopia',
+      tritanopia: 'tritanopia',
+      achromatopsia: 'achromatopsia',
+    };
+
+    // Handle vision type toggles
+    for (const [configKey, visionId] of Object.entries(visionTypeMap)) {
+      const configValue = config[configKey as keyof AccessibilityConfig] as boolean | undefined;
+      if (configValue !== undefined) {
+        const isEnabled = this.enabledVisionTypes.has(visionId);
+        if (configValue !== isEnabled) {
+          if (configValue) {
+            this.enabledVisionTypes.add(visionId);
+          } else {
+            this.enabledVisionTypes.delete(visionId);
+          }
+          needsRerender = true;
+          logger.info(`[AccessibilityTool] setConfig: ${configKey} -> ${configValue}`);
+        }
+      }
+    }
+
+    // Handle display options
+    if (config.showLabels !== undefined && config.showLabels !== this.displayOptions.showLabels) {
+      this.displayOptions.showLabels = config.showLabels;
+      needsRerender = true;
+      logger.info(`[AccessibilityTool] setConfig: showLabels -> ${config.showLabels}`);
+    }
+
+    if (
+      config.showHexValues !== undefined &&
+      config.showHexValues !== this.displayOptions.showHexValues
+    ) {
+      this.displayOptions.showHexValues = config.showHexValues;
+      needsRerender = true;
+      logger.info(`[AccessibilityTool] setConfig: showHexValues -> ${config.showHexValues}`);
+    }
+
+    if (
+      config.highContrastMode !== undefined &&
+      config.highContrastMode !== this.displayOptions.highContrastMode
+    ) {
+      this.displayOptions.highContrastMode = config.highContrastMode;
+      needsRerender = true;
+      logger.info(`[AccessibilityTool] setConfig: highContrastMode -> ${config.highContrastMode}`);
+    }
+
+    // Handle card display options (for v4-result-cards)
+    if (config.displayOptions !== undefined) {
+      const newOptions = config.displayOptions;
+      let cardOptionsChanged = false;
+
+      if (
+        newOptions.showHex !== undefined &&
+        newOptions.showHex !== this.cardDisplayOptions.showHex
+      ) {
+        this.cardDisplayOptions.showHex = newOptions.showHex;
+        cardOptionsChanged = true;
+      }
+      if (
+        newOptions.showRgb !== undefined &&
+        newOptions.showRgb !== this.cardDisplayOptions.showRgb
+      ) {
+        this.cardDisplayOptions.showRgb = newOptions.showRgb;
+        cardOptionsChanged = true;
+      }
+      if (
+        newOptions.showHsv !== undefined &&
+        newOptions.showHsv !== this.cardDisplayOptions.showHsv
+      ) {
+        this.cardDisplayOptions.showHsv = newOptions.showHsv;
+        cardOptionsChanged = true;
+      }
+      if (
+        newOptions.showLab !== undefined &&
+        newOptions.showLab !== this.cardDisplayOptions.showLab
+      ) {
+        this.cardDisplayOptions.showLab = newOptions.showLab;
+        cardOptionsChanged = true;
+      }
+
+      if (cardOptionsChanged) {
+        needsRerender = true;
+        logger.info(
+          '[AccessibilityTool] setConfig: cardDisplayOptions updated',
+          this.cardDisplayOptions
+        );
+      }
+    }
+
+    if (needsRerender) {
+      // Save to storage
+      StorageService.setItem(STORAGE_KEYS.enabledVisionTypes, Array.from(this.enabledVisionTypes));
+      StorageService.setItem(STORAGE_KEYS.displayOptions, this.displayOptions);
+
+      // Sync desktop and drawer checkboxes
+      this.syncDesktopVisionCheckboxes();
+      this.syncDesktopDisplayCheckboxes();
+
+      // Re-render results if we have data
+      if (this.selectedDyes.length > 0) {
+        this.updateResults();
+        this.updateDrawerContent();
+      }
+    }
   }
 
   // ============================================================================
@@ -305,12 +564,17 @@ export class AccessibilityTool extends BaseComponent {
   /**
    * Create a header for right panel sections
    */
+  /**
+   * Create a header for right panel sections
+   */
   private createHeader(text: string): HTMLElement {
-    return this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
+    const header = this.createElement('div', { className: 'section-header' });
+    const title = this.createElement('span', {
+      className: 'section-title',
       textContent: text,
-      attributes: { style: 'color: var(--theme-text-muted);' },
     });
+    header.appendChild(title);
+    return header;
   }
 
   /**
@@ -356,7 +620,9 @@ export class AccessibilityTool extends BaseComponent {
         this.selectedDyes = restoredDyes;
         this.updateSelectedDyesDisplay(selectedDisplay);
         // NOTE: updateResults() called in onMount() after right panel containers exist
-        logger.info(`[AccessibilityTool] Restored ${restoredDyes.length} saved dyes from localStorage`);
+        logger.info(
+          `[AccessibilityTool] Restored ${restoredDyes.length} saved dyes from localStorage`
+        );
       }
     }
 
@@ -468,7 +734,10 @@ export class AccessibilityTool extends BaseComponent {
         } else {
           this.enabledVisionTypes.delete(type.id);
         }
-        StorageService.setItem(STORAGE_KEYS.enabledVisionTypes, Array.from(this.enabledVisionTypes));
+        StorageService.setItem(
+          STORAGE_KEYS.enabledVisionTypes,
+          Array.from(this.enabledVisionTypes)
+        );
         this.updateResults();
         this.updateDrawerContent();
       });
@@ -503,8 +772,14 @@ export class AccessibilityTool extends BaseComponent {
 
     const options = [
       { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') || 'Show Labels' },
-      { key: 'showHexValues', label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values' },
-      { key: 'highContrastMode', label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode' },
+      {
+        key: 'showHexValues',
+        label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values',
+      },
+      {
+        key: 'highContrastMode',
+        label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode',
+      },
     ] as const;
 
     for (const option of options) {
@@ -550,54 +825,369 @@ export class AccessibilityTool extends BaseComponent {
     clearContainer(right);
 
     // Empty state (shown when no dyes selected)
-    this.emptyStateContainer = this.createElement('div');
+    // Use inline display style for reliable toggling, centered both horizontally and vertically
+    this.emptyStateContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          min-height: 300px;
+          width: 100%;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
     this.renderEmptyState();
     right.appendChild(this.emptyStateContainer);
 
-    // Vision Simulations Section
-    const simSection = this.createElement('div', { className: 'mb-6 hidden' });
-    simSection.appendChild(this.createHeader(LanguageService.t('accessibility.visionSimulation') || 'Vision Simulations'));
+    // Right Panel Content Wrapper (flex column with gap-8 for consistent spacing, max-width for ultrawide)
+    const contentWrapper = this.createElement('div', {
+      className: 'flex flex-col gap-8',
+      attributes: {
+        style: 'max-width: 1200px; margin: 0 auto; width: 100%;',
+      },
+    });
+
+    // Selected Dyes Section with v4-result-cards (hidden initially)
+    this.selectedDyesSection = this.createElement('div', {
+      attributes: { style: 'display: none;' },
+    });
+    this.selectedDyesSection.appendChild(
+      this.createHeader(LanguageService.t('accessibility.selectedDyes') || 'Selected Dyes')
+    );
+    // Horizontal flex layout for cards, centered
+    this.selectedDyesContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          justify-content: center;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+    this.selectedDyesSection.appendChild(this.selectedDyesContainer);
+    contentWrapper.appendChild(this.selectedDyesSection);
+
+    // Vision Simulations Section (hidden initially via inline style)
+    this.visionSimSection = this.createElement('div', {
+      attributes: { style: 'display: none;' },
+    });
+    this.visionSimSection.appendChild(
+      this.createHeader(LanguageService.t('accessibility.visionSimulation') || 'Vision Simulations')
+    );
     this.visionSimulationsContainer = this.createElement('div', {
       className: 'grid gap-4 md:grid-cols-2 lg:grid-cols-3',
     });
-    simSection.appendChild(this.visionSimulationsContainer);
-    right.appendChild(simSection);
+    this.visionSimSection.appendChild(this.visionSimulationsContainer);
+    contentWrapper.appendChild(this.visionSimSection);
 
-    // Contrast Analysis Section
-    const contrastSection = this.createElement('div', { className: 'mb-6 hidden' });
-    contrastSection.appendChild(this.createHeader(LanguageService.t('accessibility.contrastRatios') || 'Contrast Analysis'));
+    // Contrast Analysis Section (hidden initially via inline style)
+    this.contrastSection = this.createElement('div', {
+      attributes: { style: 'display: none;' },
+    });
+    this.contrastSection.appendChild(
+      this.createHeader(LanguageService.t('accessibility.contrastRatios') || 'Contrast Analysis')
+    );
     this.contrastTableContainer = this.createElement('div');
-    contrastSection.appendChild(this.contrastTableContainer);
-    right.appendChild(contrastSection);
+    this.contrastSection.appendChild(this.contrastTableContainer);
+    contentWrapper.appendChild(this.contrastSection);
 
-    // Distinguishability Matrix Section
-    const matrixSection = this.createElement('div', { className: 'hidden' });
-    matrixSection.appendChild(this.createHeader(LanguageService.t('accessibility.pairComparisons') || 'Pairwise Distinguishability'));
+    // Distinguishability Matrix Section (hidden initially via inline style)
+    this.matrixSection = this.createElement('div', {
+      attributes: { style: 'display: none;' },
+    });
+    this.matrixSection.appendChild(
+      this.createHeader(
+        LanguageService.t('accessibility.pairComparisons') || 'Pairwise Distinguishability'
+      )
+    );
     this.matrixContainer = this.createElement('div');
-    matrixSection.appendChild(this.matrixContainer);
-    right.appendChild(matrixSection);
+    this.matrixSection.appendChild(this.matrixContainer);
+    contentWrapper.appendChild(this.matrixSection);
+
+    right.appendChild(contentWrapper);
   }
 
   /**
-   * Render empty state
+   * Render empty state with 4 placeholder "Add Dye" cards (matching Compare Tool pattern)
    */
   private renderEmptyState(): void {
     if (!this.emptyStateContainer) return;
     clearContainer(this.emptyStateContainer);
 
-    const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+    const container = this.createElement('div', {
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 2rem;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
-    empty.innerHTML = `
-      <span class="inline-block w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);">${ICON_TOOL_ACCESSIBILITY}</span>
-      <p style="color: var(--theme-text);">${LanguageService.t('accessibility.selectDyesToSeeAnalysis')}</p>
-    `;
+    // Placeholder slots section
+    const slotsContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          gap: 16px;
+          flex-wrap: wrap;
+          padding: 20px;
+          justify-content: center;
+          margin-bottom: 2rem;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
 
-    this.emptyStateContainer.appendChild(empty);
+    // Create 4 placeholder slots
+    for (let i = 0; i < 4; i++) {
+      const slot = this.createElement('div', {
+        attributes: {
+          style: `
+            width: 200px;
+            height: 280px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // Hover effect
+      this.on(slot, 'mouseenter', () => {
+        slot.style.borderColor = 'rgba(255, 255, 255, 0.35)';
+        slot.style.background = 'rgba(255, 255, 255, 0.05)';
+      });
+      this.on(slot, 'mouseleave', () => {
+        slot.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        slot.style.background = 'rgba(0, 0, 0, 0.1)';
+      });
+
+      // Plus icon in a dashed circle
+      const iconContainer = this.createElement('div', {
+        attributes: {
+          style: `
+            width: 48px;
+            height: 48px;
+            border: 2px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      iconContainer.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="var(--theme-text-muted)" style="width: 24px; height: 24px; opacity: 0.4;">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+      `;
+
+      // "Add Dye" text
+      const text = this.createElement('span', {
+        textContent: LanguageService.t('accessibility.addDye') || 'Add Dye',
+        attributes: {
+          style: `
+            font-size: 0.85rem;
+            color: var(--theme-text-muted);
+            opacity: 0.6;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      slot.appendChild(iconContainer);
+      slot.appendChild(text);
+      slotsContainer.appendChild(slot);
+    }
+
+    container.appendChild(slotsContainer);
+
+    // Empty state message
+    const messageContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 40px;
+          text-align: center;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 12px;
+          border: 1px dashed rgba(255, 255, 255, 0.15);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    // Tool icon
+    const iconEl = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 150px;
+          height: 150px;
+          margin-bottom: 20px;
+          opacity: 0.4;
+          color: var(--theme-text-muted);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+    iconEl.innerHTML = ICON_TOOL_ACCESSIBILITY;
+
+    // Message text
+    const message = this.createElement('p', {
+      textContent:
+        LanguageService.t('accessibility.selectDyesToSeeAnalysis') ||
+        'Select dyes to see accessibility analysis',
+      attributes: {
+        style: `
+          font-size: 1.1rem;
+          color: var(--theme-text-muted);
+          max-width: 400px;
+          line-height: 1.5;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    messageContainer.appendChild(iconEl);
+    messageContainer.appendChild(message);
+    container.appendChild(messageContainer);
+
+    this.emptyStateContainer.appendChild(container);
+  }
+
+  /**
+   * Render selected dyes as v4-result-cards
+   * Displays each selected dye with technical details and remove action
+   */
+  private renderSelectedDyeCards(): void {
+    if (!this.selectedDyesContainer) return;
+    clearContainer(this.selectedDyesContainer);
+
+    // Clear previous card references
+    this.v4ResultCards = [];
+
+    for (const dye of this.selectedDyes) {
+      // Create v4-result-card element
+      const card = document.createElement('v4-result-card') as ResultCard;
+
+      // Build ResultCardData - focused on accessibility (no prices)
+      const cardData: ResultCardData = {
+        dye: dye,
+        originalColor: dye.hex, // Same color for both (no comparison in accessibility)
+        matchedColor: dye.hex,
+        // No deltaE, hueDeviance, price, vendorCost - keep focus on accessibility analysis
+      };
+
+      // Assign data to card
+      card.data = cardData;
+
+      // Set display options from config - color formats are configurable
+      card.showHex = this.cardDisplayOptions.showHex;
+      card.showRgb = this.cardDisplayOptions.showRgb;
+      card.showHsv = this.cardDisplayOptions.showHsv;
+      card.showLab = this.cardDisplayOptions.showLab;
+      card.showDeltaE = false; // Not applicable for accessibility checker
+      card.showPrice = false; // Keep prices hidden for accessibility tool
+      card.showAcquisition = false; // Keep it simple, focus on colors
+
+      // Set primary action to "Remove"
+      card.primaryActionLabel = LanguageService.t('common.remove') || 'Remove';
+
+      // Handle "Remove" button click
+      card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {
+        const dyeToRemove = e.detail.dye;
+        this.removeDyeFromSelection(dyeToRemove);
+      }) as EventListener);
+
+      // Handle context menu actions (cross-tool navigation)
+      card.addEventListener('context-action', ((
+        e: CustomEvent<{ action: ContextAction; dye: Dye }>
+      ) => {
+        this.handleContextAction(e.detail.action, e.detail.dye);
+      }) as EventListener);
+
+      // Set card width for horizontal layout
+      card.style.width = '280px';
+      card.style.flexShrink = '0';
+
+      // Store reference and add to container
+      this.v4ResultCards.push(card);
+      this.selectedDyesContainer.appendChild(card);
+    }
+  }
+
+  /**
+   * Remove a dye from the selection
+   */
+  private removeDyeFromSelection(dye: Dye): void {
+    const newSelection = this.selectedDyes.filter((d) => d.id !== dye.id);
+
+    // Update selectors
+    this.dyeSelector?.setSelectedDyes(newSelection);
+    this.drawerDyeSelector?.setSelectedDyes(newSelection);
+    this.selectedDyes = newSelection;
+
+    // Save to storage
+    const dyeIds = newSelection.map((d) => d.id);
+    StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+
+    // Update all displays
+    this.updateResults();
+    this.updateDrawerContent();
+
+    // Update left panel selected dyes display
+    const leftPanelDisplay = this.options.leftPanel.querySelector('.selected-dyes-display');
+    if (leftPanelDisplay) {
+      this.updateSelectedDyesDisplay(leftPanelDisplay as HTMLElement);
+    }
+
+    logger.info(`[AccessibilityTool] Removed dye: ${dye.name}`);
+  }
+
+  /**
+   * Handle context menu actions for cross-tool navigation
+   */
+  private handleContextAction(action: ContextAction, dye: Dye): void {
+    logger.info(`[AccessibilityTool] Context action: ${action} for ${dye.name}`);
+
+    // Dispatch custom event for app-level handling
+    const event = new CustomEvent('tool-context-action', {
+      bubbles: true,
+      detail: { action, dye, sourceTool: 'accessibility' },
+    });
+    this.container.dispatchEvent(event);
   }
 
   /**
@@ -625,6 +1215,7 @@ export class AccessibilityTool extends BaseComponent {
     }
 
     // Render sections
+    this.renderSelectedDyeCards(); // NEW: Render v4-result-cards for selected dyes
     this.renderVisionSimulations();
     this.renderContrastTable();
     this.renderDistinguishabilityMatrix();
@@ -632,93 +1223,126 @@ export class AccessibilityTool extends BaseComponent {
 
   /**
    * Show/hide empty state
+   * Uses inline display styles for reliability (Tailwind .hidden class can have specificity issues)
    */
   private showEmptyState(show: boolean): void {
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.classList.toggle('hidden', !show);
+      // Use inline style instead of CSS class for reliability
+      this.emptyStateContainer.style.display = show ? 'flex' : 'none';
     }
 
-    // Toggle all result sections
-    const rightPanel = this.options.rightPanel;
-    const sections = rightPanel.querySelectorAll(':scope > div:not(:first-child)');
-    sections.forEach((section) => {
-      section.classList.toggle('hidden', show);
-    });
+    // Toggle all result sections using direct property references
+    const displayValue = show ? 'none' : 'block';
+    if (this.selectedDyesSection) {
+      this.selectedDyesSection.style.display = displayValue;
+    }
+    if (this.visionSimSection) {
+      this.visionSimSection.style.display = displayValue;
+    }
+    if (this.contrastSection) {
+      this.contrastSection.style.display = displayValue;
+    }
+    if (this.matrixSection) {
+      this.matrixSection.style.display = displayValue;
+    }
   }
 
   /**
    * Render vision simulation cards
+   * Each card shows how selected dyes appear under a specific vision type
+   * Layout: Compact horizontal cards matching the mockup design
    */
   private renderVisionSimulations(): void {
     if (!this.visionSimulationsContainer) return;
     clearContainer(this.visionSimulationsContainer);
 
-    const enabledTypes = VISION_TYPES.filter((t) => this.enabledVisionTypes.has(t.id));
+    // Update container to use horizontal flex layout for compact cards, centered
+    this.visionSimulationsContainer.style.display = 'flex';
+    this.visionSimulationsContainer.style.flexWrap = 'wrap';
+    this.visionSimulationsContainer.style.gap = '16px';
+    this.visionSimulationsContainer.style.justifyContent = 'center';
+
+    // Filter out 'normal' vision type - Selected Dyes section already shows original colors
+    const enabledTypes = VISION_TYPES.filter(
+      (t) => this.enabledVisionTypes.has(t.id) && t.id !== 'normal'
+    );
 
     for (const type of enabledTypes) {
+      // Vision card container - compact size
       const card = this.createElement('div', {
-        className: 'p-4 rounded-lg',
+        className: 'vision-card',
         attributes: {
-          style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+          style: 'width: 280px; flex-shrink: 0;',
         },
       });
 
-      // Card header
-      const header = this.createElement('p', {
-        className: 'text-sm font-medium mb-3',
-        textContent: LanguageService.getVisionType(type.localeKey),
-        attributes: { style: 'color: var(--theme-text);' },
+      // Card header with vision type and prevalence
+      const header = this.createElement('div', {
+        className: 'vision-card-header',
       });
+
+      const typeLabel = this.createElement('span', {
+        className: 'vision-type-label',
+        textContent: LanguageService.getVisionType(type.localeKey),
+      });
+      header.appendChild(typeLabel);
+
+      const prevalenceLabel = this.createElement('span', {
+        className: 'vision-prevalence',
+        textContent: type.prevalence,
+      });
+      header.appendChild(prevalenceLabel);
+
       card.appendChild(header);
 
-      // Color swatches
+      // Color swatches row - horizontal layout
       const swatchContainer = this.createElement('div', {
-        className: 'flex gap-2 mb-2',
+        className: 'vision-swatches',
       });
 
       for (const result of this.dyeResults) {
-        const simColor = result.colorblindnessSimulations[type.id as keyof typeof result.colorblindnessSimulations];
-        const swatchWrapper = this.createElement('div', { className: 'text-center' });
+        const simColor =
+          result.colorblindnessSimulations[
+            type.id as keyof typeof result.colorblindnessSimulations
+          ];
 
+        // Swatch item wrapper
+        const swatchItem = this.createElement('div', {
+          className: 'vision-swatch-item',
+        });
+
+        // Color swatch
         const swatch = this.createElement('div', {
-          className: 'w-10 h-10 rounded',
+          className: 'vision-swatch',
           attributes: {
-            style: `background: ${simColor};`,
-            title: result.dyeName,
+            style: `background-color: ${simColor};`,
+            title: `${result.dyeName}: ${simColor}`,
           },
         });
-        swatchWrapper.appendChild(swatch);
+        swatchItem.appendChild(swatch);
 
+        // Label (show first word of dye name)
         if (this.displayOptions.showLabels) {
-          const label = this.createElement('p', {
-            className: 'text-xs mt-1 truncate max-w-[40px]',
+          const label = this.createElement('span', {
+            className: 'vision-swatch-label',
             textContent: result.dyeName.split(' ')[0],
-            attributes: { style: 'color: var(--theme-text-muted);' },
           });
-          swatchWrapper.appendChild(label);
+          swatchItem.appendChild(label);
         }
 
+        // Hex value (optional)
         if (this.displayOptions.showHexValues) {
-          const hex = this.createElement('p', {
-            className: 'text-xs number',
-            textContent: simColor,
-            attributes: { style: 'color: var(--theme-text-muted);' },
+          const hex = this.createElement('span', {
+            className: 'vision-swatch-hex',
+            textContent: simColor.toUpperCase(),
           });
-          swatchWrapper.appendChild(hex);
+          swatchItem.appendChild(hex);
         }
 
-        swatchContainer.appendChild(swatchWrapper);
+        swatchContainer.appendChild(swatchItem);
       }
 
       card.appendChild(swatchContainer);
-
-      // Prevalence
-      const prevalence = this.createElement('p', {
-        className: 'text-xs number',
-        textContent: type.prevalence,
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      card.appendChild(prevalence);
 
       this.visionSimulationsContainer.appendChild(card);
     }
@@ -726,64 +1350,176 @@ export class AccessibilityTool extends BaseComponent {
 
   /**
    * Render contrast analysis table
+   * Uses proper HTML table structure matching the mockup design
    */
   private renderContrastTable(): void {
     if (!this.contrastTableContainer) return;
     clearContainer(this.contrastTableContainer);
 
-    const table = this.createElement('div', {
-      className: 'rounded-lg overflow-hidden',
+    // Container with rounded corners and border
+    const tableContainer = this.createElement('div', {
+      className: 'contrast-table-container',
+    });
+
+    // Create proper HTML table
+    const table = this.createElement('table', {
+      className: 'contrast-table',
       attributes: {
-        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        style: `
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 14px;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
-    // Header row
-    const headerRow = this.createElement('div', {
-      className: 'p-3 border-b',
-      attributes: { style: 'border-color: var(--theme-border); background: var(--theme-background-secondary);' },
+    // Table header
+    const thead = this.createElement('thead');
+    const headerRow = this.createElement('tr', {
+      attributes: {
+        style: 'background: var(--theme-background-secondary);',
+      },
     });
-    headerRow.innerHTML = `
-      <div class="grid grid-cols-3 gap-2 text-xs font-medium" style="color: var(--theme-text-muted);">
-        <span>${LanguageService.t('common.dye') || 'Dye'}</span>
-        <span>${LanguageService.t('accessibility.vsWhite')}</span>
-        <span>${LanguageService.t('accessibility.vsBlack')}</span>
-      </div>
-    `;
-    table.appendChild(headerRow);
 
-    // Data rows
-    for (const result of this.dyeResults) {
-      const row = this.createElement('div', {
-        className: 'p-3 border-b last:border-b-0',
-        attributes: { style: 'border-color: var(--theme-border);' },
+    // Dye column header
+    const dyeHeader = this.createElement('th', {
+      className: 'dye-column',
+      textContent: LanguageService.t('common.dye') || 'Dye',
+      attributes: {
+        style: `
+          text-align: left;
+          padding: 12px 16px;
+          font-size: 12px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--theme-text-muted);
+          border-bottom: 1px solid var(--theme-border);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+    headerRow.appendChild(dyeHeader);
+
+    // vs White header
+    const whiteHeader = this.createElement('th', {
+      className: 'contrast-column',
+      textContent: LanguageService.t('accessibility.vsWhite') || 'vs White',
+      attributes: {
+        style: `
+          text-align: left;
+          padding: 12px 16px;
+          font-size: 12px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--theme-text-muted);
+          border-bottom: 1px solid var(--theme-border);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+    headerRow.appendChild(whiteHeader);
+
+    // vs Black header
+    const blackHeader = this.createElement('th', {
+      className: 'contrast-column',
+      textContent: LanguageService.t('accessibility.vsBlack') || 'vs Black',
+      attributes: {
+        style: `
+          text-align: left;
+          padding: 12px 16px;
+          font-size: 12px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--theme-text-muted);
+          border-bottom: 1px solid var(--theme-border);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+    headerRow.appendChild(blackHeader);
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Table body
+    const tbody = this.createElement('tbody');
+
+    for (let i = 0; i < this.dyeResults.length; i++) {
+      const result = this.dyeResults[i];
+      const isLastRow = i === this.dyeResults.length - 1;
+
+      const row = this.createElement('tr', {
+        attributes: {
+          style: isLastRow ? '' : 'border-bottom: 1px solid var(--theme-border);',
+        },
       });
 
-      row.innerHTML = `
-        <div class="grid grid-cols-3 gap-2 items-center text-sm">
-          <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded" style="background: ${result.hex};"></div>
-            <span class="truncate" style="color: var(--theme-text);">${result.dyeName}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="number" style="color: var(--theme-text);">${result.contrastVsWhite.ratio}:1</span>
-            <span class="px-1.5 py-0.5 rounded text-xs font-medium" style="${this.getWCAGBadgeStyle(result.contrastVsWhite.wcagLevel)}">${result.contrastVsWhite.wcagLevel}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="number" style="color: var(--theme-text);">${result.contrastVsBlack.ratio}:1</span>
-            <span class="px-1.5 py-0.5 rounded text-xs font-medium" style="${this.getWCAGBadgeStyle(result.contrastVsBlack.wcagLevel)}">${result.contrastVsBlack.wcagLevel}</span>
-          </div>
+      // Dye cell with color indicator
+      const dyeCell = this.createElement('td', {
+        className: 'dye-cell',
+        attributes: {
+          style: 'padding: 12px 16px;',
+        },
+      });
+      dyeCell.innerHTML = `
+        <div class="dye-cell-content">
+          <div class="dye-indicator" style="background-color: ${result.hex};"></div>
+          <span style="color: var(--theme-text); font-weight: 500;">${result.dyeName}</span>
         </div>
       `;
+      row.appendChild(dyeCell);
 
-      table.appendChild(row);
+      // vs White cell
+      const whiteCell = this.createElement('td', {
+        className: 'contrast-cell',
+        attributes: {
+          style: 'padding: 12px 16px;',
+        },
+      });
+      const whiteBadgeClass = result.contrastVsWhite.wcagLevel.toLowerCase();
+      whiteCell.innerHTML = `
+        <div class="contrast-cell-content">
+          <span class="contrast-ratio">${result.contrastVsWhite.ratio}:1</span>
+          <span class="wcag-badge ${whiteBadgeClass}">${result.contrastVsWhite.wcagLevel}</span>
+        </div>
+      `;
+      row.appendChild(whiteCell);
+
+      // vs Black cell
+      const blackCell = this.createElement('td', {
+        className: 'contrast-cell',
+        attributes: {
+          style: 'padding: 12px 16px;',
+        },
+      });
+      const blackBadgeClass = result.contrastVsBlack.wcagLevel.toLowerCase();
+      blackCell.innerHTML = `
+        <div class="contrast-cell-content">
+          <span class="contrast-ratio">${result.contrastVsBlack.ratio}:1</span>
+          <span class="wcag-badge ${blackBadgeClass}">${result.contrastVsBlack.wcagLevel}</span>
+        </div>
+      `;
+      row.appendChild(blackCell);
+
+      tbody.appendChild(row);
     }
 
-    this.contrastTableContainer.appendChild(table);
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
+    this.contrastTableContainer.appendChild(tableContainer);
   }
 
   /**
    * Render distinguishability matrix
+   * Uses proper HTML table structure matching the mockup design
    */
   private renderDistinguishabilityMatrix(): void {
     if (!this.matrixContainer) return;
@@ -792,58 +1528,155 @@ export class AccessibilityTool extends BaseComponent {
     if (this.selectedDyes.length < 2) {
       const notice = this.createElement('p', {
         className: 'text-sm text-center py-4',
-        textContent: LanguageService.t('accessibility.selectTwoDyes') || 'Select at least 2 dyes to see comparisons',
+        textContent:
+          LanguageService.t('accessibility.selectTwoDyes') ||
+          'Select at least 2 dyes to see comparisons',
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       this.matrixContainer.appendChild(notice);
       return;
     }
 
-    // Wrapper for scroll shadow effect on mobile
-    const matrixWrapper = this.createElement('div', {
-      className: 'relative',
+    // Main pairwise container
+    const pairwiseContainer = this.createElement('div', {
+      className: 'pairwise-container',
     });
 
-    const matrix = this.createElement('div', {
-      className: 'rounded-lg p-3 sm:p-4 overflow-x-auto',
+    // Table wrapper for horizontal scrolling
+    const tableWrapper = this.createElement('div', {
       attributes: {
-        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        style: 'overflow-x: auto; padding: 16px;',
       },
     });
 
-    // Build table HTML with responsive sizing
-    let html = '<table class="w-full text-sm min-w-max"><thead><tr><th></th>';
+    // Create the matrix table
+    const table = this.createElement('table', {
+      className: 'pairwise-matrix',
+      attributes: {
+        style: `
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 14px;
+          min-width: max-content;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
 
-    // Column headers - larger swatches on mobile for better touch targets
+    // Table header
+    const thead = this.createElement('thead');
+    const headerRow = this.createElement('tr');
+
+    // Empty corner cell
+    const cornerCell = this.createElement('th', {
+      className: 'matrix-corner',
+      attributes: {
+        style: 'padding: 8px; min-width: 120px;',
+      },
+    });
+    headerRow.appendChild(cornerCell);
+
+    // Column headers with color swatches and names
     for (const dye of this.selectedDyes) {
       const dyeName = LanguageService.getDyeName(dye.itemID) || dye.name;
-      html += `
-        <th class="p-2 text-center min-w-[70px]">
-          <div class="w-8 h-8 rounded mx-auto mb-1" style="background: ${dye.hex};"></div>
-          <span class="text-xs font-normal block truncate max-w-[60px] sm:max-w-20 mx-auto" style="color: var(--theme-text-muted);">${dyeName}</span>
-        </th>
+      const headerCell = this.createElement('th', {
+        className: 'matrix-header-cell',
+        attributes: {
+          style: `
+            padding: 8px 12px;
+            text-align: center;
+            vertical-align: bottom;
+            min-width: 80px;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+      headerCell.innerHTML = `
+        <div style="
+          width: 24px;
+          height: 24px;
+          border-radius: 4px;
+          background-color: ${dye.hex};
+          border: 1px solid var(--theme-border);
+          margin: 0 auto 6px;
+        "></div>
+        <span style="
+          font-size: 11px;
+          font-weight: 400;
+          color: var(--theme-text-muted);
+          display: block;
+          max-width: 70px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          margin: 0 auto;
+        ">${dyeName}</span>
       `;
+      headerRow.appendChild(headerCell);
     }
-    html += '</tr></thead><tbody>';
 
-    // Data rows - improved for mobile with larger touch targets
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Table body
+    const tbody = this.createElement('tbody');
+
     for (let i = 0; i < this.selectedDyes.length; i++) {
       const rowDye = this.selectedDyes[i];
       const rowDyeName = LanguageService.getDyeName(rowDye.itemID) || rowDye.name;
 
-      html += `
-        <tr>
-          <td class="p-2 sticky left-0" style="background: var(--theme-card-background);">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded shrink-0" style="background: ${rowDye.hex};"></div>
-              <span class="text-xs truncate max-w-[60px] sm:max-w-20" style="color: var(--theme-text);">${rowDyeName}</span>
-            </div>
-          </td>
-      `;
+      const row = this.createElement('tr');
 
+      // Row header with color swatch and name
+      const rowHeader = this.createElement('td', {
+        className: 'matrix-row-header',
+        attributes: {
+          style: `
+            padding: 8px 12px;
+            background: var(--theme-card-background);
+            position: sticky;
+            left: 0;
+            z-index: 1;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+      rowHeader.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background-color: ${rowDye.hex};
+            border: 1px solid var(--theme-border);
+            flex-shrink: 0;
+          "></div>
+          <span style="
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--theme-text);
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          ">${rowDyeName}</span>
+        </div>
+      `;
+      row.appendChild(rowHeader);
+
+      // Matrix cells
       for (let j = 0; j < this.selectedDyes.length; j++) {
+        const cell = this.createElement('td', {
+          className: 'matrix-cell',
+        });
+
         if (i === j) {
-          html += '<td class="p-2 text-center" style="color: var(--theme-text-muted);">-</td>';
+          // Diagonal cell
+          cell.textContent = '-';
+          cell.classList.add('diagonal');
         } else {
           // Find the pair result
           const pairResult = this.pairResults.find(
@@ -854,39 +1687,95 @@ export class AccessibilityTool extends BaseComponent {
 
           if (pairResult) {
             const score = pairResult.distinguishability;
-            const color = this.getDistinguishabilityColor(score);
-            html += `<td class="p-2 text-center number" style="color: ${color};">${score}%</td>`;
+            cell.textContent = `${score}%`;
+            // Add CSS class based on distinguishability score
+            cell.classList.add(this.getDistinguishabilityClass(score));
           } else {
-            html += '<td class="p-2 text-center">-</td>';
+            cell.textContent = '-';
+            cell.classList.add('diagonal');
           }
         }
+
+        row.appendChild(cell);
       }
 
-      html += '</tr>';
+      tbody.appendChild(row);
     }
 
-    html += '</tbody></table>';
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    pairwiseContainer.appendChild(tableWrapper);
 
     // Warnings section
     const allWarnings = this.pairResults.filter((p) => p.warnings.length > 0);
     if (allWarnings.length > 0) {
-      html += '<div class="mt-4 pt-4 border-t space-y-2" style="border-color: var(--theme-border);">';
+      const warningsContainer = this.createElement('div', {
+        className: 'pairwise-warnings',
+        attributes: {
+          style: `
+            padding: 16px;
+            border-top: 1px solid var(--theme-border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
       for (const pair of allWarnings) {
         for (const warning of pair.warnings) {
-          html += `
-            <div class="flex items-start gap-2 text-xs" style="color: var(--theme-text-muted);">
-              <span class="w-4 h-4 shrink-0" style="color: #b45309;">${ICON_WARNING}</span>
-              <span><strong>${pair.dye1Name}</strong> & <strong>${pair.dye2Name}</strong>: ${warning}</span>
-            </div>
+          // Determine severity based on distinguishability
+          const isCritical = pair.distinguishability < 20;
+          const bgColor = isCritical ? 'rgba(239, 68, 68, 0.1)' : 'rgba(234, 179, 8, 0.1)';
+          const borderColor = isCritical ? 'rgba(239, 68, 68, 0.3)' : 'rgba(234, 179, 8, 0.3)';
+          const iconColor = isCritical ? '#ef4444' : '#eab308';
+
+          const callout = this.createElement('div', {
+            className: `warning-callout ${isCritical ? 'critical' : 'warning'}`,
+            attributes: {
+              style: `
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 10px 12px;
+                border-radius: 6px;
+                background: ${bgColor};
+                border: 1px solid ${borderColor};
+              `
+                .replace(/\s+/g, ' ')
+                .trim(),
+            },
+          });
+
+          // Add sized warning icon
+          const sizedWarningIcon = ICON_WARNING.replace('<svg', '<svg width="16" height="16"');
+          callout.innerHTML = `
+            <span style="display: inline-flex; flex-shrink: 0; color: ${iconColor};">${sizedWarningIcon}</span>
+            <span style="font-size: 12px; color: var(--theme-text); line-height: 1.4;">
+              <strong>${pair.dye1Name}</strong> & <strong>${pair.dye2Name}</strong>: ${warning}
+            </span>
           `;
+
+          warningsContainer.appendChild(callout);
         }
       }
-      html += '</div>';
+
+      pairwiseContainer.appendChild(warningsContainer);
     }
 
-    matrix.innerHTML = html;
-    matrixWrapper.appendChild(matrix);
-    this.matrixContainer.appendChild(matrixWrapper);
+    this.matrixContainer.appendChild(pairwiseContainer);
+  }
+
+  /**
+   * Get CSS class name for distinguishability score
+   */
+  private getDistinguishabilityClass(score: number): string {
+    if (score >= 60) return 'good'; // Green - easily distinguishable
+    if (score >= 40) return 'ok'; // Blue - moderately distinguishable
+    if (score >= 20) return 'warning'; // Yellow - may be hard to distinguish
+    return 'critical'; // Red - very hard to distinguish
   }
 
   // ============================================================================
@@ -1108,7 +1997,10 @@ export class AccessibilityTool extends BaseComponent {
         } else {
           this.enabledVisionTypes.delete(type.id);
         }
-        StorageService.setItem(STORAGE_KEYS.enabledVisionTypes, Array.from(this.enabledVisionTypes));
+        StorageService.setItem(
+          STORAGE_KEYS.enabledVisionTypes,
+          Array.from(this.enabledVisionTypes)
+        );
 
         // Sync desktop checkboxes
         this.syncDesktopVisionCheckboxes();
@@ -1164,8 +2056,14 @@ export class AccessibilityTool extends BaseComponent {
 
     const options = [
       { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') || 'Show Labels' },
-      { key: 'showHexValues', label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values' },
-      { key: 'highContrastMode', label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode' },
+      {
+        key: 'showHexValues',
+        label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values',
+      },
+      {
+        key: 'highContrastMode',
+        label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode',
+      },
     ] as const;
 
     for (const option of options) {
@@ -1211,7 +2109,8 @@ export class AccessibilityTool extends BaseComponent {
    */
   private syncDesktopVisionCheckboxes(): void {
     if (!this.visionTogglesContainer) return;
-    const checkboxes = this.visionTogglesContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    const checkboxes =
+      this.visionTogglesContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     checkboxes.forEach((checkbox) => {
       const visionType = checkbox.getAttribute('data-vision-type') as VisionTypeId;
       if (visionType) {
@@ -1225,7 +2124,8 @@ export class AccessibilityTool extends BaseComponent {
    */
   private syncDesktopDisplayCheckboxes(): void {
     if (!this.displayOptionsContainer) return;
-    const checkboxes = this.displayOptionsContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    const checkboxes =
+      this.displayOptionsContainer.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     checkboxes.forEach((checkbox) => {
       const optionKey = checkbox.getAttribute('data-display-option') as keyof DisplayOptions;
       if (optionKey) {
@@ -1326,24 +2226,32 @@ export class AccessibilityTool extends BaseComponent {
     const distinguishability = Math.round((distance / 441.67) * 100);
 
     // Calculate distinguishability under each vision type
-    const normalDist = Math.round((ColorService.getColorDistance(dye1.hex, dye2.hex) / 441.67) * 100);
+    const normalDist = Math.round(
+      (ColorService.getColorDistance(dye1.hex, dye2.hex) / 441.67) * 100
+    );
     const deuterDist = Math.round(
       (ColorService.getColorDistance(
         ColorService.simulateColorblindnessHex(dye1.hex, 'deuteranopia'),
         ColorService.simulateColorblindnessHex(dye2.hex, 'deuteranopia')
-      ) / 441.67) * 100
+      ) /
+        441.67) *
+        100
     );
     const protanDist = Math.round(
       (ColorService.getColorDistance(
         ColorService.simulateColorblindnessHex(dye1.hex, 'protanopia'),
         ColorService.simulateColorblindnessHex(dye2.hex, 'protanopia')
-      ) / 441.67) * 100
+      ) /
+        441.67) *
+        100
     );
     const tritanDist = Math.round(
       (ColorService.getColorDistance(
         ColorService.simulateColorblindnessHex(dye1.hex, 'tritanopia'),
         ColorService.simulateColorblindnessHex(dye2.hex, 'tritanopia')
-      ) / 441.67) * 100
+      ) /
+        441.67) *
+        100
     );
 
     const warnings: string[] = [];
@@ -1385,31 +2293,4 @@ export class AccessibilityTool extends BaseComponent {
     };
   }
 
-  // ============================================================================
-  // Helper Methods
-  // ============================================================================
-
-  /**
-   * Get WCAG badge inline style
-   */
-  private getWCAGBadgeStyle(level: string): string {
-    switch (level) {
-      case 'AAA':
-        return 'background: #22c55e20; color: #22c55e;';
-      case 'AA':
-        return 'background: #3b82f620; color: #3b82f6;';
-      default:
-        return 'background: #ef444420; color: #ef4444;';
-    }
-  }
-
-  /**
-   * Get distinguishability color based on score
-   */
-  private getDistinguishabilityColor(score: number): string {
-    if (score >= 60) return '#22c55e';
-    if (score >= 40) return '#3b82f6';
-    if (score >= 20) return '#eab308';
-    return '#ef4444';
-  }
 }

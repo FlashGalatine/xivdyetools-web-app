@@ -13,6 +13,7 @@ import {
   authService,
   presetSubmissionService,
 } from '@services/index';
+import { getCategoryIcon } from '@shared/category-icons';
 import type { Dye } from '@shared/types';
 import type { PresetCategory } from '@xivdyetools/core';
 import type { CommunityPreset } from '@services/community-preset-service';
@@ -36,13 +37,13 @@ type OnEditCallback = (result: EditResult) => void;
 // Configuration
 // ============================================
 
-const CATEGORIES: { id: PresetCategory; label: string; icon: string }[] = [
-  { id: 'jobs', label: 'Jobs', icon: '⚔️' },
-  { id: 'grand-companies', label: 'Grand Companies', icon: '🏰' },
-  { id: 'seasons', label: 'Seasons', icon: '🌸' },
-  { id: 'events', label: 'Events', icon: '🎉' },
-  { id: 'aesthetics', label: 'Aesthetics', icon: '✨' },
-  { id: 'community', label: 'Community', icon: '🎨' },
+const CATEGORIES: { id: PresetCategory; label: string }[] = [
+  { id: 'jobs', label: 'Jobs' },
+  { id: 'grand-companies', label: 'Grand Companies' },
+  { id: 'seasons', label: 'Seasons' },
+  { id: 'events', label: 'Events' },
+  { id: 'aesthetics', label: 'Aesthetics' },
+  { id: 'community', label: 'Community' },
 ];
 
 const MIN_NAME_LENGTH = 2;
@@ -105,7 +106,11 @@ export function showPresetEditForm(preset: CommunityPreset, onEdit?: OnEditCallb
 // Form Content Creation
 // ============================================
 
-function createFormContent(presetId: string, state: FormState, onEdit?: OnEditCallback): HTMLElement {
+function createFormContent(
+  presetId: string,
+  state: FormState,
+  onEdit?: OnEditCallback
+): HTMLElement {
   const form = document.createElement('div');
   form.className = 'preset-edit-form space-y-4';
 
@@ -237,7 +242,7 @@ function createCategoryDisplay(state: FormState): HTMLElement {
   display.className = 'px-3 py-2 rounded-lg border text-sm flex items-center gap-2';
   display.style.cssText =
     'background-color: var(--theme-card-background); color: var(--theme-text-secondary); border-color: var(--theme-border);';
-  display.innerHTML = `<span>${category?.icon || '📁'}</span><span>${category?.label || state.category}</span>`;
+  display.innerHTML = `<span class="w-4 h-4 inline-block">${getCategoryIcon(state.category)}</span><span>${category?.label || state.category}</span>`;
 
   wrapper.appendChild(label);
   wrapper.appendChild(display);
@@ -356,7 +361,8 @@ function createDyeSelector(state: FormState): HTMLElement {
       const empty = document.createElement('div');
       empty.className = 'col-span-full text-center py-4 text-sm';
       empty.style.color = 'var(--theme-text-secondary)';
-      empty.textContent = filteredDyes.length === 0 ? 'No dyes found' : 'All matching dyes selected';
+      empty.textContent =
+        filteredDyes.length === 0 ? 'No dyes found' : 'All matching dyes selected';
       dyeGrid.appendChild(empty);
     }
   }
@@ -365,9 +371,7 @@ function createDyeSelector(state: FormState): HTMLElement {
     const query = searchInput.value.toLowerCase().trim();
     if (query) {
       filteredDyes = allDyes.filter(
-        (d) =>
-          d.name.toLowerCase().includes(query) ||
-          d.category.toLowerCase().includes(query)
+        (d) => d.name.toLowerCase().includes(query) || d.category.toLowerCase().includes(query)
       );
     } else {
       filteredDyes = [...allDyes];
@@ -426,7 +430,11 @@ function createTagsInput(state: FormState): HTMLElement {
   return wrapper;
 }
 
-function createSubmitButton(presetId: string, state: FormState, onEdit?: OnEditCallback): HTMLElement {
+function createSubmitButton(
+  presetId: string,
+  state: FormState,
+  onEdit?: OnEditCallback
+): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'flex justify-end gap-2 pt-4 border-t';
   wrapper.style.borderColor = 'var(--theme-border)';

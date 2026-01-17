@@ -122,7 +122,9 @@ export class HybridPresetService {
     this.apiAvailable = await this.communityService.initialize();
     this.initialized = true;
 
-    logger.info(`HybridPresetService: Initialized (API ${this.apiAvailable ? 'available' : 'unavailable'})`);
+    logger.info(
+      `HybridPresetService: Initialized (API ${this.apiAvailable ? 'available' : 'unavailable'})`
+    );
   }
 
   /**
@@ -421,7 +423,9 @@ export class HybridPresetService {
   /**
    * Get preset with resolved dyes
    */
-  async getPresetWithDyes(id: string): Promise<{ preset: UnifiedPreset; dyes: (Dye | null)[] } | null> {
+  async getPresetWithDyes(
+    id: string
+  ): Promise<{ preset: UnifiedPreset; dyes: (Dye | null)[] } | null> {
     const preset = await this.getPreset(id);
     if (!preset) return null;
 

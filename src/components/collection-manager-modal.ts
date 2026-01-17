@@ -194,7 +194,8 @@ function createCollectionItem(collection: Collection, onRefresh: () => void): HT
       const dye = dyeService.getDyeById(dyeId);
       if (dye) {
         const swatch = document.createElement('div');
-        swatch.className = 'w-6 h-6 rounded border border-gray-300 dark:border-gray-600 cursor-pointer hover:scale-110 transition-transform';
+        swatch.className =
+          'w-6 h-6 rounded border border-gray-300 dark:border-gray-600 cursor-pointer hover:scale-110 transition-transform';
         swatch.style.backgroundColor = dye.hex;
         swatch.title = LanguageService.getDyeName(dye.itemID) || dye.name;
         swatchRow.appendChild(swatch);
@@ -391,7 +392,9 @@ function showEditCollectionDialog(collection: Collection, onUpdated: () => void)
         const dyeTag = createDyeTag(dye, () => {
           CollectionService.removeDyeFromCollection(collection.id, dyeId);
           ToastService.success(
-            LanguageService.tInterpolate('collections.removedFromCollection', { name: collection.name })
+            LanguageService.tInterpolate('collections.removedFromCollection', {
+              name: collection.name,
+            })
           );
           ModalService.dismissTop();
           showEditCollectionDialog(CollectionService.getCollection(collection.id)!, onUpdated);
@@ -547,7 +550,10 @@ function triggerImport(container: HTMLElement): void {
         ModalService.dismissTop();
         showCollectionManagerModal();
       } else {
-        const errorMsg = result.errors.length > 0 ? result.errors[0] : LanguageService.t('collections.importFailed');
+        const errorMsg =
+          result.errors.length > 0
+            ? result.errors[0]
+            : LanguageService.t('collections.importFailed');
         ToastService.error(errorMsg);
       }
     } catch {

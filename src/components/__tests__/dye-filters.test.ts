@@ -1,503 +1,452 @@
 /**
- * XIV Dye Tools - Dye Filters Component Tests
+ * XIV Dye Tools - DyeFilters Unit Tests
  *
- * Tests for the advanced dye filters UI component
+ * Tests the dye filters component for filtering dyes by type.
+ * Covers rendering, filter state, persistence, and accessibility.
  *
  * @module components/__tests__/dye-filters.test
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { DyeFilters } from '../dye-filters';
-import { createTestContainer, cleanupTestContainer, waitForComponent } from './test-utils';
-import type { Dye } from '@shared/types';
+import { DyeFilters, DyeFilterConfig } from '../dye-filters';
+import {
+  createTestContainer,
+  cleanupTestContainer,
+  click,
+  query,
+  queryAll,
+  getAttr,
+  hasClass,
+  waitForRender,
+} from '../../__tests__/component-utils';
+import { mockDyes } from '../../__tests__/mocks/services';
 
-// Mock the storage service
+// Mock storage
+const { mockGetItem, mockSetItem } = vi.hoisted(() => ({
+  mockGetItem: vi.fn().mockReturnValue(null),
+  mockSetItem: vi.fn(),
+}));
+
 vi.mock('@services/storage-service', () => ({
   appStorage: {
-    getItem: vi.fn((key: string, defaultValue: unknown) => defaultValue),
-    setItem: vi.fn(),
+    getItem: mockGetItem,
+    setItem: mockSetItem,
   },
 }));
 
-// Mock dye data for filtering tests
-const createMockDye = (overrides: Partial<Dye> = {}): Dye => ({
-  id: 1,
-  itemID: 30001,
-  stainID: null,
-  name: 'Test Dye',
-  hex: '#FF0000',
-  rgb: { r: 255, g: 0, b: 0 },
-  hsv: { h: 0, s: 100, v: 100 },
-  category: 'Red',
-  acquisition: 'Vendor',
-  cost: 0,
-  isMetallic: false,
-  isPastel: false,
-  isDark: false,
-  isCosmic: false,
-  ...overrides,
-});
+vi.mock('@services/index', () => ({
+  LanguageService: {
+    t: (key: string) => key,
+    subscribe: vi.fn().mockReturnValue(() => {}),
+  },
+}));
+
+vi.mock('@shared/constants', () => ({
+  EXPENSIVE_DYE_IDS: [12345, 12346],
+}));
 
 describe('DyeFilters', () => {
   let container: HTMLElement;
-  let component: DyeFilters;
+  let filters: DyeFilters | null;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    localStorage.clear();
     container = createTestContainer();
     container.id = 'test-filters';
+    filters = null;
+    vi.clearAllMocks();
+    mockGetItem.mockReturnValue(null);
   });
 
   afterEach(() => {
-    if (component) {
-      component.destroy();
+    if (filters) {
+      try {
+        filters.destroy();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
     cleanupTestContainer(container);
     vi.restoreAllMocks();
   });
 
-  // ==========================================================================
-  // Rendering
-  // ==========================================================================
+  // ============================================================================
+  // Basic Rendering Tests
+  // ============================================================================
 
-  describe('rendering', () => {
-    it('should render the filters section', () => {
-      component = new DyeFilters(container);
-      component.init();
+  describe('Basic Rendering', () => {
+    it('should render collapsible header by default', () => {
+      filters = new DyeFilters(container);
+      filters.init();
 
-      expect(container.children.length).toBeGreaterThan(0);
-    });
-
-    it('should render collapsible header', () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      const header = container.querySelector('button');
+      const header = query(container, 'button[aria-controls]');
       expect(header).not.toBeNull();
     });
 
+    it('should hide header when hideHeader option is true', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+
+      const header = query(container, 'button[aria-controls]');
+      expect(header).toBeNull();
+    });
+
     it('should render all filter checkboxes', () => {
-      component = new DyeFilters(container);
-      component.init();
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
-      const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+      const checkboxes = queryAll(container, 'input[type="checkbox"]');
       expect(checkboxes.length).toBe(5);
     });
 
-    it('should render filter labels', () => {
-      component = new DyeFilters(container);
-      component.init();
+    it('should render excludeMetallic checkbox', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
-      // Check for actual translated filter labels
-      expect(container.textContent).toContain('Metallic');
-      expect(container.textContent).toContain('Pastel');
-      expect(container.textContent).toContain('Dark');
-      expect(container.textContent).toContain('Cosmic');
-      expect(container.textContent).toContain('Expensive');
+      const checkbox = query(container, '[id$="-excludeMetallic"]');
+      expect(checkbox).not.toBeNull();
     });
 
-    it('should render toggle chevron', () => {
-      component = new DyeFilters(container);
-      component.init();
+    it('should render excludePastel checkbox', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
-      const chevron = container.querySelector('[id$="-toggle-chevron"]');
-      expect(chevron).not.toBeNull();
-      expect(chevron?.textContent).toBe('▼');
+      const checkbox = query(container, '[id$="-excludePastel"]');
+      expect(checkbox).not.toBeNull();
     });
 
+    it('should render excludeExpensive checkbox', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+
+      const checkbox = query(container, '[id$="-excludeExpensive"]');
+      expect(checkbox).not.toBeNull();
+    });
+
+    it('should render excludeDark checkbox', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+
+      const checkbox = query(container, '[id$="-excludeDark"]');
+      expect(checkbox).not.toBeNull();
+    });
+
+    it('should render excludeCosmic checkbox', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+
+      const checkbox = query(container, '[id$="-excludeCosmic"]');
+      expect(checkbox).not.toBeNull();
+    });
+  });
+
+  // ============================================================================
+  // Collapsible Behavior Tests
+  // ============================================================================
+
+  describe('Collapsible Behavior', () => {
     it('should start collapsed by default', () => {
-      component = new DyeFilters(container);
-      component.init();
+      filters = new DyeFilters(container);
+      filters.init();
 
-      const checkboxesContainer = container.querySelector(
-        '[id$="-checkboxes-container"]'
-      ) as HTMLElement;
-      expect(checkboxesContainer?.style.maxHeight).toBe('0px');
+      const header = query(container, 'button[aria-controls]');
+      expect(getAttr(header, 'aria-expanded')).toBe('false');
+    });
+
+    it('should expand on header click', () => {
+      filters = new DyeFilters(container);
+      filters.init();
+
+      const header = query<HTMLButtonElement>(container, 'button[aria-controls]');
+      click(header);
+
+      expect(getAttr(header, 'aria-expanded')).toBe('true');
+    });
+
+    it('should collapse on second header click', () => {
+      filters = new DyeFilters(container);
+      filters.init();
+
+      const header = query<HTMLButtonElement>(container, 'button[aria-controls]');
+      click(header);
+      click(header);
+
+      expect(getAttr(header, 'aria-expanded')).toBe('false');
+    });
+
+    it('should save expanded state to storage', () => {
+      filters = new DyeFilters(container, { storageKeyPrefix: 'test' });
+      filters.init();
+
+      const header = query<HTMLButtonElement>(container, 'button[aria-controls]');
+      click(header);
+
+      expect(mockSetItem).toHaveBeenCalledWith('xivdyetools_test_filters_expanded', true);
+    });
+
+    it('should load expanded state from storage', () => {
+      mockGetItem.mockImplementation((key) => {
+        if (key === 'xivdyetools_test_filters_expanded') return true;
+        return null;
+      });
+
+      filters = new DyeFilters(container, { storageKeyPrefix: 'test' });
+      filters.init();
+
+      const header = query(container, 'button[aria-controls]');
+      expect(getAttr(header, 'aria-expanded')).toBe('true');
     });
   });
 
-  // ==========================================================================
-  // Toggle Behavior
-  // ==========================================================================
+  // ============================================================================
+  // Filter State Tests
+  // ============================================================================
 
-  describe('toggle behavior', () => {
-    it('should expand filters on header click', async () => {
-      component = new DyeFilters(container);
-      component.init();
+  describe('Filter State', () => {
+    it('should return default filters on init', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
-      const header = container.querySelector('button') as HTMLButtonElement;
-      const checkboxesContainer = container.querySelector(
-        '[id$="-checkboxes-container"]'
-      ) as HTMLElement;
-
-      expect(checkboxesContainer.style.maxHeight).toBe('0px');
-
-      header.click();
-      await waitForComponent();
-
-      expect(checkboxesContainer.style.maxHeight).toBe('500px');
+      const currentFilters = filters.getFilters();
+      expect(currentFilters.excludeMetallic).toBe(false);
+      expect(currentFilters.excludePastel).toBe(false);
+      expect(currentFilters.excludeExpensive).toBe(false);
+      expect(currentFilters.excludeDark).toBe(false);
+      expect(currentFilters.excludeCosmic).toBe(false);
     });
 
-    it('should collapse filters on second click', async () => {
-      component = new DyeFilters(container);
-      component.init();
+    it('should load saved filters from storage', () => {
+      const savedFilters: DyeFilterConfig = {
+        excludeMetallic: true,
+        excludePastel: false,
+        excludeExpensive: true,
+        excludeDark: false,
+        excludeCosmic: false,
+      };
+      mockGetItem.mockImplementation((key) => {
+        if (key === 'xivdyetools_harmony_filters') return savedFilters;
+        return null;
+      });
 
-      const header = container.querySelector('button') as HTMLButtonElement;
-      const checkboxesContainer = container.querySelector(
-        '[id$="-checkboxes-container"]'
-      ) as HTMLElement;
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
-      // Expand
-      header.click();
-      await waitForComponent();
-      expect(checkboxesContainer.style.maxHeight).toBe('500px');
-
-      // Collapse
-      header.click();
-      await waitForComponent();
-      expect(checkboxesContainer.style.maxHeight).toBe('0px');
+      const currentFilters = filters.getFilters();
+      expect(currentFilters.excludeMetallic).toBe(true);
+      expect(currentFilters.excludeExpensive).toBe(true);
     });
 
-    it('should rotate chevron when expanded', async () => {
-      component = new DyeFilters(container);
-      component.init();
+    it('should update filter on checkbox change', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
-      const header = container.querySelector('button') as HTMLButtonElement;
-      const chevron = container.querySelector('[id$="-toggle-chevron"]') as HTMLElement;
+      const metallicCheckbox = query<HTMLInputElement>(container, '[id$="-excludeMetallic"]');
+      if (metallicCheckbox) {
+        metallicCheckbox.checked = true;
+        metallicCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
 
-      // Initially rotated (collapsed)
-      expect(chevron.style.transform).toBe('rotate(-90deg)');
-
-      // Expand
-      header.click();
-      await waitForComponent();
-      expect(chevron.style.transform).toBe('rotate(0deg)');
-    });
-  });
-
-  // ==========================================================================
-  // Filter Logic
-  // ==========================================================================
-
-  describe('filter logic', () => {
-    // Helper to enable a checkbox by index
-    const enableCheckbox = async (comp: DyeFilters, cont: HTMLElement, index: number) => {
-      const checkboxes = cont.querySelectorAll(
-        'input[type="checkbox"]'
-      ) as NodeListOf<HTMLInputElement>;
-      checkboxes[index].checked = true;
-      checkboxes[index].dispatchEvent(new Event('change'));
-      await waitForComponent();
-    };
-
-    it('should exclude metallic dyes when filter is enabled', async () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      // First checkbox is excludeMetallic
-      await enableCheckbox(component, container, 0);
-
-      const metallicDye = createMockDye({ name: 'Metallic Red', isMetallic: true });
-      const regularDye = createMockDye({ name: 'Dalamud Red', isMetallic: false });
-
-      expect(component.isDyeExcluded(metallicDye)).toBe(true);
-      expect(component.isDyeExcluded(regularDye)).toBe(false);
+      const currentFilters = filters.getFilters();
+      expect(currentFilters.excludeMetallic).toBe(true);
     });
 
-    it('should exclude pastel dyes when filter is enabled', async () => {
-      component = new DyeFilters(container);
-      component.init();
+    it('should save filter state to storage on change', () => {
+      filters = new DyeFilters(container, { hideHeader: true, storageKeyPrefix: 'test' });
+      filters.init();
 
-      // Second checkbox is excludePastel
-      await enableCheckbox(component, container, 1);
+      const metallicCheckbox = query<HTMLInputElement>(container, '[id$="-excludeMetallic"]');
+      if (metallicCheckbox) {
+        metallicCheckbox.checked = true;
+        metallicCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
 
-      const pastelDye = createMockDye({ name: 'Pastel Pink', isPastel: true });
-      const regularDye = createMockDye({ name: 'Coral Pink', isPastel: false });
-
-      expect(component.isDyeExcluded(pastelDye)).toBe(true);
-      expect(component.isDyeExcluded(regularDye)).toBe(false);
+      expect(mockSetItem).toHaveBeenCalledWith(
+        'xivdyetools_test_filters',
+        expect.objectContaining({ excludeMetallic: true })
+      );
     });
 
-    it('should exclude dark dyes when filter is enabled', async () => {
-      component = new DyeFilters(container);
-      component.init();
+    it('should set filters programmatically', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
-      // Third checkbox is excludeDark
-      await enableCheckbox(component, container, 2);
+      filters.setFilters({ excludeMetallic: true, excludePastel: true });
 
-      const darkDye = createMockDye({ name: 'Dark Red', isDark: true });
-      const regularDye = createMockDye({ name: 'Blood Red', isDark: false });
-
-      expect(component.isDyeExcluded(darkDye)).toBe(true);
-      expect(component.isDyeExcluded(regularDye)).toBe(false);
-    });
-
-    it('should exclude cosmic dyes when filter is enabled', async () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      // Fourth checkbox is excludeCosmic
-      await enableCheckbox(component, container, 3);
-
-      const cosmicExploreDye = createMockDye({ acquisition: 'Cosmic Exploration', isCosmic: true });
-      const cosmicFortuneDye = createMockDye({ acquisition: 'Cosmic Fortunes', isCosmic: true });
-      const regularDye = createMockDye({ acquisition: 'Vendor', isCosmic: false });
-
-      expect(component.isDyeExcluded(cosmicExploreDye)).toBe(true);
-      expect(component.isDyeExcluded(cosmicFortuneDye)).toBe(true);
-      expect(component.isDyeExcluded(regularDye)).toBe(false);
-    });
-
-    it('should have expensive filter checkbox', () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      // Verify 5 checkboxes exist (including expensive)
-      const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-      expect(checkboxes.length).toBe(5);
-    });
-
-    it('should not exclude any dyes when all filters are disabled', () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      const metallicDye = createMockDye({ name: 'Metallic Red' });
-      const pastelDye = createMockDye({ name: 'Pastel Pink' });
-      const darkDye = createMockDye({ name: 'Dark Blue' });
-
-      expect(component.isDyeExcluded(metallicDye)).toBe(false);
-      expect(component.isDyeExcluded(pastelDye)).toBe(false);
-      expect(component.isDyeExcluded(darkDye)).toBe(false);
+      const currentFilters = filters.getFilters();
+      expect(currentFilters.excludeMetallic).toBe(true);
+      expect(currentFilters.excludePastel).toBe(true);
     });
   });
 
-  // ==========================================================================
-  // Filter Array Method
-  // ==========================================================================
+  // ============================================================================
+  // Callback Tests
+  // ============================================================================
 
-  describe('filterDyes method', () => {
-    it('should filter out excluded dyes from array', async () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      // Enable excludeMetallic via checkbox interaction
-      const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
-      checkbox.checked = true;
-      checkbox.dispatchEvent(new Event('change'));
-      await waitForComponent();
-
-      const dyes = [
-        createMockDye({ id: 1, name: 'Metallic Red', isMetallic: true }),
-        createMockDye({ id: 2, name: 'Regular Red', isMetallic: false }),
-        createMockDye({ id: 3, name: 'Metallic Blue', isMetallic: true }),
-        createMockDye({ id: 4, name: 'Regular Blue', isMetallic: false }),
-      ];
-
-      const filtered = component.filterDyes(dyes);
-
-      expect(filtered.length).toBe(2);
-      expect(filtered.map((d) => d.id)).toEqual([2, 4]);
-    });
-
-    it('should return all dyes when no filters are enabled', () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      const dyes = [
-        createMockDye({ id: 1, name: 'Metallic Red' }),
-        createMockDye({ id: 2, name: 'Pastel Pink' }),
-        createMockDye({ id: 3, name: 'Dark Blue' }),
-      ];
-
-      const filtered = component.filterDyes(dyes);
-
-      expect(filtered.length).toBe(3);
-    });
-
-    it('should handle empty array', () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      const filtered = component.filterDyes([]);
-
-      expect(filtered).toEqual([]);
-    });
-  });
-
-  // ==========================================================================
-  // Get/Set Filters
-  // ==========================================================================
-
-  describe('getFilters', () => {
-    it('should return current filter configuration', () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      const filters = component.getFilters();
-
-      expect(filters).toHaveProperty('excludeMetallic');
-      expect(filters).toHaveProperty('excludePastel');
-      expect(filters).toHaveProperty('excludeDark');
-      expect(filters).toHaveProperty('excludeCosmic');
-      expect(filters).toHaveProperty('excludeExpensive');
-    });
-
-    it('should return copy of filters (not reference)', () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      const filters1 = component.getFilters();
-      const filters2 = component.getFilters();
-
-      expect(filters1).not.toBe(filters2);
-      expect(filters1).toEqual(filters2);
-    });
-
-    it('should start with all filters disabled', () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      const filters = component.getFilters();
-
-      expect(filters.excludeMetallic).toBe(false);
-      expect(filters.excludePastel).toBe(false);
-      expect(filters.excludeDark).toBe(false);
-      expect(filters.excludeCosmic).toBe(false);
-      expect(filters.excludeExpensive).toBe(false);
-    });
-  });
-
-  describe('setFilters', () => {
-    it('should update filter values via checkbox interaction', async () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      // Expand filters first
-      const header = container.querySelector('button') as HTMLButtonElement;
-      header.click();
-      await waitForComponent();
-
-      // Find and check the first checkbox
-      const checkboxes = container.querySelectorAll(
-        'input[type="checkbox"]'
-      ) as NodeListOf<HTMLInputElement>;
-      expect(checkboxes.length).toBeGreaterThan(0);
-
-      checkboxes[0].checked = true;
-      checkboxes[0].dispatchEvent(new Event('change'));
-      await waitForComponent();
-
-      const filters = component.getFilters();
-      // First checkbox should be excludeMetallic
-      expect(filters.excludeMetallic).toBe(true);
-    });
-
-    it('should reflect checkbox state in filters', async () => {
-      component = new DyeFilters(container);
-      component.init();
-
-      // Initially all filters should be false
-      let filters = component.getFilters();
-      expect(filters.excludeMetallic).toBe(false);
-
-      // Check a checkbox
-      const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
-      checkbox.checked = true;
-      checkbox.dispatchEvent(new Event('change'));
-      await waitForComponent();
-
-      // Now the filter should be true
-      filters = component.getFilters();
-      expect(filters.excludeMetallic).toBe(true);
-    });
-  });
-
-  // ==========================================================================
-  // Events
-  // ==========================================================================
-
-  describe('events', () => {
-    it('should call onFilterChange callback when filters change', async () => {
+  describe('Filter Callbacks', () => {
+    it('should call onFilterChange callback when filter changes', () => {
       const onFilterChange = vi.fn();
-      component = new DyeFilters(container, { onFilterChange });
-      component.init();
+      filters = new DyeFilters(container, { hideHeader: true, onFilterChange });
+      filters.init();
 
-      component.setFilters({ excludeMetallic: true });
+      const metallicCheckbox = query<HTMLInputElement>(container, '[id$="-excludeMetallic"]');
+      if (metallicCheckbox) {
+        metallicCheckbox.checked = true;
+        metallicCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
 
       expect(onFilterChange).toHaveBeenCalled();
     });
 
-    it('should dispatch dye-filters-changed event', async () => {
-      component = new DyeFilters(container);
-      component.init();
+    it('should emit dye-filters-changed event on change', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
       const eventSpy = vi.fn();
       container.addEventListener('dye-filters-changed', eventSpy);
 
-      component.setFilters({ excludeMetallic: true });
+      const metallicCheckbox = query<HTMLInputElement>(container, '[id$="-excludeMetallic"]');
+      if (metallicCheckbox) {
+        metallicCheckbox.checked = true;
+        metallicCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
 
       expect(eventSpy).toHaveBeenCalled();
     });
+  });
 
-    it('should include filters in event detail', async () => {
-      component = new DyeFilters(container);
-      component.init();
+  // ============================================================================
+  // Dye Filtering Tests
+  // ============================================================================
 
-      let eventDetail: unknown = null;
-      container.addEventListener('dye-filters-changed', ((e: CustomEvent) => {
-        eventDetail = e.detail;
-      }) as EventListener);
+  describe('Dye Filtering', () => {
+    it('should exclude metallic dyes when excludeMetallic is true', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+      filters.setFilters({ excludeMetallic: true });
 
-      // Manually toggle checkbox to trigger event with correct state
-      const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
-      checkbox.checked = true;
-      checkbox.dispatchEvent(new Event('change'));
-      await waitForComponent();
+      const metallicDye = { ...mockDyes[0], isMetallic: true };
+      expect(filters.isDyeExcluded(metallicDye)).toBe(true);
+    });
 
-      expect(eventDetail).toHaveProperty('filters');
-      expect(eventDetail).not.toBeNull();
+    it('should not exclude non-metallic dyes when excludeMetallic is true', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+      filters.setFilters({ excludeMetallic: true });
+
+      const normalDye = { ...mockDyes[0], isMetallic: false };
+      expect(filters.isDyeExcluded(normalDye)).toBe(false);
+    });
+
+    it('should exclude pastel dyes when excludePastel is true', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+      filters.setFilters({ excludePastel: true });
+
+      const pastelDye = { ...mockDyes[0], isPastel: true };
+      expect(filters.isDyeExcluded(pastelDye)).toBe(true);
+    });
+
+    it('should exclude dark dyes when excludeDark is true', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+      filters.setFilters({ excludeDark: true });
+
+      const darkDye = { ...mockDyes[0], isDark: true };
+      expect(filters.isDyeExcluded(darkDye)).toBe(true);
+    });
+
+    it('should exclude cosmic dyes when excludeCosmic is true', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+      filters.setFilters({ excludeCosmic: true });
+
+      const cosmicDye = { ...mockDyes[0], isCosmic: true };
+      expect(filters.isDyeExcluded(cosmicDye)).toBe(true);
+    });
+
+    it('should exclude expensive dyes when excludeExpensive is true', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+      filters.setFilters({ excludeExpensive: true });
+
+      const expensiveDye = { ...mockDyes[0], itemID: 12345 };
+      expect(filters.isDyeExcluded(expensiveDye)).toBe(true);
+    });
+
+    it('should filter array of dyes correctly', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+      filters.setFilters({ excludeMetallic: true });
+
+      const testDyes = [
+        { ...mockDyes[0], isMetallic: true },
+        { ...mockDyes[1], isMetallic: false },
+        { ...mockDyes[2], isMetallic: false },
+      ];
+
+      const filtered = filters.filterDyes(testDyes);
+      expect(filtered.length).toBe(2);
     });
   });
 
-  // ==========================================================================
-  // Options
-  // ==========================================================================
+  // ============================================================================
+  // Accessibility Tests
+  // ============================================================================
 
-  describe('options', () => {
-    it('should use custom storage key prefix', async () => {
-      const { appStorage } = await import('@services/storage-service');
-      component = new DyeFilters(container, { storageKeyPrefix: 'custom' });
-      component.init();
+  describe('Accessibility', () => {
+    it('should have aria-controls on toggle button', () => {
+      filters = new DyeFilters(container);
+      filters.init();
 
-      expect(appStorage.getItem).toHaveBeenCalledWith(
-        'xivdyetools_custom_filters',
-        expect.anything()
-      );
+      const header = query(container, 'button[aria-controls]');
+      expect(header).not.toBeNull();
+      expect(header?.hasAttribute('aria-controls')).toBe(true);
     });
 
-    it('should use default storage key prefix when not specified', async () => {
-      const { appStorage } = await import('@services/storage-service');
-      component = new DyeFilters(container);
-      component.init();
+    it('should have role="region" on checkboxes container', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
 
-      expect(appStorage.getItem).toHaveBeenCalledWith(
-        'xivdyetools_harmony_filters',
-        expect.anything()
-      );
+      const region = query(container, '[role="region"]');
+      expect(region).not.toBeNull();
+    });
+
+    it('should have labels associated with checkboxes', () => {
+      filters = new DyeFilters(container, { hideHeader: true });
+      filters.init();
+
+      const checkboxes = queryAll<HTMLInputElement>(container, 'input[type="checkbox"]');
+      checkboxes.forEach((checkbox) => {
+        const label = query(container, `label[for="${checkbox.id}"]`);
+        expect(label).not.toBeNull();
+      });
     });
   });
 
-  // ==========================================================================
-  // Cleanup
-  // ==========================================================================
+  // ============================================================================
+  // Lifecycle Tests
+  // ============================================================================
 
-  describe('cleanup', () => {
-    it('should clean up without error', () => {
-      component = new DyeFilters(container);
-      component.init();
+  describe('Lifecycle', () => {
+    it('should clean up on destroy', () => {
+      filters = new DyeFilters(container);
+      filters.init();
 
-      expect(() => component.destroy()).not.toThrow();
+      filters.destroy();
+
+      expect(queryAll(container, 'input[type="checkbox"]').length).toBe(0);
+    });
+
+    it('should use custom storage key prefix', () => {
+      filters = new DyeFilters(container, { hideHeader: true, storageKeyPrefix: 'custom' });
+      filters.init();
+
+      const metallicCheckbox = query<HTMLInputElement>(container, '[id$="-excludeMetallic"]');
+      if (metallicCheckbox) {
+        metallicCheckbox.checked = true;
+        metallicCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      expect(mockSetItem).toHaveBeenCalledWith('xivdyetools_custom_filters', expect.any(Object));
     });
   });
 });

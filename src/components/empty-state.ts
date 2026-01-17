@@ -9,6 +9,7 @@
 
 import { BaseComponent } from './base-component';
 import { clearContainer } from '@shared/utils';
+import { LanguageService } from '@services/index';
 import {
   ICON_SEARCH,
   ICON_PALETTE,
@@ -47,58 +48,56 @@ export interface EmptyStateOptions {
 export const EMPTY_STATE_PRESETS = {
   noSearchResults: (query: string, onClear?: () => void): EmptyStateOptions => ({
     icon: ICON_SEARCH,
-    title: `No dyes match "${query}"`,
-    description: 'Try checking your spelling or search for a category like "purple" or "red".',
-    actionLabel: 'Clear search',
+    title: LanguageService.t('emptyStates.noSearchResults.title').replace('{query}', query),
+    description: LanguageService.t('emptyStates.noSearchResults.description'),
+    actionLabel: LanguageService.t('emptyStates.noSearchResults.action'),
     onAction: onClear,
   }),
 
   allFilteredOut: (onReset?: () => void): EmptyStateOptions => ({
     icon: ICON_PALETTE,
-    title: 'All suggestions were filtered out',
-    description:
-      'Your current filters are hiding all matching dyes. Try adjusting your filter settings.',
-    actionLabel: 'Reset filters',
+    title: LanguageService.t('emptyStates.filteredOut.title'),
+    description: LanguageService.t('emptyStates.filteredOut.description'),
+    actionLabel: LanguageService.t('emptyStates.filteredOut.action'),
     onAction: onReset,
   }),
 
   noPriceData: (onTryAnother?: () => void): EmptyStateOptions => ({
     icon: ICON_COINS,
-    title: 'No price data available',
-    description:
-      "This dye may not be tradeable or Universalis doesn't have recent data for this server.",
-    actionLabel: 'Try different server',
+    title: LanguageService.t('marketBoard.priceUnavailable'),
+    description: LanguageService.t('emptyStates.noPrice.description'),
+    actionLabel: LanguageService.t('emptyStates.noPrice.action'),
     onAction: onTryAnother,
   }),
 
   noHarmonyResults: (onSelectDye?: () => void): EmptyStateOptions => ({
     icon: ICON_HARMONY,
-    title: 'No harmony suggestions',
-    description: 'Select a base dye to generate color harmony suggestions.',
-    actionLabel: 'Select a dye',
+    title: LanguageService.t('emptyStates.noHarmony.title'),
+    description: LanguageService.t('emptyStates.noHarmony.description'),
+    actionLabel: LanguageService.t('emptyStates.noHarmony.action'),
     onAction: onSelectDye,
   }),
 
   noImage: (onUpload?: () => void): EmptyStateOptions => ({
     icon: ICON_IMAGE,
-    title: 'No image loaded',
-    description: 'Upload an image to start matching colors from it.',
-    actionLabel: 'Upload image',
+    title: LanguageService.t('emptyStates.noImage.title'),
+    description: LanguageService.t('emptyStates.noImage.description'),
+    actionLabel: LanguageService.t('emptyStates.noImage.action'),
     onAction: onUpload,
   }),
 
   error: (message: string, onRetry?: () => void): EmptyStateOptions => ({
     icon: ICON_WARNING,
-    title: 'Something went wrong',
+    title: LanguageService.t('errors.somethingWentWrong'),
     description: message,
-    actionLabel: 'Try again',
+    actionLabel: LanguageService.t('errors.tryAgain'),
     onAction: onRetry,
   }),
 
   loading: (): EmptyStateOptions => ({
     icon: ICON_LOADING,
-    title: 'Loading...',
-    description: 'Please wait while we fetch the data.',
+    title: LanguageService.t('emptyStates.loading.title'),
+    description: LanguageService.t('emptyStates.loading.description'),
   }),
 } as const;
 

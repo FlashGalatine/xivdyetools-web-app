@@ -56,7 +56,7 @@ function createThemePalette(config: ThemePaletteConfig): ThemePalette {
     // Default card: same as main background
     cardBackground: overrides.cardBackground ?? background,
     // Default hover: same as secondary background
-    cardHover: overrides.cardHover ?? (overrides.backgroundSecondary ?? background),
+    cardHover: overrides.cardHover ?? overrides.backgroundSecondary ?? background,
     // Default muted text: inherit from text (should be overridden for proper contrast)
     textMuted: overrides.textMuted ?? text,
     // Apply any additional overrides
@@ -81,6 +81,16 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       cardBackground: '#F5F5F5',
       cardHover: '#FFFFFF',
       textMuted: '#4A4A4A',
+      // V4 properties
+      bgGlass: 'rgba(245, 245, 245, 0.9)',
+      textHeaderMuted: 'rgba(255, 255, 255, 0.7)',
+      accentHover: '#6B1515',
+      accentRgb: '139, 26, 26',
+      shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      shadowGlow: '0 0 10px rgba(139, 26, 26, 0.2)',
+      gradientStart: '#E8E8E8',
+      gradientEnd: '#D3D3D3',
+      cardGradientEnd: '#E0E0E0',
     },
   }),
   'standard-dark': createThemePalette({
@@ -95,6 +105,42 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       cardBackground: '#1F1F1F',
       cardHover: '#3A3A3A',
       textMuted: '#B0B0B0',
+      // V4 properties
+      bgGlass: 'rgba(31, 31, 31, 0.85)',
+      textHeaderMuted: 'rgba(26, 26, 26, 0.7)',
+      accentHover: '#FF7070',
+      accentRgb: '232, 90, 90',
+      shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.3)',
+      shadowGlow: '0 0 10px rgba(232, 90, 90, 0.25)',
+      gradientStart: '#333333',
+      gradientEnd: '#2D2D2D',
+      cardGradientEnd: '#1A1A1A',
+    },
+  }),
+
+  // Premium Dark - Metallic gold accent on deep black (V4 default theme)
+  'premium-dark': createThemePalette({
+    primary: '#D4AF37', // Metallic gold
+    background: '#121212', // Deep black
+    text: '#E0E0E0',
+    isDark: true,
+    overrides: {
+      textHeader: '#1A1A1A', // Dark text for contrast on gold header
+      border: 'rgba(255, 255, 255, 0.15)',
+      backgroundSecondary: '#1A1A1A',
+      cardBackground: '#1E1E1E',
+      cardHover: '#2A2A2A',
+      textMuted: '#A0A0A0',
+      // V4 properties
+      bgGlass: 'rgba(30, 30, 30, 0.85)',
+      textHeaderMuted: 'rgba(26, 26, 26, 0.7)', // Dark muted text for gold header
+      accentHover: '#F0C040',
+      accentRgb: '212, 175, 55',
+      shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.4)',
+      shadowGlow: '0 0 10px rgba(212, 175, 55, 0.25)',
+      gradientStart: '#252525',
+      gradientEnd: '#121212',
+      cardGradientEnd: '#151515',
     },
   }),
 
@@ -109,6 +155,16 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       cardBackground: '#F9F8F4',
       cardHover: '#FDFDFC',
       textMuted: '#0C4A6E',
+      // V4 properties
+      bgGlass: 'rgba(249, 248, 244, 0.9)',
+      textHeaderMuted: 'rgba(249, 248, 244, 0.7)',
+      accentHover: '#5066B4',
+      accentRgb: '64, 86, 164',
+      shadowSoft: '0 4px 6px rgba(49, 45, 87, 0.1)',
+      shadowGlow: '0 0 10px rgba(64, 86, 164, 0.2)',
+      gradientStart: '#C2D4DE',
+      gradientEnd: '#B2C4CE',
+      cardGradientEnd: '#EAE9E5',
     },
   }),
   'og-classic-dark': createThemePalette({
@@ -122,6 +178,16 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       cardBackground: '#000B9D',
       cardHover: '#5052D9',
       textMuted: '#E4DFD0',
+      // V4 properties
+      bgGlass: 'rgba(0, 11, 157, 0.85)',
+      textHeaderMuted: 'rgba(249, 248, 244, 0.7)',
+      accentHover: '#2E50BF',
+      accentRgb: '30, 64, 175',
+      shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.4)',
+      shadowGlow: '0 0 15px rgba(30, 64, 175, 0.35)',
+      gradientStart: '#282830',
+      gradientEnd: '#181820',
+      cardGradientEnd: '#000888',
     },
   }),
 
@@ -137,6 +203,16 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       backgroundSecondary: '#FEF9E7',
       cardHover: '#FEF9E7',
       textMuted: '#92400E',
+      // V4 properties
+      bgGlass: 'rgba(254, 249, 231, 0.92)',
+      textHeaderMuted: 'rgba(120, 53, 15, 0.7)',
+      accentHover: '#E98716',
+      accentRgb: '217, 119, 6',
+      shadowSoft: '0 4px 6px rgba(120, 53, 15, 0.1)',
+      shadowGlow: '0 0 10px rgba(217, 119, 6, 0.2)',
+      gradientStart: '#FEF9E7',
+      gradientEnd: '#FEF3C7',
+      cardGradientEnd: '#FDF5D7',
     },
   }),
   'cotton-candy': createThemePalette({
@@ -151,6 +227,16 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       cardBackground: '#FFFFFF',
       cardHover: '#FFF5F9',
       textMuted: '#A0526D',
+      // V4 properties
+      bgGlass: 'rgba(255, 255, 255, 0.9)',
+      textHeaderMuted: 'rgba(139, 26, 74, 0.7)',
+      accentHover: '#FFC6E3',
+      accentRgb: '255, 182, 217',
+      shadowSoft: '0 4px 6px rgba(139, 26, 74, 0.08)',
+      shadowGlow: '0 0 10px rgba(255, 182, 217, 0.3)',
+      gradientStart: '#FFFAFC',
+      gradientEnd: '#FFF5F9',
+      cardGradientEnd: '#FFF8FB',
     },
   }),
   'sugar-riot': createThemePalette({
@@ -165,6 +251,16 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       cardBackground: '#1A0A1A',
       cardHover: '#2A1A2A',
       textMuted: '#FFB6FF',
+      // V4 properties
+      bgGlass: 'rgba(26, 10, 26, 0.88)',
+      textHeaderMuted: 'rgba(10, 10, 10, 0.7)',
+      accentHover: '#FF44A8',
+      accentRgb: '255, 20, 147',
+      shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.4)',
+      shadowGlow: '0 0 15px rgba(255, 20, 147, 0.4)',
+      gradientStart: '#1A1A1A',
+      gradientEnd: '#0A0A0A',
+      cardGradientEnd: '#150515',
     },
   }),
 
@@ -178,6 +274,16 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       backgroundSecondary: '#F3F4F6',
       cardHover: '#F3F4F6',
       textMuted: '#6B7280',
+      // V4 properties
+      bgGlass: 'rgba(255, 255, 255, 0.92)',
+      textHeaderMuted: 'rgba(255, 255, 255, 0.7)',
+      accentHover: '#505050',
+      accentRgb: '64, 64, 64',
+      shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.08)',
+      shadowGlow: '0 0 10px rgba(64, 64, 64, 0.15)',
+      gradientStart: '#FAFAFA',
+      gradientEnd: '#FFFFFF',
+      cardGradientEnd: '#F8F8F8',
     },
   }),
   'grayscale-dark': createThemePalette({
@@ -190,6 +296,16 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       backgroundSecondary: '#1F2937',
       cardHover: '#1F2937',
       textMuted: '#9CA3AF',
+      // V4 properties
+      bgGlass: 'rgba(31, 41, 55, 0.88)',
+      textHeaderMuted: 'rgba(243, 244, 246, 0.7)',
+      accentHover: '#7B8290',
+      accentRgb: '107, 114, 128',
+      shadowSoft: '0 4px 6px rgba(0, 0, 0, 0.3)',
+      shadowGlow: '0 0 10px rgba(107, 114, 128, 0.2)',
+      gradientStart: '#1F2937',
+      gradientEnd: '#111827',
+      cardGradientEnd: '#0F172A',
     },
   }),
 
@@ -204,6 +320,17 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       backgroundSecondary: '#F0F0F0',
       cardHover: '#E0E0E0',
       textMuted: '#333333',
+      // V4 properties - disable glassmorphism for accessibility
+      bgGlass: 'rgba(255, 255, 255, 1)', // Solid, no transparency
+      textHeaderMuted: '#333333',
+      accentHover: '#0000EE',
+      accentRgb: '0, 0, 204',
+      shadowSoft: '0 2px 4px rgba(0, 0, 0, 0.2)',
+      shadowGlow: 'none',
+      gradientStart: '#FFFFFF',
+      gradientEnd: '#FFFFFF',
+      cardGradientEnd: '#F5F5F5',
+      disableBlur: true,
     },
   }),
   'high-contrast-dark': createThemePalette({
@@ -216,6 +343,17 @@ const THEME_PALETTES: Record<ThemeName, ThemePalette> = {
       backgroundSecondary: '#1A1A1A',
       cardHover: '#333333',
       textMuted: '#CCCCCC',
+      // V4 properties - disable glassmorphism for accessibility
+      bgGlass: 'rgba(0, 0, 0, 1)', // Solid, no transparency
+      textHeaderMuted: '#999999',
+      accentHover: '#FFFF44',
+      accentRgb: '255, 255, 0',
+      shadowSoft: '0 2px 4px rgba(255, 255, 255, 0.1)',
+      shadowGlow: 'none',
+      gradientStart: '#000000',
+      gradientEnd: '#000000',
+      cardGradientEnd: '#0A0A0A',
+      disableBlur: true,
     },
   }),
 };
@@ -333,6 +471,7 @@ export class ThemeService {
 
   /**
    * Apply theme to document
+   * V4: Extended to set v4 CSS custom properties for glassmorphism, shadows, and gradients
    */
   private static applyTheme(themeName: ThemeName): void {
     const theme = this.getTheme(themeName);
@@ -350,6 +489,7 @@ export class ThemeService {
     const palette = theme.palette;
     const style = root.style;
 
+    // ===== V3 Core Variables =====
     style.setProperty('--theme-primary', palette.primary);
     style.setProperty('--theme-background', palette.background);
     style.setProperty('--theme-text', palette.text);
@@ -359,6 +499,50 @@ export class ThemeService {
     style.setProperty('--theme-card-background', palette.cardBackground);
     style.setProperty('--theme-card-hover', palette.cardHover);
     style.setProperty('--theme-text-muted', palette.textMuted);
+
+    // ===== V4 Extended Variables (set only if defined) =====
+
+    // Glassmorphism
+    if (palette.bgGlass) {
+      style.setProperty('--v4-glass-bg', palette.bgGlass);
+    }
+    if (palette.disableBlur) {
+      style.setProperty('--v4-glass-blur', 'none');
+    } else {
+      style.setProperty('--v4-glass-blur', 'blur(12px)');
+    }
+
+    // Text variants
+    if (palette.textHeaderMuted) {
+      style.setProperty('--v4-text-header-muted', palette.textHeaderMuted);
+    }
+
+    // Accent colors
+    if (palette.accentHover) {
+      style.setProperty('--v4-accent-hover', palette.accentHover);
+    }
+    if (palette.accentRgb) {
+      style.setProperty('--v4-accent-rgb', palette.accentRgb);
+    }
+
+    // Shadows
+    if (palette.shadowSoft) {
+      style.setProperty('--v4-shadow-soft', palette.shadowSoft);
+    }
+    if (palette.shadowGlow) {
+      style.setProperty('--v4-shadow-glow', palette.shadowGlow);
+    }
+
+    // Gradients
+    if (palette.gradientStart) {
+      style.setProperty('--v4-gradient-start', palette.gradientStart);
+    }
+    if (palette.gradientEnd) {
+      style.setProperty('--v4-gradient-end', palette.gradientEnd);
+    }
+    if (palette.cardGradientEnd) {
+      style.setProperty('--v4-card-gradient-end', palette.cardGradientEnd);
+    }
   }
 
   /**
@@ -370,8 +554,29 @@ export class ThemeService {
 
   /**
    * Get color from current theme palette
+   * Note: V4 optional properties may return undefined
    */
-  static getColor(key: keyof ThemePalette): string {
+  static getColor(key: keyof ThemePalette): string | boolean | undefined {
+    const palette = THEME_PALETTES[this.currentTheme];
+    return palette[key];
+  }
+
+  /**
+   * Get a required color from current theme palette (v3 core properties only)
+   * Use this for guaranteed string returns on core theme properties
+   */
+  static getRequiredColor(
+    key:
+      | 'primary'
+      | 'background'
+      | 'text'
+      | 'textHeader'
+      | 'border'
+      | 'backgroundSecondary'
+      | 'cardBackground'
+      | 'cardHover'
+      | 'textMuted'
+  ): string {
     const palette = THEME_PALETTES[this.currentTheme];
     return palette[key];
   }

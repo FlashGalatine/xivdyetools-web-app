@@ -13,15 +13,24 @@ import { logger } from '@shared/logger';
 // Types
 // ============================================================================
 
+/**
+ * V4 Tool IDs
+ * Changes from v3:
+ * - 'matcher' → 'extractor' (Palette Extractor)
+ * - 'mixer' → 'gradient' (Gradient Builder - old mixer functionality)
+ * - 'character' → 'swatch' (Swatch Matcher)
+ * - NEW: 'mixer' (Dye Mixer - completely new tool)
+ */
 export type ToolId =
   | 'harmony'
-  | 'matcher'
+  | 'extractor' // Was 'matcher' in v3
   | 'accessibility'
   | 'comparison'
-  | 'mixer'
+  | 'gradient' // Was 'mixer' in v3 (Gradient Builder)
   | 'presets'
   | 'budget'
-  | 'character';
+  | 'swatch' // Was 'character' in v3
+  | 'mixer'; // NEW - Dye Mixer tool
 
 export interface RouteDefinition {
   id: ToolId;
@@ -43,18 +52,32 @@ type RouteChangeListener = (state: RouteState) => void;
 const DEFAULT_TOOL: ToolId = 'harmony';
 
 /**
- * Route definitions mapping tool IDs to URL paths
+ * V4 Route definitions mapping tool IDs to URL paths
+ * Updated tool names and paths for v4 UI migration
  */
 export const ROUTES: RouteDefinition[] = [
-  { id: 'harmony', path: '/harmony', title: 'Color Harmony' },
-  { id: 'matcher', path: '/matcher', title: 'Color Matcher' },
-  { id: 'accessibility', path: '/accessibility', title: 'Accessibility' },
-  { id: 'comparison', path: '/comparison', title: 'Comparison' },
-  { id: 'mixer', path: '/mixer', title: 'Mixer' },
-  { id: 'presets', path: '/presets', title: 'Presets' },
-  { id: 'budget', path: '/budget', title: 'Budget' },
-  { id: 'character', path: '/character', title: 'Character' },
+  { id: 'harmony', path: '/harmony', title: 'Harmony Explorer' },
+  { id: 'extractor', path: '/extractor', title: 'Palette Extractor' },
+  { id: 'accessibility', path: '/accessibility', title: 'Accessibility Checker' },
+  { id: 'comparison', path: '/comparison', title: 'Dye Comparison' },
+  { id: 'gradient', path: '/gradient', title: 'Gradient Builder' },
+  { id: 'presets', path: '/presets', title: 'Community Presets' },
+  { id: 'budget', path: '/budget', title: 'Budget Suggestions' },
+  { id: 'swatch', path: '/swatch', title: 'Swatch Matcher' },
+  { id: 'mixer', path: '/mixer', title: 'Dye Mixer' }, // NEW tool
 ];
+
+/**
+ * Legacy route redirects for backward compatibility
+ * Maps old v3 paths to new v4 tool IDs
+ * Note: /mixer is NOT redirected - it's now a new tool
+ */
+const LEGACY_ROUTE_REDIRECTS: Record<string, ToolId> = {
+  '/matcher': 'extractor',
+  '/character': 'swatch',
+  // /mixer stays at /mixer but is now the NEW Dye Mixer
+  // Old mixer functionality moved to /gradient
+};
 
 /**
  * Query parameters to preserve across navigation
@@ -135,7 +158,7 @@ export class RouterService {
     const newParams = new URLSearchParams();
 
     // Copy preserved params
-    PRESERVED_PARAMS.forEach(key => {
+    PRESERVED_PARAMS.forEach((key) => {
       const value = currentParams.get(key);
       if (value) newParams.set(key, value);
     });
@@ -177,7 +200,7 @@ export class RouterService {
     const currentParams = new URLSearchParams(window.location.search);
     const newParams = new URLSearchParams();
 
-    PRESERVED_PARAMS.forEach(key => {
+    PRESERVED_PARAMS.forEach((key) => {
       const value = currentParams.get(key);
       if (value) newParams.set(key, value);
     });
@@ -231,7 +254,7 @@ export class RouterService {
    * Get route definition for a tool
    */
   static getRouteForTool(toolId: ToolId): RouteDefinition | undefined {
-    return ROUTES.find(r => r.id === toolId);
+    return ROUTES.find((r) => r.id === toolId);
   }
 
   /**
@@ -240,12 +263,12 @@ export class RouterService {
    */
   static getToolFromPath(path: string): ToolId | null {
     // First try exact match
-    const exactMatch = ROUTES.find(r => r.path === path || r.path === `/${path}`);
+    const exactMatch = ROUTES.find((r) => r.path === path || r.path === `/${path}`);
     if (exactMatch) return exactMatch.id;
 
     // Try prefix match for nested routes (e.g., /presets/community-xxx)
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    const prefixMatch = ROUTES.find(r => normalizedPath.startsWith(r.path + '/'));
+    const prefixMatch = ROUTES.find((r) => normalizedPath.startsWith(r.path + '/'));
     return prefixMatch?.id ?? null;
   }
 
@@ -274,7 +297,7 @@ export class RouterService {
    * Check if a tool ID is valid
    */
   static isValidToolId(id: string): id is ToolId {
-    return ROUTES.some(r => r.id === id);
+    return ROUTES.some((r) => r.id === id);
   }
 
   /**
@@ -321,6 +344,15 @@ export class RouterService {
 
   private static handleInitialRoute(): void {
     const path = window.location.pathname;
+
+    // V4: Check for legacy route redirects FIRST
+    const legacyRedirect = LEGACY_ROUTE_REDIRECTS[path];
+    if (legacyRedirect) {
+      logger.info(`[RouterService] Redirecting legacy route ${path} -> /${legacyRedirect}`);
+      this.replaceRoute(legacyRedirect);
+      return;
+    }
+
     const toolId = this.parseCurrentPath();
 
     // If at root or unknown path, redirect to default tool
@@ -345,7 +377,7 @@ export class RouterService {
 
   private static notifyListeners(): void {
     const state = this.getCurrentRoute();
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(state);
       } catch (error) {

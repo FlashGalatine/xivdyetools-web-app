@@ -13,12 +13,22 @@
 import { BaseComponent } from '@components/base-component';
 import { CollapsiblePanel } from '@components/collapsible-panel';
 import { DyeSelector } from '@components/dye-selector';
-import { ColorService, DyeService, LanguageService, RouterService, StorageService } from '@services/index';
+import { ResultCard, type ResultCardData } from '@components/v4/result-card';
+import {
+  ColorService,
+  ConfigController,
+  DyeService,
+  LanguageService,
+  MarketBoardService,
+  StorageService,
+  WorldService,
+} from '@services/index';
 import { ICON_TOOL_COMPARISON } from '@shared/tool-icons';
 import { ICON_BEAKER, ICON_SETTINGS } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye } from '@shared/types';
+import type { ComparisonConfig } from '@shared/tool-config-types';
 
 // ============================================================================
 // Types and Constants
@@ -36,6 +46,11 @@ export interface ComparisonToolOptions {
 interface ComparisonOptions {
   showDistanceValues: boolean;
   highlightClosestPair: boolean;
+  showHex: boolean;
+  showRgb: boolean;
+  showHsv: boolean;
+  showLab: boolean;
+  showMarketPrices: boolean;
 }
 
 /**
@@ -65,6 +80,11 @@ const STORAGE_KEYS = {
   showDistanceValues: 'v3_comparison_show_distance',
   highlightClosestPair: 'v3_comparison_highlight_closest',
   selectedDyes: 'v3_comparison_selected_dyes',
+  showHex: 'v3_comparison_show_hex',
+  showRgb: 'v3_comparison_show_rgb',
+  showHsv: 'v3_comparison_show_hsv',
+  showLab: 'v3_comparison_show_lab',
+  showMarketPrices: 'v3_comparison_show_prices',
 } as const;
 
 /**
@@ -73,6 +93,11 @@ const STORAGE_KEYS = {
 const DEFAULT_OPTIONS: ComparisonOptions = {
   showDistanceValues: true,
   highlightClosestPair: false,
+  showHex: true,
+  showRgb: true,
+  showHsv: false,
+  showLab: false,
+  showMarketPrices: true,
 };
 
 // ============================================================================
@@ -113,8 +138,20 @@ export class ComparisonTool extends BaseComponent {
   private chartsContainer: HTMLElement | null = null;
   private matrixContainer: HTMLElement | null = null;
 
+  // Section wrappers for visibility toggling
+  private selectedDyesSection: HTMLElement | null = null;
+  private statsSection: HTMLElement | null = null;
+  private chartsSection: HTMLElement | null = null;
+  private matrixSection: HTMLElement | null = null;
+
+  // Market Board UI references
+  private serverDescriptionElement: HTMLElement | null = null;
+  private serverSelectElement: HTMLSelectElement | null = null;
+
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
+  private configUnsubscribe: (() => void) | null = null;
+  private marketBoardEventCleanup: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: ComparisonToolOptions) {
     super(container);
@@ -123,9 +160,18 @@ export class ComparisonTool extends BaseComponent {
     // Load persisted options
     this.comparisonOptions = {
       showDistanceValues:
-        StorageService.getItem<boolean>(STORAGE_KEYS.showDistanceValues) ?? DEFAULT_OPTIONS.showDistanceValues,
+        StorageService.getItem<boolean>(STORAGE_KEYS.showDistanceValues) ??
+        DEFAULT_OPTIONS.showDistanceValues,
       highlightClosestPair:
-        StorageService.getItem<boolean>(STORAGE_KEYS.highlightClosestPair) ?? DEFAULT_OPTIONS.highlightClosestPair,
+        StorageService.getItem<boolean>(STORAGE_KEYS.highlightClosestPair) ??
+        DEFAULT_OPTIONS.highlightClosestPair,
+      showHex: StorageService.getItem<boolean>(STORAGE_KEYS.showHex) ?? DEFAULT_OPTIONS.showHex,
+      showRgb: StorageService.getItem<boolean>(STORAGE_KEYS.showRgb) ?? DEFAULT_OPTIONS.showRgb,
+      showHsv: StorageService.getItem<boolean>(STORAGE_KEYS.showHsv) ?? DEFAULT_OPTIONS.showHsv,
+      showLab: StorageService.getItem<boolean>(STORAGE_KEYS.showLab) ?? DEFAULT_OPTIONS.showLab,
+      showMarketPrices:
+        StorageService.getItem<boolean>(STORAGE_KEYS.showMarketPrices) ??
+        DEFAULT_OPTIONS.showMarketPrices,
     };
   }
 
@@ -154,10 +200,85 @@ export class ComparisonTool extends BaseComponent {
       this.update();
     });
 
+    // Subscribe to config changes from V4 ConfigSidebar
+    this.configUnsubscribe = ConfigController.getInstance().subscribe('comparison', (config) => {
+      this.setConfig(config);
+    });
+
+    // Subscribe to MarketBoardService events for price updates
+    this.subscribeToMarketBoardEvents();
+
     // Load persisted dyes after DyeSelector is initialized
     this.loadPersistedDyes();
 
     logger.info('[ComparisonTool] Mounted');
+  }
+
+  /**
+   * Subscribe to MarketBoardService events for reactive price updates
+   */
+  private subscribeToMarketBoardEvents(): void {
+    const marketBoardService = MarketBoardService.getInstance();
+
+    // Handler for server changes
+    const handleServerChanged = () => {
+      // Update the server description text
+      if (this.serverDescriptionElement) {
+        this.serverDescriptionElement.textContent = `Prices fetched from Universalis for ${marketBoardService.getSelectedServer()}`;
+      }
+      // Update dropdown selection if it exists
+      if (this.serverSelectElement) {
+        this.serverSelectElement.value = marketBoardService.getSelectedServer();
+      }
+      // Re-fetch prices if Market Board is enabled and we have dyes
+      if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+        this.fetchAndUpdatePrices();
+      }
+    };
+
+    // Handler for price updates
+    const handlePricesUpdated = () => {
+      // Re-render cards to show updated prices
+      if (this.selectedDyes.length > 0) {
+        this.renderSelectedDyesCards();
+      }
+    };
+
+    // Handler for settings changes (showPrices toggle from elsewhere)
+    const handleSettingsChanged = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { showPrices } = customEvent.detail;
+      if (showPrices !== this.comparisonOptions.showMarketPrices) {
+        this.comparisonOptions.showMarketPrices = showPrices;
+        StorageService.setItem(STORAGE_KEYS.showMarketPrices, showPrices);
+        this.renderSelectedDyesCards();
+      }
+    };
+
+    // Add event listeners
+    marketBoardService.addEventListener('server-changed', handleServerChanged);
+    marketBoardService.addEventListener('prices-updated', handlePricesUpdated);
+    marketBoardService.addEventListener('settings-changed', handleSettingsChanged);
+
+    // Store cleanup function
+    this.marketBoardEventCleanup = () => {
+      marketBoardService.removeEventListener('server-changed', handleServerChanged);
+      marketBoardService.removeEventListener('prices-updated', handlePricesUpdated);
+      marketBoardService.removeEventListener('settings-changed', handleSettingsChanged);
+    };
+  }
+
+  /**
+   * Fetch prices for selected dyes and update display
+   */
+  private async fetchAndUpdatePrices(): Promise<void> {
+    if (!this.comparisonOptions.showMarketPrices || this.selectedDyes.length === 0) {
+      return;
+    }
+
+    const marketBoardService = MarketBoardService.getInstance();
+    await marketBoardService.fetchPricesForDyes(this.selectedDyes);
+    // The 'prices-updated' event will trigger renderSelectedDyesCards()
   }
 
   /**
@@ -178,6 +299,10 @@ export class ComparisonTool extends BaseComponent {
         this.updateSelectedDyesDisplay();
         this.updateResults();
         this.updateDrawerSelectedDyesDisplay();
+        // Fetch prices for loaded dyes if Market Board is enabled
+        if (this.comparisonOptions.showMarketPrices) {
+          this.fetchAndUpdatePrices();
+        }
         logger.info(`[ComparisonTool] Loaded ${dyes.length} persisted dyes`);
       }
     }
@@ -193,6 +318,8 @@ export class ComparisonTool extends BaseComponent {
 
   destroy(): void {
     this.languageUnsubscribe?.();
+    this.configUnsubscribe?.();
+    this.marketBoardEventCleanup?.();
     this.dyeSelector?.destroy();
     this.dyeSelectorPanel?.destroy();
     this.optionsPanel?.destroy();
@@ -202,11 +329,87 @@ export class ComparisonTool extends BaseComponent {
     this.drawerDyeSelectorPanel?.destroy();
     this.drawerOptionsPanel?.destroy();
 
+    // Clear Market Board UI references
+    this.serverDescriptionElement = null;
+    this.serverSelectElement = null;
+
     this.selectedDyes = [];
     this.dyesWithHSV = [];
 
     super.destroy();
     logger.info('[ComparisonTool] Destroyed');
+  }
+
+  // ============================================================================
+  // V4 Integration
+  // ============================================================================
+
+  /**
+   * Update tool configuration from external source (V4 ConfigSidebar)
+   * Now reads all settings from displayOptions (refactored from individual fields)
+   */
+  public setConfig(config: Partial<ComparisonConfig>): void {
+    let needsRerender = false;
+
+    // Handle displayOptions from v4-display-options component
+    if (config.displayOptions) {
+      const opts = config.displayOptions;
+
+      // Map displayOptions to internal comparisonOptions
+      if (opts.showHex !== undefined && opts.showHex !== this.comparisonOptions.showHex) {
+        this.comparisonOptions.showHex = opts.showHex;
+        StorageService.setItem(STORAGE_KEYS.showHex, opts.showHex);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showHex -> ${opts.showHex}`);
+      }
+      if (opts.showRgb !== undefined && opts.showRgb !== this.comparisonOptions.showRgb) {
+        this.comparisonOptions.showRgb = opts.showRgb;
+        StorageService.setItem(STORAGE_KEYS.showRgb, opts.showRgb);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showRgb -> ${opts.showRgb}`);
+      }
+      if (opts.showHsv !== undefined && opts.showHsv !== this.comparisonOptions.showHsv) {
+        this.comparisonOptions.showHsv = opts.showHsv;
+        StorageService.setItem(STORAGE_KEYS.showHsv, opts.showHsv);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showHsv -> ${opts.showHsv}`);
+      }
+      if (opts.showLab !== undefined && opts.showLab !== this.comparisonOptions.showLab) {
+        this.comparisonOptions.showLab = opts.showLab;
+        StorageService.setItem(STORAGE_KEYS.showLab, opts.showLab);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showLab -> ${opts.showLab}`);
+      }
+
+      // Map showDeltaE to internal showDistanceValues
+      if (
+        opts.showDeltaE !== undefined &&
+        opts.showDeltaE !== this.comparisonOptions.showDistanceValues
+      ) {
+        this.comparisonOptions.showDistanceValues = opts.showDeltaE;
+        StorageService.setItem(STORAGE_KEYS.showDistanceValues, opts.showDeltaE);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showDeltaE -> ${opts.showDeltaE}`);
+      }
+
+      // Map showPrice to internal showMarketPrices
+      if (
+        opts.showPrice !== undefined &&
+        opts.showPrice !== this.comparisonOptions.showMarketPrices
+      ) {
+        this.comparisonOptions.showMarketPrices = opts.showPrice;
+        StorageService.setItem(STORAGE_KEYS.showMarketPrices, opts.showPrice);
+        needsRerender = true;
+        logger.info(`[ComparisonTool] setConfig: displayOptions.showPrice -> ${opts.showPrice}`);
+      }
+
+      // Note: showAcquisition is not used by comparison tool (has its own acquisition display)
+    }
+
+    // Re-render if config changed and we have dyes selected
+    if (needsRerender && this.selectedDyes.length > 0) {
+      this.updateResults();
+    }
   }
 
   // ============================================================================
@@ -264,14 +467,16 @@ export class ComparisonTool extends BaseComponent {
   }
 
   /**
-   * Create a header for right panel sections
+   * Create a header for right panel sections (styled like mock-up with golden underline)
    */
   private createHeader(text: string): HTMLElement {
-    return this.createElement('h3', {
-      className: 'text-sm font-semibold uppercase tracking-wider mb-3',
+    const header = this.createElement('div', { className: 'section-header' });
+    const title = this.createElement('span', {
+      className: 'section-title',
       textContent: text,
-      attributes: { style: 'color: var(--theme-text-muted);' },
     });
+    header.appendChild(title);
+    return header;
   }
 
   /**
@@ -313,6 +518,10 @@ export class ComparisonTool extends BaseComponent {
         this.updateResults();
         this.updateDrawerSelectedDyesDisplay();
         this.saveSelectedDyes();
+        // Fetch prices for newly selected dyes if Market Board is enabled
+        if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+          this.fetchAndUpdatePrices();
+        }
       }
     });
 
@@ -329,7 +538,8 @@ export class ComparisonTool extends BaseComponent {
     if (this.selectedDyes.length === 0) {
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
+        textContent:
+          LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -366,14 +576,7 @@ export class ComparisonTool extends BaseComponent {
       });
 
       this.on(removeBtn, 'click', () => {
-        const newSelection = this.selectedDyes.filter((d) => d.id !== dye.id);
-        this.dyeSelector?.setSelectedDyes(newSelection);
-        this.selectedDyes = newSelection;
-        this.calculateHSVValues();
-        this.updateSelectedDyesDisplay();
-        this.updateResults();
-        this.updateDrawerSelectedDyesDisplay();
-        this.saveSelectedDyes();
+        this.removeDye(dye);
       });
 
       dyeItem.appendChild(swatch);
@@ -395,12 +598,30 @@ export class ComparisonTool extends BaseComponent {
   }
 
   /**
-   * Render comparison options
+   * Render comparison options with Color Formats and Market Board sections
    */
   private renderOptions(container: HTMLElement): void {
-    this.optionsContainer = this.createElement('div', { className: 'space-y-2' });
+    this.optionsContainer = this.createElement('div', { className: 'space-y-4' });
 
-    const options = [
+    // === COLOR FORMATS SECTION ===
+    const colorFormatsSection = this.createOptionsSection(
+      LanguageService.t('common.colorFormats') || 'Color Formats'
+    );
+    const colorFormatsOptions = [
+      { key: 'showHex' as const, label: LanguageService.t('common.hexCodes') || 'Hex Codes' },
+      { key: 'showRgb' as const, label: LanguageService.t('common.rgbValues') || 'RGB Values' },
+      { key: 'showHsv' as const, label: LanguageService.t('common.hsvValues') || 'HSV Values' },
+    ];
+    for (const option of colorFormatsOptions) {
+      colorFormatsSection.content.appendChild(this.createToggleRow(option.key, option.label));
+    }
+    this.optionsContainer.appendChild(colorFormatsSection.wrapper);
+
+    // === COMPARISON OPTIONS SECTION ===
+    const comparisonSection = this.createOptionsSection(
+      LanguageService.t('comparison.comparisonOptions') || 'Comparison Options'
+    );
+    const comparisonOptions = [
       {
         key: 'showDistanceValues' as const,
         label: LanguageService.t('comparison.showDistanceValues') || 'Show Distance Values',
@@ -410,128 +631,678 @@ export class ComparisonTool extends BaseComponent {
         label: LanguageService.t('comparison.highlightClosestPair') || 'Highlight Closest Pair',
       },
     ];
-
-    for (const option of options) {
-      const label = this.createElement('label', {
-        className: 'flex items-center gap-2 cursor-pointer',
-      });
-
-      const checkbox = this.createElement('input', {
-        attributes: {
-          type: 'checkbox',
-          'data-option': option.key,
-        },
-        className: 'w-4 h-4 rounded',
-      }) as HTMLInputElement;
-      checkbox.checked = this.comparisonOptions[option.key];
-
-      this.on(checkbox, 'change', () => {
-        this.comparisonOptions[option.key] = checkbox.checked;
-        StorageService.setItem(STORAGE_KEYS[option.key], checkbox.checked);
-        this.updateResults();
-      });
-
-      const text = this.createElement('span', {
-        className: 'text-sm',
-        textContent: option.label,
-        attributes: { style: 'color: var(--theme-text);' },
-      });
-
-      label.appendChild(checkbox);
-      label.appendChild(text);
-      this.optionsContainer.appendChild(label);
+    for (const option of comparisonOptions) {
+      comparisonSection.content.appendChild(this.createToggleRow(option.key, option.label));
     }
+    this.optionsContainer.appendChild(comparisonSection.wrapper);
+
+    // === MARKET BOARD SECTION ===
+    const marketBoardSection = this.createOptionsSection(
+      LanguageService.t('common.marketBoard') || 'Market Board'
+    );
+
+    // Enable Market Board toggle
+    marketBoardSection.content.appendChild(
+      this.createToggleRow(
+        'showMarketPrices',
+        LanguageService.t('common.enableMarketBoard') || 'Enable Market Board'
+      )
+    );
+
+    // Server/World dropdown
+    const selectContainer = this.createElement('div', {
+      className: 'mt-2',
+    });
+
+    const select = this.createElement('select', {
+      className: 'w-full p-2 rounded text-sm',
+      attributes: {
+        style: `
+          background: var(--theme-card-background);
+          border: 1px solid var(--theme-border);
+          color: var(--theme-text);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    }) as HTMLSelectElement;
+
+    // Store reference for external updates
+    this.serverSelectElement = select;
+
+    // Populate with data centers and worlds
+    this.populateServerDropdown(select);
+
+    this.on(select, 'change', () => {
+      const marketBoardService = MarketBoardService.getInstance();
+      marketBoardService.setServer(select.value);
+      // Update description text immediately
+      if (this.serverDescriptionElement) {
+        this.serverDescriptionElement.textContent = `Prices fetched from Universalis for ${select.value}`;
+      }
+      // Fetch prices for the new server if Market Board is enabled
+      if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+        this.fetchAndUpdatePrices();
+      }
+      this.updateResults();
+    });
+
+    selectContainer.appendChild(select);
+
+    // Description text
+    const description = this.createElement('div', {
+      className: 'text-xs mt-1',
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+    const marketBoardService = MarketBoardService.getInstance();
+    description.textContent = `Prices fetched from Universalis for ${marketBoardService.getSelectedServer()}`;
+    // Store reference for external updates
+    this.serverDescriptionElement = description;
+    selectContainer.appendChild(description);
+
+    marketBoardSection.content.appendChild(selectContainer);
+    this.optionsContainer.appendChild(marketBoardSection.wrapper);
 
     container.appendChild(this.optionsContainer);
+  }
+
+  /**
+   * Create an options section with header and content container
+   */
+  private createOptionsSection(title: string): { wrapper: HTMLElement; content: HTMLElement } {
+    const wrapper = this.createElement('div', {
+      attributes: {
+        style: `
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 8px;
+          padding: 12px;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    const header = this.createElement('div', {
+      className: 'text-xs font-medium mb-2',
+      textContent: title,
+      attributes: {
+        style: `
+          color: var(--theme-text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    const content = this.createElement('div', { className: 'space-y-2' });
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(content);
+
+    return { wrapper, content };
+  }
+
+  /**
+   * Create a toggle row with V4-style switch
+   */
+  private createToggleRow(key: keyof ComparisonOptions, label: string): HTMLElement {
+    const row = this.createElement('label', {
+      className: 'flex items-center justify-between cursor-pointer',
+    });
+
+    const text = this.createElement('span', {
+      className: 'text-sm',
+      textContent: label,
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+
+    // V4-style toggle switch container
+    const toggleContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          position: relative;
+          width: 44px;
+          height: 24px;
+          flex-shrink: 0;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    const checkbox = this.createElement('input', {
+      attributes: {
+        type: 'checkbox',
+        'data-option': key,
+        style: 'opacity: 0; width: 0; height: 0; position: absolute;',
+      },
+    }) as HTMLInputElement;
+    checkbox.checked = this.comparisonOptions[key];
+
+    const slider = this.createElement('div', {
+      attributes: {
+        style: `
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: ${checkbox.checked ? 'var(--theme-primary)' : 'rgba(255, 255, 255, 0.2)'};
+          border-radius: 24px;
+          transition: background 0.2s;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    const knob = this.createElement('div', {
+      attributes: {
+        style: `
+          position: absolute;
+          content: '';
+          height: 18px;
+          width: 18px;
+          left: ${checkbox.checked ? '23px' : '3px'};
+          top: 3px;
+          background: white;
+          border-radius: 50%;
+          transition: left 0.2s;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    slider.appendChild(knob);
+    toggleContainer.appendChild(checkbox);
+    toggleContainer.appendChild(slider);
+
+    this.on(toggleContainer, 'click', () => {
+      checkbox.checked = !checkbox.checked;
+      this.comparisonOptions[key] = checkbox.checked;
+      StorageService.setItem(STORAGE_KEYS[key], checkbox.checked);
+
+      // Update slider visual
+      slider.style.background = checkbox.checked
+        ? 'var(--theme-primary)'
+        : 'rgba(255, 255, 255, 0.2)';
+      knob.style.left = checkbox.checked ? '23px' : '3px';
+
+      // Special handling for Market Board toggle
+      if (key === 'showMarketPrices') {
+        const marketBoardService = MarketBoardService.getInstance();
+        marketBoardService.setShowPrices(checkbox.checked);
+        // Fetch prices if enabling and we have dyes selected
+        if (checkbox.checked && this.selectedDyes.length > 0) {
+          this.fetchAndUpdatePrices();
+        }
+      }
+
+      this.renderSelectedDyesCards();
+      this.updateResults();
+    });
+
+    row.appendChild(text);
+    row.appendChild(toggleContainer);
+
+    return row;
+  }
+
+  /**
+   * Populate the server dropdown with data centers and worlds
+   */
+  private populateServerDropdown(select: HTMLSelectElement): void {
+    const dataCenters = WorldService.getAllDataCenters();
+    const worlds = WorldService.getAllWorlds();
+    const marketBoardService = MarketBoardService.getInstance();
+    const currentServer = marketBoardService.getSelectedServer();
+
+    if (dataCenters.length === 0) {
+      const option = this.createElement('option', {
+        textContent: 'Loading servers...',
+        attributes: { value: 'Crystal' },
+      });
+      select.appendChild(option);
+      return;
+    }
+
+    // Sort data centers by region then name
+    const sortedDCs = [...dataCenters].sort((a, b) => {
+      if (a.region !== b.region) return a.region.localeCompare(b.region);
+      return a.name.localeCompare(b.name);
+    });
+
+    for (const dc of sortedDCs) {
+      const optgroup = this.createElement('optgroup', {
+        attributes: { label: `${dc.name} (${dc.region})` },
+      }) as HTMLOptGroupElement;
+
+      // Data center option (All Worlds)
+      const dcOption = this.createElement('option', {
+        textContent: `${dc.name} - All Worlds`,
+        attributes: { value: dc.name },
+      }) as HTMLOptionElement;
+      if (currentServer === dc.name) dcOption.selected = true;
+      optgroup.appendChild(dcOption);
+
+      // Individual world options
+      const dcWorlds = worlds
+        .filter((w) => dc.worlds.includes(w.id))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      for (const world of dcWorlds) {
+        const worldOption = this.createElement('option', {
+          textContent: `  ${world.name}`,
+          attributes: { value: world.name },
+        }) as HTMLOptionElement;
+        if (currentServer === world.name) worldOption.selected = true;
+        optgroup.appendChild(worldOption);
+      }
+
+      select.appendChild(optgroup);
+    }
   }
 
   // ============================================================================
   // Right Panel Rendering
   // ============================================================================
 
+  // DOM reference for selected dyes cards in right panel
+  private selectedDyesCardsContainer: HTMLElement | null = null;
+
   private renderRightPanel(): void {
     const right = this.options.rightPanel;
     clearContainer(right);
 
+    // Content wrapper with max-width to prevent over-expansion on ultrawide monitors
+    const contentWrapper = this.createElement('div', {
+      attributes: {
+        style: `
+          max-width: 1200px;
+          margin: 0 auto;
+          width: 100%;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
     // Empty state (shown when < 2 dyes selected)
     this.emptyStateContainer = this.createElement('div');
     this.renderEmptyState();
-    right.appendChild(this.emptyStateContainer);
+    contentWrapper.appendChild(this.emptyStateContainer);
+
+    // Selected Dyes Cards Section (V4 result-cards in a horizontal row, centered)
+    // Hidden by default via inline style - shown when dyes are selected
+    this.selectedDyesSection = this.createElement('div', {
+      className: 'mb-6',
+      attributes: { style: 'display: none;' },
+    });
+    this.selectedDyesSection.appendChild(
+      this.createHeader(LanguageService.t('comparison.selectedDyes') || 'Selected Dyes')
+    );
+    this.selectedDyesCardsContainer = this.createElement('div', {
+      className: 'flex flex-wrap gap-4 justify-center comparison-cards-container',
+      attributes: {
+        style:
+          'display: flex; flex-direction: row; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: flex-start; --v4-result-card-width: 280px;',
+      },
+    });
+    this.selectedDyesSection.appendChild(this.selectedDyesCardsContainer);
+    contentWrapper.appendChild(this.selectedDyesSection);
 
     // Statistics Summary
-    const statsSection = this.createElement('div', { className: 'mb-6 hidden' });
-    statsSection.appendChild(this.createHeader(LanguageService.t('comparison.statistics') || 'Statistics'));
+    // Hidden by default via inline style - shown when 2+ dyes are selected
+    this.statsSection = this.createElement('div', {
+      className: 'mb-8',
+      attributes: { style: 'display: none;' },
+    });
+    this.statsSection.appendChild(
+      this.createHeader(LanguageService.t('comparison.statistics') || 'Statistics')
+    );
     this.statsContainer = this.createElement('div');
-    statsSection.appendChild(this.statsContainer);
-    right.appendChild(statsSection);
+    this.statsSection.appendChild(this.statsContainer);
+    contentWrapper.appendChild(this.statsSection);
 
-    // Charts Grid
-    const chartsSection = this.createElement('div', { className: 'mb-6 hidden' });
-    this.chartsContainer = this.createElement('div', { className: 'grid gap-4 lg:grid-cols-2' });
-    chartsSection.appendChild(this.chartsContainer);
-    right.appendChild(chartsSection);
+    // Charts Grid - side by side on medium+ screens (with margin-top for spacing after Statistics)
+    // Hidden by default via inline style - shown when 2+ dyes are selected
+    this.chartsSection = this.createElement('div', {
+      className: 'mb-8',
+      attributes: { style: 'display: none; margin-top: 1.5rem;' },
+    });
+    this.chartsContainer = this.createElement('div', {
+      className: 'grid gap-4 md:grid-cols-2',
+      attributes: {
+        style:
+          'display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); max-width: 1168px; margin: 0 auto;',
+      },
+    });
+    this.chartsSection.appendChild(this.chartsContainer);
+    contentWrapper.appendChild(this.chartsSection);
 
     // Distance Matrix
-    const matrixSection = this.createElement('div', { className: 'hidden' });
-    matrixSection.appendChild(this.createHeader(LanguageService.t('comparison.colorDistanceMatrix') || 'Color Distance Matrix'));
+    // Hidden by default via inline style - shown when 2+ dyes are selected
+    this.matrixSection = this.createElement('div', {
+      attributes: { style: 'display: none;' },
+    });
+    this.matrixSection.appendChild(
+      this.createHeader(
+        LanguageService.t('comparison.colorDistanceMatrix') || 'Color Distance Matrix'
+      )
+    );
     this.matrixContainer = this.createElement('div');
-    matrixSection.appendChild(this.matrixContainer);
-    right.appendChild(matrixSection);
+    this.matrixSection.appendChild(this.matrixContainer);
+    contentWrapper.appendChild(this.matrixSection);
+
+    // Append wrapper to right panel
+    right.appendChild(contentWrapper);
   }
 
   /**
-   * Render empty state
+   * Render empty state - V4 design with placeholder slots
    */
   private renderEmptyState(): void {
     if (!this.emptyStateContainer) return;
     clearContainer(this.emptyStateContainer);
 
-    const empty = this.createElement('div', {
-      className: 'p-8 rounded-lg border-2 border-dashed text-center',
+    const container = this.createElement('div', {
       attributes: {
-        style: 'border-color: var(--theme-border); background: var(--theme-card-background);',
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 2rem;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
       },
     });
 
-    empty.innerHTML = `
-      <span class="inline-block w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--theme-text);">${ICON_TOOL_COMPARISON}</span>
-      <p style="color: var(--theme-text);">${LanguageService.t('comparison.selectAtLeastTwoDyes') || 'Select at least 2 dyes to compare'}</p>
-    `;
+    // Placeholder slots section
+    const slotsContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          gap: 16px;
+          flex-wrap: wrap;
+          padding: 20px;
+          justify-content: center;
+          margin-bottom: 2rem;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
 
-    this.emptyStateContainer.appendChild(empty);
+    // Create 4 placeholder slots
+    for (let i = 0; i < 4; i++) {
+      const slot = this.createElement('div', {
+        attributes: {
+          style: `
+            width: 200px;
+            height: 280px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // Hover effect
+      this.on(slot, 'mouseenter', () => {
+        slot.style.borderColor = 'rgba(255, 255, 255, 0.35)';
+        slot.style.background = 'rgba(255, 255, 255, 0.05)';
+      });
+      this.on(slot, 'mouseleave', () => {
+        slot.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        slot.style.background = 'rgba(0, 0, 0, 0.1)';
+      });
+
+      // Plus icon in a dashed circle
+      const iconContainer = this.createElement('div', {
+        attributes: {
+          style: `
+            width: 48px;
+            height: 48px;
+            border: 2px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      iconContainer.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="var(--theme-text-muted)" style="width: 24px; height: 24px; opacity: 0.4;">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg>
+      `;
+
+      // "Add Dye" text
+      const text = this.createElement('span', {
+        textContent: LanguageService.t('comparison.addDye') || 'Add Dye',
+        attributes: {
+          style: `
+            font-size: 0.85rem;
+            color: var(--theme-text-muted);
+            opacity: 0.6;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      slot.appendChild(iconContainer);
+      slot.appendChild(text);
+      slotsContainer.appendChild(slot);
+    }
+
+    container.appendChild(slotsContainer);
+
+    // Empty state message
+    const messageContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 40px;
+          text-align: center;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 12px;
+          border: 1px dashed rgba(255, 255, 255, 0.15);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    // Tool icon
+    const iconEl = this.createElement('div', {
+      attributes: {
+        style: `
+          width: 150px;
+          height: 150px;
+          margin-bottom: 20px;
+          opacity: 0.4;
+          color: var(--theme-text-muted);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+    iconEl.innerHTML = ICON_TOOL_COMPARISON;
+
+    // Message text
+    const message = this.createElement('p', {
+      textContent:
+        LanguageService.t('comparison.selectAtLeastTwoDyes') ||
+        'Select 2 or more dyes from the Color Palette to compare them',
+      attributes: {
+        style: `
+          font-size: 1.1rem;
+          color: var(--theme-text-muted);
+          max-width: 400px;
+          line-height: 1.5;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    messageContainer.appendChild(iconEl);
+    messageContainer.appendChild(message);
+    container.appendChild(messageContainer);
+
+    this.emptyStateContainer.appendChild(container);
   }
 
   /**
    * Update all results
    */
   private updateResults(): void {
-    if (this.selectedDyes.length < 2) {
-      this.showEmptyState(true);
-      return;
-    }
+    const hasDyes = this.selectedDyes.length > 0;
+    const hasEnoughForAnalysis = this.selectedDyes.length >= 2;
 
-    this.showEmptyState(false);
-    this.calculateStats();
-    this.findClosestPair();
-    this.renderStats();
-    this.renderCharts();
-    this.renderDistanceMatrix();
+    // Always render selected dyes cards (clears when empty, shows cards when has dyes)
+    this.renderSelectedDyesCards();
+
+    // Show/hide sections based on dye count
+    this.showEmptyState(!hasDyes); // Only show empty state when NO dyes selected
+    this.showAnalysisSections(hasEnoughForAnalysis); // Analysis needs 2+ dyes
+
+    // Only calculate and render analysis when we have enough dyes
+    if (hasEnoughForAnalysis) {
+      this.calculateStats();
+      this.findClosestPair();
+      this.renderStats();
+      this.renderCharts();
+      this.renderDistanceMatrix();
+    }
   }
 
   /**
-   * Show/hide empty state
+   * Render selected dyes as V4 result-cards in the right panel
+   */
+  private renderSelectedDyesCards(): void {
+    if (!this.selectedDyesCardsContainer) return;
+    clearContainer(this.selectedDyesCardsContainer);
+
+    for (const dye of this.selectedDyes) {
+      // Create v4-result-card element
+      const card = document.createElement('v4-result-card') as ResultCard;
+
+      // Override default block display to allow horizontal layout
+      card.style.display = 'inline-block';
+      card.style.flexShrink = '0';
+
+      // Build card data - use dye color for both original and match (no comparison target)
+      const cardData: ResultCardData = {
+        dye: dye,
+        originalColor: dye.hex,
+        matchedColor: dye.hex,
+        // No deltaE in comparison context
+        vendorCost: dye.cost,
+      };
+
+      // Try to get market price if Market Board is enabled
+      if (this.comparisonOptions.showMarketPrices) {
+        const marketBoardService = MarketBoardService.getInstance();
+        const priceData = marketBoardService.getPriceForDye(dye.itemID);
+        if (priceData) {
+          cardData.price = priceData.currentMinPrice;
+          // Use the actual world name from price data, not just the selected server/DC
+          cardData.marketServer = marketBoardService.getWorldNameForPrice(priceData);
+        } else {
+          // No price data yet, show the selected server as placeholder
+          cardData.marketServer = marketBoardService.getSelectedServer();
+        }
+      }
+
+      card.data = cardData;
+
+      // Configure display options based on comparison settings
+      card.showHex = this.comparisonOptions.showHex;
+      card.showRgb = this.comparisonOptions.showRgb;
+      card.showHsv = this.comparisonOptions.showHsv;
+      card.showLab = this.comparisonOptions.showLab;
+      card.showDeltaE = false; // No Delta-E in comparison context
+      card.showPrice = this.comparisonOptions.showMarketPrices;
+      card.showAcquisition = true;
+      card.primaryActionLabel = LanguageService.t('common.remove') || 'Remove';
+
+      // Handle remove action
+      card.addEventListener('card-select', () => {
+        this.removeDye(dye);
+      });
+
+      this.selectedDyesCardsContainer.appendChild(card);
+    }
+  }
+
+  /**
+   * Remove a dye from the selection
+   */
+  private removeDye(dye: Dye): void {
+    const newSelection = this.selectedDyes.filter((d) => d.id !== dye.id);
+    this.dyeSelector?.setSelectedDyes(newSelection);
+    this.drawerDyeSelector?.setSelectedDyes(newSelection);
+    this.selectedDyes = newSelection;
+    this.calculateHSVValues();
+    this.updateSelectedDyesDisplay();
+    this.updateDrawerSelectedDyesDisplay();
+    this.updateResults();
+    this.saveSelectedDyes();
+  }
+
+  /**
+   * Show/hide empty state (placeholder slots + message)
+   * Empty state is shown when NO dyes are selected
    */
   private showEmptyState(show: boolean): void {
+    // Toggle empty state container using inline style for reliability
     if (this.emptyStateContainer) {
-      this.emptyStateContainer.classList.toggle('hidden', !show);
+      this.emptyStateContainer.style.display = show ? 'block' : 'none';
     }
 
-    // Toggle all result sections
-    const rightPanel = this.options.rightPanel;
-    const sections = rightPanel.querySelectorAll(':scope > div:not(:first-child)');
-    sections.forEach((section) => {
-      section.classList.toggle('hidden', show);
-    });
+    // Toggle selected dyes section (inverse of empty state)
+    // When empty state is shown, hide selected dyes section
+    // When empty state is hidden (has dyes), show selected dyes section
+    if (this.selectedDyesSection) {
+      this.selectedDyesSection.style.display = show ? 'none' : 'block';
+    }
+  }
+
+  /**
+   * Show/hide analysis sections (stats, charts, matrix)
+   * Analysis sections require 2+ dyes to be meaningful
+   */
+  private showAnalysisSections(show: boolean): void {
+    const analysisSections = [this.statsSection, this.chartsSection, this.matrixSection];
+
+    for (const section of analysisSections) {
+      if (section) {
+        section.style.display = show ? 'block' : 'none';
+      }
+    }
   }
 
   /**
@@ -559,8 +1330,10 @@ export class ComparisonTool extends BaseComponent {
     }
 
     // Calculate averages
-    const avgSaturation = this.dyesWithHSV.reduce((sum, d) => sum + d.s, 0) / this.dyesWithHSV.length;
-    const avgBrightness = this.dyesWithHSV.reduce((sum, d) => sum + d.v, 0) / this.dyesWithHSV.length;
+    const avgSaturation =
+      this.dyesWithHSV.reduce((sum, d) => sum + d.s, 0) / this.dyesWithHSV.length;
+    const avgBrightness =
+      this.dyesWithHSV.reduce((sum, d) => sum + d.v, 0) / this.dyesWithHSV.length;
 
     // Calculate hue range (considering hue wrapping)
     const hues = this.dyesWithHSV.map((d) => d.h).sort((a, b) => a - b);
@@ -581,7 +1354,10 @@ export class ComparisonTool extends BaseComponent {
     let pairCount = 0;
     for (let i = 0; i < this.selectedDyes.length; i++) {
       for (let j = i + 1; j < this.selectedDyes.length; j++) {
-        totalDistance += ColorService.getColorDistance(this.selectedDyes[i].hex, this.selectedDyes[j].hex);
+        totalDistance += ColorService.getColorDistance(
+          this.selectedDyes[i].hex,
+          this.selectedDyes[j].hex
+        );
         pairCount++;
       }
     }
@@ -609,7 +1385,10 @@ export class ComparisonTool extends BaseComponent {
 
     for (let i = 0; i < this.selectedDyes.length; i++) {
       for (let j = i + 1; j < this.selectedDyes.length; j++) {
-        const distance = ColorService.getColorDistance(this.selectedDyes[i].hex, this.selectedDyes[j].hex);
+        const distance = ColorService.getColorDistance(
+          this.selectedDyes[i].hex,
+          this.selectedDyes[j].hex
+        );
         if (distance < minDistance) {
           minDistance = distance;
           closest = [i, j];
@@ -621,33 +1400,131 @@ export class ComparisonTool extends BaseComponent {
   }
 
   /**
-   * Render statistics summary
+   * Render statistics summary - V4 stat-card design
    */
   private renderStats(): void {
     if (!this.statsContainer || !this.stats) return;
     clearContainer(this.statsContainer);
 
+    // V4 Stats Grid - Flex row centered to match dyes card layout
     const grid = this.createElement('div', {
-      className: 'grid grid-cols-2 gap-3 p-4 rounded-lg md:grid-cols-4',
+      className: 'flex flex-wrap justify-center gap-4',
       attributes: {
-        style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);',
+        style: 'display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;',
       },
     });
 
     const statItems = [
-      { label: LanguageService.t('comparison.avgSaturation') || 'Avg Saturation', value: `${this.stats.avgSaturation}%` },
-      { label: LanguageService.t('comparison.avgBrightness') || 'Avg Brightness', value: `${this.stats.avgBrightness}%` },
-      { label: LanguageService.t('comparison.hueRange') || 'Hue Range', value: `${this.stats.hueRange}\u00B0` },
-      { label: LanguageService.t('comparison.avgDistance') || 'Avg Distance', value: this.stats.avgDistance.toFixed(1) },
+      {
+        label: LanguageService.t('comparison.avgSaturation') || 'Avg Saturation',
+        value: this.stats.avgSaturation,
+        unit: '%',
+      },
+      {
+        label: LanguageService.t('comparison.avgBrightness') || 'Avg Brightness',
+        value: this.stats.avgBrightness,
+        unit: '%',
+      },
+      {
+        label: LanguageService.t('comparison.hueRange') || 'Hue Range',
+        value: this.stats.hueRange,
+        unit: '°',
+      },
+      {
+        label: LanguageService.t('comparison.avgDistance') || 'Avg Distance',
+        value: this.stats.avgDistance.toFixed(1),
+        unit: '',
+      },
     ];
 
     for (const stat of statItems) {
-      const item = this.createElement('div', { className: 'text-center' });
-      item.innerHTML = `
-        <p class="text-lg font-semibold number" style="color: var(--theme-text);">${stat.value}</p>
-        <p class="text-xs" style="color: var(--theme-text-muted);">${stat.label}</p>
-      `;
-      grid.appendChild(item);
+      // V4 Stat Card with hover effect
+      const card = this.createElement('div', {
+        attributes: {
+          style: `
+            background: var(--theme-card-background);
+            border: 1px solid var(--theme-border);
+            border-radius: 12px;
+            padding: 24px 16px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            cursor: default;
+            width: 280px;
+            flex-shrink: 0;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // Add hover effect
+      this.on(card, 'mouseenter', () => {
+        card.style.transform = 'translateY(-2px)';
+        card.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.4)';
+        card.style.borderColor = 'var(--theme-text-muted)';
+      });
+      this.on(card, 'mouseleave', () => {
+        card.style.transform = 'translateY(0)';
+        card.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.3)';
+        card.style.borderColor = 'var(--theme-border)';
+      });
+
+      // Large value with gold accent
+      const valueContainer = this.createElement('div', {
+        attributes: {
+          style: `
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--theme-primary);
+            line-height: 1;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // Value number
+      const valueSpan = document.createTextNode(String(stat.value));
+      valueContainer.appendChild(valueSpan);
+
+      // Unit suffix (smaller, muted)
+      if (stat.unit) {
+        const unitSpan = this.createElement('span', {
+          textContent: stat.unit,
+          attributes: {
+            style: `
+              font-size: 18px;
+              font-weight: 500;
+              color: var(--theme-text-muted);
+              margin-left: 2px;
+            `
+              .replace(/\s+/g, ' ')
+              .trim(),
+          },
+        });
+        valueContainer.appendChild(unitSpan);
+      }
+
+      // Label below value
+      const labelEl = this.createElement('div', {
+        textContent: stat.label,
+        attributes: {
+          style: `
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--theme-text-muted);
+            letter-spacing: 1px;
+            margin-top: 12px;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      card.appendChild(valueContainer);
+      card.appendChild(labelEl);
+      grid.appendChild(card);
     }
 
     this.statsContainer.appendChild(grid);
@@ -661,16 +1538,20 @@ export class ComparisonTool extends BaseComponent {
     clearContainer(this.chartsContainer);
 
     // Hue-Saturation Plot
-    this.chartsContainer.appendChild(this.createChartCard(
-      LanguageService.t('comparison.hueSaturationPlot') || 'Hue-Saturation Plot',
-      this.createHueSatPlot()
-    ));
+    this.chartsContainer.appendChild(
+      this.createChartCard(
+        LanguageService.t('comparison.hueSaturationPlot') || 'Hue-Saturation Plot',
+        this.createHueSatPlot()
+      )
+    );
 
     // Brightness Distribution
-    this.chartsContainer.appendChild(this.createChartCard(
-      LanguageService.t('comparison.brightnessDistribution') || 'Brightness Distribution',
-      this.createBrightnessChart()
-    ));
+    this.chartsContainer.appendChild(
+      this.createChartCard(
+        LanguageService.t('comparison.brightnessDistribution') || 'Brightness Distribution',
+        this.createBrightnessChart()
+      )
+    );
   }
 
   /**
@@ -678,14 +1559,29 @@ export class ComparisonTool extends BaseComponent {
    */
   private createChartCard(title: string, content: HTMLElement): HTMLElement {
     const card = this.createElement('div', {
-      className: 'p-4 rounded-lg flex flex-col',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      className: 'p-4 flex flex-col',
+      attributes: {
+        style:
+          'background: var(--theme-card-background); border: 1px solid var(--theme-border); border-radius: 12px;',
+      },
     });
-    card.appendChild(this.createElement('h4', {
-      className: 'text-sm font-medium mb-3 flex-shrink-0',
-      textContent: title,
-      attributes: { style: 'color: var(--theme-text);' },
-    }));
+    // Centered chart title
+    card.appendChild(
+      this.createElement('h4', {
+        className: 'text-sm font-medium mb-3 flex-shrink-0',
+        textContent: title,
+        attributes: {
+          style: `
+          color: var(--theme-text);
+          text-align: center;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      })
+    );
     const contentWrapper = this.createElement('div', { className: 'flex-1 flex flex-col min-h-0' });
     contentWrapper.appendChild(content);
     card.appendChild(contentWrapper);
@@ -693,123 +1589,331 @@ export class ComparisonTool extends BaseComponent {
   }
 
   /**
-   * Create Hue-Saturation SVG plot
+   * Create Hue-Saturation Plot - V4 plot-node design with hover tooltips
    */
   private createHueSatPlot(): HTMLElement {
-    // Use smaller max-height on mobile to save vertical space
-    const plot = this.createElement('div', { className: 'relative aspect-square max-h-[200px] md:max-h-none mx-auto' });
+    // V4 Container - responsive width with aspect ratio maintained
+    const container = this.createElement('div', {
+      attributes: {
+        style: `
+          position: relative;
+          width: 100%;
+          aspect-ratio: 380 / 280;
+          margin: 0 auto;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
 
-    // Generate data points
-    const points = this.dyesWithHSV.map((d, index) => {
-      const x = (d.h / 360) * 100;
-      const y = 100 - d.s;
-      const isClosest = this.comparisonOptions.highlightClosestPair &&
-        this.closestPair &&
-        (index === this.closestPair[0] || index === this.closestPair[1]);
-      return `
-        <circle
-          cx="${x}"
-          cy="${y}"
-          r="${isClosest ? 6 : 4}"
-          fill="${d.dye.hex}"
-          stroke="${isClosest ? 'var(--theme-primary)' : 'white'}"
-          stroke-width="${isClosest ? 2.5 : 1.5}"
-        />
-        <text
-          x="${x}"
-          y="${y - 8}"
-          text-anchor="middle"
-          font-size="4"
-          fill="var(--theme-text)"
-        >${index + 1}</text>
-      `;
-    }).join('');
+    // SVG for background, grid lines, and axis labels
+    const svgContainer = this.createElement('div', {
+      attributes: {
+        style: `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
 
-    plot.innerHTML = `
-      <svg viewBox="0 0 130 120" class="w-full h-full">
-        <!-- Chart area with padding for axis labels -->
-        <g transform="translate(26, 4)">
-          <!-- Background -->
-          <rect width="100" height="100" fill="var(--theme-background-secondary)" rx="4" />
-          <!-- Grid lines -->
-          <line x1="0" y1="25" x2="100" y2="25" stroke="var(--theme-border)" stroke-dasharray="2" opacity="0.5" />
-          <line x1="0" y1="50" x2="100" y2="50" stroke="var(--theme-border)" stroke-dasharray="2" opacity="0.5" />
-          <line x1="0" y1="75" x2="100" y2="75" stroke="var(--theme-border)" stroke-dasharray="2" opacity="0.5" />
-          <line x1="25" y1="0" x2="25" y2="100" stroke="var(--theme-border)" stroke-dasharray="2" opacity="0.5" />
-          <line x1="50" y1="0" x2="50" y2="100" stroke="var(--theme-border)" stroke-dasharray="2" opacity="0.5" />
-          <line x1="75" y1="0" x2="75" y2="100" stroke="var(--theme-border)" stroke-dasharray="2" opacity="0.5" />
-          <!-- Data points -->
-          ${points}
-          <!-- X-axis tick labels (Hue: 0° to 360°) -->
-          <text x="0" y="108" text-anchor="middle" font-size="4" fill="var(--theme-text-muted)">0\u00B0</text>
-          <text x="25" y="108" text-anchor="middle" font-size="4" fill="var(--theme-text-muted)">90\u00B0</text>
-          <text x="50" y="108" text-anchor="middle" font-size="4" fill="var(--theme-text-muted)">180\u00B0</text>
-          <text x="75" y="108" text-anchor="middle" font-size="4" fill="var(--theme-text-muted)">270\u00B0</text>
-          <text x="100" y="108" text-anchor="middle" font-size="4" fill="var(--theme-text-muted)">360\u00B0</text>
-          <!-- Y-axis tick labels (Saturation: 0% to 100%) -->
-          <text x="-4" y="102" text-anchor="end" font-size="4" fill="var(--theme-text-muted)">0%</text>
-          <text x="-4" y="77" text-anchor="end" font-size="4" fill="var(--theme-text-muted)">25%</text>
-          <text x="-4" y="52" text-anchor="end" font-size="4" fill="var(--theme-text-muted)">50%</text>
-          <text x="-4" y="27" text-anchor="end" font-size="4" fill="var(--theme-text-muted)">75%</text>
-          <text x="-4" y="2" text-anchor="end" font-size="4" fill="var(--theme-text-muted)">100%</text>
-        </g>
-        <!-- Axis titles -->
-        <text x="76" y="118" text-anchor="middle" font-size="5" fill="var(--theme-text-muted)">Hue</text>
-        <text x="6" y="54" text-anchor="middle" font-size="5" fill="var(--theme-text-muted)" transform="rotate(-90 6 54)">Saturation</text>
+    svgContainer.innerHTML = `
+      <svg viewBox="0 0 380 280" style="width: 100%; height: 100%;" preserveAspectRatio="xMidYMid meet">
+        <!-- Y-axis label -->
+        <text x="15" y="140" text-anchor="middle" font-size="10" fill="var(--theme-text-muted)"
+          transform="rotate(-90 15 140)" style="text-transform: uppercase; letter-spacing: 0.5px;">Saturation</text>
+
+        <!-- Plot area background -->
+        <rect x="50" y="20" width="300" height="200" fill="var(--theme-card-background)"
+          stroke="rgba(255, 255, 255, 0.2)" stroke-width="1" rx="4" />
+
+        <!-- Horizontal grid lines (25%, 50%, 75%) -->
+        <line x1="50" y1="70" x2="350" y2="70" stroke="rgba(255, 255, 255, 0.08)" stroke-dasharray="4" />
+        <line x1="50" y1="120" x2="350" y2="120" stroke="rgba(255, 255, 255, 0.08)" stroke-dasharray="4" />
+        <line x1="50" y1="170" x2="350" y2="170" stroke="rgba(255, 255, 255, 0.08)" stroke-dasharray="4" />
+
+        <!-- Vertical grid lines (90°, 180°, 270°) -->
+        <line x1="125" y1="20" x2="125" y2="220" stroke="rgba(255, 255, 255, 0.08)" stroke-dasharray="4" />
+        <line x1="200" y1="20" x2="200" y2="220" stroke="rgba(255, 255, 255, 0.08)" stroke-dasharray="4" />
+        <line x1="275" y1="20" x2="275" y2="220" stroke="rgba(255, 255, 255, 0.08)" stroke-dasharray="4" />
+
+        <!-- Y-axis tick labels (Saturation) -->
+        <text x="45" y="24" text-anchor="end" font-size="9" fill="var(--theme-text-muted)">100%</text>
+        <text x="45" y="74" text-anchor="end" font-size="9" fill="var(--theme-text-muted)">75%</text>
+        <text x="45" y="124" text-anchor="end" font-size="9" fill="var(--theme-text-muted)">50%</text>
+        <text x="45" y="174" text-anchor="end" font-size="9" fill="var(--theme-text-muted)">25%</text>
+        <text x="45" y="224" text-anchor="end" font-size="9" fill="var(--theme-text-muted)">0%</text>
+
+        <!-- X-axis tick labels (Hue) -->
+        <text x="50" y="240" text-anchor="middle" font-size="9" fill="var(--theme-text-muted)">0°</text>
+        <text x="125" y="240" text-anchor="middle" font-size="9" fill="var(--theme-text-muted)">90°</text>
+        <text x="200" y="240" text-anchor="middle" font-size="9" fill="var(--theme-text-muted)">180°</text>
+        <text x="275" y="240" text-anchor="middle" font-size="9" fill="var(--theme-text-muted)">270°</text>
+        <text x="350" y="240" text-anchor="middle" font-size="9" fill="var(--theme-text-muted)">360°</text>
+
+        <!-- X-axis label -->
+        <text x="200" y="265" text-anchor="middle" font-size="10" fill="var(--theme-text-muted)"
+          style="text-transform: uppercase; letter-spacing: 0.5px;">Hue</text>
       </svg>
     `;
-    return plot;
-  }
+    container.appendChild(svgContainer);
 
-  /**
-   * Create Brightness Distribution bar chart
-   */
-  private createBrightnessChart(): HTMLElement {
-    // Smaller min-height on mobile to save vertical space
-    const container = this.createElement('div', { className: 'flex flex-col flex-1 h-full min-h-[120px] md:min-h-[150px]' });
+    // Plot area for nodes (overlay on SVG)
+    // Use percentage-based positioning to match SVG viewBox (380x280) coordinates
+    // Plot rect in SVG: x=50, y=20, width=300, height=200
+    // As percentages: left=50/380=13.16%, top=20/280=7.14%, width=300/380=78.95%, height=200/280=71.43%
+    const plotArea = this.createElement('div', {
+      attributes: {
+        style: `
+          position: absolute;
+          top: 7.14%;
+          left: 13.16%;
+          width: 78.95%;
+          height: 71.43%;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
 
-    // Bar chart area - smaller gap on mobile
-    const chart = this.createElement('div', { className: 'flex items-end gap-2 md:gap-4 flex-1 h-full' });
-
+    // Create plot nodes (HTML divs for hover effects and tooltips)
     for (let i = 0; i < this.dyesWithHSV.length; i++) {
       const d = this.dyesWithHSV[i];
-      const isClosest = this.comparisonOptions.highlightClosestPair &&
+      const dyeName = LanguageService.getDyeName(d.dye.itemID) || d.dye.name;
+
+      // Calculate position (Hue on X, Saturation on Y - inverted because 100% is at top)
+      const xPercent = (d.h / 360) * 100;
+      const yPercent = 100 - d.s; // Invert so 100% saturation is at top
+
+      const isClosest =
+        this.comparisonOptions.highlightClosestPair &&
         this.closestPair &&
         (i === this.closestPair[0] || i === this.closestPair[1]);
 
-      const bar = this.createElement('div', { className: 'flex-1 h-full flex items-end' });
-      bar.innerHTML = `
-        <div
-          class="w-full rounded-t transition-all"
-          style="height: ${d.v}%; background: ${d.dye.hex}; ${isClosest ? 'box-shadow: 0 0 0 3px var(--theme-primary);' : ''}"
-        ></div>
-      `;
-      chart.appendChild(bar);
+      // V4 Plot Node
+      const node = this.createElement('div', {
+        attributes: {
+          'data-label': dyeName,
+          title: dyeName,
+          style: `
+            position: absolute;
+            left: ${xPercent}%;
+            top: ${yPercent}%;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 3px solid ${isClosest ? 'var(--theme-primary)' : 'rgba(255, 255, 255, 0.9)'};
+            transform: translate(-50%, -50%);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            z-index: 2;
+            background: ${d.dye.hex};
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // Hover effects
+      this.on(node, 'mouseenter', () => {
+        node.style.transform = 'translate(-50%, -50%) scale(1.25)';
+        node.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.6)';
+        node.style.zIndex = '10';
+      });
+      this.on(node, 'mouseleave', () => {
+        node.style.transform = 'translate(-50%, -50%)';
+        node.style.boxShadow = '0 3px 8px rgba(0, 0, 0, 0.5)';
+        node.style.zIndex = '2';
+      });
+
+      plotArea.appendChild(node);
     }
-    container.appendChild(chart);
 
-    // Labels row - smaller gap on mobile to match bars
-    const labels = this.createElement('div', {
-      className: 'flex gap-2 md:gap-4 mt-2 pt-2 border-t flex-shrink-0',
-      attributes: { style: 'border-color: var(--theme-border);' },
-    });
-
-    for (const d of this.dyesWithHSV) {
-      const dyeName = LanguageService.getDyeName(d.dye.itemID) || d.dye.name;
-      const label = this.createElement('div', { className: 'flex-1 text-center min-w-0' });
-      label.innerHTML = `
-        <span class="text-xs font-medium block truncate max-w-24 md:max-w-20 mx-auto" style="color: var(--theme-text);" title="${dyeName}">${dyeName}</span>
-        <span class="text-xs" style="color: var(--theme-text-muted);">${Math.round(d.v)}%</span>
-      `;
-      labels.appendChild(label);
-    }
-    container.appendChild(labels);
-
+    container.appendChild(plotArea);
     return container;
   }
 
   /**
-   * Render distance matrix
+   * Create Brightness Distribution bar chart - V4 bar-chart design
+   */
+  private createBrightnessChart(): HTMLElement {
+    // V4 Container - responsive width, matching aspect ratio to Hue-Sat plot
+    const container = this.createElement('div', {
+      attributes: {
+        style: `
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          aspect-ratio: 380 / 280;
+          margin: 0 auto;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    // Bar chart area with Y-axis grid lines - increased bottom padding for labels
+    const chartArea = this.createElement('div', {
+      attributes: {
+        style: `
+          flex: 1;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-around;
+          padding-top: 32px;
+          padding-bottom: 48px;
+          position: relative;
+          background: repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent calc(25% - 1px),
+            rgba(255, 255, 255, 0.05) calc(25% - 1px),
+            rgba(255, 255, 255, 0.05) 25%
+          );
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+
+    // X-axis line - positioned above the label area
+    const xAxisLine = this.createElement('div', {
+      attributes: {
+        style: `
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 48px;
+          height: 1px;
+          background: rgba(255, 255, 255, 0.2);
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
+    });
+    chartArea.appendChild(xAxisLine);
+
+    // Create bars with value labels above and name labels below
+    for (let i = 0; i < this.dyesWithHSV.length; i++) {
+      const d = this.dyesWithHSV[i];
+      const dyeName = LanguageService.getDyeName(d.dye.itemID) || d.dye.name;
+      const isClosest =
+        this.comparisonOptions.highlightClosestPair &&
+        this.closestPair &&
+        (i === this.closestPair[0] || i === this.closestPair[1]);
+
+      // Bar item container (holds value, bar, and label)
+      const barItem = this.createElement('div', {
+        attributes: {
+          style: `
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1;
+            min-width: 60px;
+            position: relative;
+            height: 100%;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // Value label above bar
+      const valueLabel = this.createElement('span', {
+        textContent: `${Math.round(d.v)}%`,
+        attributes: {
+          style: `
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--theme-text);
+            white-space: nowrap;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // The actual bar
+      const bar = this.createElement('div', {
+        attributes: {
+          style: `
+            width: 70%;
+            max-width: 80px;
+            height: ${d.v}%;
+            border-radius: 6px 6px 0 0;
+            transition: filter 0.2s, box-shadow 0.2s;
+            position: relative;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+            background: ${d.dye.hex};
+            ${isClosest ? 'box-shadow: 0 0 0 3px var(--theme-primary), 0 -2px 8px rgba(0, 0, 0, 0.3);' : ''}
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      // Add hover effect
+      this.on(bar, 'mouseenter', () => {
+        bar.style.filter = 'brightness(1.15)';
+        if (!isClosest) {
+          bar.style.boxShadow = '0 -4px 12px rgba(0, 0, 0, 0.4)';
+        }
+      });
+      this.on(bar, 'mouseleave', () => {
+        bar.style.filter = 'brightness(1)';
+        if (!isClosest) {
+          bar.style.boxShadow = '0 -2px 8px rgba(0, 0, 0, 0.3)';
+        }
+      });
+
+      // Name label below bar
+      const nameLabel = this.createElement('span', {
+        textContent: dyeName,
+        attributes: {
+          title: dyeName,
+          style: `
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--theme-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          `
+            .replace(/\s+/g, ' ')
+            .trim(),
+        },
+      });
+
+      barItem.appendChild(valueLabel);
+      barItem.appendChild(bar);
+      barItem.appendChild(nameLabel);
+      chartArea.appendChild(barItem);
+    }
+
+    container.appendChild(chartArea);
+    return container;
+  }
+
+  /**
+   * Render distance matrix - V4 pairwise-matrix design
    */
   private renderDistanceMatrix(): void {
     if (!this.matrixContainer) return;
@@ -817,21 +1921,66 @@ export class ComparisonTool extends BaseComponent {
 
     if (this.selectedDyes.length < 2) return;
 
+    // V4 Matrix container with rounded corners and shadow
     const matrix = this.createElement('div', {
-      className: 'rounded-lg overflow-hidden',
-      attributes: { style: 'background: var(--theme-card-background); border: 1px solid var(--theme-border);' },
+      attributes: {
+        style: `
+          background: var(--theme-card-background);
+          border: 1px solid var(--theme-border);
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+          max-width: 1168px;
+          width: 100%;
+          margin: 0 auto;
+        `
+          .replace(/\s+/g, ' ')
+          .trim(),
+      },
     });
 
-    // Build table HTML - use sticky first column for row labels
-    let html = '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="sticky left-0 z-10" style="background: var(--theme-card-background);"></th>';
+    // Build table HTML with V4 pairwise-matrix styling
+    let html = `
+      <div style="overflow-x: auto;">
+        <table style="border-collapse: collapse; width: 100%;">
+          <thead>
+            <tr>
+              <th style="
+                width: 140px;
+                background: rgba(0, 0, 0, 0.4);
+                padding: 12px 8px;
+              "></th>
+    `;
 
-    // Column headers
+    // Column headers with larger swatches
     for (const dye of this.selectedDyes) {
       const dyeName = LanguageService.getDyeName(dye.itemID) || dye.name;
       html += `
-        <th class="p-2 text-center">
-          <div class="w-6 h-6 rounded mx-auto mb-1" style="background: ${dye.hex};"></div>
-          <span class="text-xs font-normal block truncate max-w-16 md:max-w-20" style="color: var(--theme-text-muted);">${dyeName}</span>
+        <th style="
+          padding: 12px 8px;
+          text-align: center;
+          background: rgba(0, 0, 0, 0.4);
+          border-bottom: 1px solid var(--theme-border);
+          border-left: 1px solid var(--theme-border);
+        ">
+          <div style="
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            margin: 0 auto 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: ${dye.hex};
+          "></div>
+          <span style="
+            font-size: 11px;
+            font-weight: normal;
+            color: var(--theme-text-muted);
+            display: block;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          ">${dyeName}</span>
         </th>
       `;
     }
@@ -841,44 +1990,115 @@ export class ComparisonTool extends BaseComponent {
     for (let i = 0; i < this.selectedDyes.length; i++) {
       const rowDye = this.selectedDyes[i];
       const rowDyeName = LanguageService.getDyeName(rowDye.itemID) || rowDye.name;
-      const isRowClosest = this.comparisonOptions.highlightClosestPair &&
+      const isRowClosest =
+        this.comparisonOptions.highlightClosestPair &&
         this.closestPair &&
         (i === this.closestPair[0] || i === this.closestPair[1]);
 
-      // Use sticky positioning for the first column so row labels stay visible when scrolling
-      const rowBgColor = isRowClosest ? 'var(--theme-background-secondary)' : 'var(--theme-card-background)';
+      html += '<tr>';
+
+      // Row header with swatch
+      const rowBg = isRowClosest ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.2)';
       html += `
-        <tr>
-          <td class="p-2 sticky left-0 z-10" style="background: ${rowBgColor};">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded shrink-0" style="background: ${rowDye.hex};"></div>
-              <span class="text-xs truncate max-w-16 md:max-w-20" style="color: var(--theme-text);">${rowDyeName}</span>
-            </div>
-          </td>
+        <td style="
+          padding: 12px 16px;
+          background: ${rowBg};
+          border-bottom: 1px solid var(--theme-border);
+          min-width: 140px;
+        ">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="
+              width: 24px;
+              height: 24px;
+              border-radius: 4px;
+              flex-shrink: 0;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              background: ${rowDye.hex};
+            "></div>
+            <span style="
+              font-size: 12px;
+              color: var(--theme-text);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            ">${rowDyeName}</span>
+          </div>
+        </td>
       `;
 
+      // Data cells
       for (let j = 0; j < this.selectedDyes.length; j++) {
-        const isColClosest = this.comparisonOptions.highlightClosestPair &&
+        const isColClosest =
+          this.comparisonOptions.highlightClosestPair &&
           this.closestPair &&
           (j === this.closestPair[0] || j === this.closestPair[1]);
-        const isPair = this.comparisonOptions.highlightClosestPair &&
+        const isPair =
+          this.comparisonOptions.highlightClosestPair &&
           this.closestPair &&
           ((i === this.closestPair[0] && j === this.closestPair[1]) ||
-           (i === this.closestPair[1] && j === this.closestPair[0]));
+            (i === this.closestPair[1] && j === this.closestPair[0]));
 
         if (i === j) {
-          html += `<td class="p-2 text-center" style="color: var(--theme-text-muted);">-</td>`;
+          // Diagonal cell
+          html += `
+            <td style="
+              padding: 12px 8px;
+              text-align: center;
+              font-weight: 600;
+              font-size: 13px;
+              border-left: 1px solid var(--theme-border);
+              border-bottom: 1px solid var(--theme-border);
+              background: rgba(0, 0, 0, 0.3);
+              color: var(--theme-text-muted);
+            ">\u2014</td>
+          `;
         } else {
           const distance = ColorService.getColorDistance(rowDye.hex, this.selectedDyes[j].hex);
           const distStr = distance.toFixed(1);
-          const color = this.getDistanceColor(distance);
-          const bgStyle = isPair ? 'background: var(--theme-primary); color: var(--theme-text-header);' :
-            (isRowClosest && isColClosest ? 'background: var(--theme-background-secondary);' : '');
+          const distanceColor = this.getDistanceColor(distance);
+
+          // Cell background for highlighted pairs
+          let cellBg = '';
+          if (isPair) {
+            cellBg = 'background: var(--theme-primary);';
+          } else if (isRowClosest && isColClosest) {
+            cellBg = 'background: rgba(0, 0, 0, 0.15);';
+          }
 
           if (this.comparisonOptions.showDistanceValues) {
-            html += `<td class="p-2 text-center number" style="${bgStyle || `color: ${color};`}">${distStr}</td>`;
+            const textColor = isPair ? 'var(--theme-text-header)' : distanceColor;
+            html += `
+              <td style="
+                padding: 12px 8px;
+                text-align: center;
+                font-weight: 600;
+                font-size: 13px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                border-left: 1px solid var(--theme-border);
+                border-bottom: 1px solid var(--theme-border);
+                transition: background 0.1s;
+                color: ${textColor};
+                ${cellBg}
+              ">${distStr}</td>
+            `;
           } else {
-            html += `<td class="p-2 text-center"><div class="w-4 h-4 rounded mx-auto" style="background: ${color};"></div></td>`;
+            html += `
+              <td style="
+                padding: 12px 8px;
+                text-align: center;
+                border-left: 1px solid var(--theme-border);
+                border-bottom: 1px solid var(--theme-border);
+                ${cellBg}
+              ">
+                <div style="
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 4px;
+                  margin: 0 auto;
+                  background: ${distanceColor};
+                "></div>
+              </td>
+            `;
           }
         }
       }
@@ -892,16 +2112,15 @@ export class ComparisonTool extends BaseComponent {
   }
 
   /**
-   * Get color based on distance value
+   * Get color based on distance value - V4 color coding
+   * Low distance (similar) = green, Medium = gold, High (different) = red
    */
   private getDistanceColor(distance: number): string {
-    // Normalize to 0-1 range (max theoretical distance is ~441.67)
-    const normalized = distance / 441.67;
-
-    if (normalized >= 0.6) return '#22c55e'; // Very different (green - good)
-    if (normalized >= 0.4) return '#3b82f6'; // Different (blue)
-    if (normalized >= 0.2) return '#eab308'; // Somewhat similar (yellow)
-    return '#ef4444'; // Very similar (red - warning)
+    // Using perceptual thresholds for color distance
+    // Delta-E < 100: very similar, 100-200: moderately different, > 200: very different
+    if (distance < 100) return '#4caf50'; // Green - similar colors
+    if (distance < 200) return 'var(--theme-primary)'; // Gold - moderate difference
+    return '#f44336'; // Red - very different
   }
 
   // ============================================================================
@@ -999,6 +2218,10 @@ export class ComparisonTool extends BaseComponent {
         this.updateDrawerSelectedDyesDisplay();
         this.updateResults();
         this.saveSelectedDyes();
+        // Fetch prices for newly selected dyes if Market Board is enabled
+        if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+          this.fetchAndUpdatePrices();
+        }
       }
     });
 
@@ -1016,7 +2239,8 @@ export class ComparisonTool extends BaseComponent {
       // Show placeholder
       const placeholder = this.createElement('div', {
         className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
+        textContent:
+          LanguageService.t('comparison.selectDyesToCompare') || 'Select dyes to compare',
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -1064,18 +2288,8 @@ export class ComparisonTool extends BaseComponent {
    * Handle removing a dye from the mobile drawer
    */
   private handleDrawerRemoveDye(dye: Dye): void {
-    const newSelection = this.selectedDyes.filter((d) => d.id !== dye.id);
-
-    // Update both selectors
-    this.drawerDyeSelector?.setSelectedDyes(newSelection);
-    this.dyeSelector?.setSelectedDyes(newSelection);
-
-    this.selectedDyes = newSelection;
-    this.calculateHSVValues();
-    this.updateSelectedDyesDisplay();
-    this.updateDrawerSelectedDyesDisplay();
-    this.updateResults();
-    this.saveSelectedDyes();
+    // Use centralized remove method
+    this.removeDye(dye);
   }
 
   /**
@@ -1145,5 +2359,85 @@ export class ComparisonTool extends BaseComponent {
     }
 
     container.appendChild(optionsContainer);
+  }
+
+  /**
+   * Clear all dye selections and return to empty state.
+   * Called when "Clear All Dyes" button is clicked in Color Palette.
+   */
+  public clearDyes(): void {
+    this.selectedDyes = [];
+    this.dyesWithHSV = [];
+    this.stats = null;
+
+    // Clear from storage
+    StorageService.removeItem(STORAGE_KEYS.selectedDyes);
+    logger.info('[ComparisonTool] All dyes cleared');
+
+    // Update dye selectors
+    this.dyeSelector?.setSelectedDyes([]);
+    this.drawerDyeSelector?.setSelectedDyes([]);
+
+    // Clear UI containers
+    if (this.selectedDyesCardsContainer) {
+      clearContainer(this.selectedDyesCardsContainer);
+    }
+    if (this.statsContainer) {
+      clearContainer(this.statsContainer);
+    }
+    if (this.chartsContainer) {
+      clearContainer(this.chartsContainer);
+    }
+    if (this.matrixContainer) {
+      clearContainer(this.matrixContainer);
+    }
+
+    // Show empty state and hide analysis sections
+    this.showEmptyState(true);
+    this.showAnalysisSections(false);
+    this.updateDrawerSelectedDyesDisplay();
+  }
+
+  /**
+   * Add a dye from external source (Color Palette drawer)
+   * Adds the dye to the comparison list if not already present.
+   *
+   * @param dye The dye to add to the comparison
+   */
+  public addDye(dye: Dye): void {
+    if (!dye) return;
+
+    // Check if already in selection (max 4 dyes)
+    if (this.selectedDyes.some((d) => d.id === dye.id)) {
+      logger.debug(`[ComparisonTool] Dye already in selection: ${dye.name}`);
+      return;
+    }
+
+    if (this.selectedDyes.length >= 4) {
+      logger.debug(`[ComparisonTool] Max dyes reached (4), cannot add: ${dye.name}`);
+      return;
+    }
+
+    this.selectedDyes.push(dye);
+    logger.info(`[ComparisonTool] External dye added: ${dye.name}`);
+
+    // Update DyeSelector if it exists
+    if (this.dyeSelector) {
+      this.dyeSelector.setSelectedDyes(this.selectedDyes);
+    }
+
+    // Persist and update UI
+    const dyeIds = this.selectedDyes.map((d) => d.id);
+    StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+    this.calculateHSVValues();
+    this.updateSelectedDyesDisplay();
+    this.updateResults();
+  }
+
+  /**
+   * Alias for addDye to support the selectDye interface
+   */
+  public selectDye(dye: Dye): void {
+    this.addDye(dye);
   }
 }

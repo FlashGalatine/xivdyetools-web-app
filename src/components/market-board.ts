@@ -1,101 +1,75 @@
 /**
- * XIV Dye Tools v2.0.0 - Market Board Component
+ * XIV Dye Tools v4.0.0 - Market Board Component
  *
- * Phase 12: Architecture Refactor
- * UI component for displaying market prices from Universalis API
+ * UI component for Market Board settings and controls.
+ * Delegates price data management to MarketBoardService.
+ *
+ * Features:
+ * - Server/data center selection dropdown
+ * - Show prices toggle
+ * - Price category filters
+ * - Refresh button
  *
  * @module components/market-board
  */
 
 import { BaseComponent } from './base-component';
-import { APIService, LanguageService } from '@services/index';
-import { appStorage } from '@services/storage-service';
+import { LanguageService, WorldService } from '@services/index';
+import {
+  MarketBoardService,
+  formatPrice as serviceFormatPrice,
+  type PriceCategorySettings,
+} from '@services/market-board-service';
 import { ToastService } from '@services/toast-service';
-import { PRICE_CATEGORIES } from '@shared/constants';
-import type { Dye, PriceData, DataCenter, World } from '@shared/types';
+import type { Dye, PriceData } from '@shared/types';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 
-/**
- * Price category filter settings
- */
-interface PriceCategorySettings {
-  baseDyes: boolean;
-  craftDyes: boolean;
-  alliedSocietyDyes: boolean;
-  cosmicDyes: boolean;
-  specialDyes: boolean;
-}
+// Re-export PriceCategorySettings for backward compatibility
+export type { PriceCategorySettings } from '@services/market-board-service';
 
 /**
  * Market Board component - displays FFXIV market prices for dyes
- * Integrates with Universalis API to show current market board data
+ * Delegates to MarketBoardService for data management
  */
 export class MarketBoard extends BaseComponent {
-  private apiService: ReturnType<typeof APIService.getInstance>;
-  private dataCenters: DataCenter[] = [];
-  private worlds: World[] = [];
-  private selectedServer: string = 'Crystal'; // Default data center
-  private showPrices: boolean = false;
-  private priceCategories: PriceCategorySettings;
+  private service: MarketBoardService;
   private isRefreshing: boolean = false;
   private languageUnsubscribe: (() => void) | null = null;
 
+  // Local UI state (mirrors service state for rendering)
+  private get selectedServer(): string {
+    return this.service.getSelectedServer();
+  }
+  private get showPrices(): boolean {
+    return this.service.getShowPrices();
+  }
+  private get priceCategories(): PriceCategorySettings {
+    return this.service.getPriceCategories();
+  }
+
   constructor(container: HTMLElement) {
     super(container);
-    this.apiService = APIService.getInstance();
-
-    // Load saved settings from localStorage
-    this.showPrices = appStorage.getItem('market_board_show_prices', false) ?? false;
-    this.selectedServer = appStorage.getItem('market_board_server', 'Crystal') ?? 'Crystal';
-    this.priceCategories = appStorage.getItem('market_board_categories', {
-      baseDyes: PRICE_CATEGORIES.baseDyes.default,
-      craftDyes: PRICE_CATEGORIES.craftDyes.default,
-      alliedSocietyDyes: PRICE_CATEGORIES.alliedSocietyDyes.default,
-      cosmicDyes: PRICE_CATEGORIES.cosmicDyes.default,
-      specialDyes: PRICE_CATEGORIES.specialDyes.default,
-    }) ?? {
-      baseDyes: PRICE_CATEGORIES.baseDyes.default,
-      craftDyes: PRICE_CATEGORIES.craftDyes.default,
-      alliedSocietyDyes: PRICE_CATEGORIES.alliedSocietyDyes.default,
-      cosmicDyes: PRICE_CATEGORIES.cosmicDyes.default,
-      specialDyes: PRICE_CATEGORIES.specialDyes.default,
-    };
+    this.service = MarketBoardService.getInstance();
   }
 
   /**
-   * Load data centers and worlds from JSON files
+   * Ensure WorldService is initialized and update dropdown
+   * WorldService is typically already initialized by initializeServices(),
+   * but this ensures the dropdown is populated after component mounts.
    */
   async loadServerData(): Promise<void> {
     try {
-      // Fetch JSON files from public directory (served from root by Vite)
-      const [dcResponse, worldsResponse] = await Promise.all([
-        fetch('/json/data-centers.json'),
-        fetch('/json/worlds.json'),
-      ]);
+      // Ensure WorldService is initialized (usually already done at app startup)
+      await WorldService.initialize();
 
-      if (!dcResponse.ok || !worldsResponse.ok) {
-        throw new Error(
-          `Failed to load server data: ${dcResponse.status}, ${worldsResponse.status}`
-        );
-      }
-
-      this.dataCenters = await dcResponse.json();
-      this.worlds = await worldsResponse.json();
-
-      logger.info('✓ Loaded data centers:', this.dataCenters.length);
-      logger.info('✓ Loaded worlds:', this.worlds.length);
-
-      // Re-populate server dropdown after data loads
+      // Re-populate server dropdown after ensuring data is loaded
       const serverSelect = this.querySelector<HTMLSelectElement>('#mb-server-select');
       if (serverSelect) {
         this.populateServerDropdown(serverSelect);
       }
     } catch (error) {
-      logger.error('Error loading server data:', error);
-      // Use fallback empty arrays - component will still render but server selection disabled
-      this.dataCenters = [];
-      this.worlds = [];
+      logger.error('Error ensuring WorldService initialization:', error);
     }
   }
 
@@ -333,8 +307,9 @@ export class MarketBoard extends BaseComponent {
    * Populate server dropdown with data centers and worlds
    */
   private populateServerDropdown(selectElement: HTMLSelectElement): void {
-    // Sort data centers alphabetically
-    const sortedDataCenters = [...this.dataCenters].sort((a, b) => a.name.localeCompare(b.name));
+    // Get data centers from WorldService and sort alphabetically
+    const dataCenters = WorldService.getAllDataCenters();
+    const sortedDataCenters = [...dataCenters].sort((a, b) => a.name.localeCompare(b.name));
 
     // For each data center, add the DC as an option and its worlds as sub-options
     for (const dc of sortedDataCenters) {
@@ -351,10 +326,10 @@ export class MarketBoard extends BaseComponent {
       }
       optgroup.appendChild(dcOption);
 
-      // Get worlds for this data center and sort alphabetically
-      const dcWorlds = this.worlds
-        .filter((w) => dc.worlds.includes(w.id))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      // Get worlds for this data center (already sorted by WorldService)
+      const dcWorlds = WorldService.getWorldsInDataCenter(dc.name).sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
 
       // Add each world as an option
       for (const world of dcWorlds) {
@@ -379,9 +354,10 @@ export class MarketBoard extends BaseComponent {
     const serverSelect = this.querySelector<HTMLSelectElement>('#mb-server-select');
     if (serverSelect) {
       this.on(serverSelect, 'change', () => {
-        this.selectedServer = serverSelect.value;
-        appStorage.setItem('market_board_server', this.selectedServer);
-        this.emit('server-changed', { server: this.selectedServer });
+        // Update service (which updates ConfigController and persists)
+        this.service.setServer(serverSelect.value);
+        // Emit for backward compatibility with existing tool listeners
+        this.emit('server-changed', { server: serverSelect.value });
       });
     }
 
@@ -389,16 +365,17 @@ export class MarketBoard extends BaseComponent {
     const toggleInput = this.querySelector<HTMLInputElement>('#show-mb-prices-toggle');
     if (toggleInput) {
       this.on(toggleInput, 'change', () => {
-        this.showPrices = toggleInput.checked;
-        appStorage.setItem('market_board_show_prices', this.showPrices);
+        // Update service (which updates ConfigController and persists)
+        this.service.setShowPrices(toggleInput.checked);
 
         // Show/hide price settings
         const priceSettings = this.querySelector('#mb-price-settings');
         if (priceSettings) {
-          priceSettings.classList.toggle('hidden', !this.showPrices);
+          priceSettings.classList.toggle('hidden', !toggleInput.checked);
         }
 
-        this.emit('showPricesChanged', { showPrices: this.showPrices });
+        // Emit for backward compatibility with existing tool listeners
+        this.emit('showPricesChanged', { showPrices: toggleInput.checked });
       });
     }
 
@@ -408,9 +385,10 @@ export class MarketBoard extends BaseComponent {
       this.on(checkbox, 'change', () => {
         const category = checkbox.getAttribute('data-category') as keyof PriceCategorySettings;
         if (category) {
-          this.priceCategories[category] = checkbox.checked;
-          appStorage.setItem('market_board_categories', this.priceCategories);
-          this.emit('categories-changed', { categories: this.priceCategories });
+          // Update service (which persists to localStorage)
+          this.service.setCategories({ [category]: checkbox.checked });
+          // Emit for backward compatibility with existing tool listeners
+          this.emit('categories-changed', { categories: this.service.getPriceCategories() });
         }
       });
     }
@@ -460,8 +438,8 @@ export class MarketBoard extends BaseComponent {
     }
 
     try {
-      // Clear the price cache
-      await this.apiService.clearCache();
+      // Clear the price cache via service
+      await this.service.refreshPrices();
 
       // Emit event so parent component can re-fetch prices
       this.emit('refresh-requested', {});
@@ -489,57 +467,16 @@ export class MarketBoard extends BaseComponent {
 
   /**
    * Check if a dye should have its price fetched based on current filter settings
+   * Delegates to MarketBoardService
    */
   shouldFetchPrice(dye: Dye): boolean {
     if (!dye || !dye.itemID) return false;
-
-    // Check Special category (uses category field instead of acquisition)
-    if (this.priceCategories.specialDyes && dye.category === 'Special') {
-      return true;
-    }
-
-    // Validate acquisition exists for other checks
-    if (!dye.acquisition) return false;
-
-    // Check Base Dyes
-    if (
-      this.priceCategories.baseDyes &&
-      (PRICE_CATEGORIES.baseDyes.acquisitions as readonly string[]).includes(dye.acquisition)
-    ) {
-      return true;
-    }
-
-    // Check Craft Dyes
-    if (
-      this.priceCategories.craftDyes &&
-      (PRICE_CATEGORIES.craftDyes.acquisitions as readonly string[]).includes(dye.acquisition)
-    ) {
-      return true;
-    }
-
-    // Check Allied Society Dyes
-    if (
-      this.priceCategories.alliedSocietyDyes &&
-      (PRICE_CATEGORIES.alliedSocietyDyes.acquisitions as readonly string[]).includes(
-        dye.acquisition
-      )
-    ) {
-      return true;
-    }
-
-    // Check Cosmic Dyes
-    if (
-      this.priceCategories.cosmicDyes &&
-      (PRICE_CATEGORIES.cosmicDyes.acquisitions as readonly string[]).includes(dye.acquisition)
-    ) {
-      return true;
-    }
-
-    return false;
+    return this.service.shouldFetchPrice(dye);
   }
 
   /**
    * Fetch price for a dye using current server settings
+   * @deprecated Use fetchPricesForDyes for batch fetching (better performance)
    */
   async fetchPrice(dye: Dye): Promise<PriceData | null> {
     if (!this.showPrices || !this.shouldFetchPrice(dye)) {
@@ -547,7 +484,8 @@ export class MarketBoard extends BaseComponent {
     }
 
     try {
-      return await this.apiService.getPriceData(dye.itemID, undefined, this.selectedServer);
+      const prices = await this.service.fetchPricesForDyes([dye]);
+      return prices.get(dye.itemID) ?? null;
     } catch (error) {
       logger.error(`Failed to fetch price for ${dye.name}:`, error);
       return null;
@@ -556,63 +494,24 @@ export class MarketBoard extends BaseComponent {
 
   /**
    * Fetch prices for multiple dyes using batch API
+   * Delegates to MarketBoardService with request versioning for race condition protection
+   *
    * @param dyes - Array of dyes to fetch prices for
    * @param onProgress - Optional callback to report progress (current, total)
-   *
-   * PERFORMANCE: Uses batched API request to fetch all prices in 1-2 requests
-   * instead of N sequential requests. This significantly reduces fetch time
-   * from O(N * rate_limit_delay) to O(1-2 requests).
    */
   async fetchPricesForDyes(
     dyes: Dye[],
     onProgress?: (current: number, total: number) => void
   ): Promise<Map<number, PriceData>> {
-    const results = new Map<number, PriceData>();
-
-    // Filter dyes that should have prices fetched (based on settings)
-    const dyesToFetch = dyes.filter((dye) => this.showPrices && this.shouldFetchPrice(dye));
-    const total = dyesToFetch.length;
-
-    if (total === 0) {
-      onProgress?.(0, 0);
-      return results;
-    }
-
-    // Report initial progress
-    onProgress?.(0, total);
-
-    try {
-      // Extract item IDs for batch fetch
-      const itemIDs = dyesToFetch.map((dye) => dye.itemID);
-
-      // Use batch API to fetch all prices in a single request
-      // The Core's getPricesForDataCenter handles caching internally
-      const batchResults = await this.apiService.getPricesForDataCenter(
-        itemIDs,
-        this.selectedServer
-      );
-
-      // Copy results to our map
-      for (const [itemID, priceData] of batchResults) {
-        results.set(itemID, priceData);
-      }
-
-      // Report completion
-      onProgress?.(total, total);
-    } catch (error) {
-      logger.error('Failed to fetch batch prices:', error);
-      // Report completion even on error
-      onProgress?.(total, total);
-    }
-
-    return results;
+    return this.service.fetchPricesForDyes(dyes, onProgress);
   }
 
   /**
    * Format price for display
+   * Delegates to formatPrice from market-board-service
    */
   static formatPrice(price: number): string {
-    return APIService.formatPrice(price);
+    return serviceFormatPrice(price);
   }
 
   /**
@@ -647,24 +546,25 @@ export class MarketBoard extends BaseComponent {
    */
   protected getState(): Record<string, unknown> {
     return {
-      selectedServer: this.selectedServer,
-      showPrices: this.showPrices,
-      priceCategories: this.priceCategories,
+      selectedServer: this.service.getSelectedServer(),
+      showPrices: this.service.getShowPrices(),
+      priceCategories: this.service.getPriceCategories(),
     };
   }
 
   /**
    * Set component state
+   * Updates the service which persists and notifies subscribers
    */
   protected setState(newState: Record<string, unknown>): void {
     if (typeof newState.selectedServer === 'string') {
-      this.selectedServer = newState.selectedServer;
+      this.service.setServer(newState.selectedServer);
     }
     if (typeof newState.showPrices === 'boolean') {
-      this.showPrices = newState.showPrices;
+      this.service.setShowPrices(newState.showPrices);
     }
     if (typeof newState.priceCategories === 'object' && newState.priceCategories !== null) {
-      this.priceCategories = newState.priceCategories as PriceCategorySettings;
+      this.service.setCategories(newState.priceCategories as Partial<PriceCategorySettings>);
     }
   }
 
@@ -672,20 +572,69 @@ export class MarketBoard extends BaseComponent {
    * Get selected server
    */
   getSelectedServer(): string {
-    return this.selectedServer;
+    return this.service.getSelectedServer();
+  }
+
+  /**
+   * Set selected server (for external config synchronization)
+   */
+  setSelectedServer(server: string): void {
+    if (this.service.getSelectedServer() !== server) {
+      // Update service (persists and notifies)
+      this.service.setServer(server);
+      // Update the dropdown UI if it exists
+      const serverSelect = this.querySelector<HTMLSelectElement>('#mb-server-select');
+      if (serverSelect) {
+        serverSelect.value = server;
+      }
+      // Emit for backward compatibility
+      this.emit('server-changed', { server });
+    }
+  }
+
+  /**
+   * Set show prices (for external config synchronization)
+   */
+  setShowPrices(show: boolean): void {
+    if (this.service.getShowPrices() !== show) {
+      // Update service (persists and notifies)
+      this.service.setShowPrices(show);
+      // Update the toggle UI if it exists
+      const toggleInput = this.querySelector<HTMLInputElement>('#show-mb-prices-toggle');
+      if (toggleInput) {
+        toggleInput.checked = show;
+      }
+      // Show/hide price settings
+      const priceSettings = this.querySelector('#mb-price-settings');
+      if (priceSettings) {
+        priceSettings.classList.toggle('hidden', !show);
+      }
+      // Emit for backward compatibility
+      this.emit('showPricesChanged', { showPrices: show });
+    }
   }
 
   /**
    * Get show prices setting
    */
   getShowPrices(): boolean {
-    return this.showPrices;
+    return this.service.getShowPrices();
   }
 
   /**
    * Get price category settings
    */
   getPriceCategories(): PriceCategorySettings {
-    return { ...this.priceCategories };
+    return this.service.getPriceCategories();
+  }
+
+  /**
+   * Resolve a Universalis worldId to world name
+   * @param worldId - Universalis world ID
+   * @returns World name or undefined if not found
+   * @deprecated Use MarketBoardService.getWorldNameForPrice() or WorldService.getWorldName() directly
+   */
+  getWorldName(worldId: number | undefined): string | undefined {
+    return WorldService.getWorldName(worldId);
   }
 }

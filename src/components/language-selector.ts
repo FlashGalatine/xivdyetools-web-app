@@ -12,6 +12,7 @@ import { ThemeService, LanguageService, ColorService } from '@services/index';
 import type { LocaleCode } from '@shared/i18n-types';
 import { LOCALE_DISPLAY_INFO } from '@shared/constants';
 import { clearContainer } from '@shared/utils';
+import { ICON_GLOBE } from '@shared/ui-icons';
 
 /**
  * Language selector component - allows users to select from 6 available languages
@@ -51,8 +52,8 @@ export class LanguageSelector extends BaseComponent {
       },
     });
 
-    // Show flag and native language name
-    button.innerHTML = `${currentLocaleInfo.flag} <span class="hidden sm:inline">${currentLocaleInfo.name}</span>`;
+    // Show globe icon and native language name
+    button.innerHTML = `<span class="inline-block w-5 h-5" aria-hidden="true">${ICON_GLOBE}</span><span class="hidden sm:inline ml-1">${currentLocaleInfo.name}</span>`;
 
     // Add hover effect using theme colors
     button.addEventListener('mouseenter', () => {

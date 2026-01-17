@@ -75,6 +75,7 @@ export const PRICE_CATEGORIES = {
 export const THEME_NAMES: readonly ThemeName[] = [
   'standard-light',
   'standard-dark',
+  'premium-dark',
   'hydaelyn-light',
   'og-classic-dark',
   'parchment-light',
@@ -88,7 +89,7 @@ export const THEME_NAMES: readonly ThemeName[] = [
 
 export const THEME_COUNT = THEME_NAMES.length;
 
-export const DEFAULT_THEME: ThemeName = 'standard-light';
+export const DEFAULT_THEME: ThemeName = 'premium-dark';
 
 /**
  * Theme display names for UI
@@ -96,6 +97,7 @@ export const DEFAULT_THEME: ThemeName = 'standard-light';
 export const THEME_DISPLAY_NAMES: Record<ThemeName, string> = {
   'standard-light': 'Standard (Light)',
   'standard-dark': 'Standard (Dark)',
+  'premium-dark': 'Premium Dark',
   'hydaelyn-light': 'Hydaelyn',
   'og-classic-dark': 'OG Classic',
   'parchment-light': 'Parchment',

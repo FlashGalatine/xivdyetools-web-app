@@ -5,3 +5,5 @@ Disallow: /dyecomparison_experimental.html
 Disallow: /coloraccessibility_experimental.html
 
 Allow: /
+
+Sitemap: https://xivdyetools.app/sitemap.xml

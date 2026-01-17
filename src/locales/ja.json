@@ -14,11 +14,16 @@
     "tools": "ツール",
     "theme": "テーマ",
     "language": "言語",
-    "about": "XIV 染色ツールについて"
+    "about": "XIV 染色ツールについて",
+    "languageSelector": "言語を選択",
+    "languageOptions": "利用可能な言語",
+    "themeSelector": "テーマを選択",
+    "themeOptions": "利用可能なテーマ"
   },
   "about": {
     "title": "XIV 染色ツールについて",
-    "connect": "つながる"
+    "connect": "つながる",
+    "builtWith": "TypeScript、Vite、Tailwind CSSで構築"
   },
   "common": {
     "close": "閉じる"
@@ -55,17 +60,26 @@
       "description": "最大4つのカララントを比較",
       "subtitle": "カララントを並べて比較し、色の違いを確認して最適なマッチを見つけます。"
     },
+    "gradient": {
+      "title": "グラデーションビルダー",
+      "shortName": "グラデ",
+      "description": "色の変遷を作成",
+      "subtitle": "染料間の滑らかな色の変遷を構築し、グラデーションに沿った中間オプションを見つけます。"
+    },
     "mixer": {
       "title": "カララントミキサー",
       "shortName": "ミキサー",
-      "description": "中間カララントを探す",
-      "subtitle": "2つのカララント間の滑らかな色のグラデーションを作成し、中間オプションを発見します。"
+      "description": "色をブレンド",
+      "subtitle": "2つのカララントをブレンドして、混合色に合うFFXIVカララントを見つけます。"
     },
     "presets": {
       "title": "プリセットパレット",
       "shortName": "プリセット",
       "description": "テーマパレットを閲覧",
       "subtitle": "ジョブ、季節、イベントなどのキュレーションされた染料パレットを探索しましょう。",
+      "communityTitle": "コミュニティプリセット",
+      "communityDescription": "FFXIVコミュニティが作成したカラーパレットを発見・共有",
+      "searchPlaceholder": "プリセットを検索...",
       "allCategories": "すべて",
       "noPresets": "プリセットが見つかりません",
       "dyes": "染料",
@@ -83,7 +97,7 @@
     },
     "character": {
       "title": "キャラクターマッチャー",
-      "shortName": "キャラクター",
+      "shortName": "見本",
       "description": "キャラクターの色に合う染料を探す",
       "subtitle": "キャラクターの髪、目、肌などのカスタマイズカラーに合うFFXIVの染料を見つけます。",
       "selectSubrace": "部族を選択",
@@ -137,7 +151,137 @@
     "noDyeSelected": "カララント未選択",
     "download": "ダウンロード",
     "slot": "スロット",
-    "replace": "置き換え"
+    "replace": "置き換え",
+    "technical": "技術情報",
+    "acquisition": "入手方法",
+    "source": "入手先",
+    "recommended": "おすすめ",
+    "original": "オリジナル",
+    "match": "マッチ",
+    "cost": "コスト",
+    "market": "マーケット",
+    "closeModal": "モーダルを閉じる",
+    "full": "満杯"
+  },
+  "config": {
+    "harmonyType": "ハーモニータイプ",
+    "complementary": "補色",
+    "analogous": "類似色",
+    "triadic": "トライアド",
+    "splitComplementary": "分裂補色",
+    "tetradic": "テトラード",
+    "square": "スクエア",
+    "monochromatic": "モノクロマティック",
+    "compound": "コンパウンド",
+    "shades": "シェード",
+    "matchingAlgorithm": "マッチングアルゴリズム",
+    "perceptualMatching": "知覚的マッチング",
+    "perceptualMatchingDesc": "知覚的に正確な色のマッチングにDeltaEを使用",
+    "hueMatchingDesc": "芸術的な色調和に色相角を使用",
+    "colorFormats": "カラーフォーマット",
+    "hexCodes": "Hexコード",
+    "rgbValues": "RGB値",
+    "hsvValues": "HSV値",
+    "labValues": "LAB値",
+    "resultDetails": "結果の詳細",
+    "showPrices": "価格を表示",
+    "showDeltaE": "Delta-Eを表示",
+    "showAcquisition": "入手方法を表示",
+    "marketBoard": "マーケットボード",
+    "enableMarketBoard": "マーケットボードを有効にする",
+    "pricesFetchedFrom": "{server}のUniversalisから価格を取得",
+    "loadingServers": "サーバーを読み込み中...",
+    "allWorlds": "全ワールド",
+    "extractionSettings": "抽出設定",
+    "vibrancyBoost": "鮮やかさブースト",
+    "maxColors": "最大色数",
+    "dragThreshold": "選択感度",
+    "dragThresholdTooltip": "低い値はドラッグしやすく、高い値はクリックしやすくなります",
+    "visionTypes": "視覚タイプ",
+    "deuteranopia": "第二色覚異常",
+    "protanopia": "第一色覚異常",
+    "tritanopia": "第三色覚異常",
+    "achromatopsia": "全色盲",
+    "simulationDisplay": "シミュレーション表示",
+    "showLabels": "ラベルを表示",
+    "showHexValues": "Hex値を表示",
+    "highContrastMode": "ハイコントラストモード",
+    "gradientSteps": "グラデーションステップ",
+    "count": "数",
+    "colorSpace": "色空間",
+    "hsvHueBased": "HSV（色相ベース）",
+    "rgbDirect": "RGB（ダイレクト）",
+    "mixingMode": "混合モード",
+    "mixingRyb": "RYB (絵具混合)",
+    "mixingLab": "LAB (知覚的)",
+    "mixingRgb": "RGB (光)",
+    "mixingRybDesc": "減法混色。青 + 黄 = 緑。",
+    "mixingLabDesc": "LAB色空間での知覚的に均一なブレンド。",
+    "mixingRgbDesc": "加法混色。青 + 黄 = グレー。",
+    "resultSettings": "結果設定",
+    "maxResults": "最大結果数",
+    "category": "カテゴリ",
+    "allCategories": "すべてのカテゴリ",
+    "jobs": "ジョブ",
+    "grandCompanies": "グランドカンパニー",
+    "seasons": "季節",
+    "events": "イベント",
+    "aesthetics": "美学",
+    "community": "コミュニティ",
+    "sortBy": "並び替え",
+    "mostPopular": "人気順",
+    "mostRecent": "新着順",
+    "alphabetical": "アルファベット順",
+    "filters": "フィルター",
+    "showMyPresetsOnly": "自分のプリセットのみ表示",
+    "showFavorites": "お気に入りを表示",
+    "budgetLimit": "予算上限",
+    "maxPrice": "最大価格",
+    "colorDistance": "色距離",
+    "maxDeltaE": "最大Delta-E",
+    "colorSheet": "カラーシート",
+    "eyeColors": "瞳の色",
+    "hairColors": "髪の色",
+    "skinColors": "肌の色",
+    "highlightColors": "ハイライトカラー",
+    "lipColorsDark": "リップカラー（ダーク）",
+    "lipColorsLight": "リップカラー（ライト）",
+    "tattooColors": "タトゥー/リムバルカラー",
+    "facePaintDark": "フェイスペイント（ダーク）",
+    "facePaintLight": "フェイスペイント（ライト）",
+    "character": "キャラクター",
+    "searchSettings": "検索設定",
+    "displayOptions": "表示オプション",
+    "account": "アカウント",
+    "via": "{provider}経由",
+    "loginToSubmit": "投稿するにはログイン",
+    "loginWithDiscord": "Discordでログイン",
+    "loginWithXIVAuth": "XIVAuthでログイン",
+    "submitPreset": "プリセットを投稿",
+    "logout": "ログアウト"
+  },
+  "colorPalette": {
+    "title": "カラーパレット",
+    "searchPlaceholder": "染料を検索...",
+    "all": "すべて",
+    "metallic": "メタリック",
+    "pastel": "パステル",
+    "dark": "ダーク",
+    "vibrant": "ビビッド",
+    "favorites": "お気に入り",
+    "neutral": "ニュートラル",
+    "reds": "レッド系",
+    "browns": "ブラウン系",
+    "yellows": "イエロー系",
+    "oranges": "オレンジ系",
+    "greens": "グリーン系",
+    "blues": "ブルー系",
+    "purples": "パープル系",
+    "pinks": "ピンク系",
+    "whites": "ホワイト系",
+    "blacks": "ブラック系",
+    "grays": "グレー系",
+    "noDyesFound": "染料が見つかりません"
   },
   "harmony": {
     "suggestionMode": "提案モード",
@@ -153,6 +297,7 @@
     "selectDye": "カララントを選択",
     "selectDyePrompt": "ベースカララントを選択してカラーハーモニーを生成",
     "noDyeSelected": "カララント未選択",
+    "noColorSelected": "色が選択されていません",
     "selectBaseColor": "ハーモニーを生成するベースカラーを選択",
     "generatingHarmonies": "ハーモニーを生成中...",
     "noMatchingDyes": "マッチするカララントが見つかりません",
@@ -269,7 +414,10 @@
     "imageLoaded": "画像を読み込みました",
     "imageTooLarge": "画像が大きすぎて保存できません",
     "noColorSelected": "色が選択されていません",
-    "selectedColor": "選択された色"
+    "selectedColor": "選択された色",
+    "dropImageHere": "画像をドロップするかクリックしてアップロード",
+    "extractedPalette": "抽出されたパレット",
+    "exportCss": "CSSをエクスポート"
   },
   "accessibility": {
     "inspectDyes": "カララントを検査",
@@ -280,6 +428,7 @@
     "showLabels": "ラベルを表示",
     "highContrastMode": "ハイコントラストモード",
     "selectDyes": "カララントを選択",
+    "selectedDyes": "選択された染料",
     "selectUpTo": "アクセシビリティをチェックするカララントを最大{count}個選択",
     "selectDyesToSeeAnalysis": "カララントを選択してアクセシビリティ分析を表示",
     "visionSimulation": "色覚シミュレーション",
@@ -307,9 +456,11 @@
     "achromatopsiaWarning": "全色盲の方には見えにくい可能性があります",
     "dyesSelected": "個のカララントを選択中",
     "visionTypesEnabled": "個の色覚タイプが有効",
-    "selectTwoDyes": "比較を見るには2つ以上のカララントを選択してください"
+    "selectTwoDyes": "比較を見るには2つ以上のカララントを選択してください",
+    "addDye": "カララントを追加"
   },
   "comparison": {
+    "selectedDyes": "選択された染料",
     "selectDyes": "比較するカララントを選択",
     "selectUpTo": "最大{count}個のカララントを選択",
     "selectToSeeAnalysis": "分析を表示するには2つ以上のカララントを選択してください",
@@ -415,10 +566,32 @@
     "interpolationPreview": "補間プレビュー",
     "intermediateDyeMatches": "中間カララントマッチ",
     "selectDye": "カララントを選択",
+    "selectColor": "色を選択",
     "selectStartEndDyes": "色のトランジションを作成するには開始と終了のカララントを選択",
     "targetColor": "ターゲットカラー",
     "bestMatch": "ベストマッチ",
-    "exportPalette": "パレットをエクスポート"
+    "exportPalette": "パレットをエクスポート",
+    "selectTwoDyesToMix": "2つのカララントを選択してブレンドし、マッチする色を見つけます",
+    "dye1": "カララント1",
+    "dye2": "カララント2",
+    "maxResults": "最大結果数",
+    "matchingDyes": "マッチするカララント",
+    "blend": "ブレンド",
+    "mixSettings": "ミックス設定",
+    "slotsFullReplacing": "両方のスロットがいっぱいです。最初のカララントを置き換えます。",
+    "replacedSlot1": "スロット1を置き換えました",
+    "replacedSlot2": "スロット2を置き換えました",
+    "replaceSlot": "スロットを置き換え"
+  },
+  "gradient": {
+    "selectColor": "色を選択",
+    "setStartAndEnd": "開始色と終了色を設定してグラデーションステップを生成",
+    "clickPlusButtons": "カラーパレットからカララントを選択してグラデーションの色を設定",
+    "clickToSelectStart": "クリックして開始色を選択",
+    "clickToSelectEnd": "クリックして終了色を選択",
+    "gradientResults": "グラデーション結果",
+    "noMatchesFound": "マッチするカララントが見つかりません",
+    "sameDyeWarning": "開始と終了のカララントが同じです。グラデーションには異なるカララントを選択してください。"
   },
   "dyeSelector": {
     "searchPlaceholder": "カララント名で検索...",
@@ -496,6 +669,7 @@
     "loading": "代替品を検索中...",
     "marketPrice": "マーケットボード価格",
     "alternativesWithinBudget": "件の予算内代替品",
+    "alternativeWithinBudget": "件の予算内代替品",
     "sortedBy": "並べ替え",
     "sortMatch": "ベストマッチ",
     "sortMatchDesc": "最も近い色から",
@@ -517,7 +691,9 @@
     "distanceDesc": "値が高いほど多くの代替品が表示され、低いほど近い色が表示されます",
     "fetchingPrices": "価格を取得中",
     "maxResults": "最大表示件数",
-    "showingXOfY": "{total}件中{showing}件を表示"
+    "showingXOfY": "{total}件中{showing}件を表示",
+    "selectedDye": "選択されたカララント",
+    "currentlySelected": "現在選択中"
   },
   "export": {
     "title": "パレットをエクスポート",
@@ -545,7 +721,12 @@
     "imageTooLarge": "画像ファイルが大きすぎます。最大サイズは10MBです。",
     "unsupportedFormat": "サポートされていないファイル形式です。",
     "clipboardFailed": "クリップボードへのコピーに失敗しました。",
-    "storageFailed": "設定の保存に失敗しました。ストレージがいっぱいの可能性があります。"
+    "storageFailed": "設定の保存に失敗しました。ストレージがいっぱいの可能性があります。",
+    "somethingWentWrong": "問題が発生しました",
+    "unexpectedError": "予期しないエラーが発生しました",
+    "tryAgain": "再試行",
+    "resetComponent": "コンポーネントをリセット",
+    "retryAttempts": "再試行回数: {count}/{max}"
   },
   "success": {
     "copiedToClipboard": "クリップボードにコピーしました！",
@@ -556,6 +737,7 @@
   "themes": {
     "standardLight": "スタンダード（ライト）",
     "standardDark": "スタンダード（ダーク）",
+    "premiumDark": "プレミアムダーク",
     "hydaelynLight": "ハイデリン",
     "ogClassicDark": "OGクラシック",
     "parchmentLight": "パーチメント",
@@ -807,7 +989,8 @@
     "tab": "タブ",
     "edit": "編集",
     "delete": "削除",
-    "confirmDelete": "このプリセットを削除してもよろしいですか？",
+    "deleteTitle": "プリセットを削除",
+    "confirmDelete": "このプリセットを削除してもよろしいですか？この操作は取り消せません。",
     "categories": {
       "all": "すべて",
       "jobs": "ジョブ",
@@ -821,11 +1004,82 @@
       "popular": "人気順",
       "recent": "新着順",
       "name": "名前順"
-    }
+    },
+    "editPreset": "プリセットを編集",
+    "saveChanges": "変更を保存",
+    "loginToVote": "このプリセットに投票するにはDiscordまたはXIVAuthでログインしてください"
   },
   "auth": {
     "logout": "ログアウト",
     "loggedInAs": "ログイン中:",
-    "notLoggedIn": "未ログイン"
+    "notLoggedIn": "未ログイン",
+    "loginWithDiscord": "Discordでログイン",
+    "loginWithXIVAuth": "XIVAuthでログイン",
+    "userMenu": "ユーザーメニュー",
+    "verified": "認証済み"
+  },
+  "emptyStates": {
+    "noSearchResults": {
+      "title": "「{query}」に一致する染料がありません",
+      "description": "スペルを確認するか、「紫」や「赤」などのカテゴリで検索してください。",
+      "action": "検索をクリア"
+    },
+    "filteredOut": {
+      "title": "すべての提案がフィルターされました",
+      "description": "現在のフィルター設定で全ての染料が非表示になっています。フィルター設定を調整してみてください。",
+      "action": "フィルターをリセット"
+    },
+    "noPrice": {
+      "description": "この染料は取引不可か、このサーバーのUniversalisデータがありません。",
+      "action": "別のサーバーを試す"
+    },
+    "noHarmony": {
+      "title": "ハーモニーの提案がありません",
+      "description": "ベースの染料を選択して色調和の提案を生成します。",
+      "action": "染料を選択"
+    },
+    "noImage": {
+      "title": "画像が読み込まれていません",
+      "description": "画像をアップロードして色のマッチングを開始します。",
+      "action": "画像をアップロード"
+    },
+    "loading": {
+      "title": "読み込み中...",
+      "description": "データを取得しています。"
+    }
+  },
+  "aria": {
+    "headerNavigation": "ヘッダーナビゲーション",
+    "closeSidebar": "サイドバーを閉じる",
+    "toggleConfigSidebar": "設定サイドバーの切り替え",
+    "showColorPalette": "カラーパレットを表示",
+    "selectRandomDye": "ランダムな染料を選択",
+    "clearAllDyes": "すべての染料をクリア",
+    "closePalette": "パレットを閉じる",
+    "addToFavorites": "お気に入りに追加",
+    "removeFromFavorites": "お気に入りから削除",
+    "moreActions": "その他のアクション",
+    "slider": "スライダー",
+    "toggle": "切り替え"
+  },
+  "resultCard": {
+    "inspectDyeIn": "染料を確認...",
+    "transformDyeIn": "染料を変換...",
+    "openInBrowser": "ブラウザで開く...",
+    "sentToBudget": "予算提案に送信しました",
+    "dyeAlreadyIn": "染料は既に追加されています",
+    "addedTo": "追加しました",
+    "slotsFull": "すべてのスロットが使用中です。置き換えるスロットを選択してください：",
+    "selectSlotToReplace": "置き換えるスロットを選択",
+    "addingDye": "追加中",
+    "replacedInTool": "置き換えました",
+    "tools": {
+      "harmony": "ハーモニーエクスプローラー",
+      "budget": "予算提案",
+      "accessibility": "アクセシビリティチェッカー",
+      "comparison": "染料比較",
+      "gradient": "グラデーションビルダー",
+      "mixer": "染料ミキサー"
+    }
   }
 }

@@ -187,6 +187,14 @@ Playwright is configured in `playwright.config.ts`:
    - Panel visibility toggle animation
    - Responsive button layout
 
+10. **Extractor Tool** (17 tests) - NEW
+    - Image upload and palette extraction flow
+    - Color picker selection and dye matching
+    - Configuration persistence (sample size, palette mode, vibrancy)
+    - Mobile responsive behavior (accordions, sliders)
+    - Market board integration
+    - Results interaction (context menu, CSS export)
+
 ### Known E2E Issues
 
 **Nested Button Problem**: Some collection manager tests are skipped because the "Manage Collections" button is nested inside another `<button>` element (the favorites panel header). This is invalid HTML and prevents reliable click handling in Playwright.
@@ -258,3 +266,71 @@ Coverage thresholds are configured in `vitest.config.ts`:
 - Statements: 80%
 
 Files explicitly excluded from coverage are also listed in `vitest.config.ts` under `coverage.exclude`.
+
+## Test Consolidation with Parameterization
+
+Large test files with repetitive patterns can be consolidated using `it.each()` to reduce maintenance burden while maintaining coverage.
+
+### Helper Files
+
+- `src/components/__tests__/extractor-tool-helpers.ts` - Shared test data and utilities
+- `src/components/__tests__/extractor-tool-consolidated.example.ts` - Example refactored patterns
+
+### Parameterized Test Pattern
+
+**Before** (6 separate tests, ~150 lines):
+```typescript
+it('should handle add-comparison action', () => { /* ... */ });
+it('should handle add-mixer action', () => { /* ... */ });
+it('should handle add-accessibility action', () => { /* ... */ });
+it('should handle see-harmonies action', () => { /* ... */ });
+it('should handle budget action', () => { /* ... */ });
+it('should handle copy-hex action', () => { /* ... */ });
+```
+
+**After** (1 parameterized test, ~20 lines):
+```typescript
+import { CONTEXT_ACTION_TEST_DATA } from './extractor-tool-helpers';
+
+it.each(CONTEXT_ACTION_TEST_DATA)(
+  'should handle $action action',
+  ({ action, color, dye }) => {
+    dispatchColorSelected(options.leftPanel, color);
+    expect(() => dispatchContextAction(options.rightPanel, action, dye)).not.toThrow();
+  }
+);
+```
+
+### Test Data Arrays
+
+Test data is defined in the helpers file for:
+- **Storage keys** (`STORAGE_KEY_TEST_DATA`) - For storage restoration tests
+- **Context actions** (`CONTEXT_ACTION_TEST_DATA`) - For context menu action tests
+- **Mobile accordions** (`MOBILE_ACCORDION_TEST_DATA`) - For accordion toggle tests
+- **Config updates** (`SET_CONFIG_TEST_DATA`) - For setConfig tests
+- **Color matching** (`COLOR_MATCHING_TEST_DATA`) - For color matching tests
+
+### Tests to Remove After Consolidation
+
+When applying parameterization, remove individual tests that are now covered:
+- Individual storage restoration tests (replaced by parameterized version)
+- Individual context action tests (replaced by parameterized version)
+- Individual mobile accordion tests (replaced by parameterized version)
+- Trivial tests that only verify `expect(x).toBeDefined()`
+
+### Tests to Keep
+
+Keep tests with unique behavior that cannot be parameterized:
+- Lifecycle tests (init, destroy, multiple cycles)
+- Image loading flow tests (unique setup)
+- Error handling edge cases
+- Complex integration tests with specific assertions
+
+### Expected Results
+
+| Metric | Before | After |
+|--------|--------|-------|
+| extractor-tool.test.ts lines | 10,079 | ~2,500-3,000 |
+| Test cases | 830 | ~200-250 |
+| New E2E tests | 0 | ~17 |
+| Total coverage | Same | Same or better |

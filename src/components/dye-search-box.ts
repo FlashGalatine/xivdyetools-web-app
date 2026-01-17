@@ -83,8 +83,7 @@ export class DyeSearchBox extends BaseComponent {
 
     // Random Dye Button (icon only to prevent overflow)
     const randomBtn = this.createElement('button', {
-      className:
-        'p-2 rounded-lg transition-all duration-200 flex items-center justify-center',
+      className: 'p-2 rounded-lg transition-all duration-200 flex items-center justify-center',
       attributes: {
         id: 'dye-selector-random-btn',
         type: 'button',

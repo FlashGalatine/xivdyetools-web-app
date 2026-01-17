@@ -78,13 +78,13 @@ interface AuthResponse {
  * OAuth Worker URL - handles Discord OAuth flow
  */
 const OAUTH_WORKER_URL =
-  import.meta.env.VITE_OAUTH_WORKER_URL || 'https://auth.xivdyetools.projectgalatine.com';
+  import.meta.env.VITE_OAUTH_WORKER_URL || 'https://auth.xivdyetools.app';
 
 /**
  * Presets API URL - handles preset operations
  */
 const PRESETS_API_URL =
-  import.meta.env.VITE_PRESETS_API_URL || 'https://api.xivdyetools.projectgalatine.com';
+  import.meta.env.VITE_PRESETS_API_URL || 'https://api.xivdyetools.app';
 
 /**
  * Storage key for auth token
@@ -219,7 +219,11 @@ class AuthServiceImpl {
       }
 
       if (import.meta.env.DEV) {
-        console.log('🔐 [AuthService] URL params:', { hasCode: !!code, hasError: !!error, provider: providerFromUrl });
+        console.log('🔐 [AuthService] URL params:', {
+          hasCode: !!code,
+          hasError: !!error,
+          provider: providerFromUrl,
+        });
       }
 
       if (code) {
@@ -230,7 +234,8 @@ class AuthServiceImpl {
         await this.handleCallbackCode(code, urlParams.get('csrf'));
         // Get return path before cleaning URL, default to home
         // SECURITY: Sanitize to prevent open redirect attacks
-        const rawPath = urlParams.get('return_path') || sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
+        const rawPath =
+          urlParams.get('return_path') || sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
         const returnPath = sanitizeReturnPath(rawPath);
         if (import.meta.env.DEV) {
           console.log(`🔐 [AuthService] Navigating to return path: ${returnPath}`);
@@ -242,7 +247,8 @@ class AuthServiceImpl {
         logger.error('OAuth error:', error);
         // Get return path before cleaning URL
         // SECURITY: Sanitize to prevent open redirect attacks
-        const rawPath = urlParams.get('return_path') || sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
+        const rawPath =
+          urlParams.get('return_path') || sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
         const returnPath = sanitizeReturnPath(rawPath);
         sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
         // Clean up URL and navigate back (even on error)
@@ -453,7 +459,9 @@ class AuthServiceImpl {
 
     // Log with character info for XIVAuth users
     if (provider === 'xivauth' && payload.primary_character) {
-      logger.info(`Logged in via XIVAuth as ${payload.username} (${payload.primary_character.name} @ ${payload.primary_character.server})`);
+      logger.info(
+        `Logged in via XIVAuth as ${payload.username} (${payload.primary_character.name} @ ${payload.primary_character.server})`
+      );
     } else {
       logger.info(`Logged in as ${this.state.user?.global_name || this.state.user?.username}`);
     }
@@ -495,9 +503,22 @@ class AuthServiceImpl {
    * This handles both successful login and error cases
    */
   private navigateAfterAuth(returnPath: string): void {
+    // Check if a returnTool was stored during login initiation
+    const returnTool = sessionStorage.getItem(OAUTH_RETURN_TOOL_KEY);
+    sessionStorage.removeItem(OAUTH_RETURN_TOOL_KEY);
+
+    // If returnTool is specified, navigate to that tool's route instead
+    let finalPath = returnPath;
+    if (returnTool) {
+      finalPath = `/${returnTool}`;
+      if (import.meta.env.DEV) {
+        console.log(`🔐 [AuthService] Using returnTool: ${returnTool} -> ${finalPath}`);
+      }
+    }
+
     // Use replaceState to avoid adding callback URL to history
     // Then navigate to the return path
-    const targetUrl = new URL(window.location.origin + returnPath);
+    const targetUrl = new URL(window.location.origin + finalPath);
     window.history.replaceState({}, '', targetUrl.toString());
     // Force page reload to re-render with new auth state
     // This ensures all components see the updated auth state
