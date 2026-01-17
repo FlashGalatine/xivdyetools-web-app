@@ -859,6 +859,7 @@ export class GradientTool extends BaseComponent {
     clearContainer(right);
 
     // Apply gradient-view styling to the right panel
+    // Note: overflow-y handled by parent layout shell - do NOT add it here to avoid double scrollbars
     right.setAttribute(
       'style',
       `
@@ -869,7 +870,6 @@ export class GradientTool extends BaseComponent {
       padding: 32px;
       gap: 32px;
       box-sizing: border-box;
-      overflow-y: auto;
     `
     );
 
@@ -1071,7 +1071,6 @@ export class GradientTool extends BaseComponent {
           flex-wrap: wrap;
           justify-content: center;
           gap: 16px;
-          overflow-y: auto;
           width: 100%;
           padding: 20px 0;
           --v4-result-card-width: 280px;
@@ -2270,7 +2269,7 @@ export class GradientTool extends BaseComponent {
         // Would result in same dye for both slots
         ToastService.warning(
           LanguageService.t('gradient.sameDyeWarning') ||
-            'Start and end dyes are the same. Select different dyes for a gradient.'
+          'Start and end dyes are the same. Select different dyes for a gradient.'
         );
         logger.info(`[GradientTool] Prevented duplicate: ${dye.name} is already start`);
         return;
