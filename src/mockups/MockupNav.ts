@@ -82,11 +82,10 @@ export function getLocalizedMockupTools(): MockupNavTool[] {
     },
     {
       id: 'budget',
-      name: LanguageService.t('tools.budget.title') || 'Budget',
-      shortName: LanguageService.t('tools.budget.shortName') || 'Budget',
+      name: LanguageService.t('tools.budget.title'),
+      shortName: LanguageService.t('tools.budget.shortName'),
       icon: ICON_TOOL_BUDGET,
-      description:
-        LanguageService.t('tools.budget.description') || 'Find affordable dye alternatives',
+      description: LanguageService.t('tools.budget.description'),
     },
   ];
 }

@@ -96,7 +96,7 @@ export class ChangelogModal {
     const content = this.createContent();
 
     this.modalId = ModalService.showChangelog({
-      title: `${LanguageService.t('changelog.title') || `What's New in v${APP_VERSION}`}`,
+      title: LanguageService.t('changelog.title'),
       content,
       size: 'md',
       closable: true,
@@ -132,8 +132,7 @@ export class ChangelogModal {
       // Fallback if no changelog data for current version
       const fallback = document.createElement('p');
       fallback.className = 'text-gray-600 dark:text-gray-300';
-      fallback.textContent =
-        LanguageService.t('changelog.noChanges') || 'Bug fixes and performance improvements.';
+      fallback.textContent = LanguageService.t('changelog.noChanges');
       container.appendChild(fallback);
     } else {
       // Current version highlights
@@ -150,8 +149,7 @@ export class ChangelogModal {
 
         const previousTitle = document.createElement('h4');
         previousTitle.className = 'text-sm font-medium text-gray-500 dark:text-gray-400 mb-3';
-        previousTitle.textContent =
-          LanguageService.t('changelog.previousUpdates') || 'Previous updates:';
+        previousTitle.textContent = LanguageService.t('changelog.previousUpdates');
         previousSection.appendChild(previousTitle);
 
         const previousList = document.createElement('div');
@@ -186,7 +184,7 @@ export class ChangelogModal {
       'https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/docs/CHANGELOG.md';
     viewFullBtn.target = '_blank';
     viewFullBtn.rel = 'noopener noreferrer';
-    viewFullBtn.textContent = LanguageService.t('changelog.viewFull') || 'View full changelog';
+    viewFullBtn.textContent = LanguageService.t('changelog.viewFull');
 
     // Got it button
     const gotItBtn = document.createElement('button');
@@ -197,7 +195,7 @@ export class ChangelogModal {
     `
       .replace(/\s+/g, ' ')
       .trim();
-    gotItBtn.textContent = LanguageService.t('changelog.gotIt') || 'Got it!';
+    gotItBtn.textContent = LanguageService.t('changelog.gotIt');
     gotItBtn.addEventListener('click', () => {
       this.close();
     });

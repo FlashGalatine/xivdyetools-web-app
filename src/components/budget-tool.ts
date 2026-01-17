@@ -469,7 +469,7 @@ export class BudgetTool extends BaseComponent {
     const targetContainer = this.createElement('div');
     left.appendChild(targetContainer);
     this.targetDyePanel = new CollapsiblePanel(targetContainer, {
-      title: LanguageService.t('budget.targetDye') || 'Target Dye',
+      title: LanguageService.t('budget.targetDye'),
       storageKey: 'v3_budget_target_panel',
       defaultOpen: true,
       icon: ICON_TARGET,
@@ -483,7 +483,7 @@ export class BudgetTool extends BaseComponent {
     const quickContainer = this.createElement('div');
     left.appendChild(quickContainer);
     this.quickPicksPanel = new CollapsiblePanel(quickContainer, {
-      title: LanguageService.t('budget.quickPicks') || 'Quick Picks',
+      title: LanguageService.t('budget.quickPicks'),
       storageKey: 'v3_budget_quickpicks_panel',
       defaultOpen: true,
       icon: ICON_SPARKLES,
@@ -497,7 +497,7 @@ export class BudgetTool extends BaseComponent {
     const budgetContainer = this.createElement('div');
     left.appendChild(budgetContainer);
     this.budgetLimitPanel = new CollapsiblePanel(budgetContainer, {
-      title: LanguageService.t('budget.budgetLimit') || 'Budget Limit',
+      title: LanguageService.t('budget.budgetLimit'),
       storageKey: 'v3_budget_limit_panel',
       defaultOpen: true,
       icon: ICON_COINS,
@@ -511,7 +511,7 @@ export class BudgetTool extends BaseComponent {
     const distanceContainer = this.createElement('div');
     left.appendChild(distanceContainer);
     this.colorDistancePanel = new CollapsiblePanel(distanceContainer, {
-      title: LanguageService.t('budget.colorDistance') || 'Color Distance',
+      title: LanguageService.t('budget.colorDistance'),
       storageKey: 'v3_budget_distance_panel',
       defaultOpen: false,
       icon: ICON_DISTANCE,
@@ -525,7 +525,7 @@ export class BudgetTool extends BaseComponent {
     const sortContainer = this.createElement('div');
     left.appendChild(sortContainer);
     this.sortByPanel = new CollapsiblePanel(sortContainer, {
-      title: LanguageService.t('budget.sortBy') || 'Sort By',
+      title: LanguageService.t('budget.sortBy'),
       storageKey: 'v3_budget_sort_panel',
       defaultOpen: false,
       icon: ICON_SORT,
@@ -539,7 +539,7 @@ export class BudgetTool extends BaseComponent {
     const filtersContainer = this.createElement('div');
     left.appendChild(filtersContainer);
     this.filtersPanel = new CollapsiblePanel(filtersContainer, {
-      title: LanguageService.t('filters.title') || 'Dye Filters',
+      title: LanguageService.t('filters.title'),
       storageKey: 'v3_budget_filters',
       defaultOpen: false,
       icon: ICON_FILTER,
@@ -562,7 +562,7 @@ export class BudgetTool extends BaseComponent {
     const colorFormatsContainer = this.createElement('div');
     left.appendChild(colorFormatsContainer);
     this.colorFormatsPanel = new CollapsiblePanel(colorFormatsContainer, {
-      title: LanguageService.t('common.colorFormats') || 'Color Formats',
+      title: LanguageService.t('config.colorFormats'),
       storageKey: 'v3_budget_color_formats',
       defaultOpen: false,
       icon: ICON_EYE,
@@ -577,7 +577,7 @@ export class BudgetTool extends BaseComponent {
     const marketContainer = this.createElement('div');
     left.appendChild(marketContainer);
     this.marketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'v3_budget_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -620,10 +620,10 @@ export class BudgetTool extends BaseComponent {
    */
   private renderColorFormatsOptions(container: HTMLElement): void {
     const options = [
-      { key: 'showHex' as const, label: LanguageService.t('common.hexCodes') || 'Hex Codes' },
-      { key: 'showRgb' as const, label: LanguageService.t('common.rgbValues') || 'RGB Values' },
-      { key: 'showHsv' as const, label: LanguageService.t('common.hsvValues') || 'HSV Values' },
-      { key: 'showLab' as const, label: LanguageService.t('common.labValues') || 'LAB Values' },
+      { key: 'showHex' as const, label: LanguageService.t('config.hexCodes') },
+      { key: 'showRgb' as const, label: LanguageService.t('config.rgbValues') },
+      { key: 'showHsv' as const, label: LanguageService.t('config.hsvValues') },
+      { key: 'showLab' as const, label: LanguageService.t('config.labValues') },
     ];
 
     for (const option of options) {
@@ -716,7 +716,7 @@ export class BudgetTool extends BaseComponent {
       // Empty state
       const placeholder = this.createElement('div', {
         className: 'p-4 rounded-lg border-2 border-dashed text-center',
-        textContent: LanguageService.t('budget.selectTargetDye') || 'Select a target dye',
+        textContent: LanguageService.t('budget.selectTargetDye'),
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -760,7 +760,7 @@ export class BudgetTool extends BaseComponent {
       textContent:
         this.targetPrice > 0
           ? `~${this.targetPrice.toLocaleString()} gil`
-          : LanguageService.t('budget.loadingPrice') || 'Loading price...',
+          : LanguageService.t('budget.loadingPrice'),
       attributes: { style: `color: ${textColor} !important; text-shadow: ${textShadow};` },
     });
 
@@ -856,7 +856,7 @@ export class BudgetTool extends BaseComponent {
 
     const labelSpan = this.createElement('span', {
       className: 'text-sm',
-      textContent: LanguageService.t('budget.maxPrice') || 'Max Price',
+      textContent: LanguageService.t('budget.maxPrice'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
 
@@ -923,7 +923,7 @@ export class BudgetTool extends BaseComponent {
 
     const resultLimitLabel = this.createElement('span', {
       className: 'text-sm',
-      textContent: LanguageService.t('budget.maxResults') || 'Max Results',
+      textContent: LanguageService.t('budget.maxResults'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
 
@@ -988,7 +988,7 @@ export class BudgetTool extends BaseComponent {
 
     const labelSpan = this.createElement('span', {
       className: 'text-sm',
-      textContent: LanguageService.t('budget.maxDistance') || 'Max Delta-E',
+      textContent: LanguageService.t('budget.maxDistance'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
 
@@ -1059,18 +1059,18 @@ export class BudgetTool extends BaseComponent {
     const options = [
       {
         id: 'match',
-        label: LanguageService.t('budget.sortMatch') || 'Best Match',
-        desc: LanguageService.t('budget.sortMatchDesc') || 'Closest color first',
+        label: LanguageService.t('budget.sortMatch'),
+        desc: LanguageService.t('budget.sortMatchDesc'),
       },
       {
         id: 'price',
-        label: LanguageService.t('budget.sortPrice') || 'Lowest Price',
-        desc: LanguageService.t('budget.sortPriceDesc') || 'Cheapest first',
+        label: LanguageService.t('budget.sortPrice'),
+        desc: LanguageService.t('budget.sortPriceDesc'),
       },
       {
         id: 'value',
-        label: LanguageService.t('budget.sortValue') || 'Best Value',
-        desc: LanguageService.t('budget.sortValueDesc') || 'Balance of match + price',
+        label: LanguageService.t('budget.sortValue'),
+        desc: LanguageService.t('budget.sortValueDesc'),
       },
     ];
 
@@ -1218,7 +1218,7 @@ export class BudgetTool extends BaseComponent {
 
     empty.innerHTML = `
       <span style="display: block; width: 150px; height: 150px; margin: 0 auto 1.5rem; opacity: 0.25; color: var(--theme-text);">${ICON_TOOL_BUDGET}</span>
-      <p style="color: var(--theme-text); font-size: 1.125rem; text-align: center;">${LanguageService.t('budget.selectTargetToStart') || 'Select a target dye to find affordable alternatives'}</p>
+      <p style="color: var(--theme-text); font-size: 1.125rem; text-align: center;">${LanguageService.t('budget.selectTargetToStart')}</p>
     `;
 
     this.emptyStateContainer.appendChild(empty);
@@ -1258,7 +1258,7 @@ export class BudgetTool extends BaseComponent {
     });
     const sectionTitle = this.createElement('span', {
       className: 'section-title',
-      textContent: LanguageService.t('budget.selectedDye') || 'Selected Dye',
+      textContent: LanguageService.t('budget.selectedDye'),
     });
     sectionHeader.appendChild(sectionTitle);
     this.targetOverviewContainer.appendChild(sectionHeader);
@@ -1290,7 +1290,7 @@ export class BudgetTool extends BaseComponent {
     card.data = cardData;
     card.showActions = true;
     card.primaryActionLabel =
-      LanguageService.t('budget.currentlySelected') || 'Currently Selected';
+      LanguageService.t('budget.currentlySelected');
     card.showDeltaE = false; // Hide delta-E for target card (it's the reference)
 
     // Configure display options from global settings
@@ -1328,12 +1328,12 @@ export class BudgetTool extends BaseComponent {
 
     // Show "Showing X of Y" when results are limited, otherwise show total count
     const countLabel = isLimited
-      ? `${LanguageService.t('budget.showingXOfY') || 'Showing {showing} of {total}'}`
+      ? LanguageService.t('budget.showingXOfY')
           .replace('{showing}', String(displayCount))
           .replace('{total}', String(totalCount))
       : `${totalCount} ${totalCount === 1
-          ? (LanguageService.t('budget.alternativeWithinBudget') || 'Alternative Within Budget')
-          : (LanguageService.t('budget.alternativesWithinBudget') || 'Alternatives Within Budget')}`;
+          ? LanguageService.t('budget.alternativeWithinBudget')
+          : LanguageService.t('budget.alternativesWithinBudget')}`;
 
     // Section header (using consistent section-header/section-title pattern from other tools)
     const sectionHeader = this.createElement('div', {
@@ -1376,7 +1376,7 @@ export class BudgetTool extends BaseComponent {
         </svg>
         <div class="w-full max-w-xs">
           <div class="flex justify-between text-xs mb-1" style="color: var(--theme-text-muted);">
-            <span>${LanguageService.t('budget.fetchingPrices') || 'Fetching prices'}</span>
+            <span>${LanguageService.t('budget.fetchingPrices')}</span>
             <span class="number">${current} / ${total}</span>
           </div>
           <div class="w-full h-2 rounded-full overflow-hidden" style="background: var(--theme-background-secondary);">
@@ -1393,8 +1393,8 @@ export class BudgetTool extends BaseComponent {
         className: 'text-center py-8',
       });
       emptyState.innerHTML = `
-        <p class="text-lg font-medium mb-2" style="color: var(--theme-text);">${LanguageService.t('budget.noDyesWithinBudget') || 'No dyes within budget'}</p>
-        <p class="text-sm mb-4" style="color: var(--theme-text-muted);">${LanguageService.t('budget.tryIncreasingBudget') || 'Try increasing your budget limit'}</p>
+        <p class="text-lg font-medium mb-2" style="color: var(--theme-text);">${LanguageService.t('budget.noDyesWithinBudget')}</p>
+        <p class="text-sm mb-4" style="color: var(--theme-text-muted);">${LanguageService.t('budget.tryIncreasingBudget')}</p>
       `;
       this.alternativesListContainer.appendChild(emptyState);
       return;
@@ -1461,7 +1461,7 @@ export class BudgetTool extends BaseComponent {
       // Add savings badge below card (if savings > 0)
       if (alt.savings > 0) {
         const savingsBadge = this.createElement('div', {
-          textContent: `${LanguageService.t('budget.save') || 'Save'} ${alt.savings.toLocaleString()} gil`,
+          textContent: `${LanguageService.t('budget.save')} ${alt.savings.toLocaleString()} gil`,
           attributes: {
             style:
               'background: rgba(34, 197, 94, 0.15); color: #22C55E; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-align: center;',
@@ -1533,9 +1533,7 @@ export class BudgetTool extends BaseComponent {
       this.filterAndSortAlternatives();
     } catch (error) {
       logger.error('[BudgetTool] Error finding alternatives:', error);
-      ToastService.error(
-        LanguageService.t('budget.errorFindingAlternatives') || 'Error finding alternatives'
-      );
+      ToastService.error(LanguageService.t('budget.errorFindingAlternatives'));
       this.isLoading = false;
       this.renderAlternativesList(); // Show error state, not loading spinner
     } finally {
@@ -1620,7 +1618,7 @@ export class BudgetTool extends BaseComponent {
     const targetContainer = this.createElement('div');
     drawer.appendChild(targetContainer);
     this.mobileTargetDyePanel = new CollapsiblePanel(targetContainer, {
-      title: LanguageService.t('budget.targetDye') || 'Target Dye',
+      title: LanguageService.t('budget.targetDye'),
       storageKey: 'v3_budget_mobile_target_panel',
       defaultOpen: true,
       icon: ICON_TARGET,
@@ -1634,7 +1632,7 @@ export class BudgetTool extends BaseComponent {
     const quickContainer = this.createElement('div');
     drawer.appendChild(quickContainer);
     this.mobileQuickPicksPanel = new CollapsiblePanel(quickContainer, {
-      title: LanguageService.t('budget.quickPicks') || 'Quick Picks',
+      title: LanguageService.t('budget.quickPicks'),
       storageKey: 'v3_budget_mobile_quickpicks_panel',
       defaultOpen: true,
       icon: ICON_SPARKLES,
@@ -1648,7 +1646,7 @@ export class BudgetTool extends BaseComponent {
     const budgetContainer = this.createElement('div');
     drawer.appendChild(budgetContainer);
     this.mobileBudgetLimitPanel = new CollapsiblePanel(budgetContainer, {
-      title: LanguageService.t('budget.budgetLimit') || 'Budget Limit',
+      title: LanguageService.t('budget.budgetLimit'),
       storageKey: 'v3_budget_mobile_limit_panel',
       defaultOpen: true,
       icon: ICON_COINS,
@@ -1662,7 +1660,7 @@ export class BudgetTool extends BaseComponent {
     const distanceContainer = this.createElement('div');
     drawer.appendChild(distanceContainer);
     this.mobileColorDistancePanel = new CollapsiblePanel(distanceContainer, {
-      title: LanguageService.t('budget.colorDistance') || 'Color Distance',
+      title: LanguageService.t('budget.colorDistance'),
       storageKey: 'v3_budget_mobile_distance_panel',
       defaultOpen: false,
       icon: ICON_DISTANCE,
@@ -1676,7 +1674,7 @@ export class BudgetTool extends BaseComponent {
     const sortContainer = this.createElement('div');
     drawer.appendChild(sortContainer);
     this.mobileSortByPanel = new CollapsiblePanel(sortContainer, {
-      title: LanguageService.t('budget.sortBy') || 'Sort By',
+      title: LanguageService.t('budget.sortBy'),
       storageKey: 'v3_budget_mobile_sort_panel',
       defaultOpen: false,
       icon: ICON_SORT,
@@ -1690,7 +1688,7 @@ export class BudgetTool extends BaseComponent {
     const filtersContainer = this.createElement('div');
     drawer.appendChild(filtersContainer);
     this.mobileFiltersPanel = new CollapsiblePanel(filtersContainer, {
-      title: LanguageService.t('filters.title') || 'Dye Filters',
+      title: LanguageService.t('filters.title'),
       storageKey: 'v3_budget_mobile_filters',
       defaultOpen: false,
       icon: ICON_FILTER,
@@ -1713,7 +1711,7 @@ export class BudgetTool extends BaseComponent {
     const colorFormatsContainer = this.createElement('div');
     drawer.appendChild(colorFormatsContainer);
     this.mobileColorFormatsPanel = new CollapsiblePanel(colorFormatsContainer, {
-      title: LanguageService.t('common.colorFormats') || 'Color Formats',
+      title: LanguageService.t('config.colorFormats'),
       storageKey: 'v3_budget_mobile_color_formats',
       defaultOpen: false,
       icon: ICON_EYE,
@@ -1728,7 +1726,7 @@ export class BudgetTool extends BaseComponent {
     const marketContainer = this.createElement('div');
     drawer.appendChild(marketContainer);
     this.mobileMarketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      title: LanguageService.t('marketBoard.title'),
       storageKey: 'v3_budget_mobile_market',
       defaultOpen: false,
       icon: ICON_MARKET,
@@ -1805,7 +1803,7 @@ export class BudgetTool extends BaseComponent {
     if (!this.targetDye) {
       const placeholder = this.createElement('div', {
         className: 'p-4 rounded-lg border-2 border-dashed text-center',
-        textContent: LanguageService.t('budget.selectTargetDye') || 'Select a target dye',
+        textContent: LanguageService.t('budget.selectTargetDye'),
         attributes: {
           style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
         },
@@ -1846,7 +1844,7 @@ export class BudgetTool extends BaseComponent {
       textContent:
         this.targetPrice > 0
           ? `~${this.targetPrice.toLocaleString()} gil`
-          : LanguageService.t('budget.loadingPrice') || 'Loading price...',
+          : LanguageService.t('budget.loadingPrice'),
       attributes: { style: `color: ${textColor} !important; text-shadow: ${textShadow};` },
     });
 
@@ -1942,7 +1940,7 @@ export class BudgetTool extends BaseComponent {
 
     const labelSpan = this.createElement('span', {
       className: 'text-sm',
-      textContent: LanguageService.t('budget.maxPrice') || 'Max Price',
+      textContent: LanguageService.t('budget.maxPrice'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
 
@@ -2009,7 +2007,7 @@ export class BudgetTool extends BaseComponent {
 
     const resultLimitLabel = this.createElement('span', {
       className: 'text-sm',
-      textContent: LanguageService.t('budget.maxResults') || 'Max Results',
+      textContent: LanguageService.t('budget.maxResults'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
 
@@ -2075,7 +2073,7 @@ export class BudgetTool extends BaseComponent {
 
     const labelSpan = this.createElement('span', {
       className: 'text-sm',
-      textContent: LanguageService.t('budget.maxDistance') || 'Max Delta-E',
+      textContent: LanguageService.t('budget.maxDistance'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
 
@@ -2145,18 +2143,18 @@ export class BudgetTool extends BaseComponent {
     const options = [
       {
         id: 'match',
-        label: LanguageService.t('budget.sortMatch') || 'Best Match',
-        desc: LanguageService.t('budget.sortMatchDesc') || 'Closest color first',
+        label: LanguageService.t('budget.sortMatch'),
+        desc: LanguageService.t('budget.sortMatchDesc'),
       },
       {
         id: 'price',
-        label: LanguageService.t('budget.sortPrice') || 'Lowest Price',
-        desc: LanguageService.t('budget.sortPriceDesc') || 'Cheapest first',
+        label: LanguageService.t('budget.sortPrice'),
+        desc: LanguageService.t('budget.sortPriceDesc'),
       },
       {
         id: 'value',
-        label: LanguageService.t('budget.sortValue') || 'Best Value',
-        desc: LanguageService.t('budget.sortValueDesc') || 'Balance of match + price',
+        label: LanguageService.t('budget.sortValue'),
+        desc: LanguageService.t('budget.sortValueDesc'),
       },
     ];
 
@@ -2267,7 +2265,7 @@ export class BudgetTool extends BaseComponent {
         break;
       case 'copy-hex':
         navigator.clipboard.writeText(dye.hex);
-        ToastService.success(LanguageService.t('common.copiedToClipboard') || 'Copied!');
+        ToastService.success(LanguageService.t('common.copiedToClipboard'));
         break;
     }
   }

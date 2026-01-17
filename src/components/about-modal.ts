@@ -62,7 +62,7 @@ export class AboutModal {
 
     this.modalId = ModalService.show({
       type: 'custom',
-      title: LanguageService.t('about.title') || `About ${APP_NAME}`,
+      title: LanguageService.t('about.title'),
       content,
       size: 'md',
       closable: true,
@@ -145,7 +145,7 @@ export class AboutModal {
     const socialTitle = document.createElement('h3');
     socialTitle.className = 'text-sm font-semibold mb-3 text-center';
     socialTitle.style.color = 'var(--theme-text)';
-    socialTitle.textContent = LanguageService.t('about.connect') || 'Connect';
+    socialTitle.textContent = LanguageService.t('about.connect');
     socialSection.appendChild(socialTitle);
 
     const socialGrid = document.createElement('div');
@@ -224,7 +224,7 @@ export class AboutModal {
     closeBtn.addEventListener('mouseleave', () => {
       closeBtn.style.filter = '';
     });
-    closeBtn.textContent = LanguageService.t('common.close') || 'Close';
+    closeBtn.textContent = LanguageService.t('common.close');
     closeBtn.addEventListener('click', () => {
       this.close();
     });
