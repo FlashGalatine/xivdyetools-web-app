@@ -35,7 +35,7 @@ export class LanguageModal {
 
     this.modalId = ModalService.show({
       type: 'custom',
-      title: LanguageService.t('header.languageSelector') || 'Select Language',
+      title: LanguageService.t('header.languageSelector'),
       content,
       size: 'sm',
       closable: true,
@@ -116,10 +116,7 @@ export class LanguageModal {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-2 gap-3';
     grid.setAttribute('role', 'listbox');
-    grid.setAttribute(
-      'aria-label',
-      LanguageService.t('header.languageOptions') || 'Available languages'
-    );
+    grid.setAttribute('aria-label', LanguageService.t('header.languageOptions'));
 
     for (const locale of LOCALE_DISPLAY_INFO) {
       const isSelected = locale.code === this.currentLocale;
@@ -209,7 +206,7 @@ export class LanguageModal {
     closeBtn.addEventListener('mouseleave', () => {
       closeBtn.style.filter = '';
     });
-    closeBtn.textContent = LanguageService.t('common.close') || 'Close';
+    closeBtn.textContent = LanguageService.t('common.close');
     closeBtn.addEventListener('click', () => {
       this.close();
     });

@@ -485,7 +485,7 @@ export class DyeSelector extends BaseComponent {
     // Title with count
     const title = this.createElement('span', {
       id: 'favorites-title',
-      textContent: `${LanguageService.t('collections.favorites') || 'Favorites'} (${this.favoriteDyes.length})`,
+      textContent: `${LanguageService.t('collections.favorites')} (${this.favoriteDyes.length})`,
       className: 'font-medium text-gray-900 dark:text-white',
     });
     headerLeft.appendChild(title);
@@ -501,7 +501,7 @@ export class DyeSelector extends BaseComponent {
       id: 'manage-collections-btn',
       className:
         'text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors',
-      textContent: LanguageService.t('collections.manageCollections') || 'Manage Collections',
+      textContent: LanguageService.t('collections.manageCollections'),
       attributes: { type: 'button' },
     });
     manageBtn.addEventListener('click', (e) => {
@@ -535,8 +535,7 @@ export class DyeSelector extends BaseComponent {
       });
       const emptyText = this.createElement('p', {
         textContent:
-          LanguageService.t('collections.favoritesEmptyHint') ||
-          'Click the ★ on any dye to add it to your favorites',
+          LanguageService.t('collections.favoritesEmptyHint'),
         className: 'text-sm',
       });
       emptyState.appendChild(emptyText);
@@ -612,7 +611,7 @@ export class DyeSelector extends BaseComponent {
     // Update title count
     const title = panel.querySelector('#favorites-title');
     if (title) {
-      title.textContent = `${LanguageService.t('collections.favorites') || 'Favorites'} (${this.favoriteDyes.length})`;
+      title.textContent = `${LanguageService.t('collections.favorites')} (${this.favoriteDyes.length})`;
     }
 
     // Update content
@@ -626,9 +625,7 @@ export class DyeSelector extends BaseComponent {
           className: 'text-center py-4 text-gray-500 dark:text-gray-400',
         });
         const emptyText = this.createElement('p', {
-          textContent:
-            LanguageService.t('collections.favoritesEmptyHint') ||
-            'Click the ★ on any dye to add it to your favorites',
+          textContent: LanguageService.t('collections.favoritesEmptyHint'),
           className: 'text-sm',
         });
         emptyState.appendChild(emptyText);

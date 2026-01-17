@@ -918,8 +918,7 @@ export class SwatchTool extends BaseComponent {
 
     const emptyText = this.createElement('span', {
       textContent:
-        LanguageService.t('tools.character.noColorSelected') ||
-        'Select a color from the grid to find matching dyes',
+        LanguageService.t('tools.character.noColorSelected'),
       attributes: {
         style: `
           color: var(--theme-text-muted, #888888);

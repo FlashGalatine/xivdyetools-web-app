@@ -66,10 +66,10 @@ export class ColorWheelDisplay extends BaseComponent {
     svg.setAttribute('height', String(this.wheelSize));
     svg.setAttribute('role', 'img');
     // Provide meaningful description for screen readers
-    const harmonyLabel = LanguageService.t(`harmony.${this.harmonyType}`) || this.harmonyType;
+    const harmonyLabel = LanguageService.t(`harmony.${this.harmonyType}`);
     svg.setAttribute(
       'aria-label',
-      `${LanguageService.t('harmony.colorWheel') || 'Color harmony wheel'}: ${harmonyLabel} (${this.harmonyDyes.length} ${LanguageService.t('harmony.colors') || 'colors'})`
+      `${LanguageService.t('harmony.colorWheel')}: ${harmonyLabel} (${this.harmonyDyes.length} ${LanguageService.t('harmony.colors')})`
     );
     svg.classList.add('color-wheel');
 

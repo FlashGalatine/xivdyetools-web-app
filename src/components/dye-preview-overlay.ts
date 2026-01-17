@@ -186,7 +186,7 @@ export class DyePreviewOverlay extends BaseComponent {
     header.appendChild(iconSvg);
     const headerText = document.createElement('span');
     headerText.className = 'text-xs font-medium text-gray-600 dark:text-gray-300';
-    headerText.textContent = LanguageService.t('matcher.samplePreview') || 'Sample Point Preview';
+    headerText.textContent = LanguageService.t('matcher.samplePreview');
     header.appendChild(headerText);
     container.appendChild(header);
 
@@ -203,7 +203,7 @@ export class DyePreviewOverlay extends BaseComponent {
     sampledColorBox.style.backgroundColor = config.sampledColor;
     const sampledLabel = document.createElement('div');
     sampledLabel.className = 'text-xs text-gray-500 dark:text-gray-400 mt-1';
-    sampledLabel.textContent = LanguageService.t('matcher.sampled') || 'Sampled';
+    sampledLabel.textContent = LanguageService.t('matcher.sampled');
     sampledSwatch.appendChild(sampledColorBox);
     sampledSwatch.appendChild(sampledLabel);
 

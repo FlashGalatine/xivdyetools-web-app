@@ -286,8 +286,8 @@ export class TutorialSpotlight extends BaseComponent {
   private updateTooltipContent(step: TutorialStep, stepIndex: number, totalSteps: number): void {
     if (!this.tooltip) return;
 
-    const title = LanguageService.t(step.titleKey) || step.id;
-    const description = LanguageService.t(step.descriptionKey) || '';
+    const title = LanguageService.t(step.titleKey);
+    const description = LanguageService.t(step.descriptionKey);
 
     this.tooltip.innerHTML = '';
 
@@ -300,7 +300,7 @@ export class TutorialSpotlight extends BaseComponent {
       color: var(--theme-text-muted);
       margin-bottom: 8px;
     `;
-    stepIndicator.textContent = `${LanguageService.t('tutorial.step') || 'Step'} ${stepIndex + 1} ${LanguageService.t('tutorial.of') || 'of'} ${totalSteps}`;
+    stepIndicator.textContent = `${LanguageService.t('tutorial.step')} ${stepIndex + 1} ${LanguageService.t('tutorial.of')} ${totalSteps}`;
     this.tooltip.appendChild(stepIndicator);
 
     // Title
@@ -340,7 +340,7 @@ export class TutorialSpotlight extends BaseComponent {
 
     // Skip button
     const skipBtn = this.createElement('button', {
-      textContent: LanguageService.t('tutorial.skip') || 'Skip',
+      textContent: LanguageService.t('tutorial.skip'),
     });
     skipBtn.style.cssText = `
       padding: 8px 16px;
@@ -368,7 +368,7 @@ export class TutorialSpotlight extends BaseComponent {
     // Previous button (if not first step)
     if (stepIndex > 0) {
       const prevBtn = this.createElement('button', {
-        textContent: LanguageService.t('tutorial.previous') || 'Previous',
+        textContent: LanguageService.t('tutorial.previous'),
       });
       prevBtn.style.cssText = `
         padding: 8px 16px;
@@ -394,8 +394,8 @@ export class TutorialSpotlight extends BaseComponent {
     const nextBtn = this.createElement('button', {
       textContent:
         stepIndex === totalSteps - 1
-          ? LanguageService.t('tutorial.finish') || 'Finish'
-          : LanguageService.t('tutorial.next') || 'Next',
+          ? LanguageService.t('tutorial.finish')
+          : LanguageService.t('tutorial.next'),
     });
     nextBtn.style.cssText = `
       padding: 8px 16px;

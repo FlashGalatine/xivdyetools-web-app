@@ -203,7 +203,7 @@ export class HarmonyResultPanel extends BaseComponent {
 
     const labelEl = this.createElement('span', {
       className: 'text-xs',
-      textContent: LanguageService.t('harmony.fromIdeal') || 'from ideal',
+      textContent: LanguageService.t('harmony.fromIdeal'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
 
@@ -242,7 +242,7 @@ export class HarmonyResultPanel extends BaseComponent {
 
     const label = this.createElement('p', {
       className: 'text-xs',
-      textContent: LanguageService.t('harmony.closestDyes') || 'Closest dyes:',
+      textContent: LanguageService.t('harmony.closestDyes'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     section.appendChild(label);

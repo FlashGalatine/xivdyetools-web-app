@@ -578,16 +578,14 @@ export class PresetTool extends BaseLitComponent {
     }
 
     // Show confirmation modal
-    const confirmMessage =
-      LanguageService.t('preset.confirmDelete') ||
-      'Are you sure you want to delete this preset? This action cannot be undone.';
+    const confirmMessage = LanguageService.t('preset.confirmDelete');
 
     // Use ModalService for a custom confirmation dialog
     ModalService.showConfirm({
-      title: LanguageService.t('preset.deleteTitle') || 'Delete Preset',
+      title: LanguageService.t('preset.deleteTitle'),
       content: confirmMessage,
-      confirmText: LanguageService.t('common.delete') || 'Delete',
-      cancelText: LanguageService.t('common.cancel') || 'Cancel',
+      confirmText: LanguageService.t('common.delete'),
+      cancelText: LanguageService.t('common.cancel'),
       onConfirm: async () => {
         try {
           ToastService.info('Deleting preset...');

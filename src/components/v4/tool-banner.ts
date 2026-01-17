@@ -306,7 +306,7 @@ export class ToolBanner extends BaseLitComponent {
       <nav
         class="v4-tool-banner"
         role="navigation"
-        aria-label="${LanguageService.t('aria.toolSelection') || 'Tool selection'}"
+        aria-label="${LanguageService.t('aria.toolSelection')}"
         @keydown=${this.handleKeyDown}
       >
         ${TOOL_DEFINITIONS.map((tool) => this.renderToolButton(tool))}

@@ -133,7 +133,7 @@ export class ImageZoomController extends BaseComponent {
       className: 'zoom-btn',
       innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z" /></svg>`,
       attributes: {
-        title: LanguageService.t('matcher.zoomFit') || 'Fit to Screen',
+        title: LanguageService.t('matcher.zoomFit'),
         type: 'button',
         style: btnStyle,
       },
@@ -145,7 +145,7 @@ export class ImageZoomController extends BaseComponent {
       className: 'zoom-btn',
       innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M21 4H3v16h18V4zm-2 14H5V6h14v12z" /><path d="M12 7l-3 3h2v4H9l3 3 3-3h-2V10h2l-3-3z" /></svg>`,
       attributes: {
-        title: LanguageService.t('matcher.zoomWidth') || 'Fit Width',
+        title: LanguageService.t('matcher.zoomWidth'),
         type: 'button',
         style: btnStyle,
       },
@@ -212,7 +212,7 @@ export class ImageZoomController extends BaseComponent {
       className: 'zoom-btn',
       innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-8 3.58-8 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" /></svg>`,
       attributes: {
-        title: LanguageService.t('matcher.zoomReset') || 'Reset Zoom',
+        title: LanguageService.t('matcher.zoomReset'),
         type: 'button',
         style: btnStyle,
       },
@@ -230,7 +230,7 @@ export class ImageZoomController extends BaseComponent {
       className: 'zoom-btn',
       innerHTML: `<svg viewBox="0 0 24 24" style="${svgStyle}"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>`,
       attributes: {
-        title: LanguageService.t('matcher.clearImage') || 'Clear Image',
+        title: LanguageService.t('matcher.clearImage'),
         type: 'button',
         style: btnStyle,
       },

@@ -506,7 +506,7 @@ export class AccessibilityTool extends BaseComponent {
 
     // Section 1: Dye Selection (Collapsible with beaker icon)
     this.dyePanel = new CollapsiblePanel(left, {
-      title: LanguageService.t('accessibility.inspectDyes') || 'Inspect Dyes',
+      title: LanguageService.t('accessibility.inspectDyes'),
       storageKey: 'accessibility_dyes',
       defaultOpen: true,
       icon: ICON_BEAKER,
@@ -519,7 +519,7 @@ export class AccessibilityTool extends BaseComponent {
 
     // Section 2: Vision Types (Collapsible with eye icon)
     this.visionPanel = new CollapsiblePanel(left, {
-      title: LanguageService.t('accessibility.visionTypes') || 'Vision Types',
+      title: LanguageService.t('accessibility.visionTypes'),
       storageKey: 'accessibility_vision',
       defaultOpen: true,
       icon: ICON_EYE,
@@ -532,7 +532,7 @@ export class AccessibilityTool extends BaseComponent {
 
     // Section 3: Display Options (Collapsible with sliders icon, default closed)
     this.displayPanel = new CollapsiblePanel(left, {
-      title: LanguageService.t('accessibility.displayOptions') || 'Display Options',
+      title: LanguageService.t('accessibility.displayOptions'),
       storageKey: 'accessibility_display',
       defaultOpen: false,
       icon: ICON_SLIDERS,
@@ -681,7 +681,7 @@ export class AccessibilityTool extends BaseComponent {
 
       const removeBtn = this.createElement('button', {
         className: 'text-xs px-2 py-1 rounded transition-colors',
-        textContent: LanguageService.t('common.remove') || 'Remove',
+        textContent: LanguageService.t('common.remove'),
         attributes: {
           style: 'background: var(--theme-card-hover); color: var(--theme-text-muted);',
         },
@@ -771,14 +771,14 @@ export class AccessibilityTool extends BaseComponent {
     this.displayOptionsContainer = this.createElement('div', { className: 'space-y-2' });
 
     const options = [
-      { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') || 'Show Labels' },
+      { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') },
       {
         key: 'showHexValues',
-        label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values',
+        label: LanguageService.t('accessibility.showHexValues'),
       },
       {
         key: 'highContrastMode',
-        label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode',
+        label: LanguageService.t('accessibility.highContrastMode'),
       },
     ] as const;
 
@@ -857,7 +857,7 @@ export class AccessibilityTool extends BaseComponent {
       attributes: { style: 'display: none;' },
     });
     this.selectedDyesSection.appendChild(
-      this.createHeader(LanguageService.t('accessibility.selectedDyes') || 'Selected Dyes')
+      this.createHeader(LanguageService.t('accessibility.selectedDyes'))
     );
     // Horizontal flex layout for cards, centered
     this.selectedDyesContainer = this.createElement('div', {
@@ -880,7 +880,7 @@ export class AccessibilityTool extends BaseComponent {
       attributes: { style: 'display: none;' },
     });
     this.visionSimSection.appendChild(
-      this.createHeader(LanguageService.t('accessibility.visionSimulation') || 'Vision Simulations')
+      this.createHeader(LanguageService.t('accessibility.visionSimulation'))
     );
     this.visionSimulationsContainer = this.createElement('div', {
       className: 'grid gap-4 md:grid-cols-2 lg:grid-cols-3',
@@ -893,7 +893,7 @@ export class AccessibilityTool extends BaseComponent {
       attributes: { style: 'display: none;' },
     });
     this.contrastSection.appendChild(
-      this.createHeader(LanguageService.t('accessibility.contrastRatios') || 'Contrast Analysis')
+      this.createHeader(LanguageService.t('accessibility.contrastRatios'))
     );
     this.contrastTableContainer = this.createElement('div');
     this.contrastSection.appendChild(this.contrastTableContainer);
@@ -905,7 +905,7 @@ export class AccessibilityTool extends BaseComponent {
     });
     this.matrixSection.appendChild(
       this.createHeader(
-        LanguageService.t('accessibility.pairComparisons') || 'Pairwise Distinguishability'
+        LanguageService.t('accessibility.pairComparisons')
       )
     );
     this.matrixContainer = this.createElement('div');
@@ -1009,7 +1009,7 @@ export class AccessibilityTool extends BaseComponent {
 
       // "Add Dye" text
       const text = this.createElement('span', {
-        textContent: LanguageService.t('accessibility.addDye') || 'Add Dye',
+        textContent: LanguageService.t('accessibility.addDye'),
         attributes: {
           style: `
             font-size: 0.85rem;
@@ -1066,7 +1066,7 @@ export class AccessibilityTool extends BaseComponent {
     // Message text
     const message = this.createElement('p', {
       textContent:
-        LanguageService.t('accessibility.selectDyesToSeeAnalysis') ||
+        LanguageService.t('accessibility.selectDyesToSeeAnalysis')
         'Select dyes to see accessibility analysis',
       attributes: {
         style: `
@@ -1123,7 +1123,7 @@ export class AccessibilityTool extends BaseComponent {
       card.showAcquisition = false; // Keep it simple, focus on colors
 
       // Set primary action to "Remove"
-      card.primaryActionLabel = LanguageService.t('common.remove') || 'Remove';
+      card.primaryActionLabel = LanguageService.t('common.remove');
 
       // Handle "Remove" button click
       card.addEventListener('card-select', ((e: CustomEvent<{ dye: Dye }>) => {
@@ -1386,7 +1386,7 @@ export class AccessibilityTool extends BaseComponent {
     // Dye column header
     const dyeHeader = this.createElement('th', {
       className: 'dye-column',
-      textContent: LanguageService.t('common.dye') || 'Dye',
+      textContent: LanguageService.t('common.dye'),
       attributes: {
         style: `
           text-align: left;
@@ -1407,7 +1407,7 @@ export class AccessibilityTool extends BaseComponent {
     // vs White header
     const whiteHeader = this.createElement('th', {
       className: 'contrast-column',
-      textContent: LanguageService.t('accessibility.vsWhite') || 'vs White',
+      textContent: LanguageService.t('accessibility.vsWhite'),
       attributes: {
         style: `
           text-align: left;
@@ -1428,7 +1428,7 @@ export class AccessibilityTool extends BaseComponent {
     // vs Black header
     const blackHeader = this.createElement('th', {
       className: 'contrast-column',
-      textContent: LanguageService.t('accessibility.vsBlack') || 'vs Black',
+      textContent: LanguageService.t('accessibility.vsBlack'),
       attributes: {
         style: `
           text-align: left;
@@ -1529,7 +1529,7 @@ export class AccessibilityTool extends BaseComponent {
       const notice = this.createElement('p', {
         className: 'text-sm text-center py-4',
         textContent:
-          LanguageService.t('accessibility.selectTwoDyes') ||
+          LanguageService.t('accessibility.selectTwoDyes')
           'Select at least 2 dyes to see comparisons',
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
@@ -1818,7 +1818,7 @@ export class AccessibilityTool extends BaseComponent {
    */
   private renderDrawerDyePanel(container: HTMLElement): void {
     this.drawerDyePanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('accessibility.inspectDyes') || 'Inspect Dyes',
+      title: LanguageService.t('accessibility.inspectDyes'),
       defaultOpen: true,
       storageKey: 'accessibility_dyes_drawer',
       icon: ICON_BEAKER,
@@ -1926,7 +1926,7 @@ export class AccessibilityTool extends BaseComponent {
 
       const removeBtn = this.createElement('button', {
         className: 'text-xs px-2 py-1 rounded transition-colors',
-        textContent: LanguageService.t('common.remove') || 'Remove',
+        textContent: LanguageService.t('common.remove'),
         attributes: {
           style: 'background: var(--theme-card-hover); color: var(--theme-text-muted);',
         },
@@ -1957,7 +1957,7 @@ export class AccessibilityTool extends BaseComponent {
    */
   private renderDrawerVisionPanel(container: HTMLElement): void {
     this.drawerVisionPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('accessibility.visionTypes') || 'Vision Types',
+      title: LanguageService.t('accessibility.visionTypes'),
       defaultOpen: true,
       storageKey: 'accessibility_vision_drawer',
       icon: ICON_EYE,
@@ -2035,7 +2035,7 @@ export class AccessibilityTool extends BaseComponent {
    */
   private renderDrawerDisplayPanel(container: HTMLElement): void {
     this.drawerDisplayPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('accessibility.displayOptions') || 'Display Options',
+      title: LanguageService.t('accessibility.displayOptions'),
       defaultOpen: false,
       storageKey: 'accessibility_display_drawer',
       icon: ICON_SLIDERS,
@@ -2055,14 +2055,14 @@ export class AccessibilityTool extends BaseComponent {
     const optionsContainer = this.createElement('div', { className: 'space-y-2' });
 
     const options = [
-      { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') || 'Show Labels' },
+      { key: 'showLabels', label: LanguageService.t('accessibility.showLabels') },
       {
         key: 'showHexValues',
-        label: LanguageService.t('accessibility.showHexValues') || 'Show Hex Values',
+        label: LanguageService.t('accessibility.showHexValues'),
       },
       {
         key: 'highContrastMode',
-        label: LanguageService.t('accessibility.highContrastMode') || 'High Contrast Mode',
+        label: LanguageService.t('accessibility.highContrastMode'),
       },
     ] as const;
 

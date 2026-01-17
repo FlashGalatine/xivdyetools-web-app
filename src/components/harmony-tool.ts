@@ -522,7 +522,7 @@ export class HarmonyTool extends BaseComponent {
    */
   private renderBaseDyePanel(container: HTMLElement): void {
     const panel = new CollapsiblePanel(container, {
-      title: LanguageService.t('harmony.baseDye') || 'Base Dye',
+      title: LanguageService.t('harmony.baseDye'),
       defaultOpen: true,
       storageKey: 'harmony_base_dye',
       icon: ICON_BEAKER,
@@ -540,7 +540,7 @@ export class HarmonyTool extends BaseComponent {
    */
   private renderHarmonyTypePanel(container: HTMLElement): void {
     const panel = new CollapsiblePanel(container, {
-      title: LanguageService.t('harmony.harmonyType') || 'Harmony Type',
+      title: LanguageService.t('harmony.harmonyType'),
       defaultOpen: true,
       storageKey: 'harmony_type',
       icon: ICON_MUSIC,
@@ -558,8 +558,7 @@ export class HarmonyTool extends BaseComponent {
       });
       const companionLabel = this.createElement('div', {
         className: 'text-sm mb-2',
-        textContent:
-          LanguageService.t('harmony.companionDyes') || 'Additional Dyes Per Harmony Color',
+        textContent: LanguageService.t('harmony.companionDyes'),
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       companionSection.appendChild(companionLabel);
@@ -979,10 +978,10 @@ export class HarmonyTool extends BaseComponent {
         ${ICON_TOOL_HARMONY}
       </div>
       <div style="font-size: 18px; font-weight: 500; color: var(--theme-text, #e0e0e0); margin-bottom: 12px;">
-        ${LanguageService.t('harmony.noColorSelected') || 'No Color Selected'}
+        ${LanguageService.t('harmony.noColorSelected')}
       </div>
       <div style="font-size: 14px; color: var(--theme-text-muted, #a0a0a0); max-width: 300px; line-height: 1.5;">
-        ${LanguageService.t('harmony.selectDyePrompt') || 'Select a base color from the Color Palette to explore harmonies and discover complementary dyes for your glamour.'}
+        ${LanguageService.t('harmony.selectDyePrompt')}
       </div>
     `;
 
@@ -1028,7 +1027,7 @@ export class HarmonyTool extends BaseComponent {
    */
   private renderDrawerBaseDyePanel(container: HTMLElement): void {
     const panel = new CollapsiblePanel(container, {
-      title: LanguageService.t('harmony.baseDye') || 'Base Dye',
+      title: LanguageService.t('harmony.baseDye'),
       defaultOpen: true,
       storageKey: 'harmony_base_dye_drawer',
       icon: ICON_BEAKER,
@@ -1149,7 +1148,7 @@ export class HarmonyTool extends BaseComponent {
    */
   private renderDrawerHarmonyTypePanel(container: HTMLElement): void {
     const panel = new CollapsiblePanel(container, {
-      title: LanguageService.t('harmony.harmonyType') || 'Harmony Type',
+      title: LanguageService.t('harmony.harmonyType'),
       defaultOpen: true,
       storageKey: 'harmony_type_drawer',
       icon: ICON_MUSIC,
@@ -1167,8 +1166,7 @@ export class HarmonyTool extends BaseComponent {
       });
       const companionLabel = this.createElement('div', {
         className: 'text-sm mb-2',
-        textContent:
-          LanguageService.t('harmony.companionDyes') || 'Additional Dyes Per Harmony Color',
+        textContent: LanguageService.t('harmony.companionDyes'),
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       companionSection.appendChild(companionLabel);
@@ -1409,7 +1407,7 @@ export class HarmonyTool extends BaseComponent {
 
     // Render Base panel (no closest dyes section)
     this.renderResultPanel({
-      label: LanguageService.t('harmony.base') || 'Base',
+      label: LanguageService.t('harmony.base'),
       matchedDye: this.selectedDye,
       targetColor: this.selectedDye.hex,
       deviance: 0,
@@ -1440,7 +1438,7 @@ export class HarmonyTool extends BaseComponent {
         .map((m) => m.dye);
 
       this.renderResultPanel({
-        label: `${LanguageService.t('harmony.harmony') || 'Harmony'} ${index + 1}`,
+        label: `${LanguageService.t('harmony.harmony')} ${index + 1}`,
         matchedDye: displayDye,
         targetColor,
         deviance,

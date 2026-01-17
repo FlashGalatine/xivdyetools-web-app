@@ -1006,8 +1006,7 @@ export class BudgetTool extends BaseComponent {
     const description = this.createElement('p', {
       className: 'text-xs mb-3',
       textContent:
-        LanguageService.t('budget.distanceDesc') ||
-        'Higher values show more alternatives, lower values show closer matches',
+        LanguageService.t('budget.distanceDesc'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     container.appendChild(description);
@@ -2090,8 +2089,7 @@ export class BudgetTool extends BaseComponent {
     const description = this.createElement('p', {
       className: 'text-xs mb-3',
       textContent:
-        LanguageService.t('budget.distanceDesc') ||
-        'Higher values show more alternatives, lower values show closer matches',
+        LanguageService.t('budget.distanceDesc'),
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     container.appendChild(description);

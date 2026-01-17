@@ -36,7 +36,7 @@ export class ThemeModal {
 
     this.modalId = ModalService.show({
       type: 'custom',
-      title: LanguageService.t('header.themeSelector') || 'Select Theme',
+      title: LanguageService.t('header.themeSelector'),
       content,
       size: 'md',
       closable: true,
@@ -136,14 +136,14 @@ export class ThemeModal {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-2 gap-3';
     grid.setAttribute('role', 'listbox');
-    grid.setAttribute('aria-label', LanguageService.t('header.themeOptions') || 'Available themes');
+    grid.setAttribute('aria-label', LanguageService.t('header.themeOptions'));
 
     for (const theme of themes) {
       const isSelected = theme.name === this.currentTheme;
       const localeKey = theme.name.replace(/-([a-z])/g, (_, letter: string) =>
         letter.toUpperCase()
       );
-      const displayName = LanguageService.t(`themes.${localeKey}`) || theme.name;
+      const displayName = LanguageService.t(`themes.${localeKey}`);
 
       // Calculate optimal text color for the theme's primary
       const textColor = ColorService.getOptimalTextColor(theme.palette.primary);
@@ -231,7 +231,7 @@ export class ThemeModal {
     closeBtn.addEventListener('mouseleave', () => {
       closeBtn.style.filter = '';
     });
-    closeBtn.textContent = LanguageService.t('common.close') || 'Close';
+    closeBtn.textContent = LanguageService.t('common.close');
     closeBtn.addEventListener('click', () => {
       this.close();
     });

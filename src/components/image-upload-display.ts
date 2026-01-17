@@ -115,13 +115,13 @@ export class ImageUploadDisplay extends BaseComponent {
 
     // Desktop webcam button (T7) - visible when camera detected, hidden on mobile
     const desktopCameraBtn = this.createElement('button', {
-      innerHTML: `<span class="inline-block w-5 h-5 mr-1" aria-hidden="true">${ICON_CAMERA}</span> ${LanguageService.t('camera.useWebcam') || 'Use Webcam'}`,
+      innerHTML: `<span class="inline-block w-5 h-5 mr-1" aria-hidden="true">${ICON_CAMERA}</span> ${LanguageService.t('camera.useWebcam')}`,
       className:
         'btn-theme-primary mt-3 px-4 py-2 rounded-lg transition-colors text-sm font-medium hidden md:inline-flex items-center',
       attributes: {
         type: 'button',
         id: 'desktop-camera-btn',
-        'aria-label': LanguageService.t('camera.useWebcam') || 'Use Webcam',
+        'aria-label': LanguageService.t('camera.useWebcam'),
       },
     });
 

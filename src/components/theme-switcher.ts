@@ -73,7 +73,7 @@ export class ThemeSwitcher extends BaseComponent {
       className: 'hidden absolute right-0 mt-2 border rounded-lg shadow-lg z-50 min-w-48',
       attributes: {
         role: 'listbox',
-        'aria-label': LanguageService.t('header.themeOptions') || 'Available themes',
+        'aria-label': LanguageService.t('header.themeOptions'),
         style: 'background-color: var(--theme-card-background); border-color: var(--theme-border);',
       },
     });

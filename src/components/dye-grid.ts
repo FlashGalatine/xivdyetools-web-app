@@ -67,7 +67,7 @@ export class DyeGrid extends BaseComponent {
       className: gridClasses,
       attributes: {
         role: 'grid',
-        'aria-label': LanguageService.t('dyeSelector.gridAriaLabel') || 'Dye color selection',
+        'aria-label': LanguageService.t('dyeSelector.gridAriaLabel'),
       },
     });
 
@@ -82,16 +82,14 @@ export class DyeGrid extends BaseComponent {
                   query: this.emptyState.query || '',
                 }) || `No dyes match "${this.emptyState.query}"`,
               description:
-                LanguageService.t('dyeSelector.noResultsHint') ||
-                'Try checking your spelling or search for a category like "purple".',
+                LanguageService.t('dyeSelector.noResultsHint'),
             })
           : getEmptyStateHTML({
               icon: ICON_PALETTE,
               title:
-                LanguageService.t('dyeSelector.noDyesInCategory') || 'No dyes in this category',
+                LanguageService.t('dyeSelector.noDyesInCategory'),
               description:
-                LanguageService.t('dyeSelector.tryCategoryHint') ||
-                'Try selecting a different category.',
+                LanguageService.t('dyeSelector.tryCategoryHint'),
             });
       wrapper.innerHTML = emptyHtml;
       wrapper.classList.remove(
@@ -147,7 +145,7 @@ export class DyeGrid extends BaseComponent {
               'collection-btn p-1.5 rounded-full transition-all duration-200 text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700',
             attributes: {
               'data-collection-dye-id': String(dye.id),
-              'aria-label': LanguageService.t('collections.addToCollection') || 'Add to collection',
+              'aria-label': LanguageService.t('collections.addToCollection'),
               type: 'button',
             },
           });
@@ -165,8 +163,8 @@ export class DyeGrid extends BaseComponent {
             attributes: {
               'data-favorite-dye-id': String(dye.id),
               'aria-label': isFavorite
-                ? LanguageService.t('collections.removeFromFavorites') || 'Remove from favorites'
-                : LanguageService.t('collections.addToFavorites') || 'Add to favorites',
+                ? LanguageService.t('collections.removeFromFavorites')
+                : LanguageService.t('collections.addToFavorites'),
               'aria-pressed': isFavorite ? 'true' : 'false',
               type: 'button',
             },
@@ -270,13 +268,13 @@ export class DyeGrid extends BaseComponent {
     if (wasFavorite) {
       CollectionService.removeFavorite(dyeId);
       ToastService.success(
-        LanguageService.t('collections.removedFromFavorites') || 'Removed from favorites'
+        LanguageService.t('collections.removedFromFavorites')
       );
     } else {
       const added = CollectionService.addFavorite(dyeId);
       if (added) {
         ToastService.success(
-          LanguageService.t('collections.addedToFavorites') || 'Added to favorites'
+          LanguageService.t('collections.addedToFavorites')
         );
       } else {
         // Likely at max favorites
@@ -355,8 +353,8 @@ export class DyeGrid extends BaseComponent {
       btn.setAttribute(
         'aria-label',
         isFavorite
-          ? LanguageService.t('collections.removeFromFavorites') || 'Remove from favorites'
-          : LanguageService.t('collections.addToFavorites') || 'Add to favorites'
+          ? LanguageService.t('collections.removeFromFavorites')
+          : LanguageService.t('collections.addToFavorites')
       );
 
       // Update icon

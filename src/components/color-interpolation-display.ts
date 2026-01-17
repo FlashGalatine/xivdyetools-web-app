@@ -258,8 +258,7 @@ export class ColorInterpolationDisplay extends BaseComponent {
     // Hint text
     const hint = this.createElement('p', {
       textContent:
-        LanguageService.t('mixer.clickStopHint') ||
-        'Click a stop marker to highlight the corresponding dye',
+        LanguageService.t('mixer.clickStopHint'),
       className: 'text-xs text-gray-500 dark:text-gray-400 italic',
     });
     container.appendChild(hint);

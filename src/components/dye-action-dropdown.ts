@@ -103,7 +103,7 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
     button.style.color = 'var(--theme-text-muted)';
     button.style.backgroundColor = '';
   });
-  button.setAttribute('aria-label', LanguageService.t('harmony.actions') || 'Actions');
+  button.setAttribute('aria-label', LanguageService.t('harmony.actions'));
   button.setAttribute('aria-haspopup', 'true');
   button.setAttribute('aria-expanded', 'false');
   button.setAttribute('aria-controls', menuId);
@@ -125,7 +125,7 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
   menu.style.borderStyle = 'solid';
   menu.style.borderColor = 'var(--theme-border)';
   menu.setAttribute('role', 'menu');
-  menu.setAttribute('aria-label', LanguageService.t('harmony.actionsMenu') || 'Dye actions menu');
+  menu.setAttribute('aria-label', LanguageService.t('harmony.actionsMenu'));
   // Use inert for better accessibility - prevents focus while hidden
   menu.setAttribute('inert', '');
 
@@ -194,7 +194,7 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
     menuItem.appendChild(iconSpan);
 
     const labelSpan = document.createElement('span');
-    labelSpan.textContent = LanguageService.t(labelKey) || defaultLabel;
+    labelSpan.textContent = LanguageService.t(labelKey);
     menuItem.appendChild(labelSpan);
 
     menuItem.addEventListener('click', (e: MouseEvent) => {
@@ -317,7 +317,7 @@ export function createDyeActionDropdown(dye: Dye, onAction?: DyeActionCallback):
 async function copyHexToClipboard(hex: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(hex);
-    ToastService.success(`${LanguageService.t('harmony.copiedHex') || 'Copied'}: ${hex}`);
+    ToastService.success(`${LanguageService.t('harmony.copiedHex')}: ${hex}`);
   } catch {
     // Fallback for older browsers
     const textArea = document.createElement('textarea');
@@ -328,9 +328,9 @@ async function copyHexToClipboard(hex: string): Promise<void> {
     textArea.select();
     try {
       document.execCommand('copy');
-      ToastService.success(`${LanguageService.t('harmony.copiedHex') || 'Copied'}: ${hex}`);
+      ToastService.success(`${LanguageService.t('harmony.copiedHex')}: ${hex}`);
     } catch {
-      ToastService.error(LanguageService.t('harmony.copyFailed') || 'Failed to copy');
+      ToastService.error(LanguageService.t('harmony.copyFailed'));
     } finally {
       document.body.removeChild(textArea);
     }
@@ -350,7 +350,7 @@ function addToComparison(dye: Dye): void {
   // Check if dye already exists
   if (currentDyes.includes(dye.id)) {
     ToastService.info(
-      LanguageService.t('harmony.dyeAlreadyInComparison') || 'Dye already in Comparison'
+      LanguageService.t('harmony.dyeAlreadyInComparison')
     );
     return;
   }
@@ -359,7 +359,7 @@ function addToComparison(dye: Dye): void {
   if (currentDyes.length < MAX_SLOTS.comparison) {
     currentDyes.push(dye.id);
     StorageService.setItem(STORAGE_KEYS.comparison, currentDyes);
-    ToastService.success(LanguageService.t('harmony.addedToComparison') || 'Added to Comparison');
+    ToastService.success(LanguageService.t('harmony.addedToComparison'));
     RouterService.navigateTo('comparison');
     return;
   }
@@ -376,7 +376,7 @@ function addToMixer(dye: Dye): void {
 
   // Check if dye already exists
   if (currentDyes.includes(dye.id)) {
-    ToastService.info(LanguageService.t('harmony.dyeAlreadyInMixer') || 'Dye already in Mixer');
+    ToastService.info(LanguageService.t('harmony.dyeAlreadyInMixer'));
     return;
   }
 
@@ -384,7 +384,7 @@ function addToMixer(dye: Dye): void {
   if (currentDyes.length < MAX_SLOTS.mixer) {
     currentDyes.push(dye.id);
     StorageService.setItem(STORAGE_KEYS.mixer, currentDyes);
-    ToastService.success(LanguageService.t('harmony.addedToMixer') || 'Added to Mixer');
+    ToastService.success(LanguageService.t('harmony.addedToMixer'));
     RouterService.navigateTo('mixer');
     return;
   }
@@ -402,8 +402,7 @@ function addToAccessibility(dye: Dye): void {
   // Check if dye already exists
   if (currentDyes.includes(dye.id)) {
     ToastService.info(
-      LanguageService.t('harmony.dyeAlreadyInAccessibility') ||
-        'Dye already in Accessibility Checker'
+      LanguageService.t('harmony.dyeAlreadyInAccessibility')
     );
     return;
   }
@@ -413,7 +412,7 @@ function addToAccessibility(dye: Dye): void {
     currentDyes.push(dye.id);
     StorageService.setItem(STORAGE_KEYS.accessibility, currentDyes);
     ToastService.success(
-      LanguageService.t('harmony.addedToAccessibility') || 'Added to Accessibility Checker'
+      LanguageService.t('harmony.addedToAccessibility')
     );
     RouterService.navigateTo('accessibility');
     return;
@@ -455,21 +454,21 @@ function showSlotSelectionModal(
   // Get localized tool name
   let toolName: string;
   if (tool === 'comparison') {
-    toolName = LanguageService.t('tools.comparison.shortName') || 'Comparison';
+    toolName = LanguageService.t('tools.comparison.shortName');
   } else if (tool === 'mixer') {
-    toolName = LanguageService.t('tools.mixer.shortName') || 'Mixer';
+    toolName = LanguageService.t('tools.mixer.shortName');
   } else {
-    toolName = LanguageService.t('tools.accessibility.shortName') || 'Accessibility';
+    toolName = LanguageService.t('tools.accessibility.shortName');
   }
 
   // Generate slot labels
   const slotLabels =
     tool === 'mixer'
       ? [
-          LanguageService.t('mixer.startDye') || 'Start Dye',
-          LanguageService.t('mixer.endDye') || 'End Dye',
+          LanguageService.t('mixer.startDye'),
+          LanguageService.t('mixer.endDye'),
         ]
-      : currentDyeIds.map((_, i) => `${LanguageService.t('common.slot') || 'Slot'} ${i + 1}`);
+      : currentDyeIds.map((_, i) => `${LanguageService.t('common.slot')} ${i + 1}`);
 
   // Build slot buttons HTML
   const slotsHtml = currentDyeIds
@@ -489,7 +488,7 @@ function showSlotSelectionModal(
           <p class="font-medium text-sm" style="color: var(--theme-text);">${slotLabels[index]}</p>
           <p class="text-xs" style="color: var(--theme-text-muted);">${dyeName}</p>
         </div>
-        <span class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('common.replace') || 'Replace'}</span>
+        <span class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('common.replace')}</span>
       </button>
     `;
     })
@@ -499,13 +498,13 @@ function showSlotSelectionModal(
 
   const content = `
     <p class="mb-4" style="color: var(--theme-text);">
-      ${LanguageService.t('harmony.slotsFull') || 'All slots are full. Select one to replace:'}
+      ${LanguageService.t('harmony.slotsFull')}
     </p>
     <div class="space-y-2">${slotsHtml}</div>
     <div class="mt-4 p-3 rounded-lg flex items-center gap-3" style="background: var(--theme-background-secondary);">
       <div class="w-8 h-8 rounded" style="background: ${newDye.hex}; border: 1px solid var(--theme-border);"></div>
       <div>
-        <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('harmony.addingDye') || 'Adding'}:</p>
+        <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('harmony.addingDye')}:</p>
         <p class="font-medium text-sm" style="color: var(--theme-text);">${newDyeName}</p>
       </div>
     </div>
@@ -513,12 +512,12 @@ function showSlotSelectionModal(
 
   const modalId = ModalService.show({
     type: 'custom',
-    title: LanguageService.t('harmony.selectSlotToReplace') || `Select Slot to Replace`,
+    title: LanguageService.t('harmony.selectSlotToReplace'),
     content: content,
     size: 'sm',
     closable: true,
     closeOnBackdrop: true,
-    cancelText: LanguageService.t('common.cancel') || 'Cancel',
+    cancelText: LanguageService.t('common.cancel'),
   });
 
   // Attach click handlers after modal renders
@@ -535,7 +534,7 @@ function showSlotSelectionModal(
 
         ModalService.dismiss(modalId);
         ToastService.success(
-          LanguageService.t('harmony.replacedInTool') || `Replaced in ${toolName}`
+          LanguageService.t('harmony.replacedInTool')
         );
         RouterService.navigateTo(tool);
       });

@@ -105,7 +105,7 @@ export class OfflineBanner {
     const message = document.createElement('span');
     message.id = 'offline-banner-message';
     message.textContent =
-      LanguageService.t('offline.banner') || 'You are offline. Some features may be limited.';
+      LanguageService.t('offline.banner');
     this.banner.appendChild(message);
 
     // Dismiss button
@@ -113,7 +113,7 @@ export class OfflineBanner {
     dismissBtn.className =
       'ml-4 px-2 py-1 bg-amber-600 hover:bg-amber-700 rounded text-xs font-bold transition-colors';
     dismissBtn.textContent = '✕';
-    dismissBtn.setAttribute('aria-label', LanguageService.t('common.dismiss') || 'Dismiss');
+    dismissBtn.setAttribute('aria-label', LanguageService.t('common.dismiss'));
     dismissBtn.addEventListener('click', () => {
       this.hideBanner();
     });
@@ -188,7 +188,7 @@ export class OfflineBanner {
     const message = this.banner?.querySelector('#offline-banner-message');
     if (message) {
       message.textContent =
-        LanguageService.t('offline.banner') || 'You are offline. Some features may be limited.';
+        LanguageService.t('offline.banner');
     }
   }
 

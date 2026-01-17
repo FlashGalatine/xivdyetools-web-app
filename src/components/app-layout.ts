@@ -299,7 +299,7 @@ export class AppLayout extends BaseComponent {
     // Update info button aria-label
     const infoButton = this.querySelector<HTMLButtonElement>('#info-button');
     if (infoButton) {
-      const ariaLabel = LanguageService.t('header.about') || 'About XIV Dye Tools';
+      const ariaLabel = LanguageService.t('header.about');
       infoButton.setAttribute('aria-label', ariaLabel);
       infoButton.title = ariaLabel;
     }
@@ -342,7 +342,7 @@ export class AppLayout extends BaseComponent {
    */
   private createInfoButton(container: HTMLElement): void {
     const isLightText = this.isCurrentThemeLightText();
-    const ariaLabel = LanguageService.t('header.about') || 'About XIV Dye Tools';
+    const ariaLabel = LanguageService.t('header.about');
 
     const button = this.createElement('button', {
       id: 'info-button',

@@ -134,7 +134,7 @@ export class WelcomeModal {
     const content = this.createContent();
 
     this.modalId = ModalService.showWelcome({
-      title: LanguageService.t('welcome.title') || `Welcome to ${APP_NAME}`,
+      title: LanguageService.t('welcome.title'),
       content,
       size: 'lg',
       closable: true,
@@ -170,9 +170,7 @@ export class WelcomeModal {
     const intro = document.createElement('p');
     intro.className = 'mb-6';
     intro.style.color = 'var(--theme-text-muted)';
-    intro.textContent =
-      LanguageService.t('welcome.intro') ||
-      'Find the perfect dyes for your FFXIV glamours! Explore our tools below:';
+    intro.textContent = LanguageService.t('welcome.intro');
     container.appendChild(intro);
 
     // Tools grid
@@ -208,7 +206,7 @@ export class WelcomeModal {
     label.htmlFor = 'welcome-dont-show';
     label.className = 'text-sm cursor-pointer';
     label.style.color = 'var(--theme-text-muted)';
-    label.textContent = LanguageService.t('welcome.dontShowAgain') || "Don't show this again";
+    label.textContent = LanguageService.t('welcome.dontShowAgain');
 
     checkboxContainer.appendChild(checkbox);
     checkboxContainer.appendChild(label);
@@ -229,7 +227,7 @@ export class WelcomeModal {
     getStartedBtn.addEventListener('mouseleave', () => {
       getStartedBtn.style.filter = '';
     });
-    getStartedBtn.textContent = LanguageService.t('welcome.getStarted') || 'Get Started';
+    getStartedBtn.textContent = LanguageService.t('welcome.getStarted');
     getStartedBtn.addEventListener('click', () => {
       this.dontShowAgain = true; // Always mark as seen when clicking Get Started
       this.close();
@@ -267,11 +265,11 @@ export class WelcomeModal {
     const name = document.createElement('span');
     name.className = 'text-xs font-medium text-center';
     name.style.color = 'var(--theme-text)';
-    name.textContent = LanguageService.t(tool.nameKey) || tool.id;
+    name.textContent = LanguageService.t(tool.nameKey);
     card.appendChild(name);
 
     // Tooltip with description
-    card.title = LanguageService.t(tool.descriptionKey) || '';
+    card.title = LanguageService.t(tool.descriptionKey);
 
     return card;
   }
@@ -287,13 +285,13 @@ export class WelcomeModal {
     const title = document.createElement('h3');
     title.className = 'text-sm font-semibold mb-2';
     title.style.color = 'var(--theme-text)';
-    title.textContent = LanguageService.t('welcome.quickTips') || 'Quick Tips';
+    title.textContent = LanguageService.t('welcome.quickTips');
     section.appendChild(title);
 
     const tips = [
-      LanguageService.t('welcome.tip1') || 'Click tool names in the header to switch between tools',
-      LanguageService.t('welcome.tip2') || 'Prices are from Universalis (live market data)',
-      LanguageService.t('welcome.tip3') || 'Your settings are saved locally in your browser',
+      LanguageService.t('welcome.tip1'),
+      LanguageService.t('welcome.tip2'),
+      LanguageService.t('welcome.tip3'),
     ];
 
     const list = document.createElement('ul');

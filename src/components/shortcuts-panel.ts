@@ -28,46 +28,46 @@ interface ShortcutGroup {
 function getShortcuts(): ShortcutGroup[] {
   return [
     {
-      title: LanguageService.t('shortcuts.navigation') || 'Navigation',
+      title: LanguageService.t('shortcuts.navigation'),
       shortcuts: [
         {
           keys: '1-5',
-          description: LanguageService.t('shortcuts.switchTool') || 'Switch between tools',
+          description: LanguageService.t('shortcuts.switchTool'),
         },
         {
           keys: 'Esc',
-          description: LanguageService.t('shortcuts.closeModal') || 'Close modal or dropdown',
+          description: LanguageService.t('shortcuts.closeModal'),
         },
       ],
     },
     {
-      title: LanguageService.t('shortcuts.quickActions') || 'Quick Actions',
+      title: LanguageService.t('shortcuts.quickActions'),
       shortcuts: [
         {
           keys: 'Shift + T',
-          description: LanguageService.t('shortcuts.toggleTheme') || 'Toggle theme',
+          description: LanguageService.t('shortcuts.toggleTheme'),
         },
         {
           keys: 'Shift + L',
-          description: LanguageService.t('shortcuts.cycleLanguage') || 'Cycle language',
+          description: LanguageService.t('shortcuts.cycleLanguage'),
         },
-        { keys: '?', description: LanguageService.t('shortcuts.showHelp') || 'Show this panel' },
+        { keys: '?', description: LanguageService.t('shortcuts.showHelp') },
       ],
     },
     {
-      title: LanguageService.t('shortcuts.dyeSelection') || 'Dye Selection',
+      title: LanguageService.t('shortcuts.dyeSelection'),
       shortcuts: [
         {
           keys: 'Tab',
-          description: LanguageService.t('shortcuts.focusSelector') || 'Focus dye selector',
+          description: LanguageService.t('shortcuts.focusSelector'),
         },
         {
           keys: '↑↓←→',
-          description: LanguageService.t('shortcuts.navigateDyes') || 'Navigate between dyes',
+          description: LanguageService.t('shortcuts.navigateDyes'),
         },
         {
           keys: 'Enter',
-          description: LanguageService.t('shortcuts.selectDye') || 'Select focused dye',
+          description: LanguageService.t('shortcuts.selectDye'),
         },
       ],
     },
@@ -139,8 +139,8 @@ function createPanelContent(): HTMLElement {
   const modifierKey = isMac ? '⌘ Cmd' : 'Ctrl';
   platformHint.innerHTML = `
     <span class="opacity-70">
-      ${LanguageService.t('shortcuts.platformHint') || 'Tip'}:
-      ${LanguageService.t('shortcuts.useModifier') || `Use ${modifierKey} for system shortcuts`}
+      ${LanguageService.t('shortcuts.platformHint')}:
+      ${LanguageService.t('shortcuts.useModifier')}
     </span>
   `;
   container.appendChild(platformHint);
@@ -159,7 +159,7 @@ function createPanelContent(): HTMLElement {
 export function showShortcutsPanel(): string {
   return ModalService.show({
     type: 'custom',
-    title: LanguageService.t('shortcuts.title') || 'Keyboard Shortcuts',
+    title: LanguageService.t('shortcuts.title'),
     content: createPanelContent(),
     size: 'sm',
     closable: true,

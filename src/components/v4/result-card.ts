@@ -932,7 +932,7 @@ export class ResultCard extends BaseLitComponent {
   private setAsBudgetTarget(dye: Dye): void {
     StorageService.setItem(STORAGE_KEYS.budget, dye.id);
     ToastService.success(
-      LanguageService.t('resultCard.sentToBudget') || 'Sent to Budget Suggestions'
+      LanguageService.t('resultCard.sentToBudget')
     );
     RouterService.navigateTo('budget');
   }
@@ -952,9 +952,8 @@ export class ResultCard extends BaseLitComponent {
 
     // Check if dye already exists
     if (currentDyes.includes(dye.id)) {
-      const toolName = this.getToolDisplayName(tool);
       ToastService.info(
-        LanguageService.t('resultCard.dyeAlreadyIn') || `Dye already in ${toolName}`
+        LanguageService.t('resultCard.dyeAlreadyIn')
       );
       return;
     }
@@ -963,9 +962,8 @@ export class ResultCard extends BaseLitComponent {
     if (currentDyes.length < maxSlots) {
       currentDyes.push(dye.id);
       StorageService.setItem(storageKey, currentDyes);
-      const toolName = this.getToolDisplayName(tool);
       ToastService.success(
-        LanguageService.t('resultCard.addedTo') || `Added to ${toolName}`
+        LanguageService.t('resultCard.addedTo')
       );
       // Navigate to the appropriate tool
       RouterService.navigateTo(tool);
@@ -988,7 +986,7 @@ export class ResultCard extends BaseLitComponent {
     // Check if dye already exists in either slot
     if (currentDyes[0] === dye.id || currentDyes[1] === dye.id) {
       ToastService.info(
-        LanguageService.t('resultCard.dyeAlreadyIn') || 'Dye already in Dye Mixer'
+        LanguageService.t('resultCard.dyeAlreadyIn')
       );
       return;
     }
@@ -998,7 +996,7 @@ export class ResultCard extends BaseLitComponent {
       currentDyes[0] = dye.id;
       StorageService.setItem(STORAGE_KEYS.mixerV4, currentDyes);
       ToastService.success(
-        LanguageService.t('resultCard.addedTo') || 'Added to Dye Mixer'
+        LanguageService.t('resultCard.addedTo')
       );
       RouterService.navigateTo('mixer');
       return;
@@ -1008,7 +1006,7 @@ export class ResultCard extends BaseLitComponent {
       currentDyes[1] = dye.id;
       StorageService.setItem(STORAGE_KEYS.mixerV4, currentDyes);
       ToastService.success(
-        LanguageService.t('resultCard.addedTo') || 'Added to Dye Mixer'
+        LanguageService.t('resultCard.addedTo')
       );
       RouterService.navigateTo('mixer');
       return;
@@ -1025,10 +1023,10 @@ export class ResultCard extends BaseLitComponent {
    */
   private getToolDisplayName(tool: 'comparison' | 'accessibility' | 'gradient' | 'mixer'): string {
     const toolNames: Record<typeof tool, string> = {
-      comparison: LanguageService.t('tools.comparison.shortName') || 'Dye Comparison',
-      accessibility: LanguageService.t('tools.accessibility.shortName') || 'Accessibility Checker',
-      gradient: LanguageService.t('tools.gradient.shortName') || 'Gradient Builder',
-      mixer: LanguageService.t('tools.mixer.shortName') || 'Dye Mixer',
+      comparison: LanguageService.t('tools.comparison.shortName'),
+      accessibility: LanguageService.t('tools.accessibility.shortName'),
+      gradient: LanguageService.t('tools.gradient.shortName'),
+      mixer: LanguageService.t('tools.mixer.shortName'),
     };
     return toolNames[tool];
   }
@@ -1048,10 +1046,10 @@ export class ResultCard extends BaseLitComponent {
     const slotLabels =
       tool === 'mixer' || tool === 'gradient'
         ? [
-          LanguageService.t('mixer.startDye') || 'Start Dye',
-          LanguageService.t('mixer.endDye') || 'End Dye',
+          LanguageService.t('mixer.startDye'),
+          LanguageService.t('mixer.endDye'),
         ]
-        : currentDyeIds.map((_, i) => `${LanguageService.t('common.slot') || 'Slot'} ${i + 1}`);
+        : currentDyeIds.map((_, i) => `${LanguageService.t('common.slot')} ${i + 1}`);
 
     // Build slot buttons HTML
     const slotsHtml = currentDyeIds
@@ -1071,7 +1069,7 @@ export class ResultCard extends BaseLitComponent {
             <p class="font-medium text-sm" style="color: var(--theme-text);">${slotLabels[index]}</p>
             <p class="text-xs" style="color: var(--theme-text-muted);">${dyeName}</p>
           </div>
-          <span class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('common.replace') || 'Replace'}</span>
+          <span class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('common.replace')}</span>
         </button>
       `;
       })
@@ -1081,13 +1079,13 @@ export class ResultCard extends BaseLitComponent {
 
     const content = `
       <p class="mb-4" style="color: var(--theme-text);">
-        ${LanguageService.t('resultCard.slotsFull') || 'All slots are full. Select one to replace:'}
+        ${LanguageService.t('resultCard.slotsFull')}
       </p>
       <div class="space-y-2">${slotsHtml}</div>
       <div class="mt-4 p-3 rounded-lg flex items-center gap-3" style="background: var(--theme-background-secondary);">
         <div class="w-8 h-8 rounded" style="background: ${newDye.hex}; border: 1px solid var(--theme-border);"></div>
         <div>
-          <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('resultCard.addingDye') || 'Adding'}:</p>
+          <p class="text-xs" style="color: var(--theme-text-muted);">${LanguageService.t('resultCard.addingDye')}:</p>
           <p class="font-medium text-sm" style="color: var(--theme-text);">${newDyeName}</p>
         </div>
       </div>
@@ -1095,12 +1093,12 @@ export class ResultCard extends BaseLitComponent {
 
     const modalId = ModalService.show({
       type: 'custom',
-      title: LanguageService.t('resultCard.selectSlotToReplace') || 'Select Slot to Replace',
+      title: LanguageService.t('resultCard.selectSlotToReplace'),
       content: content,
       size: 'sm',
       closable: true,
       closeOnBackdrop: true,
-      cancelText: LanguageService.t('common.cancel') || 'Cancel',
+      cancelText: LanguageService.t('common.cancel'),
     });
 
     // Attach click handlers after modal renders
@@ -1127,7 +1125,7 @@ export class ResultCard extends BaseLitComponent {
 
           ModalService.dismiss(modalId);
           ToastService.success(
-            LanguageService.t('resultCard.replacedInTool') || `Replaced in ${toolName}`
+            LanguageService.t('resultCard.replacedInTool')
           );
           RouterService.navigateTo(tool);
         });
@@ -1382,56 +1380,56 @@ export class ResultCard extends BaseLitComponent {
                     >
                       <!-- Inspect Dye in... -->
                       <div class="menu-item has-submenu" role="menuitem" tabindex="0">
-                        ${LanguageService.t('resultCard.inspectDyeIn') || 'Inspect Dye in...'}
+                        ${LanguageService.t('resultCard.inspectDyeIn')}
                         <div class="submenu" role="menu">
                           <button
                             class="menu-item"
                             role="menuitem"
                             @click=${() => this.handleMenuAction('inspect-harmony')}
                           >
-                            ${LanguageService.t('resultCard.tools.harmony') || 'Harmony Explorer'}
+                            ${LanguageService.t('resultCard.tools.harmony')}
                           </button>
                           <button
                             class="menu-item"
                             role="menuitem"
                             @click=${() => this.handleMenuAction('inspect-budget')}
                           >
-                            ${LanguageService.t('resultCard.tools.budget') || 'Budget Suggestions'}
+                            ${LanguageService.t('resultCard.tools.budget')}
                           </button>
                           <button
                             class="menu-item"
                             role="menuitem"
                             @click=${() => this.handleMenuAction('inspect-accessibility')}
                           >
-                            ${LanguageService.t('resultCard.tools.accessibility') || 'Accessibility Checker'}
+                            ${LanguageService.t('resultCard.tools.accessibility')}
                           </button>
                           <button
                             class="menu-item"
                             role="menuitem"
                             @click=${() => this.handleMenuAction('inspect-comparison')}
                           >
-                            ${LanguageService.t('resultCard.tools.comparison') || 'Dye Comparison'}
+                            ${LanguageService.t('resultCard.tools.comparison')}
                           </button>
                         </div>
                       </div>
 
                       <!-- Transform Dye in... -->
                       <div class="menu-item has-submenu" role="menuitem" tabindex="0">
-                        ${LanguageService.t('resultCard.transformDyeIn') || 'Transform Dye in...'}
+                        ${LanguageService.t('resultCard.transformDyeIn')}
                         <div class="submenu" role="menu">
                           <button
                             class="menu-item"
                             role="menuitem"
                             @click=${() => this.handleMenuAction('transform-gradient')}
                           >
-                            ${LanguageService.t('resultCard.tools.gradient') || 'Gradient Builder'}
+                            ${LanguageService.t('resultCard.tools.gradient')}
                           </button>
                           <button
                             class="menu-item"
                             role="menuitem"
                             @click=${() => this.handleMenuAction('transform-mixer')}
                           >
-                            ${LanguageService.t('resultCard.tools.mixer') || 'Dye Mixer'}
+                            ${LanguageService.t('resultCard.tools.mixer')}
                           </button>
                         </div>
                       </div>
@@ -1440,7 +1438,7 @@ export class ResultCard extends BaseLitComponent {
 
                       <!-- Open in browser... -->
                       <div class="menu-item has-submenu" role="menuitem" tabindex="0">
-                        ${LanguageService.t('resultCard.openInBrowser') || 'Open in browser...'}
+                        ${LanguageService.t('resultCard.openInBrowser')}
                         <div class="submenu" role="menu">
                           <button
                             class="menu-item"

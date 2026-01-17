@@ -23,7 +23,7 @@ export type OnCaptureCallback = (result: CaptureResult) => void;
 export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Promise<void> {
   // Check if camera is available
   if (!cameraService.hasCameraAvailable()) {
-    ToastService.warning(LanguageService.t('camera.notAvailable') || 'No camera detected');
+    ToastService.warning(LanguageService.t('camera.notAvailable'));
     return;
   }
 
@@ -37,7 +37,7 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
 
   const statusText = document.createElement('span');
   statusText.className = 'text-sm text-gray-600 dark:text-gray-400';
-  statusText.textContent = LanguageService.t('camera.initializing') || 'Initializing camera...';
+  statusText.textContent = LanguageService.t('camera.initializing');
   statusBar.appendChild(statusText);
 
   // Camera selector (if multiple cameras)
@@ -89,15 +89,14 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
   const instructions = document.createElement('p');
   instructions.className = 'text-sm text-gray-600 dark:text-gray-400 text-center';
   instructions.textContent =
-    LanguageService.t('camera.instructions') || 'Position your subject and click capture';
+    LanguageService.t('camera.instructions');
   content.appendChild(instructions);
 
   // Privacy notice
   const privacyNotice = document.createElement('p');
   privacyNotice.className = 'text-xs text-center opacity-60 mt-1';
   privacyNotice.textContent =
-    LanguageService.t('camera.privacyNotice') ||
-    'Your camera stream is processed locally. No images are sent to our servers.';
+    LanguageService.t('camera.privacyNotice');
   content.appendChild(privacyNotice);
 
   // Action buttons
@@ -108,7 +107,7 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
   const captureBtn = document.createElement('button');
   captureBtn.className =
     'px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2';
-  captureBtn.innerHTML = `<span class="w-5 h-5" aria-hidden="true">${ICON_CAMERA}</span> ${LanguageService.t('camera.capture') || 'Capture'}`;
+  captureBtn.innerHTML = `<span class="w-5 h-5" aria-hidden="true">${ICON_CAMERA}</span> ${LanguageService.t('camera.capture')}`;
   captureBtn.disabled = true;
   captureBtn.id = 'camera-capture-btn';
   buttons.appendChild(captureBtn);
@@ -117,7 +116,7 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
   const cancelBtn = document.createElement('button');
   cancelBtn.className =
     'px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium';
-  cancelBtn.textContent = LanguageService.t('common.cancel') || 'Cancel';
+  cancelBtn.textContent = LanguageService.t('common.cancel');
   buttons.appendChild(cancelBtn);
 
   content.appendChild(buttons);
@@ -203,7 +202,7 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
         if (settings) {
           statusText.textContent = `${settings.width}×${settings.height}`;
         } else {
-          statusText.textContent = LanguageService.t('camera.ready') || 'Camera ready';
+          statusText.textContent = LanguageService.t('camera.ready');
         }
       };
       video.addEventListener('playing', videoPlayingHandler);
@@ -214,12 +213,12 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
       loadingOverlay.innerHTML = `
         <div class="text-center text-white">
           <div class="text-4xl mb-2">📷</div>
-          <div class="text-sm">${LanguageService.t('camera.permissionDenied') || 'Camera access denied'}</div>
-          <div class="text-xs text-gray-400 mt-1">${LanguageService.t('camera.checkPermissions') || 'Please check your browser permissions'}</div>
+          <div class="text-sm">${LanguageService.t('camera.permissionDenied')}</div>
+          <div class="text-xs text-gray-400 mt-1">${LanguageService.t('camera.checkPermissions')}</div>
         </div>
       `;
 
-      statusText.textContent = LanguageService.t('camera.error') || 'Camera error';
+      statusText.textContent = LanguageService.t('camera.error');
     }
   };
 
@@ -227,7 +226,7 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
   captureClickHandler = async () => {
     try {
       captureBtn.disabled = true;
-      captureBtn.textContent = LanguageService.t('camera.capturing') || 'Capturing...';
+      captureBtn.textContent = LanguageService.t('camera.capturing');
 
       const result = await cameraService.captureFrame(video);
 
@@ -240,12 +239,12 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
       // Callback with result
       onCapture(result);
 
-      ToastService.success(LanguageService.t('camera.captured') || 'Image captured!');
+      ToastService.success(LanguageService.t('camera.captured'));
     } catch (error) {
       logger.error('Capture failed:', error);
-      ToastService.error(LanguageService.t('camera.captureFailed') || 'Failed to capture image');
+      ToastService.error(LanguageService.t('camera.captureFailed'));
       captureBtn.disabled = false;
-      captureBtn.innerHTML = `<span class="w-5 h-5" aria-hidden="true">${ICON_CAMERA}</span> ${LanguageService.t('camera.capture') || 'Capture'}`;
+      captureBtn.innerHTML = `<span class="w-5 h-5" aria-hidden="true">${ICON_CAMERA}</span> ${LanguageService.t('camera.capture')}`;
     }
   };
   captureBtn.addEventListener('click', captureClickHandler as EventListener);
@@ -275,7 +274,7 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
       loadingOverlay.appendChild(spinner);
 
       captureBtn.disabled = true;
-      statusText.textContent = LanguageService.t('camera.switching') || 'Switching camera...';
+      statusText.textContent = LanguageService.t('camera.switching');
 
       // BUG-006: Serialize camera operations with promise queue
       cameraOperationPromise = cameraOperationPromise
@@ -293,7 +292,7 @@ export async function showCameraPreviewModal(onCapture: OnCaptureCallback): Prom
   // Show modal
   ModalService.show({
     type: 'custom',
-    title: LanguageService.t('camera.title') || 'Camera Capture',
+    title: LanguageService.t('camera.title'),
     content,
     size: 'lg',
     onClose: () => {

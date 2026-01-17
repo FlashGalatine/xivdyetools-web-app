@@ -521,7 +521,7 @@ export class TutorialService {
   static promptStart(tool: TutorialTool): void {
     if (this.isCompleted(tool)) return;
 
-    const toolName = LanguageService.t(`tools.${tool}.shortName`) || tool;
+    const toolName = LanguageService.t(`tools.${tool}.shortName`);
 
     const content = document.createElement('div');
     content.className = 'text-center';
@@ -529,8 +529,7 @@ export class TutorialService {
     const message = document.createElement('p');
     message.className = 'mb-4';
     message.style.color = 'var(--theme-text-muted)';
-    message.textContent =
-      LanguageService.t('tutorial.prompt.message') || 'Would you like a quick tour of this tool?';
+    message.textContent = LanguageService.t('tutorial.prompt.message');
     content.appendChild(message);
 
     const buttonContainer = document.createElement('div');
@@ -540,7 +539,7 @@ export class TutorialService {
     skipBtn.className = 'px-4 py-2 text-sm rounded-lg transition-colors';
     skipBtn.style.backgroundColor = 'var(--theme-card-background)';
     skipBtn.style.color = 'var(--theme-text-muted)';
-    skipBtn.textContent = LanguageService.t('tutorial.prompt.skip') || 'Skip';
+    skipBtn.textContent = LanguageService.t('tutorial.prompt.skip');
     skipBtn.addEventListener('click', () => {
       ModalService.dismissTop();
       this.markCompleted(tool); // Don't ask again
@@ -550,7 +549,7 @@ export class TutorialService {
     startBtn.className = 'px-4 py-2 text-sm font-medium rounded-lg transition-colors';
     startBtn.style.backgroundColor = 'var(--theme-primary)';
     startBtn.style.color = 'var(--theme-text-header)';
-    startBtn.textContent = LanguageService.t('tutorial.prompt.start') || 'Start Tour';
+    startBtn.textContent = LanguageService.t('tutorial.prompt.start');
     startBtn.addEventListener('click', () => {
       ModalService.dismissTop();
       setTimeout(() => this.start(tool), 300);
@@ -562,7 +561,7 @@ export class TutorialService {
 
     ModalService.show({
       type: 'custom',
-      title: `📚 ${LanguageService.t('tutorial.prompt.title') || `Learn ${toolName}`}`,
+      title: `📚 ${LanguageService.t('tutorial.prompt.title')}`,
       content,
       size: 'sm',
       closable: true,

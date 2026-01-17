@@ -48,7 +48,7 @@ export class RecentColorsPanel extends BaseComponent {
     this.container.style.display = 'none'; // Hidden until there are recent colors
 
     const recentColorsTitle = this.createElement('h3', {
-      textContent: LanguageService.t('matcher.recentColors') || 'Recent Picks',
+      textContent: LanguageService.t('matcher.recentColors'),
       className: 'text-lg font-semibold text-gray-900 dark:text-white mb-3',
     });
     this.container.appendChild(recentColorsTitle);
@@ -179,7 +179,7 @@ export class RecentColorsPanel extends BaseComponent {
         'hover:bg-red-50 hover:border-red-300 hover:text-red-600 ' +
         'dark:hover:bg-red-900/20 dark:hover:border-red-700 dark:hover:text-red-400 ' +
         'transition-colors ml-2',
-      textContent: LanguageService.t('matcher.clearHistory') || 'Clear',
+      textContent: LanguageService.t('matcher.clearHistory'),
       attributes: {
         title: 'Clear recent colors history',
         'aria-label': 'Clear recent colors history',
