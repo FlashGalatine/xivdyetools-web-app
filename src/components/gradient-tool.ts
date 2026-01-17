@@ -2319,4 +2319,31 @@ export class GradientTool extends BaseComponent {
     this.updateInterpolation();
     this.updateDrawerContent();
   }
+
+  /**
+   * Select a custom color from hex input (Color Palette drawer)
+   * Creates a virtual dye from the hex color for gradient creation.
+   *
+   * @param hex The hex color code (e.g., '#FF5500')
+   */
+  public selectCustomColor(hex: string): void {
+    if (!hex) return;
+
+    // Create a virtual "dye" object for the custom color
+    // Using negative ID to distinguish from real dyes
+    const virtualDye: Dye = {
+      id: -Date.now(), // Unique negative ID
+      itemID: -Date.now(),
+      name: `Custom (${hex})`,
+      hex: hex.toUpperCase(),
+      hsv: ColorService.hexToHsv(hex),
+      category: 'Custom',
+      cost: 0,
+      source: 'custom',
+    };
+
+    // Use the existing selectDye logic to add to gradient
+    this.selectDye(virtualDye);
+    logger.info(`[GradientTool] Custom color selected: ${hex}`);
+  }
 }

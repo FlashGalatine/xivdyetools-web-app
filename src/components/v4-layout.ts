@@ -115,6 +115,23 @@ export async function initializeV4Layout(container: HTMLElement): Promise<void> 
     }
   }) as EventListener);
 
+  // Listen for custom color selections from the Color Palette drawer
+  layoutElement.addEventListener('custom-color-selected', ((
+    e: CustomEvent<{ hex: string }>
+  ) => {
+    const { hex } = e.detail;
+    logger.debug(`[V4 Layout] Custom color selected: ${hex}`);
+
+    // Route custom color to active tool if it has selectCustomColor method
+    if (activeTool && 'selectCustomColor' in activeTool) {
+      (activeTool as BaseComponent & { selectCustomColor: (hex: string) => void }).selectCustomColor(hex);
+    } else {
+      logger.debug(
+        `[V4 Layout] Tool ${RouterService.getCurrentToolId()} does not support custom color selection`
+      );
+    }
+  }) as EventListener);
+
   // Listen for theme button click from header
   layoutElement.addEventListener('theme-click', (() => {
     logger.debug('[V4 Layout] Theme button clicked');

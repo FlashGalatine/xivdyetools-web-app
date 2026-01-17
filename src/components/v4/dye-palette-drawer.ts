@@ -18,6 +18,7 @@ import { ToastService } from '@services/toast-service';
 import { logger } from '@shared/logger';
 import { ICON_DICE, ICON_BROOM, ICON_CLOSE } from '@shared/ui-icons';
 import { LanguageService } from '@services/index';
+import type { ToolId } from '@services/router-service';
 
 /**
  * Filter types for dye categories
@@ -84,6 +85,24 @@ export class DyePaletteDrawer extends BaseLitComponent {
   @property({ type: Boolean, reflect: true, attribute: 'is-open' })
   isOpen = true;
 
+  /**
+   * Currently active tool ID - used to conditionally show Custom Color section
+   */
+  @property({ type: String, attribute: 'active-tool' })
+  activeTool: ToolId = 'harmony';
+
+  /**
+   * Tools that support the Custom Color feature
+   */
+  private static readonly TOOLS_WITH_CUSTOM_COLOR: ToolId[] = ['harmony', 'gradient', 'mixer'];
+
+  /**
+   * Check if custom color section should be shown for current tool
+   */
+  private get shouldShowCustomColor(): boolean {
+    return DyePaletteDrawer.TOOLS_WITH_CUSTOM_COLOR.includes(this.activeTool);
+  }
+
   // =========================================================================
   // Internal State
   // =========================================================================
@@ -95,6 +114,8 @@ export class DyePaletteDrawer extends BaseLitComponent {
   @state() private allDyes: Dye[] = [];
   @state() private filteredDyes: Dye[] = [];
   @state() private favoritesExpanded = true;
+  @state() private customColorHex = '#FF5500';
+  @state() private customColorExpanded = true;
 
   private unsubscribeFavorites: (() => void) | null = null;
   private languageUnsubscribe: (() => void) | null = null;
@@ -525,6 +546,113 @@ export class DyePaletteDrawer extends BaseLitComponent {
         margin: 0 auto 12px;
         opacity: 0.5;
       }
+
+      /* Custom Color Section */
+      .custom-color-section {
+        margin-bottom: 16px;
+        border: 1px solid var(--v4-border-subtle, rgba(255, 255, 255, 0.1));
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .custom-color-content {
+        padding: 12px;
+        display: none;
+      }
+
+      .custom-color-content.expanded {
+        display: block;
+      }
+
+      .custom-color-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .custom-color-preview {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        border: 2px solid var(--v4-border-subtle, rgba(255, 255, 255, 0.2));
+        flex-shrink: 0;
+      }
+
+      .custom-color-inputs {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .custom-hex-input {
+        width: 100%;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--v4-border-subtle, rgba(255, 255, 255, 0.1));
+        border-radius: 6px;
+        color: var(--theme-text, #e0e0e0);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s, background 0.2s;
+      }
+
+      .custom-hex-input:focus {
+        border-color: var(--theme-primary, #d4af37);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .custom-hex-input.invalid {
+        border-color: #ff6b6b;
+      }
+
+      .custom-color-picker {
+        width: 100%;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: transparent;
+      }
+
+      .custom-color-picker::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      .custom-color-picker::-webkit-color-swatch {
+        border: 1px solid var(--v4-border-subtle, rgba(255, 255, 255, 0.2));
+        border-radius: 6px;
+      }
+
+      .custom-apply-btn {
+        width: 100%;
+        padding: 10px 16px;
+        background: var(--theme-primary, #d4af37);
+        color: var(--theme-text-on-primary, #000);
+        border: none;
+        border-radius: 6px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s, opacity 0.2s;
+      }
+
+      .custom-apply-btn:hover:not(:disabled) {
+        background: var(--theme-primary-hover, #c49f2f);
+        transform: scale(1.02);
+      }
+
+      .custom-apply-btn:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      .custom-apply-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     `,
   ];
 
@@ -732,6 +860,67 @@ export class DyePaletteDrawer extends BaseLitComponent {
   }
 
   // =========================================================================
+  // Custom Color Handlers
+  // =========================================================================
+
+  /**
+   * Toggle custom color section expanded state
+   */
+  private handleToggleCustomColor(): void {
+    this.customColorExpanded = !this.customColorExpanded;
+  }
+
+  /**
+   * Handle hex input changes with validation
+   */
+  private handleCustomHexInput(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    let value = input.value.trim().toUpperCase();
+
+    // Auto-prepend # if missing
+    if (value && !value.startsWith('#')) {
+      value = '#' + value;
+    }
+
+    this.customColorHex = value;
+  }
+
+  /**
+   * Handle color picker input - sync to hex
+   */
+  private handleCustomColorPicker(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    this.customColorHex = input.value.toUpperCase();
+  }
+
+  /**
+   * Validate if the current hex color is valid
+   */
+  private isValidHex(): boolean {
+    return /^#[0-9A-Fa-f]{6}$|^#[0-9A-Fa-f]{3}$/.test(this.customColorHex);
+  }
+
+  /**
+   * Apply the custom color - emit event for tool to handle
+   */
+  private handleApplyCustomColor(): void {
+    if (!this.isValidHex()) {
+      ToastService.warning(LanguageService.t('colorPalette.invalidHexCode'));
+      return;
+    }
+
+    // Normalize 3-char hex to 6-char
+    let hex = this.customColorHex.toUpperCase();
+    if (hex.length === 4) {
+      hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+    }
+
+    this.emit('custom-color-selected', { hex });
+    logger.debug(`[DyePaletteDrawer] Custom color applied: ${hex}`);
+    ToastService.info(LanguageService.t('colorPalette.customColorApplied'));
+  }
+
+  // =========================================================================
   // Render
   // =========================================================================
 
@@ -766,7 +955,9 @@ export class DyePaletteDrawer extends BaseLitComponent {
         </div>
 
         <div class="drawer-content">
-          ${this.renderSearch()} ${this.renderFilters()} ${this.renderFavorites()}
+          ${this.renderSearch()} ${this.renderFilters()}
+          ${this.shouldShowCustomColor ? this.renderCustomColor() : nothing}
+          ${this.renderFavorites()}
           ${this.renderDyeGrid(groupedDyes)}
         </div>
       </aside>
@@ -809,7 +1000,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
     return html`
       <div class="filter-bar">
         ${filters.map(
-          (f) => html`
+      (f) => html`
             <button
               class="filter-chip ${this.activeFilter === f.id ? 'active' : ''}"
               @click=${() => this.handleFilterClick(f.id)}
@@ -817,7 +1008,75 @@ export class DyePaletteDrawer extends BaseLitComponent {
               ${LanguageService.t(f.labelKey)}
             </button>
           `
-        )}
+    )}
+      </div>
+    `;
+  }
+
+  /**
+   * Render the custom color input section
+   */
+  private renderCustomColor(): TemplateResult {
+    const isValid = this.isValidHex();
+    // Normalize hex for color picker (needs 6-char format)
+    let pickerValue = this.customColorHex;
+    if (pickerValue.length === 4) {
+      pickerValue = '#' + pickerValue[1] + pickerValue[1] + pickerValue[2] + pickerValue[2] + pickerValue[3] + pickerValue[3];
+    }
+    if (!isValid) {
+      pickerValue = '#FF5500'; // Default fallback
+    }
+
+    return html`
+      <div class="custom-color-section">
+        <div class="section-header" @click=${this.handleToggleCustomColor}>
+          <span class="section-title">
+            <svg class="favorites-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+            </svg>
+            ${LanguageService.t('colorPalette.customColor')}
+          </span>
+          <svg
+            class="chevron ${this.customColorExpanded ? '' : 'collapsed'}"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+        <div class="custom-color-content ${this.customColorExpanded ? 'expanded' : ''}">
+          <div class="custom-color-row">
+            <div
+              class="custom-color-preview"
+              style="background-color: ${isValid ? this.customColorHex : '#FF5500'}"
+            ></div>
+            <div class="custom-color-inputs">
+              <input
+                type="text"
+                class="custom-hex-input ${isValid ? '' : 'invalid'}"
+                placeholder=${LanguageService.t('colorPalette.enterHexCode')}
+                .value=${this.customColorHex}
+                @input=${this.handleCustomHexInput}
+                maxlength="7"
+              />
+              <input
+                type="color"
+                class="custom-color-picker"
+                .value=${pickerValue}
+                @input=${this.handleCustomColorPicker}
+              />
+            </div>
+          </div>
+          <button
+            class="custom-apply-btn"
+            ?disabled=${!isValid}
+            @click=${this.handleApplyCustomColor}
+          >
+            ${LanguageService.t('colorPalette.applyCustomColor')}
+          </button>
+        </div>
       </div>
     `;
   }
@@ -848,17 +1107,17 @@ export class DyePaletteDrawer extends BaseLitComponent {
           type="button"
           title="${isFav ? LanguageService.t('aria.removeFromFavorites') : LanguageService.t('aria.addToFavorites')}"
           aria-label="${isFav
-            ? `${LanguageService.t('aria.removeFromFavorites')}: ${localizedName}`
-            : `${LanguageService.t('aria.addToFavorites')}: ${localizedName}`}"
+        ? `${LanguageService.t('aria.removeFromFavorites')}: ${localizedName}`
+        : `${LanguageService.t('aria.addToFavorites')}: ${localizedName}`}"
           @click=${(e: Event) => this.handleFavoriteToggle(e, dye)}
         >
           ${isFav
-            ? html`<svg viewBox="0 0 20 20" fill="currentColor">
+        ? html`<svg viewBox="0 0 20 20" fill="currentColor">
                 <path
                   d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
                 />
               </svg>`
-            : html`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+        : html`<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path
                   d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
                 />
@@ -892,12 +1151,12 @@ export class DyePaletteDrawer extends BaseLitComponent {
         </div>
         <div class="favorites-content ${this.favoritesExpanded ? 'expanded' : ''}">
           ${this.favoriteDyes.length > 0
-            ? html`
+        ? html`
                 <div class="swatch-grid">
                   ${this.favoriteDyes.map((dye) => this.renderSwatch(dye))}
                 </div>
               `
-            : html` <div class="favorites-empty">${LanguageService.t('collections.favoritesEmptyHint')}</div> `}
+        : html` <div class="favorites-empty">${LanguageService.t('collections.favoritesEmptyHint')}</div> `}
         </div>
       </div>
     `;
@@ -925,13 +1184,13 @@ export class DyePaletteDrawer extends BaseLitComponent {
 
     return html`
       ${Array.from(groupedDyes.entries()).map(
-        ([category, dyes]) => html`
+      ([category, dyes]) => html`
           <div class="category-section">
             <div class="category-label">${LanguageService.t(CATEGORY_TRANSLATION_KEYS[category] || category)}</div>
             <div class="swatch-grid">${dyes.map((dye) => this.renderSwatch(dye))}</div>
           </div>
         `
-      )}
+    )}
     `;
   }
 }

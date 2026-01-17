@@ -34,6 +34,7 @@ import type { Dye } from '@services/dye-service-wrapper';
  *
  * @fires tool-change - When active tool changes, with detail: { toolId: ToolId }
  * @fires dye-selected - When a dye is selected from the palette drawer, with detail: { dye: Dye }
+ * @fires custom-color-selected - When a custom color is applied from the palette drawer, with detail: { hex: string }
  * @fires clear-all-dyes - When clear all dyes button is clicked in palette drawer
  * @fires theme-click - Bubbled from V4AppHeader
  * @fires language-click - Bubbled from V4AppHeader
@@ -780,6 +781,9 @@ export class V4LayoutShell extends BaseLitComponent {
    * Re-emits for parent to route to active tool
    */
   private handleDyeSelected(e: CustomEvent<{ dye: Dye }>): void {
+    // Stop the original event from bubbling further to prevent duplicate handling
+    // (we re-emit it ourselves for the parent v4-layout.ts to receive)
+    e.stopPropagation();
     this.emit('dye-selected', e.detail);
   }
 
@@ -789,6 +793,15 @@ export class V4LayoutShell extends BaseLitComponent {
    */
   private handleClearAllDyes(): void {
     this.emit('clear-all-dyes');
+  }
+
+  /**
+   * Handle custom color selection from DyePaletteDrawer
+   * Re-emits for parent to route to active tool
+   */
+  private handleCustomColorSelected(e: CustomEvent<{ hex: string }>): void {
+    e.stopPropagation();
+    this.emit('custom-color-selected', e.detail);
   }
 
   /**
@@ -858,15 +871,17 @@ export class V4LayoutShell extends BaseLitComponent {
 
         <!-- Right Palette Drawer (hidden for extractor, swatch, presets) -->
         ${this.shouldShowPalette
-          ? html`
+        ? html`
               <dye-palette-drawer
                 ?is-open=${this.paletteDrawerOpen}
+                active-tool=${this.activeTool}
                 @drawer-toggle=${this.handlePaletteDrawerToggle}
                 @dye-selected=${this.handleDyeSelected}
+                @custom-color-selected=${this.handleCustomColorSelected}
                 @clear-all-dyes=${this.handleClearAllDyes}
               ></dye-palette-drawer>
             `
-          : ''}
+        : ''}
       </div>
 
       <!-- Mobile Sidebar Toggle FAB -->
@@ -899,9 +914,9 @@ export class V4LayoutShell extends BaseLitComponent {
       <!-- Palette Drawer Toggle FAB (hidden when drawer is open or tool doesn't use palette) -->
       <button
         class="v4-palette-toggle ${this.paletteDrawerOpen ? 'drawer-open' : ''} ${!this
-          .shouldShowPalette
-          ? 'no-palette'
-          : ''}"
+        .shouldShowPalette
+        ? 'no-palette'
+        : ''}"
         type="button"
         title="${LanguageService.t('aria.showColorPalette')}"
         aria-label="${LanguageService.t('aria.showColorPalette')}"

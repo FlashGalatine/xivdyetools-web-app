@@ -1996,4 +1996,42 @@ export class HarmonyTool extends BaseComponent {
     this.generateHarmonies();
     this.updateDrawerContent();
   }
+
+  /**
+   * Select a custom color from hex input (Color Palette drawer)
+   * Creates a virtual dye from the hex color for harmony generation.
+   *
+   * @param hex The hex color code (e.g., '#FF5500')
+   */
+  public selectCustomColor(hex: string): void {
+    if (!hex) return;
+
+    // Create a virtual "dye" object for the custom color
+    // Using negative ID to distinguish from real dyes
+    const virtualDye: Dye = {
+      id: -1,
+      itemID: -1,
+      name: `Custom (${hex})`,
+      hex: hex.toUpperCase(),
+      hsv: ColorService.hexToHsv(hex),
+      category: 'Custom',
+      cost: 0,
+      source: 'custom',
+    };
+
+    this.selectedDye = virtualDye;
+
+    // Clear from storage (custom colors are not persisted)
+    StorageService.removeItem(STORAGE_KEYS.selectedDyeId);
+    logger.info(`[HarmonyTool] Custom color selected: ${hex}`);
+
+    // Clear dye selector selection (custom color is not in the list)
+    if (this.dyeSelector) {
+      this.dyeSelector.setSelectedDyes([]);
+    }
+
+    // Generate harmonies and update UI
+    this.generateHarmonies();
+    this.updateDrawerContent();
+  }
 }

@@ -95,7 +95,7 @@ export class MixerTool extends BaseComponent {
   private options: MixerToolOptions;
 
   // State
-  private selectedDyes: [Dye | null, Dye | null] = [null, null];
+  private selectedDyes: [Dye | null, Dye | null, Dye | null] = [null, null, null];
   private blendedColor: string | null = null;
   private matchedResults: MixedColorResult[] = [];
   private maxResults: number = 5;
@@ -141,6 +141,7 @@ export class MixerTool extends BaseComponent {
   private resultsGridContainer: HTMLElement | null = null;
   private slot1Element: HTMLElement | null = null;
   private slot2Element: HTMLElement | null = null;
+  private slot3Element: HTMLElement | null = null;
   private resultSlotElement: HTMLElement | null = null;
   private emptyStateMessage: HTMLElement | null = null;
   private emptyStateIcon: HTMLElement | null = null;
@@ -175,7 +176,7 @@ export class MixerTool extends BaseComponent {
    * Load selected dyes from storage
    */
   private loadSelectedDyes(): void {
-    const savedDyeIds = StorageService.getItem<[number | null, number | null]>(
+    const savedDyeIds = StorageService.getItem<[number | null, number | null, number | null]>(
       STORAGE_KEYS.selectedDyes
     );
 
@@ -183,11 +184,13 @@ export class MixerTool extends BaseComponent {
       this.selectedDyes = [
         savedDyeIds[0] ? (dyeService.getDyeById(savedDyeIds[0]) ?? null) : null,
         savedDyeIds[1] ? (dyeService.getDyeById(savedDyeIds[1]) ?? null) : null,
+        savedDyeIds[2] ? (dyeService.getDyeById(savedDyeIds[2]) ?? null) : null,
       ];
 
-      // Recalculate blend if both dyes present
+      // Recalculate blend if at least two dyes present (slot 3 is optional)
       if (this.selectedDyes[0] && this.selectedDyes[1]) {
-        this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+        const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
+        this.blendedColor = this.blendColors(...hexColors);
       }
     }
   }
@@ -196,9 +199,10 @@ export class MixerTool extends BaseComponent {
    * Save selected dyes to storage
    */
   private saveSelectedDyes(): void {
-    const ids: [number | null, number | null] = [
+    const ids: [number | null, number | null, number | null] = [
       this.selectedDyes[0]?.id ?? null,
       this.selectedDyes[1]?.id ?? null,
+      this.selectedDyes[2]?.id ?? null,
     ];
     StorageService.setItem(STORAGE_KEYS.selectedDyes, ids);
   }
@@ -210,19 +214,38 @@ export class MixerTool extends BaseComponent {
   /**
    * Blend two hex colors using the selected mixing algorithm
    */
-  private blendColors(hex1: string, hex2: string): string {
+  private blendTwoColors(hex1: string, hex2: string, ratio: number = 0.5): string {
     switch (this.mixingMode) {
       case 'ryb':
-        return ColorService.mixColorsRyb(hex1, hex2, 0.5);
+        return ColorService.mixColorsRyb(hex1, hex2, ratio);
       case 'lab':
         // User reported RGB/LAB might be swapped.
         // LAB mixing (perceptual) often yields better 'grey' results for complements.
-        return ColorService.mixColorsLab(hex1, hex2, 0.5);
+        return ColorService.mixColorsLab(hex1, hex2, ratio);
       case 'rgb':
       default:
         // RGB light mixing (averaging)
-        return ColorService.mixColorsRgb(hex1, hex2, 0.5);
+        return ColorService.mixColorsRgb(hex1, hex2, ratio);
     }
+  }
+
+  /**
+   * Blend multiple hex colors (2 or 3) using iterative mixing.
+   * Each color contributes equally to the final result.
+   */
+  private blendColors(...hexColors: string[]): string {
+    if (hexColors.length === 0) return '#000000';
+    if (hexColors.length === 1) return hexColors[0];
+
+    // Blend iteratively with weighted ratios for equal contribution
+    // Color 1 + Color 2 at 50/50, then result + Color 3 at 66/33
+    let result = hexColors[0];
+    for (let i = 1; i < hexColors.length; i++) {
+      // Each new color contributes 1/(i+1) so all colors end up equal weight
+      const ratio = 1 / (i + 1);
+      result = this.blendTwoColors(result, hexColors[i], ratio);
+    }
+    return result;
   }
 
   /**
@@ -272,7 +295,14 @@ export class MixerTool extends BaseComponent {
   // ============================================================================
 
   renderContent(): void {
-    this.renderLeftPanel();
+    // In V4 mode, leftPanel and rightPanel are the same element.
+    // Skip renderLeftPanel to avoid creating a DyeSelector that gets
+    // immediately destroyed by renderRightPanel (which clears the container).
+    // V4 uses ConfigSidebar for settings and Color Palette drawer for dye selection.
+    const isV4Mode = this.options.leftPanel === this.options.rightPanel;
+    if (!isV4Mode) {
+      this.renderLeftPanel();
+    }
     this.renderRightPanel();
 
     if (this.options.drawerContent) {
@@ -299,7 +329,8 @@ export class MixerTool extends BaseComponent {
 
     // If dyes were loaded from storage, calculate blend and matches
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
-      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+      const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
+      this.blendedColor = this.blendColors(...hexColors);
       this.findMatchingDyes();
       this.showEmptyState(false);
       this.updateCraftingUI();
@@ -331,7 +362,7 @@ export class MixerTool extends BaseComponent {
     this.mobileFiltersPanel?.destroy();
     this.mobileMarketPanel?.destroy();
 
-    this.selectedDyes = [null, null];
+    this.selectedDyes = [null, null, null];
     this.matchedResults = [];
 
     super.destroy();
@@ -347,7 +378,7 @@ export class MixerTool extends BaseComponent {
    * Called when "Clear All Dyes" button is clicked in Color Palette.
    */
   public clearDyes(): void {
-    this.selectedDyes = [null, null];
+    this.selectedDyes = [null, null, null];
     this.blendedColor = null;
     this.matchedResults = [];
 
@@ -372,25 +403,30 @@ export class MixerTool extends BaseComponent {
 
   /**
    * Select a dye from the Color Palette drawer
-   * Adds to first empty slot, or shifts dyes if both slots are full
+   * Adds to first empty slot, or shifts dyes if all three slots are full
    */
   public selectDye(dye: Dye): void {
     if (!dye) return;
 
-    // Don't add duplicates
-    if (this.selectedDyes.some((d) => d?.id === dye.id)) {
+    // Allow duplicates but not triplicates (max 2 of same dye)
+    const existingCount = this.selectedDyes.filter((d) => d?.id === dye.id).length;
+    if (existingCount >= 2) {
+      // Already have 2 of this dye, don't add a third
       return;
     }
 
-    // Add to first empty slot, or shift if both full
+    // Add to first empty slot, or shift if all full
     if (!this.selectedDyes[0]) {
       this.selectedDyes[0] = dye;
     } else if (!this.selectedDyes[1]) {
       this.selectedDyes[1] = dye;
+    } else if (!this.selectedDyes[2]) {
+      this.selectedDyes[2] = dye;
     } else {
-      // Both slots full - shift dye 2 to dye 1, add new as dye 2
+      // All 3 slots full - shift dyes: 2→1, 3→2, new→3
       this.selectedDyes[0] = this.selectedDyes[1];
-      this.selectedDyes[1] = dye;
+      this.selectedDyes[1] = this.selectedDyes[2];
+      this.selectedDyes[2] = dye;
     }
 
     // Update selectors
@@ -402,9 +438,10 @@ export class MixerTool extends BaseComponent {
     this.saveSelectedDyes();
     this.updateSelectedDyesDisplay();
 
-    // Calculate blend if both dyes selected
+    // Calculate blend if at least 2 dyes selected (slot 3 is optional)
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
-      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+      const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
+      this.blendedColor = this.blendColors(...hexColors);
       this.findMatchingDyes();
       this.showEmptyState(false);
       this.updateCraftingUI();
@@ -418,6 +455,33 @@ export class MixerTool extends BaseComponent {
 
     this.updateDrawerContent();
     logger.info(`[MixerTool] Selected dye from palette: ${dye.name}`);
+  }
+
+  /**
+   * Select a custom color from hex input (Color Palette drawer)
+   * Creates a virtual dye from the hex color for mixing.
+   *
+   * @param hex The hex color code (e.g., '#FF5500')
+   */
+  public selectCustomColor(hex: string): void {
+    if (!hex) return;
+
+    // Create a virtual "dye" object for the custom color
+    // Using negative ID to distinguish from real dyes
+    const virtualDye: Dye = {
+      id: -Date.now(), // Unique negative ID
+      itemID: -Date.now(),
+      name: `Custom (${hex})`,
+      hex: hex.toUpperCase(),
+      hsv: ColorService.hexToHsv(hex),
+      category: 'Custom',
+      cost: 0,
+      source: 'custom',
+    };
+
+    // Use the existing selectDye logic to add to mix
+    this.selectDye(virtualDye);
+    logger.info(`[MixerTool] Custom color selected: ${hex}`);
   }
 
   /**
@@ -476,9 +540,10 @@ export class MixerTool extends BaseComponent {
       needsUpdate = true;
       logger.info(`[MixerTool] setConfig: mixingMode -> ${config.mixingMode}`);
 
-      // Recalculate blended color if both dyes are selected
+      // Recalculate blended color if at least 2 dyes are selected
       if (this.selectedDyes[0] && this.selectedDyes[1]) {
-        this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+        const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
+        this.blendedColor = this.blendColors(...hexColors);
         this.updateCraftingUI();
       }
     }
@@ -634,7 +699,7 @@ export class MixerTool extends BaseComponent {
     // Instruction text
     const instruction = this.createElement('p', {
       className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to blend together',
+      textContent: LanguageService.t('mixer.selectDyesToBlend') || 'Select 2-3 dyes to blend together (3rd is optional)',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     dyeContainer.appendChild(instruction);
@@ -653,15 +718,15 @@ export class MixerTool extends BaseComponent {
     dyeContainer.appendChild(selectorContainer);
 
     const selector = new DyeSelector(selectorContainer, {
-      maxSelections: 2,
+      maxSelections: 3,
       allowMultiple: true,
-      allowDuplicates: false,
+      allowDuplicates: true, // Allow same dye twice (not thrice)
       showCategories: true,
       showPrices: true,
       excludeFacewear: true,
       showFavorites: true,
       compactMode: true,
-      hideSelectedChips: true, // We show selections above with Dye 1/Dye 2 labels
+      hideSelectedChips: true, // We show selections above with Dye 1/Dye 2/Dye 3 labels
     });
     selector.init();
 
@@ -687,15 +752,16 @@ export class MixerTool extends BaseComponent {
    * Handle dye selection from DyeSelector
    */
   private handleDyeSelection(dyes: Dye[]): void {
-    // Update selectedDyes array (limit to 2)
-    this.selectedDyes = [dyes[0] ?? null, dyes[1] ?? null];
+    // Update selectedDyes array (limit to 3)
+    this.selectedDyes = [dyes[0] ?? null, dyes[1] ?? null, dyes[2] ?? null];
 
     this.saveSelectedDyes();
     this.updateSelectedDyesDisplay();
 
-    // Calculate blend if both dyes selected
+    // Calculate blend if at least 2 dyes selected (slot 3 is optional)
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
-      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+      const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
+      this.blendedColor = this.blendColors(...hexColors);
       this.findMatchingDyes();
       this.showEmptyState(false);
       this.updateCraftingUI();
@@ -739,9 +805,10 @@ export class MixerTool extends BaseComponent {
     const labels = [
       LanguageService.t('mixer.dye1') || 'Dye 1',
       LanguageService.t('mixer.dye2') || 'Dye 2',
+      LanguageService.t('mixer.dye3') || 'Dye 3 (Optional)',
     ];
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       const dye = this.selectedDyes[i];
       if (!dye) continue;
 
@@ -808,7 +875,7 @@ export class MixerTool extends BaseComponent {
 
       const slotIndex = i;
       this.on(removeBtn, 'click', () => {
-        this.handleSlotRemove(slotIndex as 0 | 1);
+        this.handleSlotRemove(slotIndex as 0 | 1 | 2);
       });
 
       card.appendChild(removeBtn);
@@ -819,7 +886,7 @@ export class MixerTool extends BaseComponent {
   /**
    * Handle removing a dye from a slot
    */
-  private handleSlotRemove(index: 0 | 1): void {
+  private handleSlotRemove(index: 0 | 1 | 2): void {
     this.selectedDyes[index] = null;
     this.saveSelectedDyes();
 
@@ -828,9 +895,10 @@ export class MixerTool extends BaseComponent {
     this.dyeSelector?.setSelectedDyes(remainingDyes);
     this.mobileDyeSelector?.setSelectedDyes(remainingDyes);
 
-    // Recalculate
+    // Recalculate blend if at least 2 dyes remain
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
-      this.blendedColor = this.blendColors(this.selectedDyes[0].hex, this.selectedDyes[1].hex);
+      const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
+      this.blendedColor = this.blendColors(...hexColors);
       this.findMatchingDyes();
       this.showEmptyState(false);
     } else {
@@ -1029,7 +1097,7 @@ export class MixerTool extends BaseComponent {
       },
     });
 
-    // Equation row: [Slot1] + [Slot2] → [Result]
+    // Equation row: [Slot1] + [Slot2] + [Slot3?] → [Result]
     const equationRow = this.createElement('div', {
       attributes: {
         style: `
@@ -1059,6 +1127,20 @@ export class MixerTool extends BaseComponent {
     // Slot 2
     this.slot2Element = this.createDyeSlot(1);
     equationRow.appendChild(this.slot2Element);
+
+    // Plus sign 2 (for optional slot 3)
+    const plusSign2 = this.createElement('span', {
+      className: 'mixer-operator',
+      textContent: '+',
+      attributes: {
+        style: 'font-size: 28px; font-weight: bold; color: var(--theme-text-muted);',
+      },
+    });
+    equationRow.appendChild(plusSign2);
+
+    // Slot 3 (optional)
+    this.slot3Element = this.createDyeSlot(2, true);
+    equationRow.appendChild(this.slot3Element);
 
     // Arrow
     const arrow = this.createElement('span', {
@@ -1113,8 +1195,10 @@ export class MixerTool extends BaseComponent {
 
   /**
    * Create a dye input slot (100x100px)
+   * @param index - Slot index (0, 1, or 2)
+   * @param isOptional - If true, shows different placeholder for optional slot
    */
-  private createDyeSlot(index: 0 | 1): HTMLElement {
+  private createDyeSlot(index: 0 | 1 | 2, isOptional: boolean = false): HTMLElement {
     const dye = this.selectedDyes[index];
     const size = SLOT_SIZE.input;
 
@@ -1139,6 +1223,7 @@ export class MixerTool extends BaseComponent {
           position: relative;
           overflow: hidden;
           flex-shrink: 0;
+          ${isOptional && !dye ? 'opacity: 0.6;' : ''}
         `,
       },
     });
@@ -1191,18 +1276,37 @@ export class MixerTool extends BaseComponent {
       });
       slot.appendChild(slotNumber);
     } else {
-      // Empty slot placeholder with plus sign (matching Gradient Tool style)
+      // Empty slot placeholder
       const plusSign = this.createElement('span', {
-        textContent: '+',
+        textContent: isOptional ? '?' : '+',
         attributes: {
           style: `
-            font-size: 32px;
+            font-size: ${isOptional ? '28px' : '32px'};
             font-weight: 300;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, ${isOptional ? '0.3' : '0.4'});
           `,
         },
       });
       slot.appendChild(plusSign);
+
+      // Show "Optional" label for slot 3
+      if (isOptional) {
+        const optionalLabel = this.createElement('span', {
+          textContent: LanguageService.t('common.optional') || 'Optional',
+          attributes: {
+            style: `
+              font-size: 9px;
+              font-weight: 500;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              color: rgba(255, 255, 255, 0.3);
+              position: absolute;
+              bottom: 8px;
+            `,
+          },
+        });
+        slot.appendChild(optionalLabel);
+      }
     }
 
     // Hover effect
@@ -1606,7 +1710,7 @@ export class MixerTool extends BaseComponent {
     // Instruction
     const instruction = this.createElement('p', {
       className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectTwoDyes') || 'Select two dyes to blend together',
+      textContent: LanguageService.t('mixer.selectDyesToBlend') || 'Select 2-3 dyes to blend together (3rd is optional)',
       attributes: { style: 'color: var(--theme-text-muted);' },
     });
     dyeContainer.appendChild(instruction);
@@ -1626,9 +1730,9 @@ export class MixerTool extends BaseComponent {
     dyeContainer.appendChild(selectorContainer);
 
     this.mobileDyeSelector = new DyeSelector(selectorContainer, {
-      maxSelections: 2,
+      maxSelections: 3,
       allowMultiple: true,
-      allowDuplicates: false,
+      allowDuplicates: true, // Allow same dye twice (not thrice)
       showCategories: true,
       showPrices: true,
       excludeFacewear: true,
@@ -1679,9 +1783,10 @@ export class MixerTool extends BaseComponent {
     const labels = [
       LanguageService.t('mixer.dye1') || 'Dye 1',
       LanguageService.t('mixer.dye2') || 'Dye 2',
+      LanguageService.t('mixer.dye3') || 'Dye 3 (Optional)',
     ];
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       const dye = this.selectedDyes[i];
       if (!dye) continue;
 

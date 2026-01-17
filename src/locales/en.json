@@ -281,7 +281,12 @@
     "whites": "Whites",
     "blacks": "Blacks",
     "grays": "Grays",
-    "noDyesFound": "No dyes found"
+    "noDyesFound": "No dyes found",
+    "customColor": "Custom Color",
+    "enterHexCode": "Enter hex code",
+    "applyCustomColor": "Apply",
+    "customColorApplied": "Custom color applied",
+    "invalidHexCode": "Invalid hex code"
   },
   "harmony": {
     "suggestionMode": "Suggestion Mode",
