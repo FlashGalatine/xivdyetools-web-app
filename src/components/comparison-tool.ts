@@ -278,7 +278,10 @@ export class ComparisonTool extends BaseComponent {
 
     const marketBoardService = MarketBoardService.getInstance();
     await marketBoardService.fetchPricesForDyes(this.selectedDyes);
-    // The 'prices-updated' event will trigger renderSelectedDyesCards()
+    // Always update cards after fetch completes (even if stale/empty)
+    // The 'prices-updated' event only fires for successful fetches,
+    // so we need to explicitly render here to handle discarded requests
+    this.renderSelectedDyesCards();
   }
 
   /**
