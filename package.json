@@ -66,7 +66,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.17",
-    "@xivdyetools/core": "^1.12.0",
+    "@xivdyetools/core": "^1.12.4",
     "@xivdyetools/logger": "^1.0.2",
     "@xivdyetools/types": "^1.6.1",
     "lit": "^3.1.0"

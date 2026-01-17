@@ -213,49 +213,16 @@ export class MixerTool extends BaseComponent {
   private blendColors(hex1: string, hex2: string): string {
     switch (this.mixingMode) {
       case 'ryb':
-        return this.blendColorsRyb(hex1, hex2);
+        return ColorService.mixColorsRyb(hex1, hex2, 0.5);
       case 'lab':
-        return this.blendColorsLab(hex1, hex2);
+        // User reported RGB/LAB might be swapped.
+        // LAB mixing (perceptual) often yields better 'grey' results for complements.
+        return ColorService.mixColorsLab(hex1, hex2, 0.5);
       case 'rgb':
       default:
-        return this.blendColorsRgb(hex1, hex2);
+        // RGB light mixing (averaging)
+        return ColorService.mixColorsRgb(hex1, hex2, 0.5);
     }
-  }
-
-  /**
-   * Blend colors using RYB (Red-Yellow-Blue) subtractive mixing
-   * Produces paint-like results: Blue + Yellow = Green
-   */
-  private blendColorsRyb(hex1: string, hex2: string): string {
-    return ColorService.mixColorsRyb(hex1, hex2, 0.5);
-  }
-
-  /**
-   * Blend colors using LAB perceptually uniform color space
-   */
-  private blendColorsLab(hex1: string, hex2: string): string {
-    const lab1 = ColorService.hexToLab(hex1);
-    const lab2 = ColorService.hexToLab(hex2);
-
-    return ColorService.labToHex(
-      (lab1.L + lab2.L) / 2,
-      (lab1.a + lab2.a) / 2,
-      (lab1.b + lab2.b) / 2
-    );
-  }
-
-  /**
-   * Blend colors using RGB averaging (additive light mixing)
-   */
-  private blendColorsRgb(hex1: string, hex2: string): string {
-    const rgb1 = ColorService.hexToRgb(hex1);
-    const rgb2 = ColorService.hexToRgb(hex2);
-
-    const r = Math.round((rgb1.r + rgb2.r) / 2);
-    const g = Math.round((rgb1.g + rgb2.g) / 2);
-    const b = Math.round((rgb1.b + rgb2.b) / 2);
-
-    return ColorService.rgbToHex(r, g, b);
   }
 
   /**

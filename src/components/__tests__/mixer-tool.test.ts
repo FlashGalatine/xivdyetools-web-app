@@ -54,7 +54,7 @@ vi.mock('@services/index', () => ({
     tInterpolate: (key: string, params: Record<string, string>) =>
       `${key}: ${Object.values(params).join('/')}`,
     getDyeName: (itemId: number) => `Dye-${itemId}`,
-    subscribe: vi.fn().mockReturnValue(() => {}),
+    subscribe: vi.fn().mockReturnValue(() => { }),
   },
   StorageService: {
     getItem: vi.fn().mockReturnValue(null),
@@ -71,15 +71,16 @@ vi.mock('@services/index', () => ({
     rgbToHex: vi.fn((r: number, g: number, b: number) => {
       return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase();
     }),
-    blendRgb: vi.fn(() => ({ r: 128, g: 128, b: 128 })),
-    blendRyb: vi.fn(() => ({ r: 128, g: 128, b: 128 })),
-    blendLab: vi.fn(() => ({ r: 128, g: 128, b: 128 })),
+    mixColorsRgb: vi.fn(() => '#808080'),
+    mixColorsRyb: vi.fn(() => '#808080'),
+    mixColorsLab: vi.fn(() => '#808080'),
     rgbToHsv: vi.fn(() => ({ h: 0, s: 100, v: 100 })),
     calculateColorDistance: vi.fn(() => 15),
+    getColorDistance: vi.fn(() => 15),
   },
   MarketBoardService: {
     getInstance: vi.fn().mockReturnValue({
-      subscribe: vi.fn().mockReturnValue(() => {}),
+      subscribe: vi.fn().mockReturnValue(() => { }),
       getWorldId: vi.fn().mockReturnValue(null),
       setWorldId: vi.fn(),
       getPriceForItem: vi.fn().mockReturnValue(null),
@@ -93,16 +94,16 @@ vi.mock('@services/index', () => ({
   ConfigController: {
     getInstance: vi.fn().mockReturnValue({
       getConfig: vi.fn().mockReturnValue({}),
-      subscribe: vi.fn().mockReturnValue(() => {}),
+      subscribe: vi.fn().mockReturnValue(() => { }),
     }),
   },
   CollectionService: {
     getFavorites: vi.fn().mockReturnValue([]),
-    subscribeFavorites: vi.fn().mockReturnValue(() => {}),
+    subscribeFavorites: vi.fn().mockReturnValue(() => { }),
     isFavorite: vi.fn().mockReturnValue(false),
   },
   RouterService: {
-    subscribe: vi.fn().mockReturnValue(() => {}),
+    subscribe: vi.fn().mockReturnValue(() => { }),
     getCurrentToolId: vi.fn().mockReturnValue('mixer'),
     navigateTo: vi.fn(),
   },
@@ -136,7 +137,7 @@ vi.mock('@shared/tool-icons', () => ({
 }));
 
 vi.mock('@services/pricing-mixin', () => ({
-  setupMarketBoardListeners: vi.fn().mockReturnValue(() => {}),
+  setupMarketBoardListeners: vi.fn().mockReturnValue(() => { }),
 }));
 
 vi.mock('../collapsible-panel', () => ({
@@ -156,10 +157,10 @@ vi.mock('../collapsible-panel', () => ({
     destroy() {
       this.container.innerHTML = '';
     }
-    setContent() {}
-    expand() {}
-    collapse() {}
-    toggle() {}
+    setContent() { }
+    expand() { }
+    collapse() { }
+    toggle() { }
   },
 }));
 
@@ -178,7 +179,7 @@ vi.mock('../market-board', () => ({
     destroy() {
       this.container.innerHTML = '';
     }
-    setShowPrices() {}
+    setShowPrices() { }
   },
 }));
 
@@ -230,7 +231,7 @@ vi.mock('../dye-filters', () => ({
     getExcludedCategories() {
       return [];
     }
-    setEnabled() {}
+    setEnabled() { }
   },
 }));
 
