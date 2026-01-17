@@ -65,7 +65,7 @@ const MAX_TAGS = 10;
 export function showPresetSubmissionForm(onSubmit?: OnSubmitCallback): void {
   // Check authentication first
   if (!authService.isAuthenticated()) {
-    ToastService.error('Please login with Discord to submit presets');
+    ToastService.error(LanguageService.t('preset.loginToSubmit'));
     return;
   }
 
@@ -406,7 +406,7 @@ function createDyeSelector(state: FormState): HTMLElement {
           // Add if under limit
           state.selectedDyes.push(dye);
         } else {
-          ToastService.warning(`Maximum ${MAX_DYES} dyes allowed`);
+          ToastService.warning(LanguageService.tInterpolate('preset.maxDyesAllowed', { count: String(MAX_DYES) }));
           return;
         }
 
@@ -546,8 +546,10 @@ function createSubmitButton(state: FormState, onSubmit?: OnSubmitCallback): HTML
       if (result.success) {
         if (result.duplicate) {
           const duplicateName = result.duplicate.name || 'existing preset';
-          const voteMsg = result.vote_added ? ' Your vote has been added!' : '';
-          ToastService.info(`This dye combination already exists as "${duplicateName}".${voteMsg}`);
+          const message = result.vote_added
+            ? LanguageService.tInterpolate('preset.duplicateWithVote', { name: duplicateName })
+            : LanguageService.tInterpolate('preset.duplicateFound', { name: duplicateName });
+          ToastService.info(message);
 
           // Navigate to the duplicate preset after dismissing modal
           console.log('[PresetSubmissionForm] calling ModalService.dismissTop() for duplicate');
@@ -566,9 +568,9 @@ function createSubmitButton(state: FormState, onSubmit?: OnSubmitCallback): HTML
           onSubmit?.(result);
           return;
         } else if (result.moderation_status === 'pending') {
-          ToastService.success('Preset submitted! It will appear after moderator review.');
+          ToastService.success(LanguageService.t('preset.submittedPendingReview'));
         } else {
-          ToastService.success('Preset submitted successfully!');
+          ToastService.success(LanguageService.t('preset.submittedSuccess'));
         }
 
         console.log('[PresetSubmissionForm] calling ModalService.dismissTop()');
@@ -576,10 +578,10 @@ function createSubmitButton(state: FormState, onSubmit?: OnSubmitCallback): HTML
         console.log('[PresetSubmissionForm] dismissTop() returned');
         onSubmit?.(result);
       } else {
-        ToastService.error(result.error || 'Failed to submit preset');
+        ToastService.error(result.error || LanguageService.t('errors.submitPresetFailed'));
       }
     } catch (err) {
-      ToastService.error('Failed to submit preset. Please try again.');
+      ToastService.error(LanguageService.t('errors.submitPresetFailed'));
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Submit Preset';

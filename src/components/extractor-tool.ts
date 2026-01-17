@@ -2254,7 +2254,7 @@ export class ExtractorTool extends BaseComponent {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      ToastService.error('Could not get canvas context');
+      ToastService.error(LanguageService.t('errors.canvasContextFailed'));
       return;
     }
 
@@ -2265,7 +2265,7 @@ export class ExtractorTool extends BaseComponent {
     const regionHeight = Math.min(Math.floor(height), canvas.height - regionY);
 
     if (regionWidth <= 0 || regionHeight <= 0) {
-      ToastService.error('Selected region is too small');
+      ToastService.error(LanguageService.t('errors.regionTooSmall'));
       return;
     }
 
@@ -2275,7 +2275,7 @@ export class ExtractorTool extends BaseComponent {
       const pixels = PaletteService.pixelDataToRGBFiltered(imageData.data);
 
       if (pixels.length === 0) {
-        ToastService.error('No pixels to analyze in selected region');
+        ToastService.error(LanguageService.t('errors.noPixelsInRegion'));
         return;
       }
 
@@ -2310,13 +2310,13 @@ export class ExtractorTool extends BaseComponent {
       ToastService.success(
         LanguageService.tInterpolate('matcher.paletteExtracted', {
           count: String(matches.length),
-        }) || `Extracted ${matches.length} colors from selected region`
+        })
       );
 
       logger.info('[ExtractorTool] Palette extracted from region:', matches.length, 'colors');
     } catch (error) {
       logger.error('[ExtractorTool] Palette extraction from region failed:', error);
-      ToastService.error('Failed to extract palette from region');
+      ToastService.error(LanguageService.t('errors.paletteExtractionFailed'));
     }
   }
 
@@ -2336,7 +2336,7 @@ export class ExtractorTool extends BaseComponent {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      ToastService.error('Could not get canvas context');
+      ToastService.error(LanguageService.t('errors.canvasContextFailed'));
       return;
     }
 
@@ -2354,7 +2354,7 @@ export class ExtractorTool extends BaseComponent {
       const pixels = PaletteService.pixelDataToRGBFiltered(imageData.data);
 
       if (pixels.length === 0) {
-        ToastService.error('No pixels to analyze');
+        ToastService.error(LanguageService.t('errors.noPixelsToAnalyze'));
         return;
       }
 
@@ -2388,13 +2388,13 @@ export class ExtractorTool extends BaseComponent {
       ToastService.success(
         LanguageService.tInterpolate('matcher.paletteExtracted', {
           count: String(matches.length),
-        }) || `Extracted ${matches.length} colors from image`
+        })
       );
 
       logger.info('[MatcherTool] Palette extracted:', matches.length, 'colors');
     } catch (error) {
       logger.error('[MatcherTool] Palette extraction failed:', error);
-      ToastService.error('Failed to extract palette');
+      ToastService.error(LanguageService.t('errors.paletteExtractionFailed'));
     } finally {
       // Restore button state
       if (this.extractPaletteBtn) {
@@ -2619,7 +2619,7 @@ export class ExtractorTool extends BaseComponent {
             detail: { toolId: 'comparison', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToComparison'));
+        ToastService.success(LanguageService.t('harmony.addedToComparison'));
         break;
 
       case 'add-mixer':
@@ -2628,7 +2628,7 @@ export class ExtractorTool extends BaseComponent {
             detail: { toolId: 'mixer', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToMixer'));
+        ToastService.success(LanguageService.t('harmony.addedToMixer'));
         break;
 
       case 'add-accessibility':
@@ -2638,7 +2638,7 @@ export class ExtractorTool extends BaseComponent {
           })
         );
         ToastService.success(
-          LanguageService.t('toast.addedToAccessibility')
+          LanguageService.t('harmony.addedToAccessibility')
         );
         break;
 
@@ -2661,7 +2661,7 @@ export class ExtractorTool extends BaseComponent {
       case 'copy-hex':
         void navigator.clipboard.writeText(dye.hex).then(() => {
           ToastService.success(
-            LanguageService.t('toast.copiedToClipboard')
+            LanguageService.t('success.copiedToClipboard')
           );
         });
         break;

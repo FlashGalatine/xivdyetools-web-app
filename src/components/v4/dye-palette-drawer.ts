@@ -807,7 +807,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
    */
   private handleRandomDye(): void {
     if (this.allDyes.length === 0) {
-      ToastService.warning('No dyes available');
+      ToastService.warning(LanguageService.t('colorPalette.noDyesAvailable'));
       return;
     }
 
@@ -816,7 +816,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
 
     this.emit('dye-selected', { dye: randomDye });
     logger.debug(`[DyePaletteDrawer] Random dye selected: ${randomDye.name}`);
-    ToastService.info(`Selected: ${randomDye.name}`);
+    ToastService.info(LanguageService.tInterpolate('colorPalette.randomDyeSelected', { name: randomDye.name }));
   }
 
   /**
@@ -843,7 +843,7 @@ export class DyePaletteDrawer extends BaseLitComponent {
       // Failed to add - likely at limit
       const maxFavorites = CollectionService.getMaxFavorites();
       ToastService.warning(
-        `Maximum ${maxFavorites} favorites reached. Remove a favorite to add new ones.`
+        LanguageService.tInterpolate('collections.favoritesFull', { max: String(maxFavorites) })
       );
     } else {
       logger.debug(

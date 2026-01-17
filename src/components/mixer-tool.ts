@@ -1512,7 +1512,7 @@ export class MixerTool extends BaseComponent {
             detail: { toolId: 'comparison', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToComparison'));
+        ToastService.success(LanguageService.t('harmony.addedToComparison'));
         break;
 
       case 'add-mixer':
@@ -1556,7 +1556,7 @@ export class MixerTool extends BaseComponent {
           })
         );
         ToastService.success(
-          LanguageService.t('toast.addedToAccessibility')
+          LanguageService.t('harmony.addedToAccessibility')
         );
         break;
 
@@ -1579,7 +1579,7 @@ export class MixerTool extends BaseComponent {
       case 'copy-hex':
         void navigator.clipboard.writeText(dye.hex).then(() => {
           ToastService.success(
-            LanguageService.t('toast.copiedToClipboard')
+            LanguageService.t('success.copiedToClipboard')
           );
         });
         break;

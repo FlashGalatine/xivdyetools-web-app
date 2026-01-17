@@ -416,10 +416,10 @@ export class PresetDetailView extends BaseComponent {
     navigator.clipboard
       .writeText(url)
       .then(() => {
-        ToastService.success('Preset link copied to clipboard!');
+        ToastService.success(LanguageService.t('preset.linkCopied'));
       })
       .catch(() => {
-        ToastService.error('Failed to copy link');
+        ToastService.error(LanguageService.t('errors.copyLinkFailed'));
       });
   }
 
@@ -428,7 +428,7 @@ export class PresetDetailView extends BaseComponent {
    */
   private async handleVoteClick(btn: HTMLElement): Promise<void> {
     if (!authService.isAuthenticated()) {
-      ToastService.warning('Please login with Discord to vote');
+      ToastService.warning(LanguageService.t('preset.loginToVote'));
       return;
     }
 
@@ -467,9 +467,9 @@ export class PresetDetailView extends BaseComponent {
           // Update preset object
           this.preset.voteCount = result.new_vote_count;
           this.callbacks.onVoteUpdate?.(this.preset);
-          ToastService.info('Vote removed');
+          ToastService.info(LanguageService.t('preset.voteRemoved'));
         } else {
-          ToastService.error(result.error || 'Failed to remove vote');
+          ToastService.error(result.error || LanguageService.t('errors.removeVoteFailed'));
         }
       } else {
         // Add vote
@@ -492,16 +492,16 @@ export class PresetDetailView extends BaseComponent {
           // Update preset object
           this.preset.voteCount = result.new_vote_count;
           this.callbacks.onVoteUpdate?.(this.preset);
-          ToastService.success('Vote added!');
+          ToastService.success(LanguageService.t('preset.voteAdded'));
         } else if (result.already_voted) {
-          ToastService.info('You already voted for this preset');
+          ToastService.info(LanguageService.t('preset.alreadyVoted'));
         } else {
-          ToastService.error(result.error || 'Failed to vote');
+          ToastService.error(result.error || LanguageService.t('errors.voteFailed'));
         }
       }
     } catch (error) {
       console.error('Vote error:', error);
-      ToastService.error('Failed to process vote');
+      ToastService.error(LanguageService.t('errors.voteProcessFailed'));
     } finally {
       btn.removeAttribute('disabled');
       btn.style.opacity = '';

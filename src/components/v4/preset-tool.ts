@@ -567,13 +567,13 @@ export class PresetTool extends BaseLitComponent {
     const preset = e.detail?.preset;
     if (!preset) {
       logger.warn('[v4-preset-tool] Delete event received but no preset in detail');
-      ToastService.error('Unable to delete: preset data missing');
+      ToastService.error(LanguageService.t('errors.presetDataMissing'));
       return;
     }
 
     if (!preset.apiPresetId) {
       logger.warn('[v4-preset-tool] Cannot delete preset without API ID');
-      ToastService.error('Unable to delete: preset has no API ID');
+      ToastService.error(LanguageService.t('errors.presetNoApiId'));
       return;
     }
 
@@ -588,10 +588,10 @@ export class PresetTool extends BaseLitComponent {
       cancelText: LanguageService.t('common.cancel'),
       onConfirm: async () => {
         try {
-          ToastService.info('Deleting preset...');
+          ToastService.info(LanguageService.t('preset.deleting'));
           await presetSubmissionService.deletePreset(preset.apiPresetId!);
           logger.info('[v4-preset-tool] Preset deleted successfully');
-          ToastService.success('Preset deleted successfully');
+          ToastService.success(LanguageService.t('preset.deleteSuccess'));
 
           // Refresh the lists
           void this.loadPresets();
@@ -601,7 +601,7 @@ export class PresetTool extends BaseLitComponent {
           window.history.pushState({}, '', '/presets');
         } catch (error) {
           logger.error('[v4-preset-tool] Failed to delete preset:', error);
-          ToastService.error('Failed to delete preset. Please try again.');
+          ToastService.error(LanguageService.t('errors.deletePresetFailed'));
         }
       },
       onClose: () => {

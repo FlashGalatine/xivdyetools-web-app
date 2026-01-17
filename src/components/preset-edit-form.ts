@@ -9,6 +9,7 @@
 import {
   ModalService,
   ToastService,
+  LanguageService,
   dyeService,
   authService,
   presetSubmissionService,
@@ -64,14 +65,14 @@ const MAX_TAGS = 10;
 export function showPresetEditForm(preset: CommunityPreset, onEdit?: OnEditCallback): void {
   // Check authentication first
   if (!authService.isAuthenticated()) {
-    ToastService.error('Please login with Discord to edit presets');
+    ToastService.error(LanguageService.t('preset.loginToEdit'));
     return;
   }
 
   // Check ownership
   const user = authService.getUser();
   if (!user || preset.author_discord_id !== user.id) {
-    ToastService.error('You can only edit your own presets');
+    ToastService.error(LanguageService.t('preset.onlyEditOwn'));
     return;
   }
 
@@ -520,9 +521,9 @@ function createSubmitButton(
 
       if (result.success) {
         if (result.moderation_status === 'pending') {
-          ToastService.info('Changes saved! Your edit is pending moderator review.');
+          ToastService.info(LanguageService.t('preset.editPendingReview'));
         } else {
-          ToastService.success('Preset updated successfully!');
+          ToastService.success(LanguageService.t('preset.editSuccess'));
         }
 
         ModalService.dismissTop();
@@ -530,12 +531,12 @@ function createSubmitButton(
       } else if (result.duplicate) {
         // Dye combination already exists
         const dupName = result.duplicate.name || 'another preset';
-        ToastService.error(`This dye combination already exists as "${dupName}".`);
+        ToastService.error(LanguageService.tInterpolate('preset.duplicateFound', { name: dupName }));
       } else {
-        ToastService.error(result.error || 'Failed to save changes');
+        ToastService.error(result.error || LanguageService.t('errors.saveChangesFailed'));
       }
     } catch (err) {
-      ToastService.error('Failed to save changes. Please try again.');
+      ToastService.error(LanguageService.t('errors.saveChangesFailed'));
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Save Changes';

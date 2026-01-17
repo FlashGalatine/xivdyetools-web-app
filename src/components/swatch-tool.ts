@@ -1288,7 +1288,7 @@ export class SwatchTool extends BaseComponent {
             detail: { toolId: 'comparison', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToComparison'));
+        ToastService.success(LanguageService.t('harmony.addedToComparison'));
         break;
 
       case 'add-mixer':
@@ -1297,7 +1297,7 @@ export class SwatchTool extends BaseComponent {
             detail: { toolId: 'mixer', dye },
           })
         );
-        ToastService.success(LanguageService.t('toast.addedToMixer'));
+        ToastService.success(LanguageService.t('harmony.addedToMixer'));
         break;
 
       case 'add-accessibility':
@@ -1307,7 +1307,7 @@ export class SwatchTool extends BaseComponent {
           })
         );
         ToastService.success(
-          LanguageService.t('toast.addedToAccessibility')
+          LanguageService.t('harmony.addedToAccessibility')
         );
         break;
 
@@ -1330,7 +1330,7 @@ export class SwatchTool extends BaseComponent {
       case 'copy-hex':
         void navigator.clipboard.writeText(dye.hex).then(() => {
           ToastService.success(
-            LanguageService.t('toast.copiedToClipboard')
+            LanguageService.t('success.copiedToClipboard')
           );
         });
         break;

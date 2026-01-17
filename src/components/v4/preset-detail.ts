@@ -20,6 +20,7 @@ import {
   authService,
   communityPresetService,
   ToastService,
+  LanguageService,
 } from '@services/index';
 import { MarketBoardService } from '@services/market-board-service';
 import type { PriceData } from '@shared/types';
@@ -558,8 +559,8 @@ export class PresetDetail extends BaseLitComponent {
     const url = `${window.location.origin}/presets/${this.preset.id}`;
     navigator.clipboard
       .writeText(url)
-      .then(() => ToastService.success('Preset link copied to clipboard!'))
-      .catch(() => ToastService.error('Failed to copy link'));
+      .then(() => ToastService.success(LanguageService.t('preset.linkCopied')))
+      .catch(() => ToastService.error(LanguageService.t('errors.copyLinkFailed')));
   }
 
   /**
@@ -585,7 +586,7 @@ export class PresetDetail extends BaseLitComponent {
     if (!this.preset?.apiPresetId) return;
 
     if (!authService.isAuthenticated()) {
-      ToastService.warning('Please login to vote');
+      ToastService.warning(LanguageService.t('preset.loginToVote'));
       return;
     }
 
@@ -601,9 +602,9 @@ export class PresetDetail extends BaseLitComponent {
           // Emit update with new vote count
           const updatedPreset = { ...this.preset, voteCount: result.new_vote_count };
           this.emit<{ preset: UnifiedPreset }>('vote-update', { preset: updatedPreset });
-          ToastService.info('Vote removed');
+          ToastService.info(LanguageService.t('preset.voteRemoved'));
         } else {
-          ToastService.error(result.error || 'Failed to remove vote');
+          ToastService.error(result.error || LanguageService.t('errors.removeVoteFailed'));
         }
       } else {
         // Add vote
@@ -614,17 +615,17 @@ export class PresetDetail extends BaseLitComponent {
           // Emit update with new vote count
           const updatedPreset = { ...this.preset, voteCount: result.new_vote_count };
           this.emit<{ preset: UnifiedPreset }>('vote-update', { preset: updatedPreset });
-          ToastService.success('Vote added!');
+          ToastService.success(LanguageService.t('preset.voteAdded'));
         } else if (result.already_voted) {
           this.hasVoted = true;
-          ToastService.info('You already voted for this preset');
+          ToastService.info(LanguageService.t('preset.alreadyVoted'));
         } else {
-          ToastService.error(result.error || 'Failed to vote');
+          ToastService.error(result.error || LanguageService.t('errors.voteFailed'));
         }
       }
     } catch (error) {
       console.error('[v4-preset-detail] Vote error:', error);
-      ToastService.error('Failed to process vote');
+      ToastService.error(LanguageService.t('errors.voteProcessFailed'));
     } finally {
       this.isVoting = false;
     }
