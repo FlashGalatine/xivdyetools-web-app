@@ -32,7 +32,7 @@ import { ICON_PALETTE, ICON_MARKET } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { SwatchConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
+import type { SwatchConfig, DisplayOptionsConfig, MarketConfig } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
 // Import v4-result-card custom element to ensure it's registered
@@ -182,6 +182,7 @@ export class SwatchTool extends BaseComponent {
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
   private configUnsubscribe: (() => void) | null = null;
+  private marketConfigUnsubscribe: (() => void) | null = null;
   private resultsPanelMediaQueryCleanup: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: SwatchToolOptions) {
@@ -227,9 +228,27 @@ export class SwatchTool extends BaseComponent {
     });
 
     // Subscribe to config changes from V4 ConfigSidebar
-    this.configUnsubscribe = ConfigController.getInstance().subscribe('swatch', (config) => {
+    const configController = ConfigController.getInstance();
+    this.configUnsubscribe = configController.subscribe('swatch', (config) => {
       this.setConfig(config);
     });
+
+    // Subscribe to market config changes
+    this.marketConfigUnsubscribe = configController.subscribe('market', (config) => {
+      this.setMarketConfig(config);
+    });
+
+    // Sync MarketBoard components with ConfigController on initial load
+    const marketConfig = configController.getConfig('market');
+    if (this.marketBoard) {
+      this.marketBoard.setSelectedServer(marketConfig.selectedServer);
+      this.marketBoard.setShowPrices(marketConfig.showPrices);
+      this.showPrices = marketConfig.showPrices;
+    }
+    if (this.mobileMarketBoard) {
+      this.mobileMarketBoard.setSelectedServer(marketConfig.selectedServer);
+      this.mobileMarketBoard.setShowPrices(marketConfig.showPrices);
+    }
 
     logger.info('[CharacterTool] Mounted');
   }
@@ -237,6 +256,7 @@ export class SwatchTool extends BaseComponent {
   destroy(): void {
     this.languageUnsubscribe?.();
     this.configUnsubscribe?.();
+    this.marketConfigUnsubscribe?.();
     this.resultsPanelMediaQueryCleanup?.();
 
     this.marketBoard?.destroy();
@@ -334,6 +354,53 @@ export class SwatchTool extends BaseComponent {
     } else if (needsRedraw && this.matchedDyes.length > 0) {
       // Just redraw results if only display options changed
       this.updateMatchResults();
+    }
+  }
+
+  /**
+   * Update market configuration from external source (V4 ConfigSidebar)
+   */
+  public setMarketConfig(config: Partial<MarketConfig>): void {
+    // Handle showPrices
+    if ('showPrices' in config) {
+      const showPrices = config.showPrices as boolean;
+      this.showPrices = showPrices;
+      logger.info(`[SwatchTool] setMarketConfig: showPrices -> ${showPrices}`);
+
+      // Update both MarketBoard UI instances
+      if (this.marketBoard) {
+        this.marketBoard.setShowPrices(showPrices);
+      }
+      if (this.mobileMarketBoard) {
+        this.mobileMarketBoard.setShowPrices(showPrices);
+      }
+
+      // Fetch prices if enabled, or re-render to hide them
+      if (showPrices && this.matchedDyes.length > 0) {
+        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
+      } else {
+        this.updateMatchResults();
+      }
+    }
+
+    // Handle selectedServer
+    if ('selectedServer' in config) {
+      const selectedServer = config.selectedServer as string;
+      logger.info(`[SwatchTool] setMarketConfig: selectedServer -> ${selectedServer}`);
+
+      // Update both MarketBoard UI instances with the new server
+      if (this.marketBoard) {
+        this.marketBoard.setSelectedServer(selectedServer);
+      }
+      if (this.mobileMarketBoard) {
+        this.mobileMarketBoard.setSelectedServer(selectedServer);
+      }
+
+      // Re-fetch prices with the new server if prices are enabled
+      if (this.showPrices && this.matchedDyes.length > 0) {
+        this.priceData.clear();
+        this.fetchPrices(this.matchedDyes.map((m) => m.dye));
+      }
     }
   }
 

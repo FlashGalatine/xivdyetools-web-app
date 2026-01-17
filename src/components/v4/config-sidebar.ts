@@ -1369,10 +1369,10 @@ export class ConfigSidebar extends BaseLitComponent {
       }}
           >
             ${RACE_GROUPS.map(
-          (group) => html`
+        (group) => html`
                 <optgroup label="${LanguageService.getRace(group.raceKey)}">
                   ${group.subraces.map(
-            (subrace) => html`
+          (subrace) => html`
                       <option
                         value="${subrace}"
                         ?selected=${this.swatchConfig.race === subrace}
@@ -1380,10 +1380,10 @@ export class ConfigSidebar extends BaseLitComponent {
                         ${LanguageService.getClan(SUBRACE_TO_CLAN_KEY[subrace])}
                       </option>
                     `
-          )}
+        )}
                 </optgroup>
               `
-        )}
+      )}
           </select>
           <select
             class="config-select"
@@ -1439,7 +1439,7 @@ export class ConfigSidebar extends BaseLitComponent {
    * Check if current tool supports market data
    */
   private toolSupportsMarket(): boolean {
-    return ['harmony', 'comparison', 'budget', 'mixer', 'extractor', 'gradient', 'presets'].includes(
+    return ['harmony', 'comparison', 'budget', 'mixer', 'extractor', 'gradient', 'presets', 'swatch'].includes(
       this.activeTool
     );
   }

@@ -48,6 +48,13 @@ export interface ResultCardData {
   price?: number;
   /** Vendor cost in Gil (optional) */
   vendorCost?: number;
+  /**
+   * Error code when price fetching fails (optional).
+   * Format: "H" prefix for HTTP errors (e.g., "H429" for rate limiting),
+   * "N" prefix for network errors (e.g., "NOFF" for offline),
+   * "E" prefix for other errors (e.g., "EPRS" for parse error).
+   */
+  marketError?: string;
 }
 
 /**
@@ -122,6 +129,58 @@ const EXTERNAL_URLS = {
   teamcraft: (itemID: number) => `https://ffxivteamcraft.com/db/en/item/${itemID}`,
   saddlebag: (itemID: number) => `https://saddlebagexchange.com/queries/item-data/${itemID}`,
 } as const;
+
+/**
+ * Generate a short market error code from an error or HTTP status.
+ *
+ * Error code prefixes:
+ * - "H" = HTTP error (e.g., "H429" for rate limiting, "H500" for server error)
+ * - "N" = Network error (e.g., "NOFF" for offline, "NTMO" for timeout)
+ * - "E" = Other errors (e.g., "EPRS" for parse error, "EUNK" for unknown)
+ *
+ * @param error - The error that occurred during price fetching
+ * @returns Short error code string (e.g., "H429", "NOFF")
+ */
+export function generateMarketErrorCode(error: unknown): string {
+  // Check for HTTP status in error message
+  if (error instanceof Error) {
+    const message = error.message;
+
+    // HTTP errors: look for "HTTP XXX" pattern
+    const httpMatch = message.match(/HTTP\s*(\d{3})/i);
+    if (httpMatch) {
+      return `H${httpMatch[1]}`;
+    }
+
+    // Timeout errors
+    if (message.includes('timeout') || message.includes('abort')) {
+      return 'NTMO';
+    }
+
+    // Network/fetch errors
+    if (message.includes('network') || message.includes('fetch')) {
+      return navigator.onLine ? 'NFCH' : 'NOFF';
+    }
+
+    // Parse errors
+    if (message.includes('JSON') || message.includes('parse')) {
+      return 'EPRS';
+    }
+
+    // Rate limit (if in message but not captured as HTTP)
+    if (message.includes('rate limit') || message.includes('too many')) {
+      return 'H429';
+    }
+  }
+
+  // Offline check
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return 'NOFF';
+  }
+
+  // Unknown error
+  return 'EUNK';
+}
 
 /**
  * V4 Result Card - Unified dye result display
@@ -414,6 +473,14 @@ export class ResultCard extends BaseLitComponent {
       }
       .delta-poor {
         color: #f44336;
+      }
+
+      /* Market error code styling */
+      .market-error {
+        color: #f44336;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
       }
 
       /* Action Bar at Bottom */
@@ -718,9 +785,12 @@ export class ResultCard extends BaseLitComponent {
   }
 
   /**
-   * Format price with commas and "G" suffix
+   * Format price with commas and "G" suffix.
+   * If an error code is provided, displays the error code instead.
    */
-  private formatPrice(price?: number): string {
+  private formatPrice(price?: number, errorCode?: string): string {
+    // If there's an error code, display it instead of the price
+    if (errorCode) return errorCode;
     if (price === undefined || price === null) return '—';
     return `${price.toLocaleString()} G`;
   }
@@ -978,9 +1048,9 @@ export class ResultCard extends BaseLitComponent {
     const slotLabels =
       tool === 'mixer' || tool === 'gradient'
         ? [
-            LanguageService.t('mixer.startDye') || 'Start Dye',
-            LanguageService.t('mixer.endDye') || 'End Dye',
-          ]
+          LanguageService.t('mixer.startDye') || 'Start Dye',
+          LanguageService.t('mixer.endDye') || 'End Dye',
+        ]
         : currentDyeIds.map((_, i) => `${LanguageService.t('common.slot') || 'Slot'} ${i + 1}`);
 
     // Build slot buttons HTML
@@ -1239,7 +1309,7 @@ export class ResultCard extends BaseLitComponent {
                           <span class="detail-value">${marketServer ?? 'N/A'}</span>
                         </div>
                         <div class="detail-row">
-                          <span class="detail-value large">${this.formatPrice(price)}</span>
+                          <span class="detail-value large ${this.data?.marketError ? 'market-error' : ''}">${this.formatPrice(price, this.data?.marketError)}</span>
                         </div>
                       `
             : nothing}
@@ -1254,7 +1324,7 @@ export class ResultCard extends BaseLitComponent {
               <div class="card-actions">
                 <div class="action-row">
                   ${this.showSlotPicker
-                    ? html`
+            ? html`
                         <div class="slot-picker-container">
                           <button
                             class="primary-action-btn"
@@ -1288,7 +1358,7 @@ export class ResultCard extends BaseLitComponent {
                           </div>
                         </div>
                       `
-                    : html`
+            : html`
                         <button class="primary-action-btn" type="button" @click=${this.handleSelectClick}>
                           ${this.primaryActionLabel}
                         </button>
