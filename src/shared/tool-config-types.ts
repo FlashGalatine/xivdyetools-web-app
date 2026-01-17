@@ -297,7 +297,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   },
   market: {
     selectedServer: 'Balmung',
-    showPrices: true,
+    showPrices: false,
   },
   harmony: {
     harmonyType: 'complementary',
