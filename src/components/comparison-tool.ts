@@ -13,7 +13,9 @@
 import { BaseComponent } from '@components/base-component';
 import { CollapsiblePanel } from '@components/collapsible-panel';
 import { DyeSelector } from '@components/dye-selector';
+import { MarketBoard } from '@components/market-board';
 import { ResultCard, type ResultCardData } from '@components/v4/result-card';
+import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import {
   ColorService,
   ConfigController,
@@ -24,7 +26,7 @@ import {
   WorldService,
 } from '@services/index';
 import { ICON_TOOL_COMPARISON } from '@shared/tool-icons';
-import { ICON_BEAKER, ICON_SETTINGS } from '@shared/ui-icons';
+import { ICON_BEAKER, ICON_SETTINGS, ICON_MARKET } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye } from '@shared/types';
@@ -123,11 +125,15 @@ export class ComparisonTool extends BaseComponent {
   private dyeSelector: DyeSelector | null = null;
   private dyeSelectorPanel: CollapsiblePanel | null = null;
   private optionsPanel: CollapsiblePanel | null = null;
+  private marketBoard: MarketBoard | null = null;
+  private marketPanel: CollapsiblePanel | null = null;
 
   // Mobile drawer components
   private drawerDyeSelector: DyeSelector | null = null;
   private drawerDyeSelectorPanel: CollapsiblePanel | null = null;
   private drawerOptionsPanel: CollapsiblePanel | null = null;
+  private drawerMarketBoard: MarketBoard | null = null;
+  private drawerMarketPanel: CollapsiblePanel | null = null;
   private drawerSelectedDyesContainer: HTMLElement | null = null;
 
   // DOM References
@@ -143,10 +149,6 @@ export class ComparisonTool extends BaseComponent {
   private statsSection: HTMLElement | null = null;
   private chartsSection: HTMLElement | null = null;
   private matrixSection: HTMLElement | null = null;
-
-  // Market Board UI references
-  private serverDescriptionElement: HTMLElement | null = null;
-  private serverSelectElement: HTMLSelectElement | null = null;
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
@@ -205,9 +207,6 @@ export class ComparisonTool extends BaseComponent {
       this.setConfig(config);
     });
 
-    // Subscribe to MarketBoardService events for price updates
-    this.subscribeToMarketBoardEvents();
-
     // Load persisted dyes after DyeSelector is initialized
     this.loadPersistedDyes();
 
@@ -215,58 +214,7 @@ export class ComparisonTool extends BaseComponent {
   }
 
   /**
-   * Subscribe to MarketBoardService events for reactive price updates
-   */
-  private subscribeToMarketBoardEvents(): void {
-    const marketBoardService = MarketBoardService.getInstance();
 
-    // Handler for server changes
-    const handleServerChanged = () => {
-      // Update the server description text
-      if (this.serverDescriptionElement) {
-        this.serverDescriptionElement.textContent = `Prices fetched from Universalis for ${marketBoardService.getSelectedServer()}`;
-      }
-      // Update dropdown selection if it exists
-      if (this.serverSelectElement) {
-        this.serverSelectElement.value = marketBoardService.getSelectedServer();
-      }
-      // Re-fetch prices if Market Board is enabled and we have dyes
-      if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
-        this.fetchAndUpdatePrices();
-      }
-    };
-
-    // Handler for price updates
-    const handlePricesUpdated = () => {
-      // Re-render cards to show updated prices
-      if (this.selectedDyes.length > 0) {
-        this.renderSelectedDyesCards();
-      }
-    };
-
-    // Handler for settings changes (showPrices toggle from elsewhere)
-    const handleSettingsChanged = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { showPrices } = customEvent.detail;
-      if (showPrices !== this.comparisonOptions.showMarketPrices) {
-        this.comparisonOptions.showMarketPrices = showPrices;
-        StorageService.setItem(STORAGE_KEYS.showMarketPrices, showPrices);
-        this.renderSelectedDyesCards();
-      }
-    };
-
-    // Add event listeners
-    marketBoardService.addEventListener('server-changed', handleServerChanged);
-    marketBoardService.addEventListener('prices-updated', handlePricesUpdated);
-    marketBoardService.addEventListener('settings-changed', handleSettingsChanged);
-
-    // Store cleanup function
-    this.marketBoardEventCleanup = () => {
-      marketBoardService.removeEventListener('server-changed', handleServerChanged);
-      marketBoardService.removeEventListener('prices-updated', handlePricesUpdated);
-      marketBoardService.removeEventListener('settings-changed', handleSettingsChanged);
-    };
-  }
 
   /**
    * Fetch prices for selected dyes and update display
@@ -326,15 +274,15 @@ export class ComparisonTool extends BaseComponent {
     this.dyeSelector?.destroy();
     this.dyeSelectorPanel?.destroy();
     this.optionsPanel?.destroy();
+    this.marketBoard?.destroy();
+    this.marketPanel?.destroy();
 
     // Clean up drawer components
     this.drawerDyeSelector?.destroy();
     this.drawerDyeSelectorPanel?.destroy();
     this.drawerOptionsPanel?.destroy();
-
-    // Clear Market Board UI references
-    this.serverDescriptionElement = null;
-    this.serverSelectElement = null;
+    this.drawerMarketBoard?.destroy();
+    this.drawerMarketPanel?.destroy();
 
     this.selectedDyes = [];
     this.dyesWithHSV = [];
@@ -404,6 +352,11 @@ export class ComparisonTool extends BaseComponent {
         StorageService.setItem(STORAGE_KEYS.showMarketPrices, opts.showPrice);
         needsRerender = true;
         logger.info(`[ComparisonTool] setConfig: displayOptions.showPrice -> ${opts.showPrice}`);
+
+        // Fetch prices if enabled and we have dyes
+        if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+          void this.fetchAndUpdatePrices();
+        }
       }
 
       // Note: showAcquisition is not used by comparison tool (has its own acquisition display)
@@ -419,6 +372,9 @@ export class ComparisonTool extends BaseComponent {
   // Left Panel Rendering
   // ============================================================================
 
+  /**
+   * Render left panel content
+   */
   private renderLeftPanel(): void {
     const left = this.options.leftPanel;
     clearContainer(left);
@@ -450,6 +406,49 @@ export class ComparisonTool extends BaseComponent {
     const optionsContent = this.createElement('div');
     this.renderOptions(optionsContent);
     this.optionsPanel.setContent(optionsContent);
+
+    // Section 3: Market Board (Collapsible)
+    const marketContainer = this.createElement('div');
+    left.appendChild(marketContainer);
+    this.marketPanel = new CollapsiblePanel(marketContainer, {
+      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      storageKey: 'v3_comparison_market',
+      defaultOpen: false,
+      icon: ICON_MARKET,
+    });
+    this.marketPanel.init();
+
+    // Create market board content
+    // Note: MarketBoard delegates to MarketBoardService for state management
+    const marketContent = this.createElement('div');
+    this.marketBoard = new MarketBoard(marketContent);
+    this.marketBoard.init();
+
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      marketContent,
+      () => this.comparisonOptions.showMarketPrices,
+      () => this.fetchAndUpdatePrices(),
+      {
+        onPricesToggled: () => {
+          if (this.comparisonOptions.showMarketPrices) {
+            void this.fetchAndUpdatePrices();
+          } else {
+            // Re-render to hide prices (fetchAndUpdatePrices only fetches if enabled)
+            this.renderSelectedDyesCards();
+          }
+        },
+        onServerChanged: () => {
+          // Always re-render to update server name on cards, even if price fetch is pending/fails
+          this.renderSelectedDyesCards();
+          if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+            void this.fetchAndUpdatePrices();
+          }
+        },
+      }
+    );
+
+    this.marketPanel.setContent(marketContent);
   }
 
   /**
@@ -523,7 +522,7 @@ export class ComparisonTool extends BaseComponent {
         this.saveSelectedDyes();
         // Fetch prices for newly selected dyes if Market Board is enabled
         if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
-          this.fetchAndUpdatePrices();
+          void this.fetchAndUpdatePrices();
         }
       }
     });
@@ -601,7 +600,7 @@ export class ComparisonTool extends BaseComponent {
   }
 
   /**
-   * Render comparison options with Color Formats and Market Board sections
+   * Render comparison options with Color Formats
    */
   private renderOptions(container: HTMLElement): void {
     this.optionsContainer = this.createElement('div', { className: 'space-y-4' });
@@ -638,73 +637,6 @@ export class ComparisonTool extends BaseComponent {
       comparisonSection.content.appendChild(this.createToggleRow(option.key, option.label));
     }
     this.optionsContainer.appendChild(comparisonSection.wrapper);
-
-    // === MARKET BOARD SECTION ===
-    const marketBoardSection = this.createOptionsSection(
-      LanguageService.t('common.marketBoard') || 'Market Board'
-    );
-
-    // Enable Market Board toggle
-    marketBoardSection.content.appendChild(
-      this.createToggleRow(
-        'showMarketPrices',
-        LanguageService.t('common.enableMarketBoard') || 'Enable Market Board'
-      )
-    );
-
-    // Server/World dropdown
-    const selectContainer = this.createElement('div', {
-      className: 'mt-2',
-    });
-
-    const select = this.createElement('select', {
-      className: 'w-full p-2 rounded text-sm',
-      attributes: {
-        style: `
-          background: var(--theme-card-background);
-          border: 1px solid var(--theme-border);
-          color: var(--theme-text);
-        `
-          .replace(/\s+/g, ' ')
-          .trim(),
-      },
-    }) as HTMLSelectElement;
-
-    // Store reference for external updates
-    this.serverSelectElement = select;
-
-    // Populate with data centers and worlds
-    this.populateServerDropdown(select);
-
-    this.on(select, 'change', () => {
-      const marketBoardService = MarketBoardService.getInstance();
-      marketBoardService.setServer(select.value);
-      // Update description text immediately
-      if (this.serverDescriptionElement) {
-        this.serverDescriptionElement.textContent = `Prices fetched from Universalis for ${select.value}`;
-      }
-      // Fetch prices for the new server if Market Board is enabled
-      if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
-        this.fetchAndUpdatePrices();
-      }
-      this.updateResults();
-    });
-
-    selectContainer.appendChild(select);
-
-    // Description text
-    const description = this.createElement('div', {
-      className: 'text-xs mt-1',
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    const marketBoardService = MarketBoardService.getInstance();
-    description.textContent = `Prices fetched from Universalis for ${marketBoardService.getSelectedServer()}`;
-    // Store reference for external updates
-    this.serverDescriptionElement = description;
-    selectContainer.appendChild(description);
-
-    marketBoardSection.content.appendChild(selectContainer);
-    this.optionsContainer.appendChild(marketBoardSection.wrapper);
 
     container.appendChild(this.optionsContainer);
   }
@@ -2130,6 +2062,9 @@ export class ComparisonTool extends BaseComponent {
   // Mobile Drawer Content
   // ============================================================================
 
+  /**
+   * Render mobile drawer content
+   */
   private renderDrawerContent(): void {
     if (!this.options.drawerContent) return;
     const drawer = this.options.drawerContent;
@@ -2139,9 +2074,14 @@ export class ComparisonTool extends BaseComponent {
     this.drawerDyeSelector?.destroy();
     this.drawerDyeSelectorPanel?.destroy();
     this.drawerOptionsPanel?.destroy();
+    this.drawerMarketBoard?.destroy();
+    this.drawerMarketPanel?.destroy();
+
     this.drawerDyeSelector = null;
     this.drawerDyeSelectorPanel = null;
     this.drawerOptionsPanel = null;
+    this.drawerMarketBoard = null;
+    this.drawerMarketPanel = null;
 
     // Section 1: Dye Selection (Collapsible)
     const dyeContainer = this.createElement('div');
@@ -2152,6 +2092,45 @@ export class ComparisonTool extends BaseComponent {
     const optionsContainer = this.createElement('div');
     drawer.appendChild(optionsContainer);
     this.renderDrawerOptionsPanel(optionsContainer);
+
+    // Section 3: Market Board (Collapsible)
+    const marketContainer = this.createElement('div');
+    drawer.appendChild(marketContainer);
+    this.drawerMarketPanel = new CollapsiblePanel(marketContainer, {
+      title: LanguageService.t('marketBoard.title') || 'Market Board',
+      storageKey: 'v3_comparison_mobile_market',
+      defaultOpen: false,
+      icon: ICON_MARKET,
+    });
+    this.drawerMarketPanel.init();
+
+    const marketContent = this.createElement('div');
+    this.drawerMarketBoard = new MarketBoard(marketContent);
+    this.drawerMarketBoard.init();
+
+    // Setup listeners for mobile market board
+    setupMarketBoardListeners(
+      marketContent,
+      () => this.comparisonOptions.showMarketPrices,
+      () => this.fetchAndUpdatePrices(),
+      {
+        onPricesToggled: () => {
+          if (this.comparisonOptions.showMarketPrices) {
+            void this.fetchAndUpdatePrices();
+          } else {
+            this.renderSelectedDyesCards();
+          }
+        },
+        onServerChanged: () => {
+          this.renderSelectedDyesCards();
+          if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
+            void this.fetchAndUpdatePrices();
+          }
+        },
+      }
+    );
+
+    this.drawerMarketPanel.setContent(marketContent);
   }
 
   /**
