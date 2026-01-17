@@ -718,7 +718,12 @@
     "apiFailed": "マーケットボードからのデータ取得に失敗しました。",
     "networkError": "ネットワーク接続エラー。インターネット接続を確認してください。",
     "imageLoadFailed": "画像の読み込みに失敗しました。有効な画像ファイルであることを確認してください。",
-    "imageTooLarge": "画像ファイルが大きすぎます。最大サイズは10MBです。",
+    "imageTooLarge": "画像ファイルが大きすぎます。最大サイズは20MBです。",
+    "pleaseSelectImageFile": "画像ファイルを選択してください",
+    "failedToReadImage": "画像の読み取りに失敗しました",
+    "failedToReadFile": "ファイルの読み取りに失敗しました",
+    "failedToLoadSubmissions": "投稿の読み込みに失敗しました。もう一度お試しください。",
+    "failedToDeletePreset": "プリセットの削除に失敗しました。もう一度お試しください。",
     "unsupportedFormat": "サポートされていないファイル形式です。",
     "clipboardFailed": "クリップボードへのコピーに失敗しました。",
     "storageFailed": "設定の保存に失敗しました。ストレージがいっぱいの可能性があります。",
@@ -1007,7 +1012,15 @@
     },
     "editPreset": "プリセットを編集",
     "saveChanges": "変更を保存",
-    "loginToVote": "このプリセットに投票するにはDiscordまたはXIVAuthでログインしてください"
+    "loginToVote": "このプリセットに投票するにはDiscordまたはXIVAuthでログインしてください",
+    "signInToViewSubmissions": "投稿を表示するにはサインインしてください",
+    "loadingSubmissions": "投稿を読み込み中...",
+    "noSubmissionsYet": "まだプリセットを投稿していません。",
+    "submitPresetHint": "上の「プリセットを投稿」をクリックして、カラーパレットを共有しましょう！",
+    "voteCount": "{count}票",
+    "votesCount": "{count}票",
+    "dyes": "染料",
+    "tags": "タグ"
   },
   "auth": {
     "logout": "ログアウト",
@@ -1060,7 +1073,8 @@
     "removeFromFavorites": "お気に入りから削除",
     "moreActions": "その他のアクション",
     "slider": "スライダー",
-    "toggle": "切り替え"
+    "toggle": "切り替え",
+    "refreshSubmissions": "投稿を更新"
   },
   "resultCard": {
     "inspectDyeIn": "染料を確認...",

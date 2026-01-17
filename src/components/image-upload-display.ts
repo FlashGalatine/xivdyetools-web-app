@@ -321,13 +321,13 @@ export class ImageUploadDisplay extends BaseComponent {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      this.emit('error', { message: 'Please select an image file' });
+      this.emit('error', { message: LanguageService.t('errors.pleaseSelectImageFile') });
       return;
     }
 
     // Validate file size (20MB max)
     if (file.size > 20 * 1024 * 1024) {
-      this.emit('error', { message: 'Image must be smaller than 20MB' });
+      this.emit('error', { message: LanguageService.t('errors.imageTooLarge') });
       return;
     }
 
@@ -338,7 +338,7 @@ export class ImageUploadDisplay extends BaseComponent {
       const dataUrl = event.target?.result as string;
 
       if (!dataUrl) {
-        this.emit('error', { message: 'Failed to read image' });
+        this.emit('error', { message: LanguageService.t('errors.failedToReadImage') });
         // BUG-016: Clear handler to release memory
         reader.onload = null;
         reader.onerror = null;
@@ -359,7 +359,7 @@ export class ImageUploadDisplay extends BaseComponent {
       };
 
       img.onerror = () => {
-        this.emit('error', { message: 'Failed to load image' });
+        this.emit('error', { message: LanguageService.t('errors.imageLoadFailed') });
         // BUG-016: Clear handlers on error
         img.onload = null;
         img.onerror = null;
@@ -371,7 +371,7 @@ export class ImageUploadDisplay extends BaseComponent {
     };
 
     reader.onerror = () => {
-      this.emit('error', { message: 'Failed to read file' });
+      this.emit('error', { message: LanguageService.t('errors.failedToReadFile') });
       // BUG-016: Clear handlers on error
       reader.onload = null;
       reader.onerror = null;

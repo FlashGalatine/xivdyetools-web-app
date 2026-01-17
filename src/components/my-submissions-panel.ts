@@ -53,7 +53,7 @@ export class MySubmissionsPanel extends BaseComponent {
     if (!authService.isAuthenticated()) {
       const authPrompt = this.createElement('div', {
         className: 'text-center py-8 text-gray-500 dark:text-gray-400',
-        textContent: 'Sign in to view your submissions',
+        textContent: LanguageService.t('preset.signInToViewSubmissions'),
       });
       wrapper.appendChild(authPrompt);
       this.element = wrapper;
@@ -68,7 +68,7 @@ export class MySubmissionsPanel extends BaseComponent {
 
     const title = this.createElement('h3', {
       className: 'text-lg font-semibold text-gray-900 dark:text-white',
-      textContent: 'My Submissions',
+      textContent: LanguageService.t('preset.mySubmissions'),
     });
     header.appendChild(title);
 
@@ -77,7 +77,7 @@ export class MySubmissionsPanel extends BaseComponent {
       className:
         'p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors',
       dataAttributes: { action: 'refresh' },
-      attributes: { 'aria-label': 'Refresh submissions' },
+      attributes: { 'aria-label': LanguageService.t('aria.refreshSubmissions') },
     });
     refreshBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>`;
     header.appendChild(refreshBtn);
@@ -146,7 +146,7 @@ export class MySubmissionsPanel extends BaseComponent {
     loading.appendChild(spinner);
 
     const text = this.createElement('p', {
-      textContent: 'Loading your submissions...',
+      textContent: LanguageService.t('preset.loadingSubmissions'),
     });
     loading.appendChild(text);
 
@@ -159,7 +159,7 @@ export class MySubmissionsPanel extends BaseComponent {
   private renderErrorState(): HTMLElement {
     return this.createElement('div', {
       className: 'text-center py-8 text-red-500 dark:text-red-400',
-      textContent: 'Failed to load submissions. Please try again.',
+      textContent: LanguageService.t('errors.failedToLoadSubmissions'),
     });
   }
 
@@ -183,13 +183,13 @@ export class MySubmissionsPanel extends BaseComponent {
       empty.appendChild(icon);
 
       const text = this.createElement('p', {
-        textContent: "You haven't submitted any presets yet.",
+        textContent: LanguageService.t('preset.noSubmissionsYet'),
       });
       empty.appendChild(text);
 
       const hint = this.createElement('p', {
         className: 'text-sm mt-1',
-        textContent: 'Click "Submit Preset" above to share your color palettes!',
+        textContent: LanguageService.t('preset.submitPresetHint'),
       });
       empty.appendChild(hint);
 
@@ -329,7 +329,7 @@ export class MySubmissionsPanel extends BaseComponent {
 
     const dyeTitle = this.createElement('div', {
       className: 'text-xs font-medium text-gray-500 dark:text-gray-500 mb-2',
-      textContent: 'Dyes',
+      textContent: LanguageService.t('preset.dyes'),
     });
     dyeSection.appendChild(dyeTitle);
 
@@ -372,7 +372,7 @@ export class MySubmissionsPanel extends BaseComponent {
 
       const tagTitle = this.createElement('div', {
         className: 'text-xs font-medium text-gray-500 dark:text-gray-500 mb-2',
-        textContent: 'Tags',
+        textContent: LanguageService.t('preset.tags'),
       });
       tagSection.appendChild(tagTitle);
 
@@ -398,8 +398,9 @@ export class MySubmissionsPanel extends BaseComponent {
       className: 'flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400',
     });
 
+    const voteKey = preset.vote_count === 1 ? 'preset.voteCount' : 'preset.votesCount';
     const votes = this.createElement('span', {
-      textContent: `${preset.vote_count} vote${preset.vote_count !== 1 ? 's' : ''}`,
+      textContent: LanguageService.tInterpolate(voteKey, { count: preset.vote_count.toString() }),
     });
     stats.appendChild(votes);
 
@@ -415,7 +416,7 @@ export class MySubmissionsPanel extends BaseComponent {
       const editBtn = this.createElement('button', {
         className:
           'px-3 py-1.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors',
-        textContent: '✏️ Edit',
+        textContent: `✏️ ${LanguageService.t('preset.edit')}`,
         dataAttributes: { action: 'edit', presetId: preset.id },
       });
       actions.appendChild(editBtn);
@@ -424,7 +425,7 @@ export class MySubmissionsPanel extends BaseComponent {
     const deleteBtn = this.createElement('button', {
       className:
         'px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors',
-      textContent: '🗑️ Delete',
+      textContent: `🗑️ ${LanguageService.t('preset.delete')}`,
       dataAttributes: { action: 'delete', presetId: preset.id },
     });
     actions.appendChild(deleteBtn);
@@ -467,7 +468,7 @@ export class MySubmissionsPanel extends BaseComponent {
         const presetId = deleteBtn.dataset.presetId;
         if (
           presetId &&
-          confirm('Are you sure you want to delete this preset? This cannot be undone.')
+          confirm(LanguageService.t('preset.confirmDelete'))
         ) {
           this.handleDelete(presetId);
         }
@@ -515,11 +516,11 @@ export class MySubmissionsPanel extends BaseComponent {
         this.submissions = this.submissions.filter((p) => p.id !== presetId);
         this.updateListContainer(this.renderSubmissionsList());
       } else {
-        alert(result.error || 'Failed to delete preset');
+        alert(result.error || LanguageService.t('errors.failedToDeletePreset'));
       }
     } catch (error) {
       console.error('Failed to delete preset:', error);
-      alert('Failed to delete preset. Please try again.');
+      alert(LanguageService.t('errors.failedToDeletePreset'));
     }
   }
 

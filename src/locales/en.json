@@ -723,7 +723,12 @@
     "apiFailed": "Failed to fetch data from market board.",
     "networkError": "Network connection error. Please check your internet connection.",
     "imageLoadFailed": "Failed to load image. Please ensure it is a valid image file.",
-    "imageTooLarge": "Image file is too large. Maximum size is 10MB.",
+    "imageTooLarge": "Image file is too large. Maximum size is 20MB.",
+    "pleaseSelectImageFile": "Please select an image file",
+    "failedToReadImage": "Failed to read image",
+    "failedToReadFile": "Failed to read file",
+    "failedToLoadSubmissions": "Failed to load submissions. Please try again.",
+    "failedToDeletePreset": "Failed to delete preset. Please try again.",
     "unsupportedFormat": "Unsupported file format.",
     "clipboardFailed": "Failed to copy to clipboard.",
     "storageFailed": "Failed to save settings. Storage may be full.",
@@ -1012,7 +1017,15 @@
     },
     "editPreset": "Edit Preset",
     "saveChanges": "Save Changes",
-    "loginToVote": "Login with Discord or XIVAuth to vote for this preset"
+    "loginToVote": "Login with Discord or XIVAuth to vote for this preset",
+    "signInToViewSubmissions": "Sign in to view your submissions",
+    "loadingSubmissions": "Loading your submissions...",
+    "noSubmissionsYet": "You haven't submitted any presets yet.",
+    "submitPresetHint": "Click \"Submit Preset\" above to share your color palettes!",
+    "voteCount": "{count} vote",
+    "votesCount": "{count} votes",
+    "dyes": "Dyes",
+    "tags": "Tags"
   },
   "auth": {
     "logout": "Logout",
@@ -1065,7 +1078,8 @@
     "removeFromFavorites": "Remove from favorites",
     "moreActions": "More actions",
     "slider": "Slider",
-    "toggle": "Toggle"
+    "toggle": "Toggle",
+    "refreshSubmissions": "Refresh submissions"
   },
   "resultCard": {
     "inspectDyeIn": "Inspect Dye in...",

@@ -718,7 +718,12 @@
     "apiFailed": "Daten konnten nicht vom Marktbrett abgerufen werden.",
     "networkError": "Netzwerkverbindungsfehler. Bitte Internetverbindung prüfen.",
     "imageLoadFailed": "Bild konnte nicht geladen werden. Bitte stelle sicher, dass es eine gültige Bilddatei ist.",
-    "imageTooLarge": "Bilddatei ist zu groß. Maximale Größe ist 10MB.",
+    "imageTooLarge": "Bilddatei ist zu groß. Maximale Größe ist 20MB.",
+    "pleaseSelectImageFile": "Bitte wählen Sie eine Bilddatei aus",
+    "failedToReadImage": "Bild konnte nicht gelesen werden",
+    "failedToReadFile": "Datei konnte nicht gelesen werden",
+    "failedToLoadSubmissions": "Einreichungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "failedToDeletePreset": "Voreinstellung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
     "unsupportedFormat": "Nicht unterstütztes Dateiformat.",
     "clipboardFailed": "Kopieren in die Zwischenablage fehlgeschlagen.",
     "storageFailed": "Einstellungen konnten nicht gespeichert werden. Der Speicher ist möglicherweise voll.",
@@ -968,7 +973,15 @@
     },
     "editPreset": "Voreinstellung bearbeiten",
     "saveChanges": "Änderungen speichern",
-    "loginToVote": "Melden Sie sich mit Discord oder XIVAuth an, um für diese Voreinstellung zu stimmen"
+    "loginToVote": "Melden Sie sich mit Discord oder XIVAuth an, um für diese Voreinstellung zu stimmen",
+    "signInToViewSubmissions": "Melden Sie sich an, um Ihre Einreichungen anzuzeigen",
+    "loadingSubmissions": "Ihre Einreichungen werden geladen...",
+    "noSubmissionsYet": "Sie haben noch keine Voreinstellungen eingereicht.",
+    "submitPresetHint": "Klicken Sie oben auf \"Voreinstellung einreichen\", um Ihre Farbpaletten zu teilen!",
+    "voteCount": "{count} Stimme",
+    "votesCount": "{count} Stimmen",
+    "dyes": "Farbstoffe",
+    "tags": "Tags"
   },
   "auth": {
     "logout": "Abmelden",
@@ -1060,7 +1073,8 @@
     "removeFromFavorites": "Aus Favoriten entfernen",
     "moreActions": "Weitere Aktionen",
     "slider": "Schieberegler",
-    "toggle": "Umschalten"
+    "toggle": "Umschalten",
+    "refreshSubmissions": "Einreichungen aktualisieren"
   },
   "resultCard": {
     "inspectDyeIn": "Farbstoff prüfen in...",

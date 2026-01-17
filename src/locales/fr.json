@@ -718,7 +718,12 @@
     "apiFailed": "Échec de la récupération des données du tableau des ventes.",
     "networkError": "Erreur de connexion réseau. Veuillez vérifier votre connexion Internet.",
     "imageLoadFailed": "Échec du chargement de l'image. Assurez-vous qu'il s'agit d'un fichier image valide.",
-    "imageTooLarge": "Le fichier image est trop volumineux. Taille maximale : 10 Mo.",
+    "imageTooLarge": "Le fichier image est trop volumineux. Taille maximale : 20 Mo.",
+    "pleaseSelectImageFile": "Veuillez sélectionner un fichier image",
+    "failedToReadImage": "Échec de la lecture de l'image",
+    "failedToReadFile": "Échec de la lecture du fichier",
+    "failedToLoadSubmissions": "Échec du chargement des soumissions. Veuillez réessayer.",
+    "failedToDeletePreset": "Échec de la suppression du préréglage. Veuillez réessayer.",
     "unsupportedFormat": "Format de fichier non supporté.",
     "clipboardFailed": "Échec de la copie dans le presse-papiers.",
     "storageFailed": "Échec de l'enregistrement des paramètres. Le stockage est peut-être plein.",
@@ -968,7 +973,15 @@
     },
     "editPreset": "Modifier le préréglage",
     "saveChanges": "Enregistrer les modifications",
-    "loginToVote": "Connectez-vous avec Discord ou XIVAuth pour voter pour ce préréglage"
+    "loginToVote": "Connectez-vous avec Discord ou XIVAuth pour voter pour ce préréglage",
+    "signInToViewSubmissions": "Connectez-vous pour voir vos soumissions",
+    "loadingSubmissions": "Chargement de vos soumissions...",
+    "noSubmissionsYet": "Vous n'avez pas encore soumis de préréglages.",
+    "submitPresetHint": "Cliquez sur \"Soumettre un préréglage\" ci-dessus pour partager vos palettes de couleurs !",
+    "voteCount": "{count} vote",
+    "votesCount": "{count} votes",
+    "dyes": "Teintures",
+    "tags": "Tags"
   },
   "auth": {
     "logout": "Déconnexion",
@@ -1060,7 +1073,8 @@
     "removeFromFavorites": "Retirer des favoris",
     "moreActions": "Plus d'actions",
     "slider": "Curseur",
-    "toggle": "Basculer"
+    "toggle": "Basculer",
+    "refreshSubmissions": "Actualiser les soumissions"
   },
   "resultCard": {
     "inspectDyeIn": "Inspecter la teinture dans...",

@@ -738,7 +738,12 @@
     "apiFailed": "从市场布告板获取数据失败。",
     "networkError": "网络连接错误。请检查您的网络连接。",
     "imageLoadFailed": "加载图像失败。请确保它是有效的图像文件。",
-    "imageTooLarge": "图像文件太大。最大大小为 10MB。",
+    "imageTooLarge": "图像文件太大。最大大小为 20MB。",
+    "pleaseSelectImageFile": "请选择图像文件",
+    "failedToReadImage": "读取图像失败",
+    "failedToReadFile": "读取文件失败",
+    "failedToLoadSubmissions": "加载提交失败。请重试。",
+    "failedToDeletePreset": "删除预设失败。请重试。",
     "unsupportedFormat": "不支持的文件格式。",
     "clipboardFailed": "复制到剪贴板失败。",
     "storageFailed": "保存设置失败。存储空间可能已满。",
@@ -988,7 +993,15 @@
     },
     "editPreset": "编辑预设",
     "saveChanges": "保存更改",
-    "loginToVote": "使用Discord或XIVAuth登录以投票"
+    "loginToVote": "使用Discord或XIVAuth登录以投票",
+    "signInToViewSubmissions": "登录以查看您的提交",
+    "loadingSubmissions": "正在加载您的提交...",
+    "noSubmissionsYet": "您还没有提交任何预设。",
+    "submitPresetHint": "点击上方的\"提交预设\"来分享您的色板！",
+    "voteCount": "{count}票",
+    "votesCount": "{count}票",
+    "dyes": "染剂",
+    "tags": "标签"
   },
   "auth": {
     "logout": "登出",
@@ -1080,6 +1093,7 @@
     "removeFromFavorites": "从收藏夹移除",
     "moreActions": "更多操作",
     "slider": "滑块",
-    "toggle": "切换"
+    "toggle": "切换",
+    "refreshSubmissions": "刷新提交"
   }
 }
