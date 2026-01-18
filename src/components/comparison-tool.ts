@@ -607,12 +607,12 @@ export class ComparisonTool extends BaseComponent {
 
     // === COLOR FORMATS SECTION ===
     const colorFormatsSection = this.createOptionsSection(
-      LanguageService.t('common.colorFormats')
+      LanguageService.t('config.colorFormats')
     );
     const colorFormatsOptions = [
-      { key: 'showHex' as const, label: LanguageService.t('common.hexCodes') },
-      { key: 'showRgb' as const, label: LanguageService.t('common.rgbValues') },
-      { key: 'showHsv' as const, label: LanguageService.t('common.hsvValues') },
+      { key: 'showHex' as const, label: LanguageService.t('config.hexCodes') },
+      { key: 'showRgb' as const, label: LanguageService.t('config.rgbValues') },
+      { key: 'showHsv' as const, label: LanguageService.t('config.hsvValues') },
     ];
     for (const option of colorFormatsOptions) {
       colorFormatsSection.content.appendChild(this.createToggleRow(option.key, option.label));

@@ -24,6 +24,7 @@
     "build:css": "tailwindcss -i ./src/tailwind-input.css -o ./assets/css/tailwind.css",
     "build:css:watch": "tailwindcss -i ./src/tailwind-input.css -o ./assets/css/tailwind.css --watch",
     "check-bundle-size": "node scripts/check-bundle-size.js",
+    "validate:i18n": "node scripts/validate-i18n.js",
     "build:check": "npm run build && npm run check-bundle-size"
   },
   "repository": {

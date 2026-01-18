@@ -2263,7 +2263,7 @@ export class BudgetTool extends BaseComponent {
         break;
       case 'copy-hex':
         navigator.clipboard.writeText(dye.hex);
-        ToastService.success(LanguageService.t('common.copiedToClipboard'));
+        ToastService.success(LanguageService.t('success.copiedToClipboard'));
         break;
     }
   }

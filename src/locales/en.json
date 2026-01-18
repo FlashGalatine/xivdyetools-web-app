@@ -161,7 +161,13 @@
     "cost": "Cost",
     "market": "Market",
     "closeModal": "Close modal",
-    "full": "Full"
+    "full": "Full",
+    "copied": "Copied!",
+    "copiedToClipboard": "Copied to clipboard!",
+    "copyFailed": "Failed to copy",
+    "downloaded": "Downloaded!",
+    "dismiss": "Dismiss",
+    "optional": "(optional)"
   },
   "config": {
     "harmonyType": "Harmony Type",
@@ -339,6 +345,9 @@
     "acquisition": "Acquisition",
     "baseDye": "Base Dye",
     "harmonyType": "Harmony Type",
+    "colorWheel": "Color Wheel",
+    "colors": "colors",
+    "actionsMenu": "Actions menu",
     "types": {
       "complementaryDesc": "Colors directly opposite on the color wheel for maximum contrast",
       "analogousDesc": "Colors adjacent on the wheel for a harmonious, unified look",
@@ -424,7 +433,11 @@
     "selectedColor": "Selected Color",
     "dropImageHere": "Drop image here or click to upload",
     "extractedPalette": "Extracted Palette",
-    "exportCss": "Export CSS"
+    "exportCss": "Export CSS",
+    "imageCleared": "Image cleared",
+    "clearImage": "Clear image",
+    "noPaletteToExport": "No palette to export",
+    "paletteExported": "Palette exported!"
   },
   "accessibility": {
     "inspectDyes": "Inspect Dyes",
@@ -497,6 +510,7 @@
     "brightnessDistribution": "Brightness Distribution",
     "colorDistanceMatrix": "Color Distance Matrix",
     "selectAtLeastTwoDyes": "Select at least 2 dyes to compare",
+    "comparisonOptions": "Comparison Options",
     "matrix": {
       "title": "Color Distance Matrix",
       "description": "Lower values indicate more similar colors. Green = very close, Yellow = moderate, Red = very different",
@@ -588,7 +602,9 @@
     "slotsFullReplacing": "Both slots full. Replacing first dye.",
     "replacedSlot1": "Replaced Slot 1",
     "replacedSlot2": "Replaced Slot 2",
-    "replaceSlot": "Replace Slot"
+    "replaceSlot": "Replace Slot",
+    "selectDyesToBlend": "Select dyes to blend",
+    "dye3": "Dye 3"
   },
   "gradient": {
     "selectColor": "Select Color",
@@ -598,7 +614,8 @@
     "clickToSelectEnd": "Click to select end color",
     "gradientResults": "Gradient Results",
     "noMatchesFound": "No matching dyes found",
-    "sameDyeWarning": "Start and end dyes are the same. Select different dyes for a gradient."
+    "sameDyeWarning": "Start and end dyes are the same. Select different dyes for a gradient.",
+    "slotsFull": "All slots are full. Select one to replace:"
   },
   "dyeSelector": {
     "searchPlaceholder": "Search dyes by name...",
@@ -619,7 +636,9 @@
     "selected": "Selected: {current}/{max}",
     "gridAriaLabel": "Dye selection grid. Use arrow keys to navigate, Enter or Space to select.",
     "noResults": "No dyes match your search",
-    "noResultsHint": "Try a different search term or category"
+    "noResultsHint": "Try a different search term or category",
+    "noDyesInCategory": "No dyes in this category",
+    "tryCategoryHint": "Try selecting a different category"
   },
   "filters": {
     "title": "Dye Filters",
@@ -1112,7 +1131,8 @@
     "moreActions": "More actions",
     "slider": "Slider",
     "toggle": "Toggle",
-    "refreshSubmissions": "Refresh submissions"
+    "refreshSubmissions": "Refresh submissions",
+    "toolSelection": "Tool selection"
   },
   "resultCard": {
     "inspectDyeIn": "Inspect Dye in...",

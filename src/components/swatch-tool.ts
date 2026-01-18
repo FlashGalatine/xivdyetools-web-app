@@ -1211,11 +1211,11 @@ export class SwatchTool extends BaseComponent {
       .writeText(info)
       .then(() => {
         ToastService.success(
-          LanguageService.t('actions.copiedToClipboard')
+          LanguageService.t('success.copiedToClipboard')
         );
       })
       .catch(() => {
-        ToastService.error(LanguageService.t('actions.copyFailed'));
+        ToastService.error(LanguageService.t('common.copyFailed'));
       });
   }
 
