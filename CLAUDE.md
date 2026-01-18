@@ -18,7 +18,7 @@ XIV Dye Tools is a client-side web application providing six tools for Final Fan
 
 ---
 
-## Quick Commands
+## Commands
 
 ```bash
 npm run dev              # Start dev server (http://localhost:5173)
