@@ -23,6 +23,47 @@ const ANIMATION_DURATION = 300; // milliseconds
 const SCROLL_MARGIN = 100; // pixels margin when scrolling element into view
 
 // ============================================================================
+// Shadow DOM Utilities
+// ============================================================================
+
+/**
+ * Query selector that traverses through Shadow DOM boundaries.
+ * Searches document and all shadow roots recursively.
+ *
+ * @param selector - CSS selector string (can be comma-separated for multiple selectors)
+ * @returns The first matching element, or null if not found
+ */
+function querySelectorDeep(selector: string): HTMLElement | null {
+  // First try regular document query (fast path)
+  const regular = document.querySelector(selector) as HTMLElement | null;
+  if (regular) return regular;
+
+  // Split multiple selectors and try each
+  const selectors = selector.split(',').map(s => s.trim());
+
+  // Search through all shadow roots
+  function searchShadowRoots(root: Document | ShadowRoot): HTMLElement | null {
+    for (const sel of selectors) {
+      const found = root.querySelector(sel) as HTMLElement | null;
+      if (found) return found;
+    }
+
+    // Get all elements that might have shadow roots
+    const elements = root.querySelectorAll('*');
+    for (const element of elements) {
+      if (element.shadowRoot) {
+        const found = searchShadowRoots(element.shadowRoot);
+        if (found) return found;
+      }
+    }
+
+    return null;
+  }
+
+  return searchShadowRoots(document);
+}
+
+// ============================================================================
 // Tutorial Spotlight Class
 // ============================================================================
 
@@ -185,8 +226,8 @@ export class TutorialSpotlight extends BaseComponent {
     this.currentStepIndex = stepIndex;
     this.totalSteps = totalSteps;
 
-    // Find target element
-    const target = document.querySelector(step.target) as HTMLElement;
+    // Find target element (supports Shadow DOM traversal)
+    const target = querySelectorDeep(step.target);
     if (!target) {
       logger.warn(`Tutorial target not found: ${step.target}`);
       // Skip to next step if target not found
@@ -210,7 +251,8 @@ export class TutorialSpotlight extends BaseComponent {
   private updatePositions(): void {
     if (!this.currentStep || !this.spotlight || !this.tooltip) return;
 
-    const target = document.querySelector(this.currentStep.target) as HTMLElement;
+    // Use Shadow DOM traversal to find target
+    const target = querySelectorDeep(this.currentStep.target);
     if (!target) return;
 
     const rect = target.getBoundingClientRect();

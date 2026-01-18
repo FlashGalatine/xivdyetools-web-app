@@ -10,6 +10,7 @@
 import { ModalService } from '@services/modal-service';
 import { StorageService } from '@services/storage-service';
 import { LanguageService } from '@services/language-service';
+import { TutorialService } from '@services/tutorial-service';
 import { STORAGE_KEYS, APP_NAME, APP_VERSION } from '@shared/constants';
 import {
   ICON_TOOL_HARMONY,
@@ -216,6 +217,31 @@ export class WelcomeModal {
     const buttonContainer = document.createElement('div');
     buttonContainer.className = 'flex justify-end gap-3 mt-4';
 
+    // "Take the Tour" button (secondary)
+    const takeTourBtn = document.createElement('button');
+    takeTourBtn.className =
+      'px-6 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1';
+    takeTourBtn.style.backgroundColor = 'var(--theme-card-background)';
+    takeTourBtn.style.color = 'var(--theme-text)';
+    takeTourBtn.style.border = '1px solid var(--theme-primary)';
+    takeTourBtn.addEventListener('mouseenter', () => {
+      takeTourBtn.style.backgroundColor = 'var(--theme-card-hover)';
+    });
+    takeTourBtn.addEventListener('mouseleave', () => {
+      takeTourBtn.style.backgroundColor = 'var(--theme-card-background)';
+    });
+    takeTourBtn.textContent = LanguageService.t('welcome.takeTour');
+    takeTourBtn.addEventListener('click', () => {
+      this.dontShowAgain = true; // Mark as seen
+      this.close();
+      WelcomeModal.markAsSeen();
+      // Start tutorial after modal animation completes
+      setTimeout(() => {
+        TutorialService.start('harmony');
+      }, 350);
+    });
+
+    // "Get Started" button (primary)
     const getStartedBtn = document.createElement('button');
     getStartedBtn.className =
       'px-6 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1';
@@ -234,6 +260,7 @@ export class WelcomeModal {
       WelcomeModal.markAsSeen();
     });
 
+    buttonContainer.appendChild(takeTourBtn);
     buttonContainer.appendChild(getStartedBtn);
     container.appendChild(buttonContainer);
 

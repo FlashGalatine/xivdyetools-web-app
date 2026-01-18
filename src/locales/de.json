@@ -810,6 +810,7 @@
     "intro": "Finde die perfekten Farbstoffe für deine FFXIV-Glamours! Entdecke unsere Werkzeuge unten:",
     "dontShowAgain": "Nicht mehr anzeigen",
     "getStarted": "Los geht's",
+    "takeTour": "Tour starten",
     "quickTips": "Schnelltipps",
     "tip1": "Klicke auf Werkzeugnamen im Header, um zwischen Werkzeugen zu wechseln",
     "tip2": "Preise stammen von Universalis (Live-Marktdaten)",
@@ -898,83 +899,83 @@
     "harmony": {
       "baseColor": {
         "title": "Basisfarbe wählen",
-        "description": "Wählen Sie eine Farbe als Basisfarbe. Der Harmonie-Generator erstellt passende Farbpaletten basierend auf dieser Auswahl."
-      },
-      "types": {
-        "title": "Harmonieart wählen",
-        "description": "Wählen Sie ein Farbharmonie-Muster. Jeder Typ erstellt unterschiedliche Farbbeziehungen."
+        "description": "Wählen Sie eine Farbe aus der Farbpalette als Basis. Klicken Sie auf ein Farbfeld, um es auszuwählen."
       },
       "filters": {
-        "title": "Ergebnisse filtern",
-        "description": "Verwenden Sie Filter, um bestimmte Farbstofftypen wie Metallic oder Pastell auszuschließen."
+        "title": "Suchen & Filtern",
+        "description": "Suchen Sie Farben nach Namen oder filtern Sie nach Typ: Metallic, Pastell, Dunkel oder Leuchtend."
       },
-      "market": {
-        "title": "Marktpreise prüfen",
-        "description": "Sehen Sie aktuelle Marktpreise von Universalis für jede Farbe in Ihrer Palette."
+      "favorites": {
+        "title": "Ihre Favoriten",
+        "description": "Markieren Sie Farben mit einem Stern, um sie zu speichern. Klicken Sie auf den Stern, um hinzuzufügen oder zu entfernen."
       },
-      "export": {
-        "title": "Palette exportieren",
-        "description": "Exportieren Sie Ihre Farbpalette in verschiedenen Formaten: JSON, CSS oder Klartext."
+      "toolBanner": {
+        "title": "Werkzeuge wechseln",
+        "description": "Klicken Sie auf ein Werkzeugsymbol, um zwischen Funktionen zu wechseln: Harmonie, Extraktor, Vergleich und mehr!"
       }
     },
     "matcher": {
-      "upload": {
-        "title": "Bild hochladen",
-        "description": "Laden Sie ein Bild von Ihrem Gerät hoch oder fügen Sie es aus der Zwischenablage ein."
+      "palette": {
+        "title": "Farbpalette",
+        "description": "Wählen Sie Farben aus der Palette rechts für Farbextraktion und Abgleich."
       },
-      "picker": {
-        "title": "Farbe auswählen",
-        "description": "Klicken Sie auf das Bild, um eine Farbe zu erfassen, oder verwenden Sie den Farbwähler."
+      "settings": {
+        "title": "Extraktionseinstellungen",
+        "description": "Optionen wie Lebhaftigkeits-Boost umschalten, um die Farbextraktion zu verbessern."
       },
-      "sample": {
-        "title": "Abtastgröße anpassen",
-        "description": "Größere Abtastgrößen mitteln mehr Pixel für bessere Genauigkeit bei texturierten Bereichen."
+      "maxColors": {
+        "title": "Max. Farben",
+        "description": "Stellen Sie mit dem Schieberegler ein, wie viele Farben extrahiert werden sollen."
       },
-      "results": {
-        "title": "Passende Farben anzeigen",
-        "description": "Sehen Sie die am besten passenden FFXIV-Farben für Ihre ausgewählte Farbe."
+      "displayOptions": {
+        "title": "Anzeigeoptionen",
+        "description": "Passen Sie an, welche Farbwerte angezeigt werden: Hex, RGB, HSV, Lab, Preise und mehr."
       }
     },
     "comparison": {
       "select": {
-        "title": "Farben zum Vergleichen wählen",
-        "description": "Wählen Sie bis zu 4 Farben zum Vergleichen aus."
+        "title": "Farben auswählen",
+        "description": "Klicken Sie auf Farben in der Palette, um sie zum Vergleich hinzuzufügen. Bis zu 4 Farben."
       },
-      "display": {
-        "title": "Eigenschaften vergleichen",
-        "description": "Sehen Sie detaillierte Farbwerte, RGB, HSV und visuelle Vergleiche."
+      "displayOptions": {
+        "title": "Anzeigeoptionen",
+        "description": "Wählen Sie, welche Farbformate und Metadaten in der Vergleichsansicht angezeigt werden."
       },
-      "matrix": {
-        "title": "Abstandsmatrix",
-        "description": "Sehen Sie, wie ähnlich oder unterschiedlich jede Farbe zu den anderen ist."
+      "favorites": {
+        "title": "Favoriten verwenden",
+        "description": "Greifen Sie schnell auf Ihre Lieblingsfarben zu, um sie zum Vergleich hinzuzufügen."
       }
     },
     "mixer": {
-      "endpoints": {
-        "title": "Start und Ende wählen",
-        "description": "Wählen Sie zwei Farben, um einen Verlauf zu erstellen."
+      "selectColors": {
+        "title": "Farben auswählen",
+        "description": "Wählen Sie Farben aus der Palette zum Mischen. Der Mixer blendet sie zu neuen Farben."
       },
-      "gradient": {
-        "title": "Verlauf anzeigen",
-        "description": "Sehen Sie den sanften Farbübergang und die passenden Farben bei jedem Schritt."
+      "mixingMode": {
+        "title": "Mischmodus",
+        "description": "Wählen Sie den Farbmischalgorithmus: Spektral, RYB, OKLab, Lab, HSL oder RGB-Mischung."
       },
-      "settings": {
-        "title": "Interpolationseinstellungen",
-        "description": "Passen Sie die Anzahl der Schritte und den Farbraum an."
+      "maxResults": {
+        "title": "Max. Ergebnisse",
+        "description": "Passen Sie an, wie viele passende Farbergebnisse für jede gemischte Farbe angezeigt werden."
+      },
+      "displayOptions": {
+        "title": "Anzeigeoptionen",
+        "description": "Passen Sie an, welche Farbwerte und Metadaten für gemischte Farben angezeigt werden."
       }
     },
     "accessibility": {
       "select": {
-        "title": "Outfit-Farben wählen",
-        "description": "Wählen Sie bis zu 6 Farben für Ihre Outfit-Slots zur Barrierefreiheitsprüfung."
+        "title": "Farben auswählen",
+        "description": "Wählen Sie Farben aus der Palette, um zu sehen, wie sie bei verschiedenen Farbsehtypen aussehen."
       },
-      "simulations": {
-        "title": "Sehsimulationen",
-        "description": "Sehen Sie, wie Ihre Farbwahl für Menschen mit verschiedenen Farbsehschwächen aussieht."
+      "visionTypes": {
+        "title": "Sehtypen",
+        "description": "Schalten Sie um, welche Farbsehsimulationen angezeigt werden: Deuteranopie, Protanopie, Tritanopie oder Achromasie."
       },
-      "scores": {
-        "title": "Barrierefreiheitswerte",
-        "description": "Sehen Sie WCAG-Kontrastwerte und Farbblindheitskompatibilität."
+      "displaySettings": {
+        "title": "Anzeigeeinstellungen",
+        "description": "Konfigurieren Sie die Anzeigeoptionen für die Barrierefreiheitsprüfung."
       }
     }
   },

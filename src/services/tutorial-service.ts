@@ -78,81 +78,89 @@ interface TutorialCompletion {
 
 /**
  * Harmony Generator tutorial steps
+ *
+ * Note: Selectors must work with Shadow DOM (querySelectorDeep traverses shadow roots).
+ * V4 layout uses Lit components - elements are inside shadow DOM of:
+ * - v4-layout-shell → dye-palette-drawer, v4-config-sidebar, v4-tool-banner
  */
 const HARMONY_TUTORIAL: Tutorial = {
   tool: 'harmony',
   steps: [
     {
       id: 'base-color',
-      target: '[data-tutorial="harmony-base-color"], .dye-selector',
+      // Target the swatch grid in dye-palette-drawer (inside shadow DOM)
+      target: '.swatch-grid, .category-section',
       titleKey: 'tutorial.harmony.baseColor.title',
       descriptionKey: 'tutorial.harmony.baseColor.description',
-      position: 'bottom',
+      position: 'left',
     },
     {
-      id: 'harmony-type',
-      target: '[data-tutorial="harmony-types"], .harmony-type-selector',
-      titleKey: 'tutorial.harmony.types.title',
-      descriptionKey: 'tutorial.harmony.types.description',
-      position: 'bottom',
-    },
-    {
-      id: 'filters',
-      target: '[data-tutorial="harmony-filters"], .dye-filters',
+      id: 'search-filter',
+      // Target the search and filter area in dye-palette-drawer
+      target: '.filter-bar, .search-box',
       titleKey: 'tutorial.harmony.filters.title',
       descriptionKey: 'tutorial.harmony.filters.description',
       position: 'left',
     },
     {
-      id: 'market-board',
-      target: '[data-tutorial="harmony-market"], .market-board',
-      titleKey: 'tutorial.harmony.market.title',
-      descriptionKey: 'tutorial.harmony.market.description',
-      position: 'top',
+      id: 'favorites',
+      // Target the favorites section in dye-palette-drawer
+      target: '.favorites-section',
+      titleKey: 'tutorial.harmony.favorites.title',
+      descriptionKey: 'tutorial.harmony.favorites.description',
+      position: 'left',
     },
     {
-      id: 'export',
-      target: '[data-tutorial="harmony-export"], .palette-exporter',
-      titleKey: 'tutorial.harmony.export.title',
-      descriptionKey: 'tutorial.harmony.export.description',
-      position: 'top',
+      id: 'tool-banner',
+      // Target the tool banner for navigation
+      target: 'v4-tool-banner, .v4-tool-banner',
+      titleKey: 'tutorial.harmony.toolBanner.title',
+      descriptionKey: 'tutorial.harmony.toolBanner.description',
+      position: 'bottom',
     },
   ],
 };
 
 /**
- * Color Matcher tutorial steps
+ * Color Matcher (Extractor) tutorial steps
+ *
+ * Note: "matcher" is the internal tutorial tool name, but the tool is called "extractor" in the router.
+ * This tutorial focuses on the palette extractor functionality.
  */
 const MATCHER_TUTORIAL: Tutorial = {
   tool: 'matcher',
   steps: [
     {
-      id: 'image-upload',
-      target: '[data-tutorial="matcher-upload"], .image-upload',
-      titleKey: 'tutorial.matcher.upload.title',
-      descriptionKey: 'tutorial.matcher.upload.description',
-      position: 'right',
-    },
-    {
-      id: 'color-picker',
-      target: '[data-tutorial="matcher-picker"], .color-picker',
-      titleKey: 'tutorial.matcher.picker.title',
-      descriptionKey: 'tutorial.matcher.picker.description',
-      position: 'right',
-    },
-    {
-      id: 'sample-size',
-      target: '[data-tutorial="matcher-sample"], .sample-size-slider',
-      titleKey: 'tutorial.matcher.sample.title',
-      descriptionKey: 'tutorial.matcher.sample.description',
-      position: 'bottom',
-    },
-    {
-      id: 'results',
-      target: '[data-tutorial="matcher-results"], .matched-dyes',
-      titleKey: 'tutorial.matcher.results.title',
-      descriptionKey: 'tutorial.matcher.results.description',
+      id: 'color-palette',
+      // Target the swatch grid in dye-palette-drawer for selecting colors
+      target: '.swatch-grid, .category-section',
+      titleKey: 'tutorial.matcher.palette.title',
+      descriptionKey: 'tutorial.matcher.palette.description',
       position: 'left',
+    },
+    {
+      id: 'extraction-settings',
+      // Target the config toggle for vibrancy boost
+      target: '.config-row, v4-toggle-switch',
+      titleKey: 'tutorial.matcher.settings.title',
+      descriptionKey: 'tutorial.matcher.settings.description',
+      position: 'right',
+    },
+    {
+      id: 'max-colors',
+      // Target the slider wrapper for max colors
+      target: '.slider-wrapper, v4-range-slider',
+      titleKey: 'tutorial.matcher.maxColors.title',
+      descriptionKey: 'tutorial.matcher.maxColors.description',
+      position: 'right',
+    },
+    {
+      id: 'display-options',
+      // Target the display options component
+      target: 'v4-display-options',
+      titleKey: 'tutorial.matcher.displayOptions.title',
+      descriptionKey: 'tutorial.matcher.displayOptions.description',
+      position: 'right',
     },
   ],
 };
@@ -165,24 +173,27 @@ const COMPARISON_TUTORIAL: Tutorial = {
   steps: [
     {
       id: 'select-dyes',
-      target: '[data-tutorial="comparison-selector"], .dye-selector',
+      // Target the swatch grid to select dyes for comparison
+      target: '.swatch-grid, .category-section',
       titleKey: 'tutorial.comparison.select.title',
       descriptionKey: 'tutorial.comparison.select.description',
-      position: 'bottom',
+      position: 'left',
     },
     {
-      id: 'side-by-side',
-      target: '[data-tutorial="comparison-display"], .comparison-display',
-      titleKey: 'tutorial.comparison.display.title',
-      descriptionKey: 'tutorial.comparison.display.description',
-      position: 'top',
+      id: 'display-options',
+      // Target the display options for customizing the comparison view
+      target: 'v4-display-options',
+      titleKey: 'tutorial.comparison.displayOptions.title',
+      descriptionKey: 'tutorial.comparison.displayOptions.description',
+      position: 'right',
     },
     {
-      id: 'matrix',
-      target: '[data-tutorial="comparison-matrix"], .distance-matrix',
-      titleKey: 'tutorial.comparison.matrix.title',
-      descriptionKey: 'tutorial.comparison.matrix.description',
-      position: 'top',
+      id: 'favorites',
+      // Target the favorites section
+      target: '.favorites-section',
+      titleKey: 'tutorial.comparison.favorites.title',
+      descriptionKey: 'tutorial.comparison.favorites.description',
+      position: 'left',
     },
   ],
 };
@@ -194,25 +205,36 @@ const MIXER_TUTORIAL: Tutorial = {
   tool: 'mixer',
   steps: [
     {
-      id: 'start-end',
-      target: '[data-tutorial="mixer-endpoints"], .mixer-endpoints',
-      titleKey: 'tutorial.mixer.endpoints.title',
-      descriptionKey: 'tutorial.mixer.endpoints.description',
-      position: 'bottom',
-    },
-    {
-      id: 'gradient',
-      target: '[data-tutorial="mixer-gradient"], .gradient-display',
-      titleKey: 'tutorial.mixer.gradient.title',
-      descriptionKey: 'tutorial.mixer.gradient.description',
-      position: 'top',
-    },
-    {
-      id: 'settings',
-      target: '[data-tutorial="mixer-settings"], .interpolation-settings',
-      titleKey: 'tutorial.mixer.settings.title',
-      descriptionKey: 'tutorial.mixer.settings.description',
+      id: 'select-colors',
+      // Target the swatch grid to select colors to mix
+      target: '.swatch-grid, .category-section',
+      titleKey: 'tutorial.mixer.selectColors.title',
+      descriptionKey: 'tutorial.mixer.selectColors.description',
       position: 'left',
+    },
+    {
+      id: 'mixing-mode',
+      // Target the mixing mode dropdown selector
+      target: '.config-select',
+      titleKey: 'tutorial.mixer.mixingMode.title',
+      descriptionKey: 'tutorial.mixer.mixingMode.description',
+      position: 'right',
+    },
+    {
+      id: 'max-results',
+      // Target the max results slider
+      target: '.slider-wrapper, v4-range-slider',
+      titleKey: 'tutorial.mixer.maxResults.title',
+      descriptionKey: 'tutorial.mixer.maxResults.description',
+      position: 'right',
+    },
+    {
+      id: 'display-options',
+      // Target the display options component
+      target: 'v4-display-options',
+      titleKey: 'tutorial.mixer.displayOptions.title',
+      descriptionKey: 'tutorial.mixer.displayOptions.description',
+      position: 'right',
     },
   ],
 };
@@ -224,25 +246,28 @@ const ACCESSIBILITY_TUTORIAL: Tutorial = {
   tool: 'accessibility',
   steps: [
     {
-      id: 'select-outfit',
-      target: '[data-tutorial="accessibility-selector"], .outfit-selector',
+      id: 'select-dyes',
+      // Target the swatch grid to select dyes for accessibility check
+      target: '.swatch-grid, .category-section',
       titleKey: 'tutorial.accessibility.select.title',
       descriptionKey: 'tutorial.accessibility.select.description',
-      position: 'bottom',
-    },
-    {
-      id: 'simulations',
-      target: '[data-tutorial="accessibility-simulations"], .vision-simulations',
-      titleKey: 'tutorial.accessibility.simulations.title',
-      descriptionKey: 'tutorial.accessibility.simulations.description',
       position: 'left',
     },
     {
-      id: 'scores',
-      target: '[data-tutorial="accessibility-scores"], .accessibility-scores',
-      titleKey: 'tutorial.accessibility.scores.title',
-      descriptionKey: 'tutorial.accessibility.scores.description',
-      position: 'top',
+      id: 'vision-types',
+      // Target the vision type toggle switches
+      target: '.config-row, v4-toggle-switch',
+      titleKey: 'tutorial.accessibility.visionTypes.title',
+      descriptionKey: 'tutorial.accessibility.visionTypes.description',
+      position: 'right',
+    },
+    {
+      id: 'display-settings',
+      // Target the simulation display toggles
+      target: 'v4-display-options',
+      titleKey: 'tutorial.accessibility.displaySettings.title',
+      descriptionKey: 'tutorial.accessibility.displaySettings.description',
+      position: 'right',
     },
   ],
 };

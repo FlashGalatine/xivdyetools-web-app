@@ -810,6 +810,7 @@
     "intro": "Trouvez les teintures parfaites pour vos glamours FFXIV ! Explorez nos outils ci-dessous :",
     "dontShowAgain": "Ne plus afficher",
     "getStarted": "Commencer",
+    "takeTour": "Faire la visite",
     "quickTips": "Astuces rapides",
     "tip1": "Cliquez sur les noms des outils dans l'en-tête pour changer d'outil",
     "tip2": "Les prix proviennent d'Universalis (données de marché en direct)",
@@ -898,83 +899,83 @@
     "harmony": {
       "baseColor": {
         "title": "Sélectionner une teinture de base",
-        "description": "Choisissez une teinture comme couleur de base. Le générateur créera des palettes complémentaires."
-      },
-      "types": {
-        "title": "Choisir le type harmonie",
-        "description": "Sélectionnez un motif harmonique de couleur basé sur la théorie des couleurs."
+        "description": "Choisissez une teinture dans la palette de couleurs. Cliquez sur un échantillon pour le sélectionner."
       },
       "filters": {
-        "title": "Filtrer les résultats",
-        "description": "Utilisez des filtres pour exclure certains types de teintures comme métallique ou pastel."
+        "title": "Rechercher & Filtrer",
+        "description": "Recherchez des teintures par nom ou filtrez par type : Métallique, Pastel, Sombre ou Vibrant."
       },
-      "market": {
-        "title": "Vérifier les prix du marché",
-        "description": "Consultez les prix actuels de Universalis pour chaque teinture de votre palette."
+      "favorites": {
+        "title": "Vos favoris",
+        "description": "Marquez les teintures avec une étoile pour les sauvegarder. Cliquez sur l'étoile pour ajouter ou retirer."
       },
-      "export": {
-        "title": "Exporter la palette",
-        "description": "Exportez votre palette en différents formats : JSON, CSS ou texte brut."
+      "toolBanner": {
+        "title": "Changer d'outil",
+        "description": "Cliquez sur une icône pour changer de fonction : Harmonie, Extracteur, Comparaison et plus !"
       }
     },
     "matcher": {
-      "upload": {
-        "title": "Télécharger une image",
-        "description": "Téléchargez une image ou collez depuis le presse-papiers. Cliquez ou faites glisser."
+      "palette": {
+        "title": "Palette de couleurs",
+        "description": "Sélectionnez des teintures de la palette à droite pour extraction et correspondance de couleurs."
       },
-      "picker": {
-        "title": "Choisir une couleur",
-        "description": "Cliquez sur image pour échantillonner une couleur ou utilisez le sélecteur de couleur."
+      "settings": {
+        "title": "Paramètres d'extraction",
+        "description": "Activez des options comme le boost de vivacité pour améliorer l'extraction des couleurs."
       },
-      "sample": {
-        "title": "Ajuster la taille",
-        "description": "Des tailles plus grandes moyennent plus de pixels pour une meilleure précision."
+      "maxColors": {
+        "title": "Max. couleurs",
+        "description": "Ajustez le curseur pour définir combien de couleurs extraire de votre image."
       },
-      "results": {
-        "title": "Voir les correspondances",
-        "description": "Voyez les teintures FFXIV les plus proches de votre couleur sélectionnée."
+      "displayOptions": {
+        "title": "Options d'affichage",
+        "description": "Personnalisez les valeurs de couleur affichées : Hex, RGB, HSV, Lab, prix et plus."
       }
     },
     "comparison": {
       "select": {
         "title": "Sélectionner des teintures",
-        "description": "Choisissez jusqu à 4 teintures à comparer côte à côte."
+        "description": "Cliquez sur les teintures de la palette pour les ajouter à la comparaison. Jusqu'à 4 teintures."
       },
-      "display": {
-        "title": "Comparer les propriétés",
-        "description": "Voyez les valeurs de couleur détaillées, RGB, HSV et comparaisons visuelles."
+      "displayOptions": {
+        "title": "Options d'affichage",
+        "description": "Choisissez quels formats de couleur et métadonnées afficher dans la vue de comparaison."
       },
-      "matrix": {
-        "title": "Matrice de distance",
-        "description": "Voyez à quel point chaque teinture est similaire ou différente des autres."
+      "favorites": {
+        "title": "Utiliser les favoris",
+        "description": "Accédez rapidement à vos teintures favorites pour les ajouter aux comparaisons."
       }
     },
     "mixer": {
-      "endpoints": {
-        "title": "Sélectionner début et fin",
-        "description": "Choisissez deux teintures pour créer un dégradé entre elles."
+      "selectColors": {
+        "title": "Sélectionner des couleurs",
+        "description": "Choisissez des teintures de la palette à mélanger. Le mixeur les fusionnera en nouvelles couleurs."
       },
-      "gradient": {
-        "title": "Voir le dégradé",
-        "description": "Voyez la transition de couleur fluide et les meilleures correspondances à chaque étape."
+      "mixingMode": {
+        "title": "Mode de mélange",
+        "description": "Sélectionnez l'algorithme de mélange : Spectral, RYB, OKLab, Lab, HSL ou RGB."
       },
-      "settings": {
-        "title": "Paramètres interpolation",
-        "description": "Ajustez le nombre étapes et espace colorimétrique pour personnaliser."
+      "maxResults": {
+        "title": "Max. résultats",
+        "description": "Ajustez combien de résultats de teintures correspondantes sont affichés pour chaque couleur mélangée."
+      },
+      "displayOptions": {
+        "title": "Options d'affichage",
+        "description": "Personnalisez les valeurs de couleur et métadonnées affichées pour les couleurs mélangées."
       }
     },
     "accessibility": {
       "select": {
-        "title": "Sélectionner les teintures",
-        "description": "Choisissez jusqu à 6 teintures représentant vos emplacements tenue."
+        "title": "Sélectionner des teintures",
+        "description": "Choisissez des teintures de la palette pour voir comment elles apparaissent avec différents types de vision."
       },
-      "simulations": {
-        "title": "Simulations de vision",
-        "description": "Voyez comment vos choix de couleurs apparaissent aux personnes avec différents types de vision."
+      "visionTypes": {
+        "title": "Types de vision",
+        "description": "Activez les simulations de vision à afficher : Deutéranopie, Protanopie, Tritanopie ou Achromatopsie."
       },
-      "scores": {
-        "title": "Scores accessibilité",
-        "description": "Consultez les évaluations de contraste WCAG et la compatibilité daltonisme."
+      "displaySettings": {
+        "title": "Paramètres d'affichage",
+        "description": "Configurez les options d'affichage pour la vue vérificateur d'accessibilité."
       }
     }
   },

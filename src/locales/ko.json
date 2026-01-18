@@ -793,6 +793,7 @@
     "intro": "FFXIV 글래머에 완벽한 염료를 찾아보세요! 아래 도구를 살펴보세요:",
     "dontShowAgain": "다시 표시하지 않기",
     "getStarted": "시작하기",
+    "takeTour": "투어 시작",
     "quickTips": "빠른 팁",
     "tip1": "헤더의 도구 이름을 클릭하여 도구 간 전환",
     "tip2": "가격은 Universalis에서 제공되는 실시간 마켓 데이터입니다",
@@ -881,83 +882,83 @@
     "harmony": {
       "baseColor": {
         "title": "기본 염료 선택",
-        "description": "기본 색상으로 사용할 염료를 선택하세요. 하모니 생성기가 이 선택을 기반으로 보색 팔레트를 만듭니다."
-      },
-      "types": {
-        "title": "하모니 유형 선택",
-        "description": "색상 조화 패턴을 선택하세요. 각 유형은 색상 이론 원칙에 따라 다른 색상 관계를 만듭니다."
+        "description": "색상 팔레트에서 염료를 선택하여 기본 색상으로 사용하세요. 색상 견본을 클릭하여 선택합니다."
       },
       "filters": {
-        "title": "결과 필터링",
-        "description": "메탈릭이나 파스텔과 같은 특정 염료 유형을 제외하는 필터를 사용하세요."
+        "title": "검색 및 필터",
+        "description": "검색창에서 이름으로 염료를 찾거나 메탈릭, 파스텔, 다크, 비비드로 필터링하세요."
       },
-      "market": {
-        "title": "시장 가격 확인",
-        "description": "팔레트의 각 염료에 대한 Universalis의 현재 시장 가격을 확인하세요."
+      "favorites": {
+        "title": "즐겨찾기",
+        "description": "염료에 별표를 달아 즐겨찾기에 저장하세요. 별을 클릭하여 추가하거나 제거합니다."
       },
-      "export": {
-        "title": "팔레트 내보내기",
-        "description": "색상 팔레트를 다양한 형식으로 내보내기: JSON, CSS 또는 일반 텍스트."
+      "toolBanner": {
+        "title": "도구 전환",
+        "description": "도구 아이콘을 클릭하여 기능을 전환하세요: 하모니, 추출기, 비교 등!"
       }
     },
     "matcher": {
-      "upload": {
-        "title": "이미지 업로드",
-        "description": "기기에서 이미지를 업로드하거나 클립보드에서 붙여넣으세요. 클릭하거나 드래그하세요."
+      "palette": {
+        "title": "색상 팔레트",
+        "description": "오른쪽 팔레트에서 색상을 선택하여 색상 추출 및 매칭에 사용합니다."
       },
-      "picker": {
-        "title": "색상 선택",
-        "description": "이미지의 아무 곳이나 클릭하여 색상을 샘플링하거나 색상 선택기를 사용하세요."
+      "settings": {
+        "title": "추출 설정",
+        "description": "생동감 부스트와 같은 옵션을 전환하여 이미지에서 색상 추출을 향상시킵니다."
       },
-      "sample": {
-        "title": "샘플 크기 조정",
-        "description": "샘플 크기가 클수록 텍스처가 있는 영역에서 더 정확한 색상을 얻을 수 있습니다."
+      "maxColors": {
+        "title": "최대 색상 수",
+        "description": "슬라이더를 조정하여 이미지에서 추출할 색상 수를 설정합니다."
       },
-      "results": {
-        "title": "매칭된 염료 보기",
-        "description": "선택한 색상과 가장 잘 맞는 FFXIV 염료를 색상 거리 순으로 확인하세요."
+      "displayOptions": {
+        "title": "표시 옵션",
+        "description": "표시할 색상 값을 사용자 지정합니다: Hex, RGB, HSV, Lab, 가격 등."
       }
     },
     "comparison": {
       "select": {
-        "title": "비교할 염료 선택",
-        "description": "최대 4개의 염료를 선택하여 나란히 비교하세요."
+        "title": "염료 선택",
+        "description": "팔레트에서 염료를 클릭하여 비교에 추가합니다. 최대 4개의 염료를 비교할 수 있습니다."
       },
-      "display": {
-        "title": "속성 비교",
-        "description": "선택한 염료 간의 상세한 색상 값, RGB, HSV 및 시각적 비교를 확인하세요."
+      "displayOptions": {
+        "title": "표시 옵션",
+        "description": "비교 보기에 표시할 색상 형식과 메타데이터를 선택합니다."
       },
-      "matrix": {
-        "title": "거리 매트릭스",
-        "description": "각 염료가 다른 염료와 얼마나 비슷하거나 다른지 확인하세요."
+      "favorites": {
+        "title": "즐겨찾기 사용",
+        "description": "즐겨찾기 염료에 빠르게 액세스하여 비교에 추가합니다."
       }
     },
     "mixer": {
-      "endpoints": {
-        "title": "시작과 끝 선택",
-        "description": "그라데이션을 만들 두 개의 염료를 선택하세요. 믹서가 중간 염료를 찾습니다."
+      "selectColors": {
+        "title": "색상 선택",
+        "description": "팔레트에서 염료를 선택하여 혼합합니다. 믹서가 블렌딩하여 새로운 색상을 만듭니다."
       },
-      "gradient": {
-        "title": "그라데이션 보기",
-        "description": "부드러운 색상 전환과 각 단계에서 가장 일치하는 염료를 확인하세요."
+      "mixingMode": {
+        "title": "혼합 모드",
+        "description": "색상 혼합 알고리즘을 선택합니다: 스펙트럴, RYB, OKLab, Lab, HSL 또는 RGB 블렌딩."
       },
-      "settings": {
-        "title": "보간 설정",
-        "description": "단계 수와 색상 공간을 조정하여 그라데이션을 사용자 지정하세요."
+      "maxResults": {
+        "title": "최대 결과 수",
+        "description": "각 혼합 색상에 대해 표시할 매칭 염료 결과 수를 조정합니다."
+      },
+      "displayOptions": {
+        "title": "표시 옵션",
+        "description": "혼합 색상에 표시할 색상 값과 메타데이터를 사용자 지정합니다."
       }
     },
     "accessibility": {
       "select": {
-        "title": "의상 염료 선택",
-        "description": "접근성을 확인하기 위해 의상 슬롯을 나타내는 최대 6개의 염료를 선택하세요."
+        "title": "염료 선택",
+        "description": "팔레트에서 염료를 선택하여 다양한 색각 유형에서 어떻게 보이는지 확인합니다."
       },
-      "simulations": {
-        "title": "시각 시뮬레이션",
-        "description": "다양한 색각을 가진 사람들에게 염료가 어떻게 보이는지 확인하세요."
+      "visionTypes": {
+        "title": "시각 유형",
+        "description": "표시할 색각 시뮬레이션을 전환합니다: 녹색맹, 적색맹, 청색맹 또는 전색맹."
       },
-      "scores": {
-        "title": "접근성 점수",
-        "description": "WCAG 대비 등급과 색맹 호환성을 확인하세요."
+      "displaySettings": {
+        "title": "표시 설정",
+        "description": "접근성 검사기 보기의 표시 옵션을 구성합니다."
       }
     }
   },

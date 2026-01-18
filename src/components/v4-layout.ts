@@ -14,9 +14,11 @@
 
 import { RouterService, type ToolId } from '@services/router-service';
 import { ConfigController } from '@services/config-controller';
-import { LanguageService } from '@services/index';
+import { LanguageService, StorageService, ModalService } from '@services/index';
+import { TutorialService, type TutorialTool } from '@services/tutorial-service';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
+import { STORAGE_PREFIX } from '@shared/constants';
 import type { BaseComponent } from './base-component';
 import type { V4LayoutShell } from './v4/v4-layout-shell';
 import { ModalContainer } from './modal-container';
@@ -24,6 +26,7 @@ import { ToastContainer } from './toast-container';
 import { showThemeModal } from './v4/theme-modal';
 import { showLanguageModal } from './v4/language-modal';
 import { showAboutModal } from './about-modal';
+import { WelcomeModal } from './welcome-modal';
 
 // Import V4 layout shell (registers custom element)
 import '@components/v4/v4-layout-shell';
@@ -36,6 +39,86 @@ let languageUnsubscribe: (() => void) | null = null;
 let configUnsubscribe: (() => void) | null = null;
 let modalContainer: ModalContainer | null = null;
 let toastContainer: ToastContainer | null = null;
+
+// ============================================================================
+// Tutorial Integration
+// ============================================================================
+
+/**
+ * Mapping from router tool IDs to tutorial tool IDs
+ * Note: Router uses different IDs than tutorials for some tools
+ */
+const TOOL_TO_TUTORIAL: Partial<Record<ToolId, TutorialTool>> = {
+  harmony: 'harmony',
+  extractor: 'matcher', // Router uses 'extractor', tutorial uses 'matcher'
+  comparison: 'comparison',
+  gradient: 'mixer', // Router uses 'gradient', tutorial uses 'mixer'
+  accessibility: 'accessibility',
+};
+
+/**
+ * Get storage key for tracking if a tool's tutorial has been offered
+ */
+function getTutorialOfferedKey(tool: TutorialTool): string {
+  return `${STORAGE_PREFIX}_tutorial_offered_${tool}`;
+}
+
+/**
+ * Check if tutorial has been offered for this tool
+ */
+function isTutorialOffered(tool: TutorialTool): boolean {
+  return StorageService.getItem<boolean>(getTutorialOfferedKey(tool), false) ?? false;
+}
+
+/**
+ * Mark tutorial as offered for this tool
+ */
+function markTutorialOffered(tool: TutorialTool): void {
+  StorageService.setItem(getTutorialOfferedKey(tool), true);
+}
+
+/**
+ * Prompt user to take tutorial on first visit to a tool
+ * Only prompts once per tool, respects completion status
+ */
+function promptTutorialIfFirstVisit(tool: TutorialTool): void {
+  // Skip if welcome modal hasn't been dismissed yet (user is brand new)
+  if (WelcomeModal.shouldShow()) {
+    return;
+  }
+
+  // Skip if tutorial already completed
+  if (TutorialService.isCompleted(tool)) {
+    return;
+  }
+
+  // Skip if tutorial already offered for this tool
+  if (isTutorialOffered(tool)) {
+    return;
+  }
+
+  // Skip if another modal is open
+  if (ModalService.hasOpenModals()) {
+    return;
+  }
+
+  // Skip if a tutorial is currently active
+  if (TutorialService.getState().isActive) {
+    return;
+  }
+
+  // Mark as offered before prompting (prevents race conditions)
+  markTutorialOffered(tool);
+
+  // Small delay to let tool render completely before showing tutorial prompt
+  setTimeout(() => {
+    TutorialService.promptStart(tool);
+  }, 800);
+}
+
+// ============================================================================
+// Layout Initialization
+// ============================================================================
 
 /**
  * Initialize the v4 layout
@@ -367,6 +450,12 @@ async function loadToolContent(toolId: ToolId): Promise<void> {
     // Clear loading and append tool container
     clearContainer(contentContainer);
     contentContainer.appendChild(toolContainer);
+
+    // Check if we should prompt for tutorial on first visit to this tool
+    const tutorialTool = TOOL_TO_TUTORIAL[toolId];
+    if (tutorialTool) {
+      promptTutorialIfFirstVisit(tutorialTool);
+    }
   } catch (error) {
     logger.error(`[V4 Layout] Failed to load ${toolId}:`, error);
     contentContainer.innerHTML = `

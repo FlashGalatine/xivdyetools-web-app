@@ -840,6 +840,7 @@
     "intro": "Find the perfect dyes for your FFXIV glamours! Explore our tools below:",
     "dontShowAgain": "Don't show this again",
     "getStarted": "Get Started",
+    "takeTour": "Take the Tour",
     "quickTips": "Quick Tips",
     "tip1": "Click tool names in the header to switch between tools",
     "tip2": "Prices are from Universalis (live market data)",
@@ -967,83 +968,83 @@
     "harmony": {
       "baseColor": {
         "title": "Select a Base Dye",
-        "description": "Choose a dye to use as your base color. The harmony generator will create complementary color palettes based on this selection."
-      },
-      "types": {
-        "title": "Choose Harmony Type",
-        "description": "Select a color harmony pattern. Each type creates different color relationships based on color theory principles."
+        "description": "Choose a dye from the color palette to use as your base. Click any color swatch to select it."
       },
       "filters": {
-        "title": "Filter Your Results",
-        "description": "Use filters to exclude certain dye types like metallic or pastel dyes, helping you find exactly what you need."
+        "title": "Search & Filter",
+        "description": "Use the search box to find dyes by name, or filter by type: Metallic, Pastel, Dark, or Vibrant."
       },
-      "market": {
-        "title": "Check Market Prices",
-        "description": "View current market prices from Universalis for each dye in your palette. Prices update in real-time."
+      "favorites": {
+        "title": "Your Favorites",
+        "description": "Star any dye to save it to your favorites. Click the star on a swatch to add or remove it."
       },
-      "export": {
-        "title": "Export Your Palette",
-        "description": "Export your color palette in various formats: JSON for developers, CSS for web projects, or plain text for sharing."
+      "toolBanner": {
+        "title": "Switch Tools",
+        "description": "Click any tool icon to switch between different features: Color Harmony, Extractor, Comparison, and more!"
       }
     },
     "matcher": {
-      "upload": {
-        "title": "Upload an Image",
-        "description": "Upload an image from your device or paste from clipboard. Click or drag to upload."
+      "palette": {
+        "title": "Color Palette",
+        "description": "Select dyes from the palette on the right to use in color extraction and matching."
       },
-      "picker": {
-        "title": "Pick a Color",
-        "description": "Click anywhere on the image to sample a color, or use the color picker for manual selection."
+      "settings": {
+        "title": "Extraction Settings",
+        "description": "Toggle options like Vibrancy Boost to enhance color extraction from images."
       },
-      "sample": {
-        "title": "Adjust Sample Size",
-        "description": "Larger sample sizes average more pixels for better accuracy on textured areas."
+      "maxColors": {
+        "title": "Max Colors",
+        "description": "Adjust the slider to set how many colors to extract from your image."
       },
-      "results": {
-        "title": "View Matched Dyes",
-        "description": "See the best matching FFXIV dyes for your selected color, sorted by color distance."
+      "displayOptions": {
+        "title": "Display Options",
+        "description": "Customize which color values are shown: Hex, RGB, HSV, Lab, prices, and more."
       }
     },
     "comparison": {
       "select": {
-        "title": "Select Dyes to Compare",
-        "description": "Choose up to 4 dyes to compare side-by-side. Click dyes to select them."
+        "title": "Select Dyes",
+        "description": "Click dyes from the palette to add them to the comparison. You can compare up to 4 dyes."
       },
-      "display": {
-        "title": "Compare Properties",
-        "description": "View detailed color values, RGB, HSV, and visual comparisons between your selected dyes."
+      "displayOptions": {
+        "title": "Display Options",
+        "description": "Choose which color formats and metadata to display in the comparison view."
       },
-      "matrix": {
-        "title": "Distance Matrix",
-        "description": "See how similar or different each dye is from the others. Lower numbers mean more similar colors."
+      "favorites": {
+        "title": "Use Favorites",
+        "description": "Quickly access your favorite dyes to add them to comparisons."
       }
     },
     "mixer": {
-      "endpoints": {
-        "title": "Select Start and End",
-        "description": "Choose two dyes to create a gradient between. The mixer will find intermediate dyes."
+      "selectColors": {
+        "title": "Select Colors",
+        "description": "Choose dyes from the palette to mix together. The mixer will blend them to create new colors."
       },
-      "gradient": {
-        "title": "View Gradient",
-        "description": "See the smooth color transition and the best matching dyes at each step."
+      "mixingMode": {
+        "title": "Mixing Mode",
+        "description": "Select the color mixing algorithm: Spectral, RYB, OKLab, Lab, HSL, or RGB blending."
       },
-      "settings": {
-        "title": "Interpolation Settings",
-        "description": "Adjust the number of steps and color space to customize your gradient."
+      "maxResults": {
+        "title": "Max Results",
+        "description": "Adjust how many matching dye results are shown for each mixed color."
+      },
+      "displayOptions": {
+        "title": "Display Options",
+        "description": "Customize which color values and metadata are shown for mixed colors."
       }
     },
     "accessibility": {
       "select": {
-        "title": "Select Outfit Dyes",
-        "description": "Choose up to 6 dyes representing your outfit slots to check their accessibility."
+        "title": "Select Dyes",
+        "description": "Choose dyes from the palette to check how they appear with different types of color vision."
       },
-      "simulations": {
-        "title": "Vision Simulations",
-        "description": "See how your dye choices appear to people with different types of color vision."
+      "visionTypes": {
+        "title": "Vision Types",
+        "description": "Toggle which color vision simulations to show: Deuteranopia, Protanopia, Tritanopia, or Achromatopsia."
       },
-      "scores": {
-        "title": "Accessibility Scores",
-        "description": "View WCAG contrast ratings and colorblindness compatibility for your color choices."
+      "displaySettings": {
+        "title": "Display Settings",
+        "description": "Configure display options for the accessibility checker view."
       }
     }
   },

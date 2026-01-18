@@ -813,6 +813,7 @@
     "intro": "为您的 FFXIV 幻化找到完美的染剂！探索我们的工具：",
     "dontShowAgain": "不再显示",
     "getStarted": "开始使用",
+    "takeTour": "开始导览",
     "quickTips": "快速提示",
     "tip1": "点击标题栏中的工具名称可切换工具",
     "tip2": "价格来自 Universalis（实时市场数据）",
@@ -901,83 +902,83 @@
     "harmony": {
       "baseColor": {
         "title": "选择基础染料",
-        "description": "选择一个染料作为基础颜色。协调生成器将根据此选择创建互补色调色板。"
-      },
-      "types": {
-        "title": "选择协调类型",
-        "description": "选择颜色协调模式。每种类型根据色彩理论原则创建不同的颜色关系。"
+        "description": "从调色板中选择一个染料作为基础颜色。点击色块进行选择。"
       },
       "filters": {
-        "title": "过滤结果",
-        "description": "使用过滤器排除某些染料类型，如金属色或柔和色。"
+        "title": "搜索与筛选",
+        "description": "使用搜索框按名称查找染料，或按类型筛选：金属色、柔和色、深色或鲜艳色。"
       },
-      "market": {
-        "title": "查看市场价格",
-        "description": "查看调色板中每种染料的Universalis当前市场价格。价格实时更新。"
+      "favorites": {
+        "title": "收藏夹",
+        "description": "为染料加星标以保存到收藏夹。点击星标可添加或移除。"
       },
-      "export": {
-        "title": "导出调色板",
-        "description": "以多种格式导出您的调色板：JSON、CSS或纯文本。"
+      "toolBanner": {
+        "title": "切换工具",
+        "description": "点击工具图标切换不同功能：色彩协调、提取器、比较等！"
       }
     },
     "matcher": {
-      "upload": {
-        "title": "上传图片",
-        "description": "从您的设备上传图片或从剪贴板粘贴。点击或拖动上传。"
+      "palette": {
+        "title": "调色板",
+        "description": "从右侧调色板中选择染料，用于颜色提取和匹配。"
       },
-      "picker": {
-        "title": "选择颜色",
-        "description": "点击图片的任何位置采样颜色，或使用颜色选择器手动选择。"
+      "settings": {
+        "title": "提取设置",
+        "description": "切换鲜艳度增强等选项，以改善从图片中提取颜色。"
       },
-      "sample": {
-        "title": "调整采样大小",
-        "description": "较大的采样尺寸可以平均更多像素，在纹理区域获得更准确的颜色。"
+      "maxColors": {
+        "title": "最大颜色数",
+        "description": "调整滑块以设置从图片中提取多少种颜色。"
       },
-      "results": {
-        "title": "查看匹配的染料",
-        "description": "查看与您选择的颜色最匹配的FFXIV染料，按颜色距离排序。"
+      "displayOptions": {
+        "title": "显示选项",
+        "description": "自定义显示的颜色值：Hex、RGB、HSV、Lab、价格等。"
       }
     },
     "comparison": {
       "select": {
-        "title": "选择要比较的染料",
-        "description": "选择最多4种染料进行并排比较。点击染料以选择它们。"
+        "title": "选择染料",
+        "description": "点击调色板中的染料将其添加到比较中。最多可比较4种染料。"
       },
-      "display": {
-        "title": "比较属性",
-        "description": "查看所选染料之间的详细颜色值、RGB、HSV和视觉比较。"
+      "displayOptions": {
+        "title": "显示选项",
+        "description": "选择在比较视图中显示哪些颜色格式和元数据。"
       },
-      "matrix": {
-        "title": "距离矩阵",
-        "description": "查看每种染料与其他染料的相似程度或差异程度。"
+      "favorites": {
+        "title": "使用收藏夹",
+        "description": "快速访问您收藏的染料，将其添加到比较中。"
       }
     },
     "mixer": {
-      "endpoints": {
-        "title": "选择起点和终点",
-        "description": "选择两种染料来创建它们之间的渐变。混合器将找到中间染料。"
+      "selectColors": {
+        "title": "选择颜色",
+        "description": "从调色板中选择染料进行混合。混合器将混合它们创建新颜色。"
       },
-      "gradient": {
-        "title": "查看渐变",
-        "description": "查看平滑的颜色过渡以及每个步骤中最匹配的染料。"
+      "mixingMode": {
+        "title": "混合模式",
+        "description": "选择颜色混合算法：光谱、RYB、OKLab、Lab、HSL或RGB混合。"
       },
-      "settings": {
-        "title": "插值设置",
-        "description": "调整步骤数和色彩空间以自定义您的渐变。"
+      "maxResults": {
+        "title": "最大结果数",
+        "description": "调整每种混合颜色显示多少个匹配染料结果。"
+      },
+      "displayOptions": {
+        "title": "显示选项",
+        "description": "自定义混合颜色显示的颜色值和元数据。"
       }
     },
     "accessibility": {
       "select": {
-        "title": "选择服装染料",
-        "description": "选择最多6种代表您装备槽位的染料来检查可访问性。"
+        "title": "选择染料",
+        "description": "从调色板中选择染料，查看它们在不同色觉类型下的显示效果。"
       },
-      "simulations": {
-        "title": "视觉模拟",
-        "description": "查看具有不同色觉类型的人如何看到您的染料选择。"
+      "visionTypes": {
+        "title": "视觉类型",
+        "description": "切换要显示的色觉模拟：绿色盲、红色盲、蓝色盲或全色盲。"
       },
-      "scores": {
-        "title": "可访问性评分",
-        "description": "查看WCAG对比度评级和色盲兼容性。"
+      "displaySettings": {
+        "title": "显示设置",
+        "description": "配置无障碍检查器视图的显示选项。"
       }
     }
   },

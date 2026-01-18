@@ -70,6 +70,11 @@ async function initializeApp(): Promise<void> {
     const { initializeV4Layout } = await import('@components/v4-layout');
     await initializeV4Layout(appContainer);
 
+    // Initialize tutorial spotlight component (listens for tutorial events)
+    logger.info('📚 Initializing tutorial spotlight...');
+    const { initializeTutorialSpotlight } = await import('@components/tutorial-spotlight');
+    initializeTutorialSpotlight();
+
     logger.info('✅ Application initialized successfully');
 
     // Show welcome modal for first-time visitors, or changelog for returning users
