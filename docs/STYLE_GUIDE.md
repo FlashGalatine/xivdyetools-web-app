@@ -46,6 +46,7 @@ Avoid reintroducing `bg-white`/`dark:bg-gray-900` on those surfaces—let the sh
 - `docs/ARCHITECTURE.md` – overview of the TypeScript + Lit structure.
 - `docs/PRIVACY.md` – what data stays on-device (important for color/image tooling).
 - `docs/TROUBLESHOOTING.md` – known responsive gotchas and fixes.
+- `docs/I18N.md` – internationalization patterns and translation key usage.
 
 Keep this guide close when building new components so the app stays visually consistent as we iterate. 
 
