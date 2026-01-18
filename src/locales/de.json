@@ -161,7 +161,8 @@
     "cost": "Kosten",
     "market": "Markt",
     "closeModal": "Modal schließen",
-    "full": "Voll"
+    "full": "Voll",
+    "optional": "(optional)"
   },
   "config": {
     "harmonyType": "Harmonie-Typ",
@@ -281,7 +282,14 @@
     "whites": "Weißtöne",
     "blacks": "Schwarztöne",
     "grays": "Grautöne",
-    "noDyesFound": "Keine Farbstoffe gefunden"
+    "noDyesFound": "Keine Farbstoffe gefunden",
+    "customColor": "Benutzerdefinierte Farbe",
+    "enterHexCode": "Hex-Code eingeben",
+    "applyCustomColor": "Anwenden",
+    "customColorApplied": "Benutzerdefinierte Farbe angewendet",
+    "invalidHexCode": "Ungültiger Hex-Code",
+    "noDyesAvailable": "Keine Farbstoffe verfügbar",
+    "randomDyeSelected": "{name} ausgewählt"
   },
   "harmony": {
     "suggestionMode": "Vorschlagsmodus",
@@ -581,7 +589,9 @@
     "slotsFullReplacing": "Beide Slots voll. Ersetze ersten Farbstoff.",
     "replacedSlot1": "Slot 1 ersetzt",
     "replacedSlot2": "Slot 2 ersetzt",
-    "replaceSlot": "Slot ersetzen"
+    "replaceSlot": "Slot ersetzen",
+    "selectDyesToBlend": "Farbstoffe zum Mischen auswählen",
+    "dye3": "Farbstoff 3"
   },
   "gradient": {
     "selectColor": "Farbe auswählen",

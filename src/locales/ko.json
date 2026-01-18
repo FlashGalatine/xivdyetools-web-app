@@ -161,7 +161,8 @@
     "cost": "비용",
     "market": "시장",
     "closeModal": "모달 닫기",
-    "full": "가득 참"
+    "full": "가득 참",
+    "optional": "(선택사항)"
   },
   "config": {
     "harmonyType": "조화 유형",
@@ -281,7 +282,14 @@
     "whites": "화이트",
     "blacks": "블랙",
     "grays": "그레이",
-    "noDyesFound": "염료를 찾을 수 없습니다"
+    "noDyesFound": "염료를 찾을 수 없습니다",
+    "customColor": "사용자 지정 색상",
+    "enterHexCode": "Hex 코드 입력",
+    "applyCustomColor": "적용",
+    "customColorApplied": "사용자 지정 색상이 적용되었습니다",
+    "invalidHexCode": "유효하지 않은 Hex 코드",
+    "noDyesAvailable": "사용 가능한 염료가 없습니다",
+    "randomDyeSelected": "{name} 선택됨"
   },
   "harmony": {
     "suggestionMode": "제안 모드",
@@ -581,7 +589,9 @@
     "slotsFullReplacing": "두 슬롯이 가득 찼습니다. 첫 번째 염료를 교체합니다.",
     "replacedSlot1": "슬롯 1 교체됨",
     "replacedSlot2": "슬롯 2 교체됨",
-    "replaceSlot": "슬롯 교체"
+    "replaceSlot": "슬롯 교체",
+    "selectDyesToBlend": "블렌딩할 염료 선택",
+    "dye3": "염료 3"
   },
   "gradient": {
     "selectColor": "색상 선택",

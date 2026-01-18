@@ -161,7 +161,8 @@
     "cost": "成本",
     "market": "市场",
     "closeModal": "关闭弹窗",
-    "full": "已满"
+    "full": "已满",
+    "optional": "（可选）"
   },
   "resultCard": {
     "inspectDyeIn": "在以下工具中查看...",
@@ -301,7 +302,14 @@
     "whites": "白色系",
     "blacks": "黑色系",
     "grays": "灰色系",
-    "noDyesFound": "未找到染剂"
+    "noDyesFound": "未找到染剂",
+    "customColor": "自定义颜色",
+    "enterHexCode": "输入十六进制代码",
+    "applyCustomColor": "应用",
+    "customColorApplied": "已应用自定义颜色",
+    "invalidHexCode": "无效的十六进制代码",
+    "noDyesAvailable": "没有可用的染剂",
+    "randomDyeSelected": "已选择 {name}"
   },
   "harmony": {
     "suggestionMode": "建议模式",
@@ -601,7 +609,9 @@
     "slotsFullReplacing": "两个槽位已满。正在替换第一个染剂。",
     "replacedSlot1": "已替换槽位 1",
     "replacedSlot2": "已替换槽位 2",
-    "replaceSlot": "替换槽位"
+    "replaceSlot": "替换槽位",
+    "selectDyesToBlend": "选择要混合的染剂",
+    "dye3": "染剂 3"
   },
   "gradient": {
     "selectColor": "选择颜色",

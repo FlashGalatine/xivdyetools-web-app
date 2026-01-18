@@ -161,7 +161,8 @@
     "cost": "Coût",
     "market": "Marché",
     "closeModal": "Fermer la fenêtre",
-    "full": "Complet"
+    "full": "Complet",
+    "optional": "(optionnel)"
   },
   "config": {
     "harmonyType": "Type d'harmonie",
@@ -281,7 +282,14 @@
     "whites": "Blancs",
     "blacks": "Noirs",
     "grays": "Gris",
-    "noDyesFound": "Aucune teinture trouvée"
+    "noDyesFound": "Aucune teinture trouvée",
+    "customColor": "Couleur personnalisée",
+    "enterHexCode": "Entrer le code hex",
+    "applyCustomColor": "Appliquer",
+    "customColorApplied": "Couleur personnalisée appliquée",
+    "invalidHexCode": "Code hex invalide",
+    "noDyesAvailable": "Aucune teinture disponible",
+    "randomDyeSelected": "{name} sélectionné"
   },
   "harmony": {
     "suggestionMode": "Mode de Suggestion",
@@ -581,7 +589,9 @@
     "slotsFullReplacing": "Les deux emplacements sont pleins. Remplacement de la première teinture.",
     "replacedSlot1": "Emplacement 1 remplacé",
     "replacedSlot2": "Emplacement 2 remplacé",
-    "replaceSlot": "Remplacer l'emplacement"
+    "replaceSlot": "Remplacer l'emplacement",
+    "selectDyesToBlend": "Sélectionner les teintures à mélanger",
+    "dye3": "Teinture 3"
   },
   "gradient": {
     "selectColor": "Sélectionner une Couleur",

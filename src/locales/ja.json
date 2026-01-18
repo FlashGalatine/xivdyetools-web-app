@@ -161,7 +161,8 @@
     "cost": "コスト",
     "market": "マーケット",
     "closeModal": "モーダルを閉じる",
-    "full": "満杯"
+    "full": "満杯",
+    "optional": "(任意)"
   },
   "config": {
     "harmonyType": "ハーモニータイプ",
@@ -281,7 +282,14 @@
     "whites": "ホワイト系",
     "blacks": "ブラック系",
     "grays": "グレー系",
-    "noDyesFound": "染料が見つかりません"
+    "noDyesFound": "染料が見つかりません",
+    "customColor": "カスタムカラー",
+    "enterHexCode": "Hexコードを入力",
+    "applyCustomColor": "適用",
+    "customColorApplied": "カスタムカラーを適用しました",
+    "invalidHexCode": "無効なHexコードです",
+    "noDyesAvailable": "利用可能な染料がありません",
+    "randomDyeSelected": "{name}を選択しました"
   },
   "harmony": {
     "suggestionMode": "提案モード",
@@ -581,7 +589,9 @@
     "slotsFullReplacing": "両方のスロットがいっぱいです。最初のカララントを置き換えます。",
     "replacedSlot1": "スロット1を置き換えました",
     "replacedSlot2": "スロット2を置き換えました",
-    "replaceSlot": "スロットを置き換え"
+    "replaceSlot": "スロットを置き換え",
+    "selectDyesToBlend": "ブレンドする染料を選択",
+    "dye3": "カララント3"
   },
   "gradient": {
     "selectColor": "色を選択",
