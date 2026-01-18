@@ -1,5 +1,25 @@
 # Build Scripts
 
+## i18n Validation
+
+Validate all `LanguageService.t()` calls against the locale files:
+
+```bash
+# Check for missing translation keys
+npm run validate:i18n
+
+# Check with typo suggestions (Levenshtein-based)
+npm run validate:i18n -- --fix
+```
+
+The script scans all TypeScript files in `src/` and validates that every translation key exists in `src/locales/en.json`.
+
+**Related:** The project also includes a custom ESLint rule `xivdyetools-i18n/no-i18n-fallback` that warns against fallback patterns like `LanguageService.t('key') || 'fallback'`. This runs automatically with `npm run lint`.
+
+See `docs/I18N.md` for full i18n documentation.
+
+---
+
 ## Icon Conversion to WebP
 
 To optimize images for mobile performance, run the icon conversion script:

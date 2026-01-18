@@ -1088,9 +1088,7 @@ export class ComparisonTool extends BaseComponent {
 
     // Message text
     const message = this.createElement('p', {
-      textContent:
-        LanguageService.t('comparison.selectAtLeastTwoDyes')
-        'Select 2 or more dyes from the Color Palette to compare them',
+      textContent: LanguageService.t('comparison.selectAtLeastTwoDyes'),
       attributes: {
         style: `
           font-size: 1.1rem;

@@ -2324,12 +2324,18 @@ export class GradientTool extends BaseComponent {
     const virtualDye: Dye = {
       id: -Date.now(), // Unique negative ID
       itemID: -Date.now(),
+      stainID: null, // Custom colors don't have a stain ID
       name: `Custom (${hex})`,
       hex: hex.toUpperCase(),
+      rgb: ColorService.hexToRgb(hex),
       hsv: ColorService.hexToHsv(hex),
       category: 'Custom',
+      acquisition: 'Custom',
       cost: 0,
-      source: 'custom',
+      isMetallic: false,
+      isPastel: false,
+      isDark: false,
+      isCosmic: false,
     };
 
     // Use the existing selectDye logic to add to gradient

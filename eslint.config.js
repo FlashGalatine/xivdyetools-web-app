@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import prettier from 'eslint-config-prettier'
 import pluginPrettier from 'eslint-plugin-prettier/recommended'
+import i18nPlugin from './eslint-rules/no-i18n-fallback.js'
 
 export default [
   {
@@ -34,6 +35,9 @@ export default [
         document: 'readonly',
       },
     },
+    plugins: {
+      'xivdyetools-i18n': i18nPlugin,
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
@@ -52,6 +56,8 @@ export default [
       ],
       'prefer-const': 'error',
       'no-var': 'error',
+      // Custom i18n rule: warn against fallback patterns
+      'xivdyetools-i18n/no-i18n-fallback': 'warn',
     },
   },
   pluginPrettier,

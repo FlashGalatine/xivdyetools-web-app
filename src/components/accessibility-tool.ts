@@ -1065,9 +1065,7 @@ export class AccessibilityTool extends BaseComponent {
 
     // Message text
     const message = this.createElement('p', {
-      textContent:
-        LanguageService.t('accessibility.selectDyesToSeeAnalysis')
-        'Select dyes to see accessibility analysis',
+      textContent: LanguageService.t('accessibility.selectDyesToSeeAnalysis'),
       attributes: {
         style: `
           font-size: 1.1rem;
@@ -1528,9 +1526,7 @@ export class AccessibilityTool extends BaseComponent {
     if (this.selectedDyes.length < 2) {
       const notice = this.createElement('p', {
         className: 'text-sm text-center py-4',
-        textContent:
-          LanguageService.t('accessibility.selectTwoDyes')
-          'Select at least 2 dyes to see comparisons',
+        textContent: LanguageService.t('accessibility.selectTwoDyes'),
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       this.matrixContainer.appendChild(notice);
