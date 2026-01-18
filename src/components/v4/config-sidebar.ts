@@ -12,6 +12,7 @@
  */
 
 import { html, css, CSSResultGroup, TemplateResult, nothing } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { customElement, property, state } from 'lit/decorators.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ConfigController } from '@services/config-controller';
@@ -38,6 +39,15 @@ import type {
 } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS, DEFAULT_CONFIGS } from '@shared/tool-config-types';
 import { STORAGE_KEYS } from '@shared/constants';
+import {
+  ICON_REFRESH,
+  ICON_PALETTE,
+  ICON_STAR,
+  ICON_FOLDER,
+  ICON_BOOK,
+  ICON_EXPORT,
+  ICON_IMPORT,
+} from '@shared/ui-icons';
 import { showPresetSubmissionForm } from '@components/preset-submission-form';
 import type { DataCenter, World } from '@shared/types';
 import { logger } from '@shared/logger';
@@ -573,6 +583,9 @@ export class ConfigSidebar extends BaseLitComponent {
       }
 
       .advanced-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
         width: 100%;
         padding: 10px 16px;
         margin-bottom: 8px;
@@ -584,6 +597,21 @@ export class ConfigSidebar extends BaseLitComponent {
         cursor: pointer;
         text-align: left;
         transition: background 0.15s, border-color 0.15s;
+      }
+
+      .advanced-btn-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        opacity: 0.8;
+      }
+
+      .advanced-btn-icon svg {
+        width: 100%;
+        height: 100%;
       }
 
       .advanced-btn:hover {
@@ -602,6 +630,10 @@ export class ConfigSidebar extends BaseLitComponent {
       }
 
       .advanced-btn-half {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
         flex: 1;
         padding: 8px 12px;
         background: rgba(255, 255, 255, 0.08);
@@ -611,6 +643,11 @@ export class ConfigSidebar extends BaseLitComponent {
         font-size: 12px;
         cursor: pointer;
         transition: background 0.15s, border-color 0.15s;
+      }
+
+      .advanced-btn-half .advanced-btn-icon {
+        width: 16px;
+        height: 16px;
       }
 
       .advanced-btn-half:hover {
@@ -1789,28 +1826,35 @@ export class ConfigSidebar extends BaseLitComponent {
           <div class="config-group-content ${this.advancedSettingsCollapsed ? 'collapsed' : ''}">
             <!-- Data Management Buttons -->
             <button class="advanced-btn" @click=${this.handleResetSettings}>
-              🔄 ${LanguageService.t('config.resetSettings')}
+              <span class="advanced-btn-icon">${unsafeHTML(ICON_REFRESH)}</span>
+              ${LanguageService.t('config.resetSettings')}
             </button>
             <button class="advanced-btn" @click=${this.handleClearDyes}>
-              🎨 ${LanguageService.t('config.clearDyes')}
+              <span class="advanced-btn-icon">${unsafeHTML(ICON_PALETTE)}</span>
+              ${LanguageService.t('config.clearDyes')}
             </button>
             <button class="advanced-btn" @click=${this.handleClearFavorites}>
-              ⭐ ${LanguageService.t('config.clearFavorites')}
+              <span class="advanced-btn-icon">${unsafeHTML(ICON_STAR)}</span>
+              ${LanguageService.t('config.clearFavorites')}
             </button>
             <button class="advanced-btn" @click=${this.handleClearPalettes}>
-              🗂️ ${LanguageService.t('config.clearPalettes')}
+              <span class="advanced-btn-icon">${unsafeHTML(ICON_FOLDER)}</span>
+              ${LanguageService.t('config.clearPalettes')}
             </button>
             <button class="advanced-btn" @click=${this.handleResetTutorial}>
-              📖 ${LanguageService.t('config.resetTutorial')}
+              <span class="advanced-btn-icon">${unsafeHTML(ICON_BOOK)}</span>
+              ${LanguageService.t('config.resetTutorial')}
             </button>
 
             <!-- Export/Import Row -->
             <div class="advanced-btn-row">
               <button class="advanced-btn-half" @click=${this.handleExportSettings}>
-                📤 ${LanguageService.t('config.exportSettings')}
+                <span class="advanced-btn-icon">${unsafeHTML(ICON_EXPORT)}</span>
+                ${LanguageService.t('config.exportSettings')}
               </button>
               <button class="advanced-btn-half" @click=${this.triggerImportSettings}>
-                📥 ${LanguageService.t('config.importSettings')}
+                <span class="advanced-btn-icon">${unsafeHTML(ICON_IMPORT)}</span>
+                ${LanguageService.t('config.importSettings')}
               </button>
               <input
                 type="file"
