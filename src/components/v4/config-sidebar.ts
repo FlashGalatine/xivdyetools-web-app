@@ -1007,6 +1007,9 @@ export class ConfigSidebar extends BaseLitComponent {
             <option value="lch">${LanguageService.t('gradient.mode.lch')}</option>
             <option value="rgb">${LanguageService.t('gradient.mode.rgb')}</option>
           </select>
+          <div class="config-description">
+            ${this.getColorSpaceDescription()}
+          </div>
         </div>
 
         <v4-display-options
@@ -1101,6 +1104,25 @@ export class ConfigSidebar extends BaseLitComponent {
       case 'rgb':
       default:
         return LanguageService.t('config.mixingRgbDesc');
+    }
+  }
+
+  /**
+   * Get description text for the current color space interpolation mode
+   */
+  private getColorSpaceDescription(): string {
+    switch (this.gradientConfig.interpolation) {
+      case 'oklch':
+        return LanguageService.t('config.colorSpaceOklchDesc');
+      case 'hsv':
+        return LanguageService.t('config.colorSpaceHsvDesc');
+      case 'lab':
+        return LanguageService.t('config.colorSpaceLabDesc');
+      case 'lch':
+        return LanguageService.t('config.colorSpaceLchDesc');
+      case 'rgb':
+      default:
+        return LanguageService.t('config.colorSpaceRgbDesc');
     }
   }
 
