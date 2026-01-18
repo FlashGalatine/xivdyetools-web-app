@@ -352,14 +352,11 @@ export class GradientTool extends BaseComponent {
 
     // Handle interpolation (maps to colorSpace)
     if (config.interpolation !== undefined) {
-      const newColorSpace = config.interpolation === 'rgb' ? 'rgb' : 'hsv';
-      if (newColorSpace !== this.colorSpace) {
-        this.colorSpace = newColorSpace;
-        StorageService.setItem(STORAGE_KEYS.colorSpace, newColorSpace);
+      if (config.interpolation !== this.colorSpace) {
+        this.colorSpace = config.interpolation;
+        StorageService.setItem(STORAGE_KEYS.colorSpace, config.interpolation);
         needsUpdate = true;
-        logger.info(
-          `[GradientTool] setConfig: interpolation -> ${config.interpolation} (colorSpace: ${newColorSpace})`
-        );
+        logger.info(`[GradientTool] setConfig: interpolation -> ${config.interpolation}`);
       }
     }
 
