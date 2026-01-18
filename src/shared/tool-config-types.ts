@@ -224,6 +224,16 @@ export interface MarketConfig {
   showPrices: boolean;
 }
 
+/**
+ * Advanced Settings configuration (debug/utility options)
+ */
+export interface AdvancedConfig {
+  /** Enable anonymous analytics data collection (placeholder for future) */
+  analyticsEnabled: boolean;
+  /** Enable performance mode (reduce animations, disable blur effects) */
+  performanceMode: boolean;
+}
+
 // ============================================================================
 // Shared Display Options
 // ============================================================================
@@ -275,6 +285,7 @@ export const DEFAULT_DISPLAY_OPTIONS: DisplayOptionsConfig = {
 export interface ToolConfigMap {
   global: GlobalConfig;
   market: MarketConfig;
+  advanced: AdvancedConfig;
   harmony: HarmonyConfig;
   extractor: ExtractorConfig;
   accessibility: AccessibilityConfig;
@@ -292,9 +303,9 @@ export interface ToolConfigMap {
 export type ToolConfig = ToolConfigMap[keyof ToolConfigMap];
 
 /**
- * Config key type (tool ID, 'global', or 'market')
+ * Config key type (tool ID, 'global', 'market', or 'advanced')
  */
-export type ConfigKey = ToolId | 'global' | 'market';
+export type ConfigKey = ToolId | 'global' | 'market' | 'advanced';
 
 // ============================================================================
 // Default Values
@@ -311,6 +322,10 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   market: {
     selectedServer: 'Balmung',
     showPrices: false,
+  },
+  advanced: {
+    analyticsEnabled: false,
+    performanceMode: false,
   },
   harmony: {
     harmonyType: 'complementary',
@@ -382,7 +397,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
  * Check if a config key is a valid tool ID
  */
 export function isToolId(key: ConfigKey): key is ToolId {
-  return key !== 'global' && key !== 'market';
+  return key !== 'global' && key !== 'market' && key !== 'advanced';
 }
 
 /**

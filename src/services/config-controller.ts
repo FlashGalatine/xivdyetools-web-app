@@ -223,6 +223,7 @@ export class ConfigController {
     const keys: ConfigKey[] = [
       'global',
       'market',
+      'advanced',
       'harmony',
       'extractor',
       'accessibility',
@@ -246,6 +247,7 @@ export class ConfigController {
     return {
       global: this.getConfig('global'),
       market: this.getConfig('market'),
+      advanced: this.getConfig('advanced'),
       harmony: this.getConfig('harmony'),
       extractor: this.getConfig('extractor'),
       accessibility: this.getConfig('accessibility'),
@@ -256,6 +258,65 @@ export class ConfigController {
       budget: this.getConfig('budget'),
       swatch: this.getConfig('swatch'),
     };
+  }
+
+  /**
+   * Export all configs as a serializable object for backup/sharing
+   */
+  exportAllConfigs(): ToolConfigMap {
+    return this.getAllConfigs();
+  }
+
+  /**
+   * Import configs from a serialized object (e.g., from file upload)
+   * Only imports valid config keys, ignores unknown keys
+   *
+   * @param configs - Partial config object to import
+   */
+  importConfigs(configs: Partial<ToolConfigMap>): void {
+    const validKeys: ConfigKey[] = [
+      'global',
+      'market',
+      'advanced',
+      'harmony',
+      'extractor',
+      'accessibility',
+      'comparison',
+      'gradient',
+      'mixer',
+      'presets',
+      'budget',
+      'swatch',
+    ];
+
+    for (const key of validKeys) {
+      if (key in configs && configs[key]) {
+        this.setConfig(key, configs[key] as Partial<ToolConfigMap[typeof key]>);
+      }
+    }
+
+    logger.info('[ConfigController] Imported configs');
+  }
+
+  /**
+   * Check if a string is a valid config key
+   */
+  isValidConfigKey(key: string): key is ConfigKey {
+    const validKeys = [
+      'global',
+      'market',
+      'advanced',
+      'harmony',
+      'extractor',
+      'accessibility',
+      'comparison',
+      'gradient',
+      'mixer',
+      'presets',
+      'budget',
+      'swatch',
+    ];
+    return validKeys.includes(key);
   }
 
   // =========================================================================

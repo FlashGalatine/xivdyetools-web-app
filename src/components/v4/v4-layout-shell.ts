@@ -763,6 +763,41 @@ export class V4LayoutShell extends BaseLitComponent {
   }
 
   /**
+   * Handle settings reset from Advanced Settings
+   */
+  private handleSettingsReset(): void {
+    this.emit('settings-reset');
+  }
+
+  /**
+   * Handle favorites cleared from Advanced Settings
+   */
+  private handleFavoritesCleared(): void {
+    this.emit('favorites-cleared');
+  }
+
+  /**
+   * Handle palettes cleared from Advanced Settings
+   */
+  private handlePalettesCleared(): void {
+    this.emit('palettes-cleared');
+  }
+
+  /**
+   * Handle tutorial reset from Advanced Settings
+   */
+  private handleTutorialReset(): void {
+    this.emit('tutorial-reset');
+  }
+
+  /**
+   * Handle settings imported from Advanced Settings
+   */
+  private handleSettingsImported(): void {
+    this.emit('settings-imported');
+  }
+
+  /**
    * Toggle palette drawer visibility
    */
   private togglePaletteDrawer(): void {
@@ -851,6 +886,12 @@ export class V4LayoutShell extends BaseLitComponent {
           ?collapsed=${this.sidebarCollapsed}
           @sidebar-collapse=${this.handleSidebarCollapse}
           @config-change=${this.handleConfigChange}
+          @settings-reset=${this.handleSettingsReset}
+          @clear-all-dyes=${this.handleClearAllDyes}
+          @favorites-cleared=${this.handleFavoritesCleared}
+          @palettes-cleared=${this.handlePalettesCleared}
+          @tutorial-reset=${this.handleTutorialReset}
+          @settings-imported=${this.handleSettingsImported}
         ></v4-config-sidebar>
 
         <!-- Mobile Overlay -->
