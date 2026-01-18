@@ -218,12 +218,18 @@
     "hsvHueBased": "HSV (Hue-based)",
     "rgbDirect": "RGB (Direct)",
     "mixingMode": "Mixing Mode",
-    "mixingRyb": "RYB (Paint Mixing)",
-    "mixingLab": "LAB (Perceptual)",
     "mixingRgb": "RGB (Light)",
-    "mixingRybDesc": "Subtractive paint mixing. Blue + Yellow = Green.",
-    "mixingLabDesc": "Perceptually uniform blending in LAB color space.",
+    "mixingLab": "LAB (Perceptual)",
+    "mixingOklab": "OKLAB (Modern Perceptual)",
+    "mixingRyb": "RYB (Paint)",
+    "mixingHsl": "HSL (Hue-based)",
+    "mixingSpectral": "Spectral (Realistic Paint)",
     "mixingRgbDesc": "Additive light mixing. Blue + Yellow = Gray.",
+    "mixingLabDesc": "Perceptually uniform blending. Blue + Yellow = Pink.",
+    "mixingOklabDesc": "Modern perceptual space. Blue + Yellow = Cyan.",
+    "mixingRybDesc": "Gossett-Chen paint simulation. Blue + Yellow = Olive.",
+    "mixingHslDesc": "Hue-based blending in HSL color space.",
+    "mixingSpectralDesc": "Kubelka-Munk physics. Blue + Yellow = Green.",
     "resultSettings": "Result Settings",
     "maxResults": "Max Results",
     "category": "Category",
@@ -615,7 +621,14 @@
     "gradientResults": "Gradient Results",
     "noMatchesFound": "No matching dyes found",
     "sameDyeWarning": "Start and end dyes are the same. Select different dyes for a gradient.",
-    "slotsFull": "All slots are full. Select one to replace:"
+    "slotsFull": "All slots are full. Select one to replace:",
+    "mode": {
+      "rgb": "Linear (gray midpoints)",
+      "hsv": "Hue-based (vibrant)",
+      "lab": "Perceptual (natural)",
+      "oklch": "Modern perceptual (best)",
+      "lch": "Cylindrical LAB"
+    }
   },
   "dyeSelector": {
     "searchPlaceholder": "Search dyes by name...",

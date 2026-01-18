@@ -213,12 +213,18 @@
     "hsvHueBased": "HSV (Farbton-basiert)",
     "rgbDirect": "RGB (Direkt)",
     "mixingMode": "Mischmodus",
-    "mixingRyb": "RYB (Farbmischung)",
-    "mixingLab": "LAB (Wahrnehmung)",
     "mixingRgb": "RGB (Licht)",
-    "mixingRybDesc": "Subtraktive Farbmischung. Blau + Gelb = Grün.",
-    "mixingLabDesc": "Wahrnehmungsgetreue Mischung im LAB-Farbraum.",
+    "mixingLab": "LAB (Wahrnehmung)",
+    "mixingOklab": "OKLAB (Moderne Wahrnehmung)",
+    "mixingRyb": "RYB (Farbe)",
+    "mixingHsl": "HSL (Farbton-basiert)",
+    "mixingSpectral": "Spektral (Realistische Farbe)",
     "mixingRgbDesc": "Additive Lichtmischung. Blau + Gelb = Grau.",
+    "mixingLabDesc": "Wahrnehmungsgetreue Mischung. Blau + Gelb = Rosa.",
+    "mixingOklabDesc": "Moderner Wahrnehmungsfarbraum. Blau + Gelb = Cyan.",
+    "mixingRybDesc": "Farbsimulation. Blau + Gelb = Oliv.",
+    "mixingHslDesc": "Farbton-basierte Mischung im HSL-Farbraum.",
+    "mixingSpectralDesc": "Kubelka-Munk Physik. Blau + Gelb = Grün.",
     "resultSettings": "Ergebniseinstellungen",
     "maxResults": "Max. Ergebnisse",
     "category": "Kategorie",
@@ -601,7 +607,14 @@
     "clickToSelectEnd": "Klicken, um Endfarbe auszuwählen",
     "gradientResults": "Verlaufsergebnisse",
     "noMatchesFound": "Keine passenden Farbstoffe gefunden",
-    "sameDyeWarning": "Start- und Endfarbstoff sind identisch. Wähle verschiedene Farbstoffe für einen Verlauf."
+    "sameDyeWarning": "Start- und Endfarbstoff sind identisch. Wähle verschiedene Farbstoffe für einen Verlauf.",
+    "mode": {
+      "rgb": "Linear (graue Mittelpunkte)",
+      "hsv": "Farbtonbasiert (lebendig)",
+      "lab": "Perzeptuell (natürlich)",
+      "oklch": "Modern perzeptuell (beste)",
+      "lch": "Zylindrisches LAB"
+    }
   },
   "dyeSelector": {
     "searchPlaceholder": "Farbstoffe nach Name suchen...",

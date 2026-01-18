@@ -151,7 +151,7 @@ export class ConfigSidebar extends BaseLitComponent {
   };
   @state() private gradientConfig: GradientConfig = {
     stepCount: 8,
-    interpolation: 'linear',
+    interpolation: 'hsv',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private mixerConfig: MixerConfig = {
@@ -1001,8 +1001,11 @@ export class ConfigSidebar extends BaseLitComponent {
         this.handleConfigChange('gradient', 'interpolation', value);
       }}
           >
-            <option value="hsv">${LanguageService.t('config.hsvHueBased')}</option>
-            <option value="rgb">${LanguageService.t('config.rgbDirect')}</option>
+            <option value="oklch">${LanguageService.t('gradient.mode.oklch')}</option>
+            <option value="hsv">${LanguageService.t('gradient.mode.hsv')}</option>
+            <option value="lab">${LanguageService.t('gradient.mode.lab')}</option>
+            <option value="lch">${LanguageService.t('gradient.mode.lch')}</option>
+            <option value="rgb">${LanguageService.t('gradient.mode.rgb')}</option>
           </select>
         </div>
 
@@ -1038,8 +1041,11 @@ export class ConfigSidebar extends BaseLitComponent {
         this.handleConfigChange('mixer', 'mixingMode', value);
       }}
           >
+            <option value="spectral">${LanguageService.t('config.mixingSpectral')}</option>
             <option value="ryb">${LanguageService.t('config.mixingRyb')}</option>
+            <option value="oklab">${LanguageService.t('config.mixingOklab')}</option>
             <option value="lab">${LanguageService.t('config.mixingLab')}</option>
+            <option value="hsl">${LanguageService.t('config.mixingHsl')}</option>
             <option value="rgb">${LanguageService.t('config.mixingRgb')}</option>
           </select>
           <div class="config-description">
@@ -1082,10 +1088,16 @@ export class ConfigSidebar extends BaseLitComponent {
    */
   private getMixingModeDescription(): string {
     switch (this.mixerConfig.mixingMode) {
+      case 'spectral':
+        return LanguageService.t('config.mixingSpectralDesc');
       case 'ryb':
         return LanguageService.t('config.mixingRybDesc');
+      case 'oklab':
+        return LanguageService.t('config.mixingOklabDesc');
       case 'lab':
         return LanguageService.t('config.mixingLabDesc');
+      case 'hsl':
+        return LanguageService.t('config.mixingHslDesc');
       case 'rgb':
       default:
         return LanguageService.t('config.mixingRgbDesc');

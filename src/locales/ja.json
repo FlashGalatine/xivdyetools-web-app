@@ -213,12 +213,18 @@
     "hsvHueBased": "HSV（色相ベース）",
     "rgbDirect": "RGB（ダイレクト）",
     "mixingMode": "混合モード",
-    "mixingRyb": "RYB (絵具混合)",
-    "mixingLab": "LAB (知覚的)",
     "mixingRgb": "RGB (光)",
-    "mixingRybDesc": "減法混色。青 + 黄 = 緑。",
-    "mixingLabDesc": "LAB色空間での知覚的に均一なブレンド。",
+    "mixingLab": "LAB (知覚的)",
+    "mixingOklab": "OKLAB (現代知覚的)",
+    "mixingRyb": "RYB (絵具)",
+    "mixingHsl": "HSL (色相ベース)",
+    "mixingSpectral": "スペクトル (リアル絵具)",
     "mixingRgbDesc": "加法混色。青 + 黄 = グレー。",
+    "mixingLabDesc": "知覚的に均一なブレンド。青 + 黄 = ピンク。",
+    "mixingOklabDesc": "現代知覚色空間。青 + 黄 = シアン。",
+    "mixingRybDesc": "絵具シミュレーション。青 + 黄 = オリーブ。",
+    "mixingHslDesc": "HSL色空間での色相ベースブレンド。",
+    "mixingSpectralDesc": "クベルカ・ムンク物理学。青 + 黄 = 緑。",
     "resultSettings": "結果設定",
     "maxResults": "最大結果数",
     "category": "カテゴリ",
@@ -601,7 +607,14 @@
     "clickToSelectEnd": "クリックして終了色を選択",
     "gradientResults": "グラデーション結果",
     "noMatchesFound": "マッチするカララントが見つかりません",
-    "sameDyeWarning": "開始と終了のカララントが同じです。グラデーションには異なるカララントを選択してください。"
+    "sameDyeWarning": "開始と終了のカララントが同じです。グラデーションには異なるカララントを選択してください。",
+    "mode": {
+      "rgb": "リニア（グレー中間点）",
+      "hsv": "色相ベース（鮮やか）",
+      "lab": "知覚的（自然）",
+      "oklch": "現代知覚的（最適）",
+      "lch": "円筒LAB"
+    }
   },
   "dyeSelector": {
     "searchPlaceholder": "カララント名で検索...",

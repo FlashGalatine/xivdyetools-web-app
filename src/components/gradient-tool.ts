@@ -41,7 +41,7 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { GradientConfig, DisplayOptionsConfig, MarketConfig } from '@shared/tool-config-types';
+import type { GradientConfig, DisplayOptionsConfig, MarketConfig, InterpolationMode } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 
 // ============================================================================
@@ -99,7 +99,7 @@ export class GradientTool extends BaseComponent {
   // State - selectedDyes[0] = start, selectedDyes[1] = end
   private selectedDyes: Dye[] = [];
   private stepCount: number;
-  private colorSpace: 'rgb' | 'hsv';
+  private colorSpace: InterpolationMode;
   private currentSteps: InterpolationStep[] = [];
 
   // Market Board Service integration
@@ -176,7 +176,7 @@ export class GradientTool extends BaseComponent {
     // Load persisted settings
     this.stepCount = StorageService.getItem<number>(STORAGE_KEYS.stepCount) ?? DEFAULTS.stepCount;
     this.colorSpace =
-      StorageService.getItem<'rgb' | 'hsv'>(STORAGE_KEYS.colorSpace) ?? DEFAULTS.colorSpace;
+      StorageService.getItem<InterpolationMode>(STORAGE_KEYS.colorSpace) ?? DEFAULTS.colorSpace;
 
     // Load display options from ConfigController
     const configController = ConfigController.getInstance();
@@ -775,7 +775,7 @@ export class GradientTool extends BaseComponent {
     stepsGroup.appendChild(stepsInput);
     settingsContainer.appendChild(stepsGroup);
 
-    // Color space toggle
+    // Color space dropdown
     const colorSpaceGroup = this.createElement('div');
     const colorSpaceLabel = this.createElement('label', {
       className: 'block text-sm mb-2',
@@ -784,65 +784,48 @@ export class GradientTool extends BaseComponent {
     });
     colorSpaceGroup.appendChild(colorSpaceLabel);
 
-    const buttonContainer = this.createElement('div', { className: 'flex gap-2' });
-
-    const rgbBtn = this.createElement('button', {
-      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: 'RGB',
+    // Dropdown select for interpolation mode
+    const colorSpaceSelect = this.createElement('select', {
+      className: 'w-full px-3 py-2 text-sm rounded-lg',
       attributes: {
-        'data-testid': 'gradient-rgb-button',
-        style:
-          this.colorSpace === 'rgb'
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        'data-testid': 'gradient-colorspace-select',
+        style: `
+          background: var(--theme-background-secondary);
+          color: var(--theme-text);
+          border: 1px solid var(--theme-border);
+          cursor: pointer;
+        `,
       },
-    });
+    }) as HTMLSelectElement;
 
-    const hsvBtn = this.createElement('button', {
-      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: 'HSV',
-      attributes: {
-        'data-testid': 'gradient-hsv-button',
-        style:
-          this.colorSpace === 'hsv'
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
-    });
+    // Interpolation mode options with descriptive labels
+    const modeOptions: { value: InterpolationMode; label: string; description: string }[] = [
+      { value: 'rgb', label: 'RGB', description: LanguageService.t('gradient.mode.rgb') },
+      { value: 'hsv', label: 'HSV', description: LanguageService.t('gradient.mode.hsv') },
+      { value: 'lab', label: 'LAB', description: LanguageService.t('gradient.mode.lab') },
+      { value: 'oklch', label: 'OKLCH', description: LanguageService.t('gradient.mode.oklch') },
+      { value: 'lch', label: 'LCH', description: LanguageService.t('gradient.mode.lch') },
+    ];
 
-    this.on(rgbBtn, 'click', () => {
-      this.colorSpace = 'rgb';
-      StorageService.setItem(STORAGE_KEYS.colorSpace, 'rgb');
-      rgbBtn.setAttribute(
-        'style',
-        'background: var(--theme-primary); color: var(--theme-text-header);'
-      );
-      hsvBtn.setAttribute(
-        'style',
-        'background: var(--theme-background-secondary); color: var(--theme-text);'
-      );
+    for (const mode of modeOptions) {
+      const option = this.createElement('option', {
+        textContent: `${mode.label} - ${mode.description}`,
+        attributes: { value: mode.value },
+      }) as HTMLOptionElement;
+      if (mode.value === this.colorSpace) {
+        option.selected = true;
+      }
+      colorSpaceSelect.appendChild(option);
+    }
+
+    this.on(colorSpaceSelect, 'change', () => {
+      this.colorSpace = colorSpaceSelect.value as InterpolationMode;
+      StorageService.setItem(STORAGE_KEYS.colorSpace, this.colorSpace);
       this.updateInterpolation();
       this.updateDrawerContent();
     });
 
-    this.on(hsvBtn, 'click', () => {
-      this.colorSpace = 'hsv';
-      StorageService.setItem(STORAGE_KEYS.colorSpace, 'hsv');
-      hsvBtn.setAttribute(
-        'style',
-        'background: var(--theme-primary); color: var(--theme-text-header);'
-      );
-      rgbBtn.setAttribute(
-        'style',
-        'background: var(--theme-background-secondary); color: var(--theme-text);'
-      );
-      this.updateInterpolation();
-      this.updateDrawerContent();
-    });
-
-    buttonContainer.appendChild(rgbBtn);
-    buttonContainer.appendChild(hsvBtn);
-    colorSpaceGroup.appendChild(buttonContainer);
+    colorSpaceGroup.appendChild(colorSpaceSelect);
     settingsContainer.appendChild(colorSpaceGroup);
 
     container.appendChild(settingsContainer);
@@ -1227,6 +1210,13 @@ export class GradientTool extends BaseComponent {
 
   /**
    * Calculate interpolation steps
+   *
+   * Interpolation modes and their characteristics:
+   * - RGB: Linear RGB interpolation (gray midpoints for complementary colors)
+   * - HSV: Hue-based interpolation with wraparound (vibrant but can be unpredictable)
+   * - LAB: Perceptually uniform (good for natural transitions, has blue issues)
+   * - OKLCH: Modern perceptual with hue (best for gradients, fixes LAB's blue distortion)
+   * - LCH: Cylindrical LAB with hue (good balance of perceptual uniformity)
    */
   private calculateInterpolation(): void {
     if (!this.startDye || !this.endDye) {
@@ -1242,31 +1232,90 @@ export class GradientTool extends BaseComponent {
 
       let theoreticalColor: string;
 
-      if (this.colorSpace === 'rgb') {
-        // RGB interpolation (linear)
-        const startRgb = ColorService.hexToRgb(this.startDye.hex);
-        const endRgb = ColorService.hexToRgb(this.endDye.hex);
+      switch (this.colorSpace) {
+        case 'rgb': {
+          // RGB interpolation (linear)
+          const startRgb = ColorService.hexToRgb(this.startDye.hex);
+          const endRgb = ColorService.hexToRgb(this.endDye.hex);
 
-        const r = Math.round(startRgb.r + (endRgb.r - startRgb.r) * t);
-        const g = Math.round(startRgb.g + (endRgb.g - startRgb.g) * t);
-        const b = Math.round(startRgb.b + (endRgb.b - startRgb.b) * t);
+          const r = Math.round(startRgb.r + (endRgb.r - startRgb.r) * t);
+          const g = Math.round(startRgb.g + (endRgb.g - startRgb.g) * t);
+          const b = Math.round(startRgb.b + (endRgb.b - startRgb.b) * t);
 
-        theoreticalColor = ColorService.rgbToHex(r, g, b);
-      } else {
-        // HSV interpolation (perceptual, with hue wraparound)
-        const startHsv = ColorService.hexToHsv(this.startDye.hex);
-        const endHsv = ColorService.hexToHsv(this.endDye.hex);
+          theoreticalColor = ColorService.rgbToHex(r, g, b);
+          break;
+        }
 
-        // Handle hue wraparound
-        let hueDiff = endHsv.h - startHsv.h;
-        if (hueDiff > 180) hueDiff -= 360;
-        if (hueDiff < -180) hueDiff += 360;
+        case 'hsv': {
+          // HSV interpolation (with hue wraparound)
+          const startHsv = ColorService.hexToHsv(this.startDye.hex);
+          const endHsv = ColorService.hexToHsv(this.endDye.hex);
 
-        const h = (startHsv.h + hueDiff * t + 360) % 360;
-        const s = startHsv.s + (endHsv.s - startHsv.s) * t;
-        const v = startHsv.v + (endHsv.v - startHsv.v) * t;
+          // Handle hue wraparound (take shorter path)
+          let hueDiff = endHsv.h - startHsv.h;
+          if (hueDiff > 180) hueDiff -= 360;
+          if (hueDiff < -180) hueDiff += 360;
 
-        theoreticalColor = ColorService.hsvToHex(h, s, v);
+          const h = (startHsv.h + hueDiff * t + 360) % 360;
+          const s = startHsv.s + (endHsv.s - startHsv.s) * t;
+          const v = startHsv.v + (endHsv.v - startHsv.v) * t;
+
+          theoreticalColor = ColorService.hsvToHex(h, s, v);
+          break;
+        }
+
+        case 'lab': {
+          // LAB interpolation (perceptually uniform, linear in L*a*b*)
+          const startLab = ColorService.hexToLab(this.startDye.hex);
+          const endLab = ColorService.hexToLab(this.endDye.hex);
+
+          const L = startLab.L + (endLab.L - startLab.L) * t;
+          const a = startLab.a + (endLab.a - startLab.a) * t;
+          const b = startLab.b + (endLab.b - startLab.b) * t;
+
+          theoreticalColor = ColorService.labToHex(L, a, b);
+          break;
+        }
+
+        case 'oklch': {
+          // OKLCH interpolation (modern perceptual with hue)
+          const startOklch = ColorService.hexToOklch(this.startDye.hex);
+          const endOklch = ColorService.hexToOklch(this.endDye.hex);
+
+          // Handle hue wraparound (take shorter path)
+          let hueDiff = endOklch.h - startOklch.h;
+          if (hueDiff > 180) hueDiff -= 360;
+          if (hueDiff < -180) hueDiff += 360;
+
+          const L = startOklch.L + (endOklch.L - startOklch.L) * t;
+          const C = startOklch.C + (endOklch.C - startOklch.C) * t;
+          const h = (startOklch.h + hueDiff * t + 360) % 360;
+
+          theoreticalColor = ColorService.oklchToHex(L, C, h);
+          break;
+        }
+
+        case 'lch': {
+          // LCH interpolation (cylindrical LAB with hue)
+          const startLch = ColorService.hexToLch(this.startDye.hex);
+          const endLch = ColorService.hexToLch(this.endDye.hex);
+
+          // Handle hue wraparound (take shorter path)
+          let hueDiff = endLch.h - startLch.h;
+          if (hueDiff > 180) hueDiff -= 360;
+          if (hueDiff < -180) hueDiff += 360;
+
+          const L = startLch.L + (endLch.L - startLch.L) * t;
+          const C = startLch.C + (endLch.C - startLch.C) * t;
+          const h = (startLch.h + hueDiff * t + 360) % 360;
+
+          theoreticalColor = ColorService.lchToHex(L, C, h);
+          break;
+        }
+
+        default:
+          // Default to HSV for backward compatibility
+          theoreticalColor = ColorService.hsvToHex(0, 0, 50);
       }
 
       // Find closest dye (excluding start and end)
@@ -2032,7 +2081,7 @@ export class GradientTool extends BaseComponent {
     stepsGroup.appendChild(stepsInput);
     settingsContainer.appendChild(stepsGroup);
 
-    // Color space toggle
+    // Color space dropdown (matches desktop)
     const colorSpaceGroup = this.createElement('div');
     const colorSpaceLabel = this.createElement('label', {
       className: 'block text-sm mb-2',
@@ -2041,63 +2090,47 @@ export class GradientTool extends BaseComponent {
     });
     colorSpaceGroup.appendChild(colorSpaceLabel);
 
-    const buttonContainer = this.createElement('div', { className: 'flex gap-2' });
-
-    const rgbBtn = this.createElement('button', {
-      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: 'RGB',
+    // Dropdown select for interpolation mode
+    const colorSpaceSelect = this.createElement('select', {
+      className: 'w-full px-3 py-2 text-sm rounded-lg',
       attributes: {
-        'data-testid': 'gradient-rgb-button',
-        style:
-          this.colorSpace === 'rgb'
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
+        'data-testid': 'gradient-mobile-colorspace-select',
+        style: `
+          background: var(--theme-background-secondary);
+          color: var(--theme-text);
+          border: 1px solid var(--theme-border);
+          cursor: pointer;
+        `,
       },
-    });
+    }) as HTMLSelectElement;
 
-    const hsvBtn = this.createElement('button', {
-      className: 'flex-1 px-3 py-2 text-sm rounded-lg transition-colors',
-      textContent: 'HSV',
-      attributes: {
-        'data-testid': 'gradient-hsv-button',
-        style:
-          this.colorSpace === 'hsv'
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: var(--theme-background-secondary); color: var(--theme-text);',
-      },
-    });
+    // Interpolation mode options with descriptive labels
+    const modeOptions: { value: InterpolationMode; label: string; description: string }[] = [
+      { value: 'rgb', label: 'RGB', description: LanguageService.t('gradient.mode.rgb') },
+      { value: 'hsv', label: 'HSV', description: LanguageService.t('gradient.mode.hsv') },
+      { value: 'lab', label: 'LAB', description: LanguageService.t('gradient.mode.lab') },
+      { value: 'oklch', label: 'OKLCH', description: LanguageService.t('gradient.mode.oklch') },
+      { value: 'lch', label: 'LCH', description: LanguageService.t('gradient.mode.lch') },
+    ];
 
-    this.on(rgbBtn, 'click', () => {
-      this.colorSpace = 'rgb';
-      StorageService.setItem(STORAGE_KEYS.colorSpace, 'rgb');
-      rgbBtn.setAttribute(
-        'style',
-        'background: var(--theme-primary); color: var(--theme-text-header);'
-      );
-      hsvBtn.setAttribute(
-        'style',
-        'background: var(--theme-background-secondary); color: var(--theme-text);'
-      );
+    for (const mode of modeOptions) {
+      const option = this.createElement('option', {
+        textContent: `${mode.label} - ${mode.description}`,
+        attributes: { value: mode.value },
+      }) as HTMLOptionElement;
+      if (mode.value === this.colorSpace) {
+        option.selected = true;
+      }
+      colorSpaceSelect.appendChild(option);
+    }
+
+    this.on(colorSpaceSelect, 'change', () => {
+      this.colorSpace = colorSpaceSelect.value as InterpolationMode;
+      StorageService.setItem(STORAGE_KEYS.colorSpace, this.colorSpace);
       this.updateInterpolation();
     });
 
-    this.on(hsvBtn, 'click', () => {
-      this.colorSpace = 'hsv';
-      StorageService.setItem(STORAGE_KEYS.colorSpace, 'hsv');
-      hsvBtn.setAttribute(
-        'style',
-        'background: var(--theme-primary); color: var(--theme-text-header);'
-      );
-      rgbBtn.setAttribute(
-        'style',
-        'background: var(--theme-background-secondary); color: var(--theme-text);'
-      );
-      this.updateInterpolation();
-    });
-
-    buttonContainer.appendChild(rgbBtn);
-    buttonContainer.appendChild(hsvBtn);
-    colorSpaceGroup.appendChild(buttonContainer);
+    colorSpaceGroup.appendChild(colorSpaceSelect);
     settingsContainer.appendChild(colorSpaceGroup);
 
     container.appendChild(settingsContainer);

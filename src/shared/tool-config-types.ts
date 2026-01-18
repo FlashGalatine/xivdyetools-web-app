@@ -96,24 +96,37 @@ export interface ComparisonConfig {
 }
 
 /**
+ * Color interpolation mode for the Gradient Builder tool
+ * - 'rgb': Linear RGB interpolation (gray midpoints for complements)
+ * - 'hsv': HSV hue interpolation with wraparound
+ * - 'lab': CIE LAB perceptual interpolation
+ * - 'oklch': OKLCH perceptual interpolation (best for gradients)
+ * - 'lch': LCH (cylindrical LAB) interpolation
+ */
+export type InterpolationMode = 'rgb' | 'hsv' | 'lab' | 'oklch' | 'lch';
+
+/**
  * Gradient Builder (Dye Mixer) configuration
  */
 export interface GradientConfig {
   /** Number of gradient steps (3-12) */
   stepCount: number;
-  /** Interpolation method (linear, ease, etc.) */
-  interpolation: string;
+  /** Interpolation color space mode */
+  interpolation: InterpolationMode;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
 }
 
 /**
  * Color mixing algorithm for the Dye Mixer tool
- * - 'ryb': RYB subtractive mixing (paint-like, Blue + Yellow = Green)
- * - 'lab': LAB perceptually uniform blending
  * - 'rgb': RGB additive mixing (light-based, Blue + Yellow = Gray)
+ * - 'lab': LAB perceptually uniform blending (Blue + Yellow = Pink)
+ * - 'oklab': OKLAB perceptually uniform blending (Blue + Yellow = Cyan)
+ * - 'ryb': RYB subtractive mixing (paint-like, Blue + Yellow = Olive Green)
+ * - 'hsl': HSL hue-based blending
+ * - 'spectral': Kubelka-Munk spectral mixing (realistic paint, Blue + Yellow = Green)
  */
-export type MixingMode = 'ryb' | 'lab' | 'rgb';
+export type MixingMode = 'rgb' | 'lab' | 'oklab' | 'ryb' | 'hsl' | 'spectral';
 
 /**
  * Dye Mixer (NEW in v4) configuration

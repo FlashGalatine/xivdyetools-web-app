@@ -213,12 +213,18 @@
     "hsvHueBased": "HSV (색조 기반)",
     "rgbDirect": "RGB (직접)",
     "mixingMode": "혼합 모드",
-    "mixingRyb": "RYB (물감 혼합)",
-    "mixingLab": "LAB (지각적)",
     "mixingRgb": "RGB (빛)",
-    "mixingRybDesc": "감산 혼합. 파랑 + 노랑 = 초록.",
-    "mixingLabDesc": "LAB 색 공간에서의 지각적으로 균일한 혼합.",
+    "mixingLab": "LAB (지각적)",
+    "mixingOklab": "OKLAB (현대 지각적)",
+    "mixingRyb": "RYB (물감)",
+    "mixingHsl": "HSL (색조 기반)",
+    "mixingSpectral": "스펙트럼 (실제 물감)",
     "mixingRgbDesc": "가산 혼합. 파랑 + 노랑 = 회색.",
+    "mixingLabDesc": "지각적으로 균일한 혼합. 파랑 + 노랑 = 분홍.",
+    "mixingOklabDesc": "현대 지각 색 공간. 파랑 + 노랑 = 청록.",
+    "mixingRybDesc": "물감 시뮬레이션. 파랑 + 노랑 = 올리브.",
+    "mixingHslDesc": "HSL 색 공간에서의 색조 기반 혼합.",
+    "mixingSpectralDesc": "쿠벨카-뭉크 물리학. 파랑 + 노랑 = 초록.",
     "resultSettings": "결과 설정",
     "maxResults": "최대 결과 수",
     "category": "카테고리",
@@ -601,7 +607,14 @@
     "clickToSelectEnd": "클릭하여 끝 색상 선택",
     "gradientResults": "그라데이션 결과",
     "noMatchesFound": "일치하는 염료를 찾을 수 없습니다",
-    "sameDyeWarning": "시작과 끝 염료가 동일합니다. 그라데이션을 위해 다른 염료를 선택하세요."
+    "sameDyeWarning": "시작과 끝 염료가 동일합니다. 그라데이션을 위해 다른 염료를 선택하세요.",
+    "mode": {
+      "rgb": "선형 (회색 중간점)",
+      "hsv": "색조 기반 (선명함)",
+      "lab": "지각적 (자연스러움)",
+      "oklch": "현대 지각적 (최적)",
+      "lch": "원통형 LAB"
+    }
   },
   "dyeSelector": {
     "searchPlaceholder": "염료 이름으로 검색...",

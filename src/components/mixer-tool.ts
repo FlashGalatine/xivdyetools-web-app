@@ -213,19 +213,38 @@ export class MixerTool extends BaseComponent {
 
   /**
    * Blend two hex colors using the selected mixing algorithm
+   *
+   * Color mixing modes and their characteristics:
+   * - RGB: Light mixing (additive) - Blue + Yellow = Gray
+   * - LAB: Perceptual uniform - Blue + Yellow = Pink (LAB hue distortion)
+   * - OKLAB: Modern perceptual - Blue + Yellow = Cyan (fixes LAB issues)
+   * - RYB: Paint simulation (Gossett-Chen) - Blue + Yellow = Olive Green
+   * - HSL: Hue-based blending
+   * - Spectral: Kubelka-Munk physics - Blue + Yellow = Green (most realistic)
    */
   private blendTwoColors(hex1: string, hex2: string, ratio: number = 0.5): string {
     switch (this.mixingMode) {
-      case 'ryb':
-        return ColorService.mixColorsRyb(hex1, hex2, ratio);
-      case 'lab':
-        // User reported RGB/LAB might be swapped.
-        // LAB mixing (perceptual) often yields better 'grey' results for complements.
-        return ColorService.mixColorsLab(hex1, hex2, ratio);
       case 'rgb':
-      default:
         // RGB light mixing (averaging)
         return ColorService.mixColorsRgb(hex1, hex2, ratio);
+      case 'lab':
+        // LAB perceptual mixing (has blue hue distortion)
+        return ColorService.mixColorsLab(hex1, hex2, ratio);
+      case 'oklab':
+        // OKLAB perceptual mixing (fixes LAB's blue issues)
+        return ColorService.mixColorsOklab(hex1, hex2, ratio);
+      case 'ryb':
+        // RYB subtractive mixing (paint-like)
+        return ColorService.mixColorsRyb(hex1, hex2, ratio);
+      case 'hsl':
+        // HSL hue-based blending
+        return ColorService.mixColorsHsl(hex1, hex2, ratio);
+      case 'spectral':
+        // Kubelka-Munk spectral mixing (most realistic paint mixing)
+        return ColorService.mixColorsSpectral(hex1, hex2, ratio);
+      default:
+        // Default to RYB for paint-like results
+        return ColorService.mixColorsRyb(hex1, hex2, ratio);
     }
   }
 

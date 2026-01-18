@@ -233,12 +233,18 @@
     "hsvHueBased": "HSV（色相为基础）",
     "rgbDirect": "RGB（直接）",
     "mixingMode": "混合模式",
-    "mixingRyb": "RYB (颜料混合)",
-    "mixingLab": "LAB (感知)",
     "mixingRgb": "RGB (光)",
-    "mixingRybDesc": "减色颜料混合。蓝 + 黄 = 绿。",
-    "mixingLabDesc": "LAB 色彩空间中的感知均匀混合。",
+    "mixingLab": "LAB (感知)",
+    "mixingOklab": "OKLAB (现代感知)",
+    "mixingRyb": "RYB (颜料)",
+    "mixingHsl": "HSL (色相为基础)",
+    "mixingSpectral": "光谱 (真实颜料)",
     "mixingRgbDesc": "加色光混合。蓝 + 黄 = 灰。",
+    "mixingLabDesc": "感知均匀混合。蓝 + 黄 = 粉红。",
+    "mixingOklabDesc": "现代感知色彩空间。蓝 + 黄 = 青。",
+    "mixingRybDesc": "颜料模拟。蓝 + 黄 = 橄榄。",
+    "mixingHslDesc": "HSL 色彩空间中的色相为基础混合。",
+    "mixingSpectralDesc": "库贝尔卡-蒙克物理学。蓝 + 黄 = 绿。",
     "resultSettings": "结果设置",
     "maxResults": "最大结果数",
     "category": "类别",
@@ -621,7 +627,14 @@
     "clickToSelectEnd": "点击选择结束颜色",
     "gradientResults": "渐变结果",
     "noMatchesFound": "未找到匹配的染剂",
-    "sameDyeWarning": "起始和结束染剂相同。请选择不同的染剂以创建渐变。"
+    "sameDyeWarning": "起始和结束染剂相同。请选择不同的染剂以创建渐变。",
+    "mode": {
+      "rgb": "线性（灰色中点）",
+      "hsv": "基于色相（鲜艳）",
+      "lab": "感知（自然）",
+      "oklch": "现代感知（最佳）",
+      "lch": "圆柱LAB"
+    }
   },
   "dyeSelector": {
     "searchPlaceholder": "按名称搜索染剂...",

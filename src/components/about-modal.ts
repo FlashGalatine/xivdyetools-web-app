@@ -184,17 +184,23 @@ export class AboutModal {
     socialSection.appendChild(socialGrid);
     container.appendChild(socialSection);
 
-    // Universalis credit section
-    const universalisSection = document.createElement('div');
-    universalisSection.className = 'text-center mb-6';
+    // Credits section (Universalis + Spectral.js)
+    const creditsSection = document.createElement('div');
+    creditsSection.className = 'text-center mb-6 space-y-2';
 
     const universalisText = document.createElement('p');
     universalisText.className = 'text-xs';
     universalisText.style.color = 'var(--theme-text-muted)';
     universalisText.innerHTML = `${LanguageService.t('footer.universalisCredit')} <a href="https://universalis.app/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">Universalis</a>`;
-    universalisSection.appendChild(universalisText);
+    creditsSection.appendChild(universalisText);
 
-    container.appendChild(universalisSection);
+    const spectralText = document.createElement('p');
+    spectralText.className = 'text-xs';
+    spectralText.style.color = 'var(--theme-text-muted)';
+    spectralText.innerHTML = `Realistic paint mixing powered by <a href="https://github.com/rvanwijnen/spectral.js" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">spectral.js</a> (Kubelka-Munk theory)`;
+    creditsSection.appendChild(spectralText);
+
+    container.appendChild(creditsSection);
 
     // Square Enix disclaimer section
     const disclaimerSection = document.createElement('div');

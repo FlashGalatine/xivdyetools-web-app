@@ -67,10 +67,11 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.17",
-    "@xivdyetools/core": "^1.12.4",
+    "@xivdyetools/core": "^1.12.5",
     "@xivdyetools/logger": "^1.0.2",
     "@xivdyetools/types": "^1.6.1",
-    "lit": "^3.1.0"
+    "lit": "^3.1.0",
+    "spectral.js": "^3.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

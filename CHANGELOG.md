@@ -103,6 +103,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved card layout and header styling
 - Enhanced empty state UX
 - Better gradient visualization
+- **5 Interpolation Modes**: OKLCH (recommended), HSV, LAB, LCH, RGB
+  - OKLCH produces green midpoints for Blue→Yellow (not gray like RGB)
+  - Full i18n support for all 6 languages
+
+**Dye Mixer (New Tool)**
+- **6 Color Mixing Algorithms**:
+  - Spectral (Kubelka-Munk) - Most realistic paint mixing
+  - RYB (Gossett-Chen) - Traditional paint simulation
+  - OKLAB - Modern perceptual mixing
+  - LAB - CIE LAB perceptual mixing
+  - HSL - Hue-based blending
+  - RGB - Additive light mixing
+- Spectral.js integration for physics-based color mixing
+- Full i18n support for all mixing modes
 
 **Swatch Matcher (formerly Character Color Matcher)**
 - V4 layout refactoring

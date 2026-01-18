@@ -213,12 +213,18 @@
     "hsvHueBased": "HSV (basé sur la teinte)",
     "rgbDirect": "RGB (direct)",
     "mixingMode": "Mode de mélange",
-    "mixingRyb": "RYB (Mélange de peinture)",
-    "mixingLab": "LAB (Perceptuel)",
     "mixingRgb": "RGB (Lumière)",
-    "mixingRybDesc": "Mélange soustractif de peinture. Bleu + Jaune = Vert.",
-    "mixingLabDesc": "Mélange perceptuellement uniforme dans l'espace colorimétrique LAB.",
+    "mixingLab": "LAB (Perceptuel)",
+    "mixingOklab": "OKLAB (Perceptuel moderne)",
+    "mixingRyb": "RYB (Peinture)",
+    "mixingHsl": "HSL (Basé sur la teinte)",
+    "mixingSpectral": "Spectral (Peinture réaliste)",
     "mixingRgbDesc": "Mélange additif de lumière. Bleu + Jaune = Gris.",
+    "mixingLabDesc": "Mélange perceptuellement uniforme. Bleu + Jaune = Rose.",
+    "mixingOklabDesc": "Espace colorimétrique perceptuel moderne. Bleu + Jaune = Cyan.",
+    "mixingRybDesc": "Simulation de peinture. Bleu + Jaune = Olive.",
+    "mixingHslDesc": "Mélange basé sur la teinte dans l'espace HSL.",
+    "mixingSpectralDesc": "Physique Kubelka-Munk. Bleu + Jaune = Vert.",
     "resultSettings": "Paramètres de résultat",
     "maxResults": "Résultats maximum",
     "category": "Catégorie",
@@ -601,7 +607,14 @@
     "clickToSelectEnd": "Cliquez pour sélectionner la couleur de fin",
     "gradientResults": "Résultats du Dégradé",
     "noMatchesFound": "Aucune teinture correspondante trouvée",
-    "sameDyeWarning": "Les teintures de début et de fin sont identiques. Sélectionnez des teintures différentes pour un dégradé."
+    "sameDyeWarning": "Les teintures de début et de fin sont identiques. Sélectionnez des teintures différentes pour un dégradé.",
+    "mode": {
+      "rgb": "Linéaire (points médians gris)",
+      "hsv": "Basé sur la teinte (vif)",
+      "lab": "Perceptuel (naturel)",
+      "oklch": "Perceptuel moderne (optimal)",
+      "lch": "LAB cylindrique"
+    }
   },
   "dyeSelector": {
     "searchPlaceholder": "Rechercher des teintures par nom...",
