@@ -24,6 +24,18 @@ vi.mock('@xivdyetools/core', () => ({
     hexToHsv: vi.fn(() => ({ h: 0, s: 100, v: 100 })),
     isLightColor: vi.fn(() => false),
   },
+  DyeService: class MockDyeService {
+    getAllDyes() {
+      return [];
+    }
+    getDyeById() {
+      return null;
+    }
+    getCategories() {
+      return [];
+    }
+  },
+  dyeDatabase: [],
 }));
 
 vi.mock('@shared/logger', () => ({
