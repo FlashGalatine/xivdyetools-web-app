@@ -1231,11 +1231,11 @@ export class ConfigSidebar extends BaseLitComponent {
         this.handleConfigChange('gradient', 'interpolation', value);
       }}
           >
-            <option value="oklch">${LanguageService.t('gradient.mode.oklch')}</option>
-            <option value="hsv">${LanguageService.t('gradient.mode.hsv')}</option>
-            <option value="lab">${LanguageService.t('gradient.mode.lab')}</option>
-            <option value="lch">${LanguageService.t('gradient.mode.lch')}</option>
-            <option value="rgb">${LanguageService.t('gradient.mode.rgb')}</option>
+            <option value="oklch">OKLCH - ${LanguageService.t('gradient.mode.oklch')}</option>
+            <option value="hsv">HSV - ${LanguageService.t('gradient.mode.hsv')}</option>
+            <option value="lab">LAB - ${LanguageService.t('gradient.mode.lab')}</option>
+            <option value="lch">LCH - ${LanguageService.t('gradient.mode.lch')}</option>
+            <option value="rgb">RGB - ${LanguageService.t('gradient.mode.rgb')}</option>
           </select>
           <div class="config-description">
             ${this.getColorSpaceDescription()}
