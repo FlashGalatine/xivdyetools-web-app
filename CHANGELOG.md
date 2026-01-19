@@ -58,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `harmony-tool.ts`, `gradient-tool.ts`, `extractor-tool.ts`, `mixer-tool.ts`, `swatch-tool.ts` - Wire up matching method
 - All 6 locale files - New translation keys for matching methods
 
+#### Fixed (Deep-Dive Audit 2026-01-19)
+
+- **WEB-BUG-001**: Fixed event listener accumulation risk in DyeSelector. Changed `manageBtn.addEventListener()` to `this.on()` for proper cleanup via `unbindAllEvents()`
+- **WEB-BUG-003**: Fixed race condition in palette import count. Consolidated two separate storage reads into one to prevent TOCTOU race
+- **WEB-OPT-003**: Verified MarketBoardService lazy-loading already optimized (singleton cache, on-demand fetching, request versioning)
+
 #### Dependencies
 
 - Updated `@xivdyetools/core` to ^1.13.0 for matching algorithm support
