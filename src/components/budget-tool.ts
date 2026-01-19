@@ -25,7 +25,10 @@ import {
   MarketBoardService,
   StorageService,
   ToastService,
+  applyDisplayOptions,
+  formatPriceWithSuffix,
 } from '@services/index';
+import type { DisplayOptionsConfig } from '@shared/tool-config-types';
 import { RouterService } from '@services/router-service';
 import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { ICON_TOOL_BUDGET } from '@shared/tool-icons';
@@ -323,11 +326,11 @@ export class BudgetTool extends BaseComponent {
 
       // Update desktop display
       if (this.budgetValueDisplay) {
-        this.budgetValueDisplay.textContent = `${config.maxPrice.toLocaleString()} gil`;
+        this.budgetValueDisplay.textContent = formatPriceWithSuffix(config.maxPrice);
       }
       // Update mobile display
       if (this.mobileBudgetValueDisplay) {
-        this.mobileBudgetValueDisplay.textContent = `${config.maxPrice.toLocaleString()} gil`;
+        this.mobileBudgetValueDisplay.textContent = formatPriceWithSuffix(config.maxPrice);
       }
     }
 
@@ -366,50 +369,40 @@ export class BudgetTool extends BaseComponent {
     }
 
     // Handle displayOptions from v4-display-options component
+    // WEB-REF-003: Using shared applyDisplayOptions helper
     let needsRerender = false;
     if (config.displayOptions) {
-      const opts = config.displayOptions;
-      if (opts.showHex !== undefined && opts.showHex !== this.showHex) {
-        this.showHex = opts.showHex;
-        StorageService.setItem(STORAGE_KEYS.showHex, opts.showHex);
+      // Build current state as DisplayOptionsConfig
+      const currentOptions: DisplayOptionsConfig = {
+        showHex: this.showHex,
+        showRgb: this.showRgb,
+        showHsv: this.showHsv,
+        showLab: this.showLab,
+        showPrice: this.showPrice,
+        showDeltaE: this.showDeltaE,
+        showAcquisition: this.showAcquisition,
+      };
+
+      const result = applyDisplayOptions({
+        current: currentOptions,
+        incoming: config.displayOptions,
+        toolName: 'BudgetTool',
+        onChange: (key, value) => {
+          // Persist each change to storage
+          StorageService.setItem(STORAGE_KEYS[key], value);
+        },
+      });
+
+      if (result.hasChanges) {
+        // Distribute updated values back to individual properties
+        this.showHex = result.options.showHex;
+        this.showRgb = result.options.showRgb;
+        this.showHsv = result.options.showHsv;
+        this.showLab = result.options.showLab;
+        this.showPrice = result.options.showPrice;
+        this.showDeltaE = result.options.showDeltaE;
+        this.showAcquisition = result.options.showAcquisition;
         needsRerender = true;
-        logger.info(`[BudgetTool] setConfig: displayOptions.showHex -> ${opts.showHex}`);
-      }
-      if (opts.showRgb !== undefined && opts.showRgb !== this.showRgb) {
-        this.showRgb = opts.showRgb;
-        StorageService.setItem(STORAGE_KEYS.showRgb, opts.showRgb);
-        needsRerender = true;
-        logger.info(`[BudgetTool] setConfig: displayOptions.showRgb -> ${opts.showRgb}`);
-      }
-      if (opts.showHsv !== undefined && opts.showHsv !== this.showHsv) {
-        this.showHsv = opts.showHsv;
-        StorageService.setItem(STORAGE_KEYS.showHsv, opts.showHsv);
-        needsRerender = true;
-        logger.info(`[BudgetTool] setConfig: displayOptions.showHsv -> ${opts.showHsv}`);
-      }
-      if (opts.showLab !== undefined && opts.showLab !== this.showLab) {
-        this.showLab = opts.showLab;
-        StorageService.setItem(STORAGE_KEYS.showLab, opts.showLab);
-        needsRerender = true;
-        logger.info(`[BudgetTool] setConfig: displayOptions.showLab -> ${opts.showLab}`);
-      }
-      if (opts.showPrice !== undefined && opts.showPrice !== this.showPrice) {
-        this.showPrice = opts.showPrice;
-        StorageService.setItem(STORAGE_KEYS.showPrice, opts.showPrice);
-        needsRerender = true;
-        logger.info(`[BudgetTool] setConfig: displayOptions.showPrice -> ${opts.showPrice}`);
-      }
-      if (opts.showDeltaE !== undefined && opts.showDeltaE !== this.showDeltaE) {
-        this.showDeltaE = opts.showDeltaE;
-        StorageService.setItem(STORAGE_KEYS.showDeltaE, opts.showDeltaE);
-        needsRerender = true;
-        logger.info(`[BudgetTool] setConfig: displayOptions.showDeltaE -> ${opts.showDeltaE}`);
-      }
-      if (opts.showAcquisition !== undefined && opts.showAcquisition !== this.showAcquisition) {
-        this.showAcquisition = opts.showAcquisition;
-        StorageService.setItem(STORAGE_KEYS.showAcquisition, opts.showAcquisition);
-        needsRerender = true;
-        logger.info(`[BudgetTool] setConfig: displayOptions.showAcquisition -> ${opts.showAcquisition}`);
       }
     }
 
@@ -759,7 +752,7 @@ export class BudgetTool extends BaseComponent {
       className: 'text-sm font-medium number',
       textContent:
         this.targetPrice > 0
-          ? `~${this.targetPrice.toLocaleString()} gil`
+          ? `~${formatPriceWithSuffix(this.targetPrice)}`
           : LanguageService.t('budget.loadingPrice'),
       attributes: { style: `color: ${textColor} !important; text-shadow: ${textShadow};` },
     });
@@ -862,7 +855,7 @@ export class BudgetTool extends BaseComponent {
 
     this.budgetValueDisplay = this.createElement('span', {
       className: 'font-semibold',
-      textContent: `${this.budgetLimit.toLocaleString()} gil`,
+      textContent: formatPriceWithSuffix(this.budgetLimit),
       attributes: { style: 'color: var(--theme-text);' },
     });
 
@@ -886,7 +879,7 @@ export class BudgetTool extends BaseComponent {
     this.on(slider, 'input', () => {
       this.budgetLimit = parseInt(slider.value, 10);
       if (this.budgetValueDisplay) {
-        this.budgetValueDisplay.textContent = `${this.budgetLimit.toLocaleString()} gil`;
+        this.budgetValueDisplay.textContent = formatPriceWithSuffix(this.budgetLimit);
       }
       StorageService.setItem(STORAGE_KEYS.budgetLimit, this.budgetLimit);
       this.filterAndSortAlternatives();
@@ -1460,7 +1453,7 @@ export class BudgetTool extends BaseComponent {
       // Add savings badge below card (if savings > 0)
       if (alt.savings > 0) {
         const savingsBadge = this.createElement('div', {
-          textContent: `${LanguageService.t('budget.save')} ${alt.savings.toLocaleString()} gil`,
+          textContent: `${LanguageService.t('budget.save')} ${formatPriceWithSuffix(alt.savings)}`,
           attributes: {
             style:
               'background: rgba(34, 197, 94, 0.15); color: #22C55E; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px; text-align: center;',
@@ -1842,7 +1835,7 @@ export class BudgetTool extends BaseComponent {
       className: 'text-sm font-medium number',
       textContent:
         this.targetPrice > 0
-          ? `~${this.targetPrice.toLocaleString()} gil`
+          ? `~${formatPriceWithSuffix(this.targetPrice)}`
           : LanguageService.t('budget.loadingPrice'),
       attributes: { style: `color: ${textColor} !important; text-shadow: ${textShadow};` },
     });
@@ -1945,7 +1938,7 @@ export class BudgetTool extends BaseComponent {
 
     this.mobileBudgetValueDisplay = this.createElement('span', {
       className: 'font-semibold',
-      textContent: `${this.budgetLimit.toLocaleString()} gil`,
+      textContent: formatPriceWithSuffix(this.budgetLimit),
       attributes: { style: 'color: var(--theme-text);' },
     });
 
@@ -1968,10 +1961,10 @@ export class BudgetTool extends BaseComponent {
     this.on(slider, 'input', () => {
       this.budgetLimit = parseInt(slider.value, 10);
       if (this.mobileBudgetValueDisplay) {
-        this.mobileBudgetValueDisplay.textContent = `${this.budgetLimit.toLocaleString()} gil`;
+        this.mobileBudgetValueDisplay.textContent = formatPriceWithSuffix(this.budgetLimit);
       }
       if (this.budgetValueDisplay) {
-        this.budgetValueDisplay.textContent = `${this.budgetLimit.toLocaleString()} gil`;
+        this.budgetValueDisplay.textContent = formatPriceWithSuffix(this.budgetLimit);
       }
       StorageService.setItem(STORAGE_KEYS.budgetLimit, this.budgetLimit);
       this.filterAndSortAlternatives();

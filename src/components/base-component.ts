@@ -96,6 +96,18 @@ export abstract class BaseComponent implements ComponentLifecycle {
   }
 
   // ============================================================================
+  // Public Accessors
+  // ============================================================================
+
+  /**
+   * Get the component's root element.
+   * Used by external code to access the element for event delegation.
+   */
+  getElement(): HTMLElement | null {
+    return this.element;
+  }
+
+  // ============================================================================
   // Lifecycle Methods
   // ============================================================================
 
@@ -458,7 +470,11 @@ export abstract class BaseComponent implements ComponentLifecycle {
    * For user-controlled content, ALWAYS use textContent instead.
    * See ui-icons.ts for detailed security rationale.
    */
-  protected createElement<K extends keyof HTMLElementTagNameMap>(
+  /**
+   * Public createElement for use by external utilities (e.g., tool-panel-builders).
+   * Subclasses continue to use this method directly.
+   */
+  public createElement<K extends keyof HTMLElementTagNameMap>(
     tagName: K,
     options?: ElementOptions
   ): HTMLElementTagNameMap[K] {

@@ -21,6 +21,7 @@ import {
   LanguageService,
   StorageService,
   dyeService,
+  applyDisplayOptions,
 } from '@services/index';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
@@ -437,40 +438,16 @@ export class AccessibilityTool extends BaseComponent {
     }
 
     // Handle card display options (for v4-result-cards)
+    // WEB-REF-003: Using shared applyDisplayOptions helper
     if (config.displayOptions !== undefined) {
-      const newOptions = config.displayOptions;
-      let cardOptionsChanged = false;
-
-      if (
-        newOptions.showHex !== undefined &&
-        newOptions.showHex !== this.cardDisplayOptions.showHex
-      ) {
-        this.cardDisplayOptions.showHex = newOptions.showHex;
-        cardOptionsChanged = true;
-      }
-      if (
-        newOptions.showRgb !== undefined &&
-        newOptions.showRgb !== this.cardDisplayOptions.showRgb
-      ) {
-        this.cardDisplayOptions.showRgb = newOptions.showRgb;
-        cardOptionsChanged = true;
-      }
-      if (
-        newOptions.showHsv !== undefined &&
-        newOptions.showHsv !== this.cardDisplayOptions.showHsv
-      ) {
-        this.cardDisplayOptions.showHsv = newOptions.showHsv;
-        cardOptionsChanged = true;
-      }
-      if (
-        newOptions.showLab !== undefined &&
-        newOptions.showLab !== this.cardDisplayOptions.showLab
-      ) {
-        this.cardDisplayOptions.showLab = newOptions.showLab;
-        cardOptionsChanged = true;
-      }
-
-      if (cardOptionsChanged) {
+      const result = applyDisplayOptions({
+        current: this.cardDisplayOptions,
+        incoming: config.displayOptions,
+        toolName: 'AccessibilityTool',
+        logChanges: false, // Log single summary instead
+      });
+      if (result.hasChanges) {
+        this.cardDisplayOptions = result.options;
         needsRerender = true;
         logger.info(
           '[AccessibilityTool] setConfig: cardDisplayOptions updated',

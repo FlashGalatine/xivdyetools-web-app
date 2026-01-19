@@ -303,6 +303,9 @@ export class ComparisonTool extends BaseComponent {
     let needsRerender = false;
 
     // Handle displayOptions from v4-display-options component
+    // Note: ComparisonTool uses custom property mapping (showDeltaE→showDistanceValues,
+    // showPrice→showMarketPrices) so we handle these explicitly rather than using
+    // the shared applyDisplayOptions helper which expects standard DisplayOptionsConfig.
     if (config.displayOptions) {
       const opts = config.displayOptions;
 

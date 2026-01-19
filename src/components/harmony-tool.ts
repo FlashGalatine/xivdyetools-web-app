@@ -862,7 +862,7 @@ export class HarmonyTool extends BaseComponent {
     const displayContainer = refs.displayContainer;
 
     // Listen for dye selection (custom event from DyeSelector)
-    refs.selector.element?.parentElement?.addEventListener('selection-changed', ((
+    refs.selector.getElement()?.parentElement?.addEventListener('selection-changed', ((
       event: CustomEvent<{ selectedDyes: Dye[] }>
     ) => {
       const selectedDyes = event.detail.selectedDyes;
@@ -1123,7 +1123,7 @@ export class HarmonyTool extends BaseComponent {
       const displayContainer = dyeRefs.displayContainer;
 
       // Listen for dye selection - sync with desktop
-      dyeRefs.selector.element?.parentElement?.addEventListener('selection-changed', ((
+      dyeRefs.selector.getElement()?.parentElement?.addEventListener('selection-changed', ((
         event: CustomEvent<{ selectedDyes: Dye[] }>
       ) => {
         const selectedDyes = event.detail.selectedDyes;

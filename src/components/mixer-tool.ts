@@ -956,7 +956,7 @@ export class MixerTool extends BaseComponent {
     this.renderSelectedDyesDisplayInto(refs.displayContainer);
 
     // Listen for selection changes
-    refs.selector.element?.parentElement?.addEventListener('selection-changed', () => {
+    refs.selector.getElement()?.parentElement?.addEventListener('selection-changed', () => {
       const selectedDyes = refs.selector.getSelectedDyes();
       this.handleDyeSelection(selectedDyes);
     });
@@ -1688,7 +1688,7 @@ export class MixerTool extends BaseComponent {
     this.renderSelectedDyesDisplayInto(dyeRefs.displayContainer);
 
     // Listen for selection changes - sync with desktop
-    dyeRefs.selector.element?.parentElement?.addEventListener('selection-changed', () => {
+    dyeRefs.selector.getElement()?.parentElement?.addEventListener('selection-changed', () => {
       const selectedDyes = dyeRefs.selector.getSelectedDyes();
       this.handleDyeSelection(selectedDyes);
       this.dyeSelector?.setSelectedDyes(selectedDyes);
