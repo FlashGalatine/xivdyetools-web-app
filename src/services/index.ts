@@ -136,6 +136,31 @@ export type {
   MarketPanelConfig,
 } from './tool-panel-builders';
 
+// WEB-REF-003 Phase 4: Shared price utilities and display options helpers
+export {
+  formatPriceWithSuffix,
+  getDyePriceDisplay,
+  getPriceInfo,
+  preparePriceCardData,
+  preparePriceCardDataFromMap,
+  getItemIdsForPriceFetch,
+  hasCachedPrices,
+} from './price-utilities';
+export type { PriceCardData, DyePriceDisplayOptions } from './price-utilities';
+
+export {
+  DEFAULT_DISPLAY_OPTIONS,
+  applyDisplayOptions,
+  hasDisplayOptionsChanges,
+  getCardDisplayOptions,
+  mergeWithDefaults,
+} from './display-options-helper';
+export type {
+  DisplayOptionsChangeCallback,
+  ApplyDisplayOptionsConfig,
+  ApplyDisplayOptionsResult,
+} from './display-options-helper';
+
 // Re-export commonly used types
 export type { Dye, VisionType, ThemeName, PriceData } from '@shared/types';
 

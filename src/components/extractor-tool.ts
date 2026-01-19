@@ -25,6 +25,7 @@ import {
   ConfigController,
   dyeService,
   LanguageService,
+  MarketBoardService,
   RouterService,
   StorageService,
   ToastService,
@@ -100,9 +101,18 @@ export class ExtractorTool extends BaseComponent {
   private paletteColorCount: number = 4;
   private vibrancyBoost: boolean = true;
   private matchedDyes: DyeWithDistance[] = [];
-  private showPrices: boolean = false;
-  private priceData: Map<number, PriceData> = new Map();
   private filterConfig: DyeFilterConfig | null = null;
+
+  // WEB-REF-003 Phase 4: MarketBoardService (shared price cache with race condition protection)
+  private marketBoardService: MarketBoardService;
+
+  // Getters for service state (replaces local showPrices and priceData fields)
+  private get showPrices(): boolean {
+    return this.marketBoardService.getShowPrices();
+  }
+  private get priceData(): Map<number, PriceData> {
+    return this.marketBoardService.getAllPrices();
+  }
   private currentImage: HTMLImageElement | null = null;
   private currentImageDataUrl: string | null = null;
   private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
@@ -175,6 +185,9 @@ export class ExtractorTool extends BaseComponent {
     this.paletteMode = StorageService.getItem<boolean>(STORAGE_KEYS.paletteMode) ?? true; // v4: Default to palette mode
     this.paletteColorCount = StorageService.getItem<number>(STORAGE_KEYS.paletteColorCount) ?? 4;
     this.vibrancyBoost = StorageService.getItem<boolean>(STORAGE_KEYS.vibrancyBoost) ?? true;
+
+    // WEB-REF-003 Phase 4: Initialize MarketBoardService (shared price cache)
+    this.marketBoardService = MarketBoardService.getInstance();
 
     // Initialize palette service
     this.paletteService = new PaletteService();
@@ -720,6 +733,7 @@ export class ExtractorTool extends BaseComponent {
   /**
    * Render market board collapsible panel
    * WEB-REF-003 Phase 3: Refactored to use shared builder
+   * WEB-REF-003 Phase 4: Uses MarketBoardService for state (showPrices/priceData via getters)
    */
   private renderMarketPanel(container: HTMLElement): void {
     const refs = buildMarketPanel(this, container, {
@@ -730,7 +744,7 @@ export class ExtractorTool extends BaseComponent {
         if (this.showPrices) {
           void this.fetchPricesForMatches();
         } else {
-          this.priceData.clear();
+          // Service handles cache clearing; just re-render to update UI
           if (this.lastPaletteResults.length > 0) {
             this.renderPaletteResults(this.lastPaletteResults);
           } else {
@@ -739,6 +753,7 @@ export class ExtractorTool extends BaseComponent {
         }
       },
       onServerChanged: () => {
+        // Service clears cache on server change; fetch new prices if enabled
         if (this.showPrices) {
           void this.fetchPricesForMatches();
         }
@@ -747,9 +762,8 @@ export class ExtractorTool extends BaseComponent {
     this.marketPanel = refs.panel;
     this.marketBoard = refs.marketBoard;
 
-    // Load server data for the dropdown and get initial showPrices state
+    // Load server data for the dropdown (showPrices state now comes from MarketBoardService getter)
     void this.marketBoard.loadServerData();
-    this.showPrices = this.marketBoard.getShowPrices();
   }
 
   // ============================================================================
@@ -1168,10 +1182,9 @@ export class ExtractorTool extends BaseComponent {
     // Clear from storage
     StorageService.removeItem(STORAGE_KEYS.imageDataUrl);
 
-    // Clear palette results
+    // Clear palette results (price cache managed by MarketBoardService)
     this.lastPaletteResults = [];
     this.matchedDyes = [];
-    this.priceData.clear();
 
     // Show drop zone content, hide canvas
     if (this.dropContent) {
@@ -1960,6 +1973,7 @@ export class ExtractorTool extends BaseComponent {
     void this.mobileMarketBoard.loadServerData();
 
     // Set up market board event listeners using shared utility
+    // WEB-REF-003 Phase 4: Uses MarketBoardService for state (showPrices/priceData via getters)
     setupMarketBoardListeners(
       marketContainer,
       () => this.showPrices,
@@ -1969,7 +1983,7 @@ export class ExtractorTool extends BaseComponent {
           if (this.showPrices) {
             void this.fetchPricesForMatches();
           } else {
-            this.priceData.clear();
+            // Service handles cache clearing; just re-render to update UI
             if (this.lastPaletteResults.length > 0) {
               this.renderPaletteResults(this.lastPaletteResults);
             } else {
@@ -1978,6 +1992,7 @@ export class ExtractorTool extends BaseComponent {
           }
         },
         onServerChanged: () => {
+          // Service clears cache on server change; fetch new prices if enabled
           if (this.showPrices) {
             void this.fetchPricesForMatches();
           }
@@ -2192,9 +2207,10 @@ export class ExtractorTool extends BaseComponent {
 
   /**
    * Fetch prices for matched dyes
+   * WEB-REF-003 Phase 4: Delegates to MarketBoardService with race condition protection
    */
   private async fetchPricesForMatches(): Promise<void> {
-    if (!this.marketBoard) return;
+    if (!this.showPrices) return;
 
     // Collect dyes to fetch prices for - either from palette results or matched dyes
     let dyesToFetch: Dye[] = [];
@@ -2209,17 +2225,16 @@ export class ExtractorTool extends BaseComponent {
     if (dyesToFetch.length === 0) return;
 
     try {
-      const prices = await this.marketBoard.fetchPricesForDyes(dyesToFetch);
-      this.priceData.clear();
-      for (const [id, price] of prices.entries()) {
-        this.priceData.set(id, price);
-      }
-      // Re-render appropriate results based on mode
+      const prices = await this.marketBoardService.fetchPricesForDyes(dyesToFetch);
+      // Always re-render after fetch completes (even if empty/stale)
+      // This ensures cards reflect current state when server changes
+      // priceData getter automatically returns updated cache from service
       if (this.lastPaletteResults.length > 0) {
         this.renderPaletteResults(this.lastPaletteResults);
       } else {
         this.renderMatchedResults();
       }
+      logger.info(`[ExtractorTool] Fetched prices for ${prices.size} dyes`);
     } catch (error) {
       logger.error('[ExtractorTool] Failed to fetch prices:', error);
     }
