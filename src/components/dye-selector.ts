@@ -497,6 +497,8 @@ export class DyeSelector extends BaseComponent {
     });
 
     // Manage Collections button
+    // WEB-BUG-001 FIX: Use this.on() instead of direct addEventListener
+    // to ensure proper cleanup via unbindAllEvents() on component destroy/update
     const manageBtn = this.createElement('button', {
       id: 'manage-collections-btn',
       className:
@@ -504,7 +506,7 @@ export class DyeSelector extends BaseComponent {
       textContent: LanguageService.t('collections.manageCollections'),
       attributes: { type: 'button' },
     });
-    manageBtn.addEventListener('click', (e) => {
+    this.on(manageBtn, 'click', (e) => {
       e.stopPropagation(); // Prevent toggling the panel
       showCollectionManagerModal();
     });
