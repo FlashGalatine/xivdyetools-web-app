@@ -26,9 +26,14 @@ import {
   StorageService,
   ToastService,
   WorldService,
+  // WEB-REF-003 Phase 3: Shared panel builders
+  buildFiltersPanel,
+  buildMarketPanel,
 } from '@services/index';
+// Note: setupMarketBoardListeners still used by drawer code until Phase 2 refactor
 import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { ICON_TOOL_MIXER } from '@shared/tool-icons';
+// Note: ICON_FILTER and ICON_MARKET still used by drawer code until Phase 2 refactor
 import {
   ICON_FILTER,
   ICON_MARKET,
@@ -472,66 +477,43 @@ export class GradientTool extends BaseComponent {
     this.settingsPanel.setContent(settingsContent);
 
     // Section 3: Dye Filters (collapsible)
+    // WEB-REF-003 Phase 3: Refactored to use shared builder
     const filtersContainer = this.createElement('div');
     left.appendChild(filtersContainer);
-    this.filtersPanel = new CollapsiblePanel(filtersContainer, {
-      title: LanguageService.t('filters.advancedFilters'),
+    const filtersRefs = buildFiltersPanel(this, filtersContainer, {
       storageKey: 'v3_mixer_filters',
-      defaultOpen: false,
-      icon: ICON_FILTER,
-    });
-    this.filtersPanel.init();
-
-    const filtersContent = this.createElement('div');
-    this.dyeFilters = new DyeFilters(filtersContent, {
       storageKeyPrefix: 'v3_mixer',
-      hideHeader: true,
       onFilterChange: () => {
         this.updateInterpolation();
       },
     });
-    this.dyeFilters.render();
-    this.dyeFilters.bindEvents();
-    this.filtersPanel.setContent(filtersContent);
+    this.filtersPanel = filtersRefs.panel;
+    this.dyeFilters = filtersRefs.filters;
 
     // Section 4: Market Board (collapsible)
+    // WEB-REF-003 Phase 3: Refactored to use shared builder
     const marketContainer = this.createElement('div');
     left.appendChild(marketContainer);
-    this.marketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title'),
+    const marketRefs = buildMarketPanel(this, marketContainer, {
       storageKey: 'v3_mixer_market',
-      defaultOpen: false,
-      icon: ICON_MARKET,
+      getShowPrices: () => this.showPrices,
+      fetchPrices: () => this.fetchPricesForDisplayedDyes(),
+      onPricesToggled: () => {
+        if (this.showPrices) {
+          void this.fetchPricesForDisplayedDyes();
+        } else {
+          this.updateSelectedDyesDisplay();
+          this.renderIntermediateMatches();
+        }
+      },
+      onServerChanged: () => {
+        if (this.showPrices) {
+          void this.fetchPricesForDisplayedDyes();
+        }
+      },
     });
-    this.marketPanel.init();
-
-    const marketContent = this.createElement('div');
-    this.marketBoard = new MarketBoard(marketContent);
-    this.marketBoard.init();
-
-    // Set up market board event listeners using shared utility
-    setupMarketBoardListeners(
-      marketContent,
-      () => this.showPrices,
-      () => this.fetchPricesForDisplayedDyes(),
-      {
-        onPricesToggled: () => {
-          if (this.showPrices) {
-            void this.fetchPricesForDisplayedDyes();
-          } else {
-            this.updateSelectedDyesDisplay();
-            this.renderIntermediateMatches();
-          }
-        },
-        onServerChanged: () => {
-          if (this.showPrices) {
-            void this.fetchPricesForDisplayedDyes();
-          }
-        },
-      }
-    );
-
-    this.marketPanel.setContent(marketContent);
+    this.marketPanel = marketRefs.panel;
+    this.marketBoard = marketRefs.marketBoard;
   }
 
   /**

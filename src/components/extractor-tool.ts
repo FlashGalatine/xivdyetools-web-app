@@ -28,8 +28,12 @@ import {
   RouterService,
   StorageService,
   ToastService,
+  // WEB-REF-003 Phase 3: Shared panel builders
+  buildFiltersPanel,
+  buildMarketPanel,
 } from '@services/index';
 import { WorldService } from '@services/world-service';
+// Note: setupMarketBoardListeners still used by drawer code until Phase 2 refactor
 import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import {
   ICON_FILTER,
@@ -696,21 +700,12 @@ export class ExtractorTool extends BaseComponent {
 
   /**
    * Render dye filters collapsible panel
+   * WEB-REF-003 Phase 3: Refactored to use shared builder
    */
   private renderFiltersPanel(container: HTMLElement): void {
-    this.filtersPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('filters.advancedFilters'),
+    const refs = buildFiltersPanel(this, container, {
       storageKey: 'matcher_filters',
-      defaultOpen: false,
-      icon: ICON_FILTER,
-    });
-    this.filtersPanel.init();
-
-    // Create filters content
-    const filtersContent = this.createElement('div');
-    this.dyeFilters = new DyeFilters(filtersContent, {
       storageKeyPrefix: 'v3_matcher',
-      hideHeader: true, // FIX: Prevent double-nested collapsible headers
       onFilterChange: (filters) => {
         this.filterConfig = filters;
         if (this.selectedColor) {
@@ -718,59 +713,43 @@ export class ExtractorTool extends BaseComponent {
         }
       },
     });
-    this.dyeFilters.init();
-
-    this.filtersPanel.setContent(filtersContent);
+    this.filtersPanel = refs.panel;
+    this.dyeFilters = refs.filters;
   }
 
   /**
    * Render market board collapsible panel
+   * WEB-REF-003 Phase 3: Refactored to use shared builder
    */
   private renderMarketPanel(container: HTMLElement): void {
-    this.marketPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('marketBoard.title'),
+    const refs = buildMarketPanel(this, container, {
       storageKey: 'matcher_market',
-      defaultOpen: false,
-      icon: ICON_MARKET,
+      getShowPrices: () => this.showPrices,
+      fetchPrices: () => this.fetchPricesForMatches(),
+      onPricesToggled: () => {
+        if (this.showPrices) {
+          void this.fetchPricesForMatches();
+        } else {
+          this.priceData.clear();
+          if (this.lastPaletteResults.length > 0) {
+            this.renderPaletteResults(this.lastPaletteResults);
+          } else {
+            this.renderMatchedResults();
+          }
+        }
+      },
+      onServerChanged: () => {
+        if (this.showPrices) {
+          void this.fetchPricesForMatches();
+        }
+      },
     });
-    this.marketPanel.init();
-
-    // Create market board content
-    const marketContent = this.createElement('div');
-    this.marketBoard = new MarketBoard(marketContent);
-    this.marketBoard.init();
+    this.marketPanel = refs.panel;
+    this.marketBoard = refs.marketBoard;
 
     // Load server data for the dropdown and get initial showPrices state
     void this.marketBoard.loadServerData();
     this.showPrices = this.marketBoard.getShowPrices();
-
-    // Set up market board event listeners using shared utility
-    setupMarketBoardListeners(
-      marketContent,
-      () => this.showPrices,
-      () => this.fetchPricesForMatches(),
-      {
-        onPricesToggled: () => {
-          if (this.showPrices) {
-            void this.fetchPricesForMatches();
-          } else {
-            this.priceData.clear();
-            if (this.lastPaletteResults.length > 0) {
-              this.renderPaletteResults(this.lastPaletteResults);
-            } else {
-              this.renderMatchedResults();
-            }
-          }
-        },
-        onServerChanged: () => {
-          if (this.showPrices) {
-            void this.fetchPricesForMatches();
-          }
-        },
-      }
-    );
-
-    this.marketPanel.setContent(marketContent);
   }
 
   // ============================================================================

@@ -127,6 +127,15 @@ export {
 } from './harmony-generator';
 export type { HarmonyTypeInfo, ScoredDyeMatch, HarmonyConfig } from './harmony-generator';
 
+// WEB-REF-003 Phase 3: Shared panel builders for tool components
+export { buildFiltersPanel, buildMarketPanel } from './tool-panel-builders';
+export type {
+  FiltersPanelRefs,
+  MarketPanelRefs,
+  FiltersPanelConfig,
+  MarketPanelConfig,
+} from './tool-panel-builders';
+
 // Re-export commonly used types
 export type { Dye, VisionType, ThemeName, PriceData } from '@shared/types';
 

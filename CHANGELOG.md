@@ -64,7 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WEB-BUG-003**: Fixed race condition in palette import count. Consolidated two separate storage reads into one to prevent TOCTOU race
 - **WEB-OPT-003**: Verified MarketBoardService lazy-loading already optimized (singleton cache, on-demand fetching, request versioning)
 - **WEB-REF-003 Phase 1**: Extracted pure algorithmic logic from large components. Created `mixer-blending-engine.ts` (~180 lines) and `harmony-generator.ts` (~280 lines) services, reducing MixerTool by ~120 lines and HarmonyTool by ~200 lines
-- **WEB-REF-003 Phase 2**: Eliminated desktop ↔ drawer code duplication using shared panel builder pattern. Created shared builder methods (`buildDyeSelectorPanel`, `buildSettingsSlider`, `buildHarmonyTypeSelector`, etc.) that return component references for reuse. MixerTool reduced ~180 lines, HarmonyTool reduced ~250 lines. (remaining phases: desktop UI extraction, shared services)
+- **WEB-REF-003 Phase 2**: Eliminated desktop ↔ drawer code duplication using shared panel builder pattern. Created shared builder methods (`buildDyeSelectorPanel`, `buildSettingsSlider`, `buildHarmonyTypeSelector`, etc.) that return component references for reuse. MixerTool reduced ~180 lines, HarmonyTool reduced ~250 lines
+- **WEB-REF-003 Phase 3**: Extracted panel controllers to shared service. Created `tool-panel-builders.ts` with `buildFiltersPanel()` and `buildMarketPanel()` functions. Refactored gradient-tool (~40 lines reduced) and extractor-tool (~50 lines reduced) to use shared builders. Other tools can incrementally adopt the pattern. (remaining: shared services)
 
 #### Dependencies
 
