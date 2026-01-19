@@ -36,6 +36,9 @@ export class MarketBoard extends BaseComponent {
   private service: MarketBoardService;
   private isRefreshing: boolean = false;
   private languageUnsubscribe: (() => void) | null = null;
+  // Handler references for MarketBoardService event cleanup
+  private boundServerChangedHandler: ((event: Event) => void) | null = null;
+  private boundSettingsChangedHandler: ((event: Event) => void) | null = null;
 
   // Local UI state (mirrors service state for rendering)
   private get selectedServer(): string {
@@ -357,6 +360,7 @@ export class MarketBoard extends BaseComponent {
         // Update service (which updates ConfigController and persists)
         this.service.setServer(serverSelect.value);
         // Emit for backward compatibility with existing tool listeners
+        console.log('📣 [MarketBoard] Emitting server-changed, server=', serverSelect.value);
         this.emit('server-changed', { server: serverSelect.value });
       });
     }
@@ -375,6 +379,7 @@ export class MarketBoard extends BaseComponent {
         }
 
         // Emit for backward compatibility with existing tool listeners
+        console.log('📣 [MarketBoard] Emitting showPricesChanged, checked=', toggleInput.checked);
         this.emit('showPricesChanged', { showPrices: toggleInput.checked });
       });
     }
@@ -528,6 +533,62 @@ export class MarketBoard extends BaseComponent {
     this.languageUnsubscribe = LanguageService.subscribe(() => {
       this.update(); // Re-render to update localized text (NOT init() - avoids infinite loop)
     });
+
+    // Subscribe to MarketBoardService events and relay them as DOM events
+    // This allows tools to receive server-changed events when ConfigSidebar changes the server
+    this.cleanupServiceSubscriptions();
+
+    this.boundServerChangedHandler = (event: Event) => {
+      const customEvent = event as CustomEvent<{ server: string; previousServer: string }>;
+      const { server } = customEvent.detail;
+      // Update dropdown UI to reflect the new server
+      const serverSelect = this.querySelector<HTMLSelectElement>('#mb-server-select');
+      if (serverSelect && serverSelect.value !== server) {
+        serverSelect.value = server;
+      }
+      // Re-emit as DOM event for tool listeners
+      console.log('📣 [MarketBoard] Relaying server-changed from service, server=', server);
+      this.emit('server-changed', { server });
+    };
+    this.service.addEventListener('server-changed', this.boundServerChangedHandler);
+
+    this.boundSettingsChangedHandler = (event: Event) => {
+      const customEvent = event as CustomEvent<{ showPrices: boolean }>;
+      const { showPrices } = customEvent.detail;
+      // Update toggle UI to reflect the new setting
+      const toggleInput = this.querySelector<HTMLInputElement>('#show-mb-prices-toggle');
+      if (toggleInput && toggleInput.checked !== showPrices) {
+        toggleInput.checked = showPrices;
+        // Update toggle background color
+        const toggleBg = toggleInput.nextElementSibling as HTMLElement;
+        if (toggleBg) {
+          toggleBg.style.backgroundColor = showPrices ? 'var(--theme-primary)' : '';
+        }
+      }
+      // Show/hide price settings
+      const priceSettings = this.querySelector('#mb-price-settings');
+      if (priceSettings) {
+        priceSettings.classList.toggle('hidden', !showPrices);
+      }
+      // Re-emit as DOM event for tool listeners
+      console.log('📣 [MarketBoard] Relaying showPricesChanged from service, showPrices=', showPrices);
+      this.emit('showPricesChanged', { showPrices });
+    };
+    this.service.addEventListener('settings-changed', this.boundSettingsChangedHandler);
+  }
+
+  /**
+   * Clean up MarketBoardService event subscriptions
+   */
+  private cleanupServiceSubscriptions(): void {
+    if (this.boundServerChangedHandler) {
+      this.service.removeEventListener('server-changed', this.boundServerChangedHandler);
+      this.boundServerChangedHandler = null;
+    }
+    if (this.boundSettingsChangedHandler) {
+      this.service.removeEventListener('settings-changed', this.boundSettingsChangedHandler);
+      this.boundSettingsChangedHandler = null;
+    }
   }
 
   /**
@@ -538,6 +599,8 @@ export class MarketBoard extends BaseComponent {
       this.languageUnsubscribe();
       this.languageUnsubscribe = null;
     }
+    // Clean up MarketBoardService event subscriptions
+    this.cleanupServiceSubscriptions();
     super.destroy();
   }
 

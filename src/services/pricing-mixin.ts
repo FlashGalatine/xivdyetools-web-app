@@ -67,8 +67,11 @@ export function setupMarketBoardListeners(
   fetchPrices: () => void | Promise<void>,
   options: MarketBoardListenerOptions = {}
 ): void {
+  console.log('📡 [setupMarketBoardListeners] Setting up listeners on container:', container.tagName, container.className);
+
   // Price toggle - showPricesChanged event
   container.addEventListener('showPricesChanged', (() => {
+    console.log('📡 [setupMarketBoardListeners] showPricesChanged event received');
     if (options.onPricesToggled) {
       options.onPricesToggled();
     } else if (shouldFetchPrices()) {
@@ -78,6 +81,7 @@ export function setupMarketBoardListeners(
 
   // Server changed
   container.addEventListener('server-changed', (() => {
+    console.log('📡 [setupMarketBoardListeners] server-changed event received');
     if (options.onServerChanged) {
       options.onServerChanged();
     } else if (shouldFetchPrices()) {

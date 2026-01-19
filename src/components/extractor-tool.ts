@@ -50,7 +50,7 @@ import type { Dye, DyeWithDistance, PriceData } from '@shared/types';
 import type { ExtractorConfig, DisplayOptionsConfig, MatchingMethod } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import { PaletteService, type PaletteMatch } from '@xivdyetools/core';
-import type { ResultCardData, ContextAction } from '@components/v4/result-card';
+import type { ResultCard, ResultCardData, ContextAction } from '@components/v4/result-card';
 import '@components/v4/result-card';
 
 // ============================================================================
@@ -171,10 +171,15 @@ export class ExtractorTool extends BaseComponent {
 
   // Palette extraction state
   private lastPaletteResults: PaletteMatch[] = [];
+  /** V4 result card elements for updating prices after fetch */
+  private v4ResultCards: ResultCard[] = [];
+  /** Last market fetch error code for display on cards (e.g., "H429", "NOFF") */
+  private lastMarketError: string | undefined = undefined;
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
   private configUnsubscribe: (() => void) | null = null;
+  private marketConfigUnsubscribe: (() => void) | null = null;
 
   constructor(container: HTMLElement, options: ExtractorToolOptions) {
     super(container);
@@ -310,6 +315,22 @@ export class ExtractorTool extends BaseComponent {
       this.setConfig(config);
     });
 
+    // Subscribe to market config changes (from ConfigSidebar)
+    // Re-render results and fetch prices when server changes
+    this.marketConfigUnsubscribe = ConfigController.getInstance().subscribe('market', (config) => {
+      if (this.lastPaletteResults.length > 0) {
+        this.renderPaletteResults(this.lastPaletteResults);
+        if (config.showPrices) {
+          void this.fetchPricesForMatches();
+        }
+      } else if (this.matchedDyes.length > 0) {
+        this.renderMatchedResults();
+        if (config.showPrices) {
+          void this.fetchPricesForMatches();
+        }
+      }
+    });
+
     // Restore saved image from storage
     const savedImageDataUrl = StorageService.getItem<string>(STORAGE_KEYS.imageDataUrl);
     if (savedImageDataUrl) {
@@ -385,6 +406,7 @@ export class ExtractorTool extends BaseComponent {
     // Cleanup subscriptions
     this.languageUnsubscribe?.();
     this.configUnsubscribe?.();
+    this.marketConfigUnsubscribe?.();
 
     // Cleanup child components
     this.imageUpload?.destroy();
@@ -741,6 +763,7 @@ export class ExtractorTool extends BaseComponent {
       getShowPrices: () => this.showPrices,
       fetchPrices: () => this.fetchPricesForMatches(),
       onPricesToggled: () => {
+        console.log('🔔 [ExtractorTool] onPricesToggled called, showPrices=', this.showPrices);
         if (this.showPrices) {
           void this.fetchPricesForMatches();
         } else {
@@ -753,8 +776,16 @@ export class ExtractorTool extends BaseComponent {
         }
       },
       onServerChanged: () => {
-        // Service clears cache on server change; fetch new prices if enabled
+        // Service clears cache on server change; re-render results then fetch new prices
+        console.log('🔔 [ExtractorTool] onServerChanged called, showPrices=', this.showPrices);
         if (this.showPrices) {
+          // Re-render results to clear stale prices (cache was cleared by service)
+          if (this.lastPaletteResults.length > 0) {
+            this.renderPaletteResults(this.lastPaletteResults);
+          } else if (this.matchedDyes.length > 0) {
+            this.renderMatchedResults();
+          }
+          // Then fetch new prices for the new server
           void this.fetchPricesForMatches();
         }
       },
@@ -1082,7 +1113,7 @@ export class ExtractorTool extends BaseComponent {
       // but check target as a fallback)
       const target = e.target as HTMLElement;
       if (target.tagName === 'CANVAS') return;
-      
+
       // If no image loaded, trigger file dialog
       if (!this.currentImage) {
         this.dropZoneFileInput?.click();
@@ -1992,8 +2023,15 @@ export class ExtractorTool extends BaseComponent {
           }
         },
         onServerChanged: () => {
-          // Service clears cache on server change; fetch new prices if enabled
+          // Service clears cache on server change; re-render results then fetch new prices
           if (this.showPrices) {
+            // Re-render results to clear stale prices (cache was cleared by service)
+            if (this.lastPaletteResults.length > 0) {
+              this.renderPaletteResults(this.lastPaletteResults);
+            } else if (this.matchedDyes.length > 0) {
+              this.renderMatchedResults();
+            }
+            // Then fetch new prices for the new server
             void this.fetchPricesForMatches();
           }
         },
@@ -2210,6 +2248,7 @@ export class ExtractorTool extends BaseComponent {
    * WEB-REF-003 Phase 4: Delegates to MarketBoardService with race condition protection
    */
   private async fetchPricesForMatches(): Promise<void> {
+    console.log('💰 [ExtractorTool] fetchPricesForMatches called, showPrices=', this.showPrices);
     if (!this.showPrices) return;
 
     // Collect dyes to fetch prices for - either from palette results or matched dyes
@@ -2224,19 +2263,99 @@ export class ExtractorTool extends BaseComponent {
 
     if (dyesToFetch.length === 0) return;
 
+    // Clear previous error before fetch
+    this.lastMarketError = undefined;
+
     try {
       const prices = await this.marketBoardService.fetchPricesForDyes(dyesToFetch);
-      // Always re-render after fetch completes (even if empty/stale)
-      // This ensures cards reflect current state when server changes
-      // priceData getter automatically returns updated cache from service
-      if (this.lastPaletteResults.length > 0) {
-        this.renderPaletteResults(this.lastPaletteResults);
-      } else {
-        this.renderMatchedResults();
-      }
       logger.info(`[ExtractorTool] Fetched prices for ${prices.size} dyes`);
     } catch (error) {
+      // Parse error into short display code for result cards
+      this.lastMarketError = this.parseMarketError(error);
       logger.error('[ExtractorTool] Failed to fetch prices:', error);
+    } finally {
+      // Always update cards to reflect current showPrices state and any fetched data
+      // This ensures cards show Market section even if fetch failed
+      this.updateV4ResultCardPrices();
+    }
+  }
+
+  /**
+   * Parse a market fetch error into a short display code for result cards
+   * Error code format follows result-card conventions:
+   * - "H" prefix for HTTP errors (e.g., "H429" for rate limit, "H502" for bad gateway)
+   * - "N" prefix for network errors (e.g., "NOFF" for offline)
+   * - "E" prefix for other errors (e.g., "EUNK" for unknown)
+   */
+  private parseMarketError(error: unknown): string {
+    // Check for network offline
+    if (!navigator.onLine) {
+      return 'NOFF'; // Network offline
+    }
+
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+
+      // Check for HTTP status codes in error message
+      const statusMatch = message.match(/status[:\s]*(\d{3})/i) ||
+        message.match(/(\d{3})[:\s]*(rate limit|too many|forbidden|not found|server error)/i);
+      if (statusMatch) {
+        const status = parseInt(statusMatch[1], 10);
+        if (status === 429) return 'H429'; // Rate limited
+        if (status >= 500) return `H${status}`; // Server error
+        if (status >= 400) return `H${status}`; // Client error
+      }
+
+      // Check for specific error patterns
+      if (message.includes('rate limit')) return 'H429';
+      if (message.includes('timeout') || message.includes('timed out')) return 'TOUT';
+      if (message.includes('network') || message.includes('fetch') || message.includes('failed to fetch')) return 'NCON';
+      if (message.includes('abort')) return 'CANC';
+    }
+
+    // Check if error is a Response object with status
+    if (error && typeof error === 'object' && 'status' in error) {
+      const status = (error as { status: number }).status;
+      if (status === 429) return 'H429';
+      if (status >= 400) return `H${status}`;
+    }
+
+    return 'EUNK'; // Unknown error
+  }
+
+  /**
+   * Update v4 result cards with newly fetched price data
+   * Called after fetchPricesForMatches() completes to update cards in-place
+   * rather than re-rendering the entire grid
+   */
+  private updateV4ResultCardPrices(): void {
+    console.log('🔄 [ExtractorTool] updateV4ResultCardPrices:', this.v4ResultCards.length, 'cards, priceData size:', this.priceData.size);
+
+    for (const card of this.v4ResultCards) {
+      const currentData = card.data;
+      if (!currentData?.dye) continue;
+
+      const priceInfo = this.priceData.get(currentData.dye.itemID);
+      // Get market server from price data, falling back to selected server from UI
+      const marketServer = this.marketBoardService.getWorldNameForPrice(priceInfo)
+        ?? this.marketBoard?.getSelectedServer();
+
+      console.log('  📦 Updating card:', currentData.dye.name, '| server:', marketServer, '| price:', priceInfo?.currentMinPrice);
+
+      // Update card's showPrice display option (controls visibility of price section)
+      card.showPrice = this.displayOptions.showPrice && this.showPrices;
+
+      // Determine if we should show an error code instead of price
+      // Show error if: showPrices is on, there's an error, AND no cached price data
+      const shouldShowError = this.showPrices && this.lastMarketError && !priceInfo;
+
+      // Update card data (triggers Lit re-render)
+      card.data = {
+        ...currentData,
+        price: this.showPrices && priceInfo ? priceInfo.currentMinPrice : undefined,
+        marketServer: marketServer,
+        marketError: shouldShowError ? this.lastMarketError : undefined,
+      };
     }
   }
 
@@ -2525,6 +2644,7 @@ export class ExtractorTool extends BaseComponent {
 
     // Clear existing results
     clearContainer(this.resultsContainer);
+    this.v4ResultCards = []; // Clear card references for price updates
 
     // Hide empty state
     this.showEmptyState(false);
@@ -2609,6 +2729,8 @@ export class ExtractorTool extends BaseComponent {
         this.handleContextAction(e.detail.action, e.detail.dye);
       }) as EventListener);
 
+      // Store card reference for price updates
+      this.v4ResultCards.push(card as ResultCard);
       cardsGrid.appendChild(card);
     }
 
