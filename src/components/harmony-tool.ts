@@ -79,6 +79,31 @@ export interface HarmonyToolOptions {
  */
 type SuggestionsMode = 'simple' | 'expanded';
 
+// WEB-REF-003 Phase 2: Shared panel builder result types
+interface BaseDyePanelRefs {
+  selector: DyeSelector;
+  displayContainer: HTMLElement;
+}
+
+interface CompanionSliderRefs {
+  slider: HTMLInputElement;
+  valueDisplay: HTMLElement;
+}
+
+interface HarmonyTypeSelectorRefs {
+  container: HTMLElement;
+}
+
+interface FiltersPanelRefs {
+  panel: CollapsiblePanel;
+  filters: DyeFilters;
+}
+
+interface MarketPanelRefs {
+  panel: CollapsiblePanel;
+  marketBoard: MarketBoard;
+}
+
 // WEB-REF-003 FIX: HARMONY_TYPE_IDS and HARMONY_OFFSETS moved to @services/harmony-generator
 
 /**
@@ -461,6 +486,274 @@ export class HarmonyTool extends BaseComponent {
   }
 
   // ============================================================================
+  // WEB-REF-003 Phase 2: Shared Panel Builders
+  // Eliminates desktop ↔ drawer code duplication (~300 lines extracted)
+  // ============================================================================
+
+  /**
+   * Render current dye display (shared by desktop and drawer)
+   * @param container Container to render into
+   */
+  private renderCurrentDyeDisplayInto(container: HTMLElement): void {
+    clearContainer(container);
+
+    if (this.selectedDye) {
+      const display = this.createElement('div', {
+        className: 'flex items-center gap-3 p-3 rounded-lg',
+        attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);' },
+      });
+
+      const swatch = this.createElement('div', {
+        className: 'w-8 h-8 rounded border-2 border-white/30',
+        attributes: { style: `background: ${this.selectedDye.hex};` },
+      });
+
+      const name = this.createElement('span', {
+        className: 'font-medium',
+        textContent: LanguageService.getDyeName(this.selectedDye.itemID) ?? this.selectedDye.name,
+      });
+
+      display.appendChild(swatch);
+      display.appendChild(name);
+      container.appendChild(display);
+    } else {
+      const placeholder = this.createElement('div', {
+        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
+        textContent: LanguageService.t('harmony.selectDye'),
+        attributes: {
+          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
+        },
+      });
+      container.appendChild(placeholder);
+    }
+  }
+
+  /**
+   * Build base dye selector panel content (shared by desktop and drawer)
+   * @param container Container to render into
+   * @returns References to created selector and display container
+   */
+  private buildBaseDyePanel(container: HTMLElement): BaseDyePanelRefs {
+    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+
+    // Current selection display
+    const displayContainer = this.createElement('div', {
+      className: 'current-dye-display',
+    });
+    this.renderCurrentDyeDisplayInto(displayContainer);
+    dyeContainer.appendChild(displayContainer);
+
+    // Dye selector component
+    const selectorContainer = this.createElement('div');
+    dyeContainer.appendChild(selectorContainer);
+
+    const selector = new DyeSelector(selectorContainer, {
+      maxSelections: 1,
+      allowMultiple: false,
+      showCategories: true,
+      showPrices: this.showPrices,
+      excludeFacewear: true,
+      showFavorites: true,
+      compactMode: true,
+    });
+    selector.init();
+
+    // Pre-select persisted dye if available
+    if (this.selectedDye) {
+      selector.setSelectedDyes([this.selectedDye]);
+    }
+
+    container.appendChild(dyeContainer);
+    return { selector, displayContainer };
+  }
+
+  /**
+   * Build harmony type selector buttons (shared by desktop and drawer)
+   * @param container Container to render into
+   * @returns Reference to container element
+   */
+  private buildHarmonyTypeSelector(container: HTMLElement): HarmonyTypeSelectorRefs {
+    const typesContainer = this.createElement('div', {
+      className: 'space-y-1 max-h-48 overflow-y-auto',
+    });
+
+    const harmonyTypes = getHarmonyTypes();
+
+    for (const type of harmonyTypes) {
+      const isSelected = this.selectedHarmonyType === type.id;
+      const btn = this.createElement('button', {
+        className:
+          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
+        attributes: {
+          style: isSelected
+            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+            : 'background: transparent; color: var(--theme-text);',
+          'data-harmony-type': type.id,
+        },
+      });
+
+      // Icon
+      const iconSpan = this.createElement('span', {
+        className: 'w-5 h-5 flex-shrink-0',
+        innerHTML: HARMONY_ICONS[type.icon] || '',
+      });
+
+      const nameSpan = this.createElement('span', { textContent: type.name });
+
+      btn.appendChild(iconSpan);
+      btn.appendChild(nameSpan);
+
+      typesContainer.appendChild(btn);
+    }
+
+    container.appendChild(typesContainer);
+    return { container: typesContainer };
+  }
+
+  /**
+   * Update harmony type button styles (shared by desktop and drawer)
+   * @param container The harmony types container element
+   * @param typeId Currently selected harmony type ID
+   */
+  private updateHarmonyTypeButtonStyles(container: HTMLElement | null, typeId: string): void {
+    if (!container) return;
+    const buttons = container.querySelectorAll('button');
+    buttons.forEach((btn) => {
+      const isSelected = btn.getAttribute('data-harmony-type') === typeId;
+      btn.setAttribute(
+        'style',
+        isSelected
+          ? 'background: var(--theme-primary); color: var(--theme-text-header);'
+          : 'background: transparent; color: var(--theme-text);'
+      );
+    });
+  }
+
+  /**
+   * Build companion dyes slider (shared by desktop and drawer)
+   * @param container Container to render into
+   * @returns References to created slider and value display
+   */
+  private buildCompanionSlider(container: HTMLElement): CompanionSliderRefs {
+    const sliderContainer = this.createElement('div', { className: 'flex items-center gap-3' });
+
+    const slider = this.createElement('input', {
+      attributes: {
+        type: 'range',
+        min: String(COMPANION_DYES_MIN),
+        max: String(COMPANION_DYES_MAX),
+        value: String(this.companionDyesCount),
+      },
+      className: 'flex-1',
+    }) as HTMLInputElement;
+
+    const valueDisplay = this.createElement('span', {
+      className: 'text-sm number w-6 text-center',
+      textContent: String(this.companionDyesCount),
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+
+    sliderContainer.appendChild(slider);
+    sliderContainer.appendChild(valueDisplay);
+    container.appendChild(sliderContainer);
+
+    return { slider, valueDisplay };
+  }
+
+  /**
+   * Bind companion slider events (shared by desktop and drawer)
+   * Syncs both sliders when either changes
+   */
+  private bindCompanionSliderEvents(slider: HTMLInputElement, valueDisplay: HTMLElement): void {
+    this.on(slider, 'input', () => {
+      this.companionDyesCount = parseInt(slider.value, 10);
+      valueDisplay.textContent = String(this.companionDyesCount);
+      StorageService.setItem(STORAGE_KEYS.companionCount, this.companionDyesCount);
+
+      // Sync both sliders
+      if (this.companionSlider) {
+        this.companionSlider.value = String(this.companionDyesCount);
+      }
+      if (this.companionDisplay) {
+        this.companionDisplay.textContent = String(this.companionDyesCount);
+      }
+      if (this.drawerCompanionSlider) {
+        this.drawerCompanionSlider.value = String(this.companionDyesCount);
+      }
+      if (this.drawerCompanionDisplay) {
+        this.drawerCompanionDisplay.textContent = String(this.companionDyesCount);
+      }
+    });
+
+    this.on(slider, 'change', () => {
+      this.generateHarmonies();
+    });
+  }
+
+  /**
+   * Build filters panel (shared by desktop and drawer)
+   * @param container Container to render into
+   * @param storageKey Storage key for panel collapse state
+   * @returns References to created panel and filters
+   */
+  private buildFiltersPanel(container: HTMLElement, storageKey: string): FiltersPanelRefs {
+    const panel = new CollapsiblePanel(container, {
+      title: LanguageService.t('filters.advancedFilters'),
+      storageKey,
+      defaultOpen: false,
+      icon: ICON_FILTER,
+    });
+    panel.init();
+
+    const filtersContent = this.createElement('div');
+    const filters = new DyeFilters(filtersContent, {
+      storageKeyPrefix: 'v3_harmony',
+      hideHeader: true,
+      onFilterChange: (filterConfig) => {
+        this.filterConfig = filterConfig;
+        this.generateHarmonies();
+      },
+    });
+    filters.init();
+
+    panel.setContent(filtersContent);
+    return { panel, filters };
+  }
+
+  /**
+   * Build market board panel (shared by desktop and drawer)
+   * @param container Container to render into
+   * @param storageKey Storage key for panel collapse state
+   * @returns References to created panel and market board
+   */
+  private buildMarketPanel(container: HTMLElement, storageKey: string): MarketPanelRefs {
+    const panel = new CollapsiblePanel(container, {
+      title: LanguageService.t('marketBoard.title'),
+      storageKey,
+      defaultOpen: false,
+      icon: ICON_MARKET,
+    });
+    panel.init();
+
+    const marketContent = this.createElement('div');
+    const marketBoard = new MarketBoard(marketContent);
+    marketBoard.init();
+
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForDisplayedDyes(), {
+      onPricesToggled: () => {
+        this.generateHarmonies();
+      },
+      onServerChanged: () => {
+        if (this.selectedDye) this.generateHarmonies();
+      },
+    });
+
+    panel.setContent(marketContent);
+    return { panel, marketBoard };
+  }
+
+  // ============================================================================
   // Left Panel Rendering
   // ============================================================================
 
@@ -558,46 +851,24 @@ export class HarmonyTool extends BaseComponent {
 
   /**
    * Render dye selector section
+   * WEB-REF-003 Phase 2: Refactored to use shared builder
    */
   private renderDyeSelector(container: HTMLElement): void {
-    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+    const refs = this.buildBaseDyePanel(container);
 
-    // Current selection display
-    const currentDisplay = this.createElement('div', {
-      className: 'current-dye-display',
-    });
-    this.updateCurrentDyeDisplay(currentDisplay);
-    dyeContainer.appendChild(currentDisplay);
-
-    // Dye selector component
-    const selectorContainer = this.createElement('div');
-    dyeContainer.appendChild(selectorContainer);
-
-    this.dyeSelector = new DyeSelector(selectorContainer, {
-      maxSelections: 1,
-      allowMultiple: false,
-      showCategories: true,
-      showPrices: this.showPrices,
-      excludeFacewear: true,
-      showFavorites: true,
-      compactMode: true, // Use 3-column layout for narrow left panel
-    });
-    this.dyeSelector.init();
-
-    // Pre-select persisted dye if available
-    if (this.selectedDye) {
-      this.dyeSelector.setSelectedDyes([this.selectedDye]);
-    }
+    // Store references
+    this.dyeSelector = refs.selector;
+    // Store displayContainer reference for updates
+    const displayContainer = refs.displayContainer;
 
     // Listen for dye selection (custom event from DyeSelector)
-    selectorContainer.addEventListener('selection-changed', ((
+    refs.selector.element?.parentElement?.addEventListener('selection-changed', ((
       event: CustomEvent<{ selectedDyes: Dye[] }>
     ) => {
       const selectedDyes = event.detail.selectedDyes;
       this.selectedDye = selectedDyes.length > 0 ? selectedDyes[0] : null;
 
       // Persist selected dye itemID for restoration when returning to this tool
-      // Use itemID which is the FFXIV standard identifier (5729-48227 range)
       if (this.selectedDye) {
         const dyeIdToSave = this.selectedDye.itemID;
         StorageService.setItem(STORAGE_KEYS.selectedDyeId, dyeIdToSave);
@@ -610,97 +881,37 @@ export class HarmonyTool extends BaseComponent {
       // Clear swapped dyes when base dye changes
       this.swappedDyes.clear();
 
-      this.updateCurrentDyeDisplay(currentDisplay);
+      this.renderCurrentDyeDisplayInto(displayContainer);
       this.generateHarmonies();
       this.updateDrawerContent();
     }) as EventListener);
-
-    container.appendChild(dyeContainer);
   }
 
-  /**
-   * Update the current dye display
-   */
-  private updateCurrentDyeDisplay(container: HTMLElement): void {
-    clearContainer(container);
-
-    if (this.selectedDye) {
-      const display = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);' },
-      });
-
-      const swatch = this.createElement('div', {
-        className: 'w-8 h-8 rounded border-2 border-white/30',
-        attributes: { style: `background: ${this.selectedDye.hex};` },
-      });
-
-      const name = this.createElement('span', {
-        className: 'font-medium',
-        textContent: LanguageService.getDyeName(this.selectedDye.itemID) ?? this.selectedDye.name,
-      });
-
-      display.appendChild(swatch);
-      display.appendChild(name);
-      container.appendChild(display);
-    } else {
-      const placeholder = this.createElement('div', {
-        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('harmony.selectDye'),
-        attributes: {
-          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
-        },
-      });
-      container.appendChild(placeholder);
-    }
-  }
+  // WEB-REF-003 Phase 2: updateCurrentDyeDisplay removed - now using renderCurrentDyeDisplayInto
 
   /**
    * Render harmony type selector
+   * WEB-REF-003 Phase 2: Refactored to use shared builder
    */
   private renderHarmonyTypeSelector(container: HTMLElement): void {
-    this.harmonyTypesContainer = this.createElement('div', {
-      className: 'space-y-1 max-h-48 overflow-y-auto',
+    const refs = this.buildHarmonyTypeSelector(container);
+    this.harmonyTypesContainer = refs.container;
+
+    // Bind click events
+    const buttons = refs.container.querySelectorAll('button');
+    buttons.forEach((btn) => {
+      const typeId = btn.getAttribute('data-harmony-type');
+      if (typeId) {
+        this.on(btn, 'click', () => {
+          this.selectHarmonyType(typeId);
+        });
+      }
     });
-
-    const harmonyTypes = getHarmonyTypes();
-
-    for (const type of harmonyTypes) {
-      const isSelected = this.selectedHarmonyType === type.id;
-      const btn = this.createElement('button', {
-        className:
-          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
-        attributes: {
-          style: isSelected
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: transparent; color: var(--theme-text);',
-          'data-harmony-type': type.id,
-        },
-      });
-
-      // Icon
-      const iconSpan = this.createElement('span', {
-        className: 'w-5 h-5 flex-shrink-0',
-        innerHTML: HARMONY_ICONS[type.icon] || '',
-      });
-
-      const nameSpan = this.createElement('span', { textContent: type.name });
-
-      btn.appendChild(iconSpan);
-      btn.appendChild(nameSpan);
-
-      this.on(btn, 'click', () => {
-        this.selectHarmonyType(type.id);
-      });
-
-      this.harmonyTypesContainer.appendChild(btn);
-    }
-
-    container.appendChild(this.harmonyTypesContainer);
   }
 
   /**
    * Select a harmony type
+   * WEB-REF-003 Phase 2: Uses shared style update method
    */
   private selectHarmonyType(typeId: string): void {
     this.selectedHarmonyType = typeId;
@@ -709,19 +920,9 @@ export class HarmonyTool extends BaseComponent {
     // Clear swapped dyes when harmony type changes
     this.swappedDyes.clear();
 
-    // Update button styles
-    if (this.harmonyTypesContainer) {
-      const buttons = this.harmonyTypesContainer.querySelectorAll('button');
-      buttons.forEach((btn) => {
-        const isSelected = btn.getAttribute('data-harmony-type') === typeId;
-        btn.setAttribute(
-          'style',
-          isSelected
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: transparent; color: var(--theme-text);'
-        );
-      });
-    }
+    // Update button styles for both desktop and drawer
+    this.updateHarmonyTypeButtonStyles(this.harmonyTypesContainer, typeId);
+    this.updateHarmonyTypeButtonStyles(this.drawerHarmonyTypesContainer, typeId);
 
     this.generateHarmonies();
     this.updateDrawerContent();
@@ -729,101 +930,33 @@ export class HarmonyTool extends BaseComponent {
 
   /**
    * Render companion dyes slider
+   * WEB-REF-003 Phase 2: Refactored to use shared builder
    */
   private renderCompanionSlider(container: HTMLElement): void {
-    const sliderContainer = this.createElement('div', { className: 'flex items-center gap-3' });
-
-    this.companionSlider = this.createElement('input', {
-      attributes: {
-        type: 'range',
-        min: String(COMPANION_DYES_MIN),
-        max: String(COMPANION_DYES_MAX),
-        value: String(this.companionDyesCount),
-      },
-      className: 'flex-1',
-    }) as HTMLInputElement;
-
-    this.companionDisplay = this.createElement('span', {
-      className: 'text-sm number w-6 text-center',
-      textContent: String(this.companionDyesCount),
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-
-    this.on(this.companionSlider, 'input', () => {
-      if (this.companionSlider && this.companionDisplay) {
-        this.companionDyesCount = parseInt(this.companionSlider.value, 10);
-        this.companionDisplay.textContent = String(this.companionDyesCount);
-        StorageService.setItem(STORAGE_KEYS.companionCount, this.companionDyesCount);
-      }
-    });
-
-    this.on(this.companionSlider, 'change', () => {
-      this.generateHarmonies();
-    });
-
-    sliderContainer.appendChild(this.companionSlider);
-    sliderContainer.appendChild(this.companionDisplay);
-    container.appendChild(sliderContainer);
+    const refs = this.buildCompanionSlider(container);
+    this.companionSlider = refs.slider;
+    this.companionDisplay = refs.valueDisplay;
+    this.bindCompanionSliderEvents(refs.slider, refs.valueDisplay);
   }
 
   /**
    * Render dye filters collapsible panel
+   * WEB-REF-003 Phase 2: Refactored to use shared builder
    */
   private renderFiltersPanel(container: HTMLElement): void {
-    this.filtersPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('filters.advancedFilters'),
-      storageKey: 'harmony_filters',
-      defaultOpen: false,
-      icon: ICON_FILTER,
-    });
-    this.filtersPanel.init();
-
-    // Create filters content
-    const filtersContent = this.createElement('div');
-    this.dyeFilters = new DyeFilters(filtersContent, {
-      storageKeyPrefix: 'v3_harmony',
-      hideHeader: true, // Header is provided by the outer CollapsiblePanel
-      onFilterChange: (filters) => {
-        this.filterConfig = filters;
-        this.generateHarmonies();
-      },
-    });
-    this.dyeFilters.init();
-
-    this.filtersPanel.setContent(filtersContent);
+    const refs = this.buildFiltersPanel(container, 'harmony_filters');
+    this.filtersPanel = refs.panel;
+    this.dyeFilters = refs.filters;
   }
 
   /**
    * Render market board collapsible panel
+   * WEB-REF-003 Phase 2: Refactored to use shared builder
    */
   private renderMarketPanel(container: HTMLElement): void {
-    this.marketPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('marketBoard.title'),
-      storageKey: 'harmony_market',
-      defaultOpen: false,
-      icon: ICON_MARKET,
-    });
-    this.marketPanel.init();
-
-    // Create market board content
-    // Note: MarketBoard delegates to MarketBoardService for state management
-    const marketContent = this.createElement('div');
-    this.marketBoard = new MarketBoard(marketContent);
-    this.marketBoard.init();
-
-    // Set up market board event listeners using shared utility
-    setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForDisplayedDyes(), {
-      onPricesToggled: () => {
-        this.generateHarmonies();
-        // Note: generateHarmonies() already calls fetchPricesForDisplayedDyes() internally
-      },
-      onServerChanged: () => {
-        if (this.selectedDye) this.generateHarmonies();
-        // Note: generateHarmonies() already calls fetchPricesForDisplayedDyes() internally
-      },
-    });
-
-    this.marketPanel.setContent(marketContent);
+    const refs = this.buildMarketPanel(container, 'harmony_market');
+    this.marketPanel = refs.panel;
+    this.marketBoard = refs.marketBoard;
   }
 
   // ============================================================================
@@ -966,172 +1099,88 @@ export class HarmonyTool extends BaseComponent {
 
   /**
    * Render full interactive configuration controls in the mobile drawer
-   * Mirrors the left panel configuration but uses drawer-specific component instances
+   * WEB-REF-003 Phase 2: Refactored to use shared builders
    */
   private renderDrawerContent(): void {
     if (!this.options.drawerContent) return;
     const drawer = this.options.drawerContent;
     clearContainer(drawer);
 
-    // Section 1: Base Dye (Collapsible)
+    // Section 1: Base Dye (Collapsible) - uses shared builder
     const dyeContainer = this.createElement('div');
     drawer.appendChild(dyeContainer);
-    this.renderDrawerBaseDyePanel(dyeContainer);
-
-    // Section 2: Harmony Type + Companion Slider (Collapsible)
-    const harmonyContainer = this.createElement('div');
-    drawer.appendChild(harmonyContainer);
-    this.renderDrawerHarmonyTypePanel(harmonyContainer);
-
-    // Collapsible: Dye Filters
-    const filtersContainer = this.createElement('div');
-    drawer.appendChild(filtersContainer);
-    this.renderDrawerFiltersPanel(filtersContainer);
-
-    // Collapsible: Market Board
-    const marketContainer = this.createElement('div');
-    drawer.appendChild(marketContainer);
-    this.renderDrawerMarketPanel(marketContainer);
-  }
-
-  /**
-   * Render collapsible Base Dye panel for mobile drawer
-   */
-  private renderDrawerBaseDyePanel(container: HTMLElement): void {
-    const panel = new CollapsiblePanel(container, {
+    const dyePanel = new CollapsiblePanel(dyeContainer, {
       title: LanguageService.t('harmony.baseDye'),
       defaultOpen: true,
       storageKey: 'harmony_base_dye_drawer',
       icon: ICON_BEAKER,
     });
-    panel.init();
+    dyePanel.init();
+    const dyeContent = dyePanel.getContentContainer();
+    if (dyeContent) {
+      const dyeRefs = this.buildBaseDyePanel(dyeContent);
+      this.drawerDyeSelector = dyeRefs.selector;
+      const displayContainer = dyeRefs.displayContainer;
 
-    const contentContainer = panel.getContentContainer();
-    if (contentContainer) {
-      this.renderDrawerDyeSelector(contentContainer);
-    }
-  }
+      // Listen for dye selection - sync with desktop
+      dyeRefs.selector.element?.parentElement?.addEventListener('selection-changed', ((
+        event: CustomEvent<{ selectedDyes: Dye[] }>
+      ) => {
+        const selectedDyes = event.detail.selectedDyes;
+        this.selectedDye = selectedDyes.length > 0 ? selectedDyes[0] : null;
 
-  /**
-   * Render dye selector for mobile drawer
-   */
-  private renderDrawerDyeSelector(container: HTMLElement): void {
-    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+        // Persist selected dye
+        if (this.selectedDye) {
+          StorageService.setItem(STORAGE_KEYS.selectedDyeId, this.selectedDye.itemID);
+          logger.info(`[HarmonyTool] Saved dye from drawer: ${this.selectedDye.name}`);
+        } else {
+          StorageService.removeItem(STORAGE_KEYS.selectedDyeId);
+        }
 
-    // Current selection display
-    const currentDisplay = this.createElement('div', {
-      className: 'drawer-current-dye-display',
-    });
-    this.updateDrawerCurrentDyeDisplay(currentDisplay);
-    dyeContainer.appendChild(currentDisplay);
+        // Clear swapped dyes when base dye changes
+        this.swappedDyes.clear();
 
-    // Dye selector component
-    const selectorContainer = this.createElement('div');
-    dyeContainer.appendChild(selectorContainer);
+        // Sync desktop selector if it exists
+        if (this.dyeSelector && this.selectedDye) {
+          this.dyeSelector.setSelectedDyes([this.selectedDye]);
+        } else if (this.dyeSelector) {
+          this.dyeSelector.setSelectedDyes([]);
+        }
 
-    this.drawerDyeSelector = new DyeSelector(selectorContainer, {
-      maxSelections: 1,
-      allowMultiple: false,
-      showCategories: true,
-      showPrices: this.showPrices,
-      excludeFacewear: true,
-      showFavorites: true,
-      compactMode: true,
-    });
-    this.drawerDyeSelector.init();
-
-    // Pre-select persisted dye if available
-    if (this.selectedDye) {
-      this.drawerDyeSelector.setSelectedDyes([this.selectedDye]);
+        // Update displays and regenerate
+        this.renderCurrentDyeDisplayInto(displayContainer);
+        this.generateHarmonies();
+      }) as EventListener);
     }
 
-    // Listen for dye selection
-    selectorContainer.addEventListener('selection-changed', ((
-      event: CustomEvent<{ selectedDyes: Dye[] }>
-    ) => {
-      const selectedDyes = event.detail.selectedDyes;
-      this.selectedDye = selectedDyes.length > 0 ? selectedDyes[0] : null;
-
-      // Persist selected dye
-      if (this.selectedDye) {
-        StorageService.setItem(STORAGE_KEYS.selectedDyeId, this.selectedDye.itemID);
-        logger.info(`[HarmonyTool] Saved dye from drawer: ${this.selectedDye.name}`);
-      } else {
-        StorageService.removeItem(STORAGE_KEYS.selectedDyeId);
-      }
-
-      // Clear swapped dyes when base dye changes
-      this.swappedDyes.clear();
-
-      // Sync desktop selector if it exists
-      if (this.dyeSelector && this.selectedDye) {
-        this.dyeSelector.setSelectedDyes([this.selectedDye]);
-      } else if (this.dyeSelector) {
-        this.dyeSelector.setSelectedDyes([]);
-      }
-
-      // Update displays and regenerate
-      this.updateDrawerCurrentDyeDisplay(currentDisplay);
-      this.generateHarmonies();
-    }) as EventListener);
-
-    container.appendChild(dyeContainer);
-  }
-
-  /**
-   * Update the current dye display in mobile drawer
-   */
-  private updateDrawerCurrentDyeDisplay(container: HTMLElement): void {
-    clearContainer(container);
-
-    if (this.selectedDye) {
-      const display = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-primary); color: var(--theme-text-header);' },
-      });
-
-      const swatch = this.createElement('div', {
-        className: 'w-8 h-8 rounded border-2 border-white/30',
-        attributes: { style: `background: ${this.selectedDye.hex};` },
-      });
-
-      const name = this.createElement('span', {
-        className: 'font-medium',
-        textContent: LanguageService.getDyeName(this.selectedDye.itemID) ?? this.selectedDye.name,
-      });
-
-      display.appendChild(swatch);
-      display.appendChild(name);
-      container.appendChild(display);
-    } else {
-      const placeholder = this.createElement('div', {
-        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('harmony.selectDye'),
-        attributes: {
-          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
-        },
-      });
-      container.appendChild(placeholder);
-    }
-  }
-
-  /**
-   * Render collapsible Harmony Type panel for mobile drawer
-   */
-  private renderDrawerHarmonyTypePanel(container: HTMLElement): void {
-    const panel = new CollapsiblePanel(container, {
+    // Section 2: Harmony Type + Companion Slider (Collapsible) - uses shared builders
+    const harmonyContainer = this.createElement('div');
+    drawer.appendChild(harmonyContainer);
+    const harmonyPanel = new CollapsiblePanel(harmonyContainer, {
       title: LanguageService.t('harmony.harmonyType'),
       defaultOpen: true,
       storageKey: 'harmony_type_drawer',
       icon: ICON_MUSIC,
     });
-    panel.init();
+    harmonyPanel.init();
+    const harmonyContent = harmonyPanel.getContentContainer();
+    if (harmonyContent) {
+      // Harmony type selector - uses shared builder
+      const typeRefs = this.buildHarmonyTypeSelector(harmonyContent);
+      this.drawerHarmonyTypesContainer = typeRefs.container;
 
-    const contentContainer = panel.getContentContainer();
-    if (contentContainer) {
-      this.renderDrawerHarmonyTypeSelector(contentContainer);
+      // Bind click events for drawer selector
+      const buttons = typeRefs.container.querySelectorAll('button');
+      buttons.forEach((btn) => {
+        const typeId = btn.getAttribute('data-harmony-type');
+        if (typeId) {
+          this.on(btn, 'click', () => {
+            this.selectHarmonyType(typeId);
+          });
+        }
+      });
 
-      // Companion Dyes slider
+      // Companion Dyes slider - uses shared builder
       const companionSection = this.createElement('div', {
         className: 'mt-4 pt-4 border-t',
         attributes: { style: 'border-color: var(--theme-border);' },
@@ -1142,199 +1191,32 @@ export class HarmonyTool extends BaseComponent {
         attributes: { style: 'color: var(--theme-text-muted);' },
       });
       companionSection.appendChild(companionLabel);
-      this.renderDrawerCompanionSlider(companionSection);
-      contentContainer.appendChild(companionSection);
-    }
-  }
-
-  /**
-   * Render harmony type selector for mobile drawer
-   */
-  private renderDrawerHarmonyTypeSelector(container: HTMLElement): void {
-    this.drawerHarmonyTypesContainer = this.createElement('div', {
-      className: 'space-y-1 max-h-48 overflow-y-auto',
-    });
-
-    const harmonyTypes = getHarmonyTypes();
-
-    for (const type of harmonyTypes) {
-      const isSelected = this.selectedHarmonyType === type.id;
-      const btn = this.createElement('button', {
-        className:
-          'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all text-sm',
-        attributes: {
-          style: isSelected
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: transparent; color: var(--theme-text);',
-          'data-harmony-type': type.id,
-        },
-      });
-
-      const iconSpan = this.createElement('span', {
-        className: 'w-5 h-5 flex-shrink-0',
-        innerHTML: HARMONY_ICONS[type.icon] || '',
-      });
-
-      const nameSpan = this.createElement('span', { textContent: type.name });
-
-      btn.appendChild(iconSpan);
-      btn.appendChild(nameSpan);
-
-      this.on(btn, 'click', () => {
-        this.selectHarmonyTypeFromDrawer(type.id);
-      });
-
-      this.drawerHarmonyTypesContainer.appendChild(btn);
+      const sliderRefs = this.buildCompanionSlider(companionSection);
+      this.drawerCompanionSlider = sliderRefs.slider;
+      this.drawerCompanionDisplay = sliderRefs.valueDisplay;
+      this.bindCompanionSliderEvents(sliderRefs.slider, sliderRefs.valueDisplay);
+      harmonyContent.appendChild(companionSection);
     }
 
-    container.appendChild(this.drawerHarmonyTypesContainer);
+    // Collapsible: Dye Filters - uses shared builder
+    const filtersContainer = this.createElement('div');
+    drawer.appendChild(filtersContainer);
+    const filtersRefs = this.buildFiltersPanel(filtersContainer, 'harmony_filters_drawer');
+    this.drawerFiltersPanel = filtersRefs.panel;
+    this.drawerDyeFilters = filtersRefs.filters;
+
+    // Collapsible: Market Board - uses shared builder
+    const marketContainer = this.createElement('div');
+    drawer.appendChild(marketContainer);
+    const marketRefs = this.buildMarketPanel(marketContainer, 'harmony_market_drawer');
+    this.drawerMarketPanel = marketRefs.panel;
+    this.drawerMarketBoard = marketRefs.marketBoard;
   }
 
-  /**
-   * Select harmony type from mobile drawer (syncs with desktop)
-   */
-  private selectHarmonyTypeFromDrawer(typeId: string): void {
-    this.selectedHarmonyType = typeId;
-    StorageService.setItem(STORAGE_KEYS.harmonyType, typeId);
-
-    // Clear swapped dyes when harmony type changes
-    this.swappedDyes.clear();
-
-    // Update drawer button styles
-    if (this.drawerHarmonyTypesContainer) {
-      const buttons = this.drawerHarmonyTypesContainer.querySelectorAll('button');
-      buttons.forEach((btn) => {
-        const isSelected = btn.getAttribute('data-harmony-type') === typeId;
-        btn.setAttribute(
-          'style',
-          isSelected
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: transparent; color: var(--theme-text);'
-        );
-      });
-    }
-
-    // Sync desktop harmony type selector
-    if (this.harmonyTypesContainer) {
-      const buttons = this.harmonyTypesContainer.querySelectorAll('button');
-      buttons.forEach((btn) => {
-        const isSelected = btn.getAttribute('data-harmony-type') === typeId;
-        btn.setAttribute(
-          'style',
-          isSelected
-            ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-            : 'background: transparent; color: var(--theme-text);'
-        );
-      });
-    }
-
-    this.generateHarmonies();
-  }
-
-  /**
-   * Render companion dyes slider for mobile drawer
-   */
-  private renderDrawerCompanionSlider(container: HTMLElement): void {
-    const sliderContainer = this.createElement('div', { className: 'flex items-center gap-3' });
-
-    this.drawerCompanionSlider = this.createElement('input', {
-      attributes: {
-        type: 'range',
-        min: String(COMPANION_DYES_MIN),
-        max: String(COMPANION_DYES_MAX),
-        value: String(this.companionDyesCount),
-      },
-      className: 'flex-1',
-    }) as HTMLInputElement;
-
-    this.drawerCompanionDisplay = this.createElement('span', {
-      className: 'text-sm number w-6 text-center',
-      textContent: String(this.companionDyesCount),
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-
-    this.on(this.drawerCompanionSlider, 'input', () => {
-      if (this.drawerCompanionSlider && this.drawerCompanionDisplay) {
-        this.companionDyesCount = parseInt(this.drawerCompanionSlider.value, 10);
-        this.drawerCompanionDisplay.textContent = String(this.companionDyesCount);
-        StorageService.setItem(STORAGE_KEYS.companionCount, this.companionDyesCount);
-
-        // Sync desktop slider
-        if (this.companionSlider) {
-          this.companionSlider.value = String(this.companionDyesCount);
-        }
-        if (this.companionDisplay) {
-          this.companionDisplay.textContent = String(this.companionDyesCount);
-        }
-      }
-    });
-
-    this.on(this.drawerCompanionSlider, 'change', () => {
-      this.generateHarmonies();
-    });
-
-    sliderContainer.appendChild(this.drawerCompanionSlider);
-    sliderContainer.appendChild(this.drawerCompanionDisplay);
-    container.appendChild(sliderContainer);
-  }
-
-  /**
-   * Render dye filters panel for mobile drawer
-   */
-  private renderDrawerFiltersPanel(container: HTMLElement): void {
-    this.drawerFiltersPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('filters.advancedFilters'),
-      storageKey: 'harmony_filters_drawer',
-      defaultOpen: false,
-      icon: ICON_FILTER,
-    });
-    this.drawerFiltersPanel.init();
-
-    const filtersContent = this.createElement('div');
-    this.drawerDyeFilters = new DyeFilters(filtersContent, {
-      storageKeyPrefix: 'v3_harmony',
-      hideHeader: true,
-      onFilterChange: (filters) => {
-        this.filterConfig = filters;
-        this.generateHarmonies();
-      },
-    });
-    this.drawerDyeFilters.init();
-
-    this.drawerFiltersPanel.setContent(filtersContent);
-  }
-
-  /**
-   * Render market board panel for mobile drawer
-   * Note: MarketBoard delegates to MarketBoardService for state management
-   */
-  private renderDrawerMarketPanel(container: HTMLElement): void {
-    this.drawerMarketPanel = new CollapsiblePanel(container, {
-      title: LanguageService.t('marketBoard.title'),
-      storageKey: 'harmony_market_drawer',
-      defaultOpen: false,
-      icon: ICON_MARKET,
-    });
-    this.drawerMarketPanel.init();
-
-    const marketContent = this.createElement('div');
-    this.drawerMarketBoard = new MarketBoard(marketContent);
-    this.drawerMarketBoard.init();
-
-    // Set up market board event listeners using shared utility
-    setupMarketBoardListeners(marketContent, () => this.showPrices, () => this.fetchPricesForDisplayedDyes(), {
-      onPricesToggled: () => {
-        this.generateHarmonies();
-        // Note: generateHarmonies() already calls fetchPricesForDisplayedDyes() internally
-      },
-      onServerChanged: () => {
-        if (this.selectedDye) this.generateHarmonies();
-        // Note: generateHarmonies() already calls fetchPricesForDisplayedDyes() internally
-      },
-    });
-
-    this.drawerMarketPanel.setContent(marketContent);
-  }
+  // WEB-REF-003 Phase 2: renderDrawerBaseDyePanel, renderDrawerDyeSelector,
+  // updateDrawerCurrentDyeDisplay, renderDrawerHarmonyTypePanel, renderDrawerHarmonyTypeSelector,
+  // selectHarmonyTypeFromDrawer, renderDrawerCompanionSlider, renderDrawerFiltersPanel,
+  // and renderDrawerMarketPanel removed - now using shared builders in renderDrawerContent
 
   /**
    * Update drawer content - no longer needed since drawer has full interactive controls
@@ -1811,19 +1693,9 @@ export class HarmonyTool extends BaseComponent {
       this.generateHarmonies();
       this.updateDrawerContent();
 
-      // Update harmony type buttons if they exist
-      if (this.harmonyTypesContainer) {
-        const buttons = this.harmonyTypesContainer.querySelectorAll('button');
-        buttons.forEach((btn) => {
-          const isSelected = btn.getAttribute('data-harmony-type') === this.selectedHarmonyType;
-          btn.setAttribute(
-            'style',
-            isSelected
-              ? 'background: var(--theme-primary); color: var(--theme-text-header);'
-              : 'background: transparent; color: var(--theme-text);'
-          );
-        });
-      }
+      // Update harmony type buttons if they exist (shared method handles null containers)
+      this.updateHarmonyTypeButtonStyles(this.harmonyTypesContainer, this.selectedHarmonyType);
+      this.updateHarmonyTypeButtonStyles(this.drawerHarmonyTypesContainer, this.selectedHarmonyType);
     }
   }
 

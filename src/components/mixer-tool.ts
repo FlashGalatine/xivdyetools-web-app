@@ -67,6 +67,27 @@ export interface MixerToolOptions {
 
 // WEB-REF-003 FIX: MixedColorResult type imported from @services/mixer-blending-engine
 
+// WEB-REF-003 Phase 2: Shared panel builder result types
+interface DyeSelectorPanelRefs {
+  selector: DyeSelector;
+  displayContainer: HTMLElement;
+}
+
+interface SettingsSliderRefs {
+  slider: HTMLInputElement;
+  valueDisplay: HTMLElement;
+}
+
+interface FiltersPanelRefs {
+  panel: CollapsiblePanel;
+  filters: DyeFilters;
+}
+
+interface MarketPanelRefs {
+  panel: CollapsiblePanel;
+  marketBoard: MarketBoard;
+}
+
 /**
  * Storage keys for Dye Mixer tool
  */
@@ -243,6 +264,320 @@ export class MixerTool extends BaseComponent {
       excludeIds,
       this.dyeFilters
     );
+  }
+
+  // ============================================================================
+  // WEB-REF-003 Phase 2: Shared Panel Builders
+  // Eliminates desktop ↔ drawer code duplication (~250 lines extracted)
+  // ============================================================================
+
+  /**
+   * Build dye selector panel content (shared by desktop and drawer)
+   * @param container Container to render into
+   * @param storageKeyPrefix Storage key prefix for component state
+   * @returns References to created selector and display container
+   */
+  private buildDyeSelectorPanel(container: HTMLElement, storageKeyPrefix: string): DyeSelectorPanelRefs {
+    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+
+    // Instruction text
+    const instruction = this.createElement('p', {
+      className: 'text-sm mb-2',
+      textContent: LanguageService.t('mixer.selectDyesToBlend'),
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+    dyeContainer.appendChild(instruction);
+
+    // Selected dyes display
+    const displayContainer = this.createElement('div', {
+      className: 'selected-dyes-display space-y-2',
+    });
+    dyeContainer.appendChild(displayContainer);
+
+    // Dye selector component
+    const selectorContainer = this.createElement('div', { className: 'mt-3' });
+    dyeContainer.appendChild(selectorContainer);
+
+    const selector = new DyeSelector(selectorContainer, {
+      maxSelections: 3,
+      allowMultiple: true,
+      allowDuplicates: true,
+      showCategories: true,
+      showPrices: true,
+      excludeFacewear: true,
+      showFavorites: true,
+      compactMode: true,
+      hideSelectedChips: true,
+    });
+    selector.init();
+
+    // Set initial selection if dyes were loaded from storage
+    const initialDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
+    if (initialDyes.length > 0) {
+      selector.setSelectedDyes(initialDyes);
+    }
+
+    container.appendChild(dyeContainer);
+    return { selector, displayContainer };
+  }
+
+  /**
+   * Render selected dyes display (shared by desktop and drawer)
+   * @param container Container to render into
+   */
+  private renderSelectedDyesDisplayInto(container: HTMLElement): void {
+    clearContainer(container);
+
+    const filledSlots = this.selectedDyes.filter((d): d is Dye => d !== null);
+
+    if (filledSlots.length === 0) {
+      // Empty state - dashed border placeholder
+      const placeholder = this.createElement('div', {
+        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
+        textContent: LanguageService.t('mixer.selectDyes'),
+        attributes: {
+          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
+        },
+      });
+      container.appendChild(placeholder);
+      return;
+    }
+
+    // Display each selected dye with role label
+    const labels = [
+      LanguageService.t('mixer.dye1'),
+      LanguageService.t('mixer.dye2'),
+      LanguageService.t('mixer.dye3'),
+    ];
+
+    for (let i = 0; i < 3; i++) {
+      const dye = this.selectedDyes[i];
+      if (!dye) continue;
+
+      const label = labels[i];
+
+      const card = this.createElement('div', {
+        className: 'flex items-center gap-3 p-3 rounded-lg',
+        attributes: { style: 'background: var(--theme-background-secondary);' },
+      });
+
+      // Color swatch
+      const swatch = this.createElement('div', {
+        className: 'w-10 h-10 rounded border',
+        attributes: {
+          style: `background: ${dye.hex}; border-color: var(--theme-border);`,
+        },
+      });
+      card.appendChild(swatch);
+
+      // Info section
+      const info = this.createElement('div', { className: 'flex-1 min-w-0' });
+
+      // Role label
+      const roleLabel = this.createElement('p', {
+        className: 'text-xs font-semibold uppercase tracking-wider',
+        textContent: label,
+        attributes: { style: 'color: var(--theme-primary);' },
+      });
+      info.appendChild(roleLabel);
+
+      // Dye name
+      const name = this.createElement('p', {
+        className: 'font-medium truncate',
+        textContent: LanguageService.getDyeName(dye.itemID) || dye.name,
+        attributes: { style: 'color: var(--theme-text);' },
+      });
+      info.appendChild(name);
+
+      // Hex and price
+      const details = this.createElement('p', {
+        className: 'text-xs number',
+        attributes: { style: 'color: var(--theme-text-muted);' },
+      });
+      let detailText = dye.hex;
+      const priceText = this.formatPrice(dye);
+      if (priceText) {
+        detailText += ` • ${priceText}`;
+      }
+      details.textContent = detailText;
+      info.appendChild(details);
+
+      card.appendChild(info);
+
+      // Remove button (only for desktop - drawer is read-only display)
+      if (container === this.selectedDyesContainer) {
+        const removeBtn = this.createElement('button', {
+          className: 'w-8 h-8 flex items-center justify-center rounded-full transition-colors',
+          textContent: '\u00D7',
+          attributes: {
+            style:
+              'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
+            title: LanguageService.t('common.remove'),
+          },
+        });
+
+        const slotIndex = i;
+        this.on(removeBtn, 'click', () => {
+          this.handleSlotRemove(slotIndex as 0 | 1 | 2);
+        });
+
+        card.appendChild(removeBtn);
+      }
+
+      container.appendChild(card);
+    }
+  }
+
+  /**
+   * Build settings slider (shared by desktop and drawer)
+   * @param container Container to render into
+   * @returns References to created slider and value display
+   */
+  private buildSettingsSlider(container: HTMLElement): SettingsSliderRefs {
+    const settingsContainer = this.createElement('div', { className: 'space-y-4' });
+
+    // Max Results slider (3-8 range)
+    const sliderGroup = this.createElement('div');
+    const sliderLabel = this.createElement('label', {
+      className: 'flex items-center justify-between text-sm mb-2',
+    });
+
+    const labelText = this.createElement('span', {
+      textContent: LanguageService.t('mixer.maxResults'),
+      attributes: { style: 'color: var(--theme-text);' },
+    });
+
+    const valueDisplay = this.createElement('span', {
+      className: 'number',
+      textContent: String(this.maxResults),
+      attributes: { style: 'color: var(--theme-text-muted);' },
+    });
+
+    sliderLabel.appendChild(labelText);
+    sliderLabel.appendChild(valueDisplay);
+    sliderGroup.appendChild(sliderLabel);
+
+    const slider = this.createElement('input', {
+      attributes: {
+        type: 'range',
+        min: '3',
+        max: '8',
+        value: String(this.maxResults),
+        style: 'width: 100%; accent-color: var(--theme-primary);',
+      },
+    }) as HTMLInputElement;
+
+    sliderGroup.appendChild(slider);
+    settingsContainer.appendChild(sliderGroup);
+    container.appendChild(settingsContainer);
+
+    return { slider, valueDisplay };
+  }
+
+  /**
+   * Bind settings slider events (shared by desktop and drawer)
+   * Syncs both sliders when either changes
+   */
+  private bindSettingsSliderEvents(slider: HTMLInputElement, valueDisplay: HTMLElement): void {
+    this.on(slider, 'input', () => {
+      this.maxResults = parseInt(slider.value, 10);
+      // Update both displays
+      if (this.maxResultsValueDisplay) {
+        this.maxResultsValueDisplay.textContent = String(this.maxResults);
+      }
+      if (this.mobileMaxResultsDisplay) {
+        this.mobileMaxResultsDisplay.textContent = String(this.maxResults);
+      }
+    });
+
+    this.on(slider, 'change', () => {
+      ConfigController.getInstance().setConfig('mixer', { maxResults: this.maxResults });
+      this.findMatchingDyesInternal();
+      this.renderResultsGrid();
+      if (this.showPrices) {
+        void this.fetchPricesForDisplayedDyes();
+      }
+      this.updateDrawerContent();
+    });
+  }
+
+  /**
+   * Build filters panel (shared by desktop and drawer)
+   * @param container Container to render into
+   * @param storageKey Storage key for panel collapse state
+   * @returns References to created panel and filters
+   */
+  private buildFiltersPanel(container: HTMLElement, storageKey: string): FiltersPanelRefs {
+    const panel = new CollapsiblePanel(container, {
+      title: LanguageService.t('filters.advancedFilters'),
+      storageKey,
+      defaultOpen: false,
+      icon: ICON_FILTER,
+    });
+    panel.init();
+
+    const filtersContent = this.createElement('div');
+    const filters = new DyeFilters(filtersContent, {
+      storageKeyPrefix: storageKey.replace('_filters', ''),
+      hideHeader: true,
+      onFilterChange: () => {
+        this.findMatchingDyesInternal();
+        this.renderResultsGrid();
+        if (this.showPrices) {
+          void this.fetchPricesForDisplayedDyes();
+        }
+      },
+    });
+    filters.render();
+    filters.bindEvents();
+    panel.setContent(filtersContent);
+
+    return { panel, filters };
+  }
+
+  /**
+   * Build market board panel (shared by desktop and drawer)
+   * @param container Container to render into
+   * @param storageKey Storage key for panel collapse state
+   * @returns References to created panel and market board
+   */
+  private buildMarketPanel(container: HTMLElement, storageKey: string): MarketPanelRefs {
+    const panel = new CollapsiblePanel(container, {
+      title: LanguageService.t('marketBoard.title'),
+      storageKey,
+      defaultOpen: false,
+      icon: ICON_MARKET,
+    });
+    panel.init();
+
+    const marketContent = this.createElement('div');
+    const marketBoard = new MarketBoard(marketContent);
+    marketBoard.init();
+
+    // Set up market board event listeners using shared utility
+    setupMarketBoardListeners(
+      marketContent,
+      () => this.showPrices,
+      () => this.fetchPricesForDisplayedDyes(),
+      {
+        onPricesToggled: () => {
+          if (this.showPrices) {
+            void this.fetchPricesForDisplayedDyes();
+          } else {
+            this.renderResultsGrid();
+          }
+        },
+        onServerChanged: () => {
+          this.renderResultsGrid();
+          if (this.showPrices && this.matchedResults.length > 0) {
+            void this.fetchPricesForDisplayedDyes();
+          }
+        },
+      }
+    );
+
+    panel.setContent(marketContent);
+    return { panel, marketBoard };
   }
 
   // ============================================================================
@@ -590,130 +925,41 @@ export class MixerTool extends BaseComponent {
     this.settingsPanel.setContent(settingsContent);
 
     // Section 3: Dye Filters (collapsible)
+    // WEB-REF-003 Phase 2: Refactored to use shared builder
     const filtersContainer = this.createElement('div');
     left.appendChild(filtersContainer);
-    this.filtersPanel = new CollapsiblePanel(filtersContainer, {
-      title: LanguageService.t('filters.advancedFilters'),
-      storageKey: 'v4_mixer_filters',
-      defaultOpen: false,
-      icon: ICON_FILTER,
-    });
-    this.filtersPanel.init();
-
-    const filtersContent = this.createElement('div');
-    this.dyeFilters = new DyeFilters(filtersContent, {
-      storageKeyPrefix: 'v4_mixer',
-      hideHeader: true,
-      onFilterChange: () => {
-        this.findMatchingDyesInternal();
-        this.renderResultsGrid();
-        if (this.showPrices) {
-          void this.fetchPricesForDisplayedDyes();
-        }
-      },
-    });
-    this.dyeFilters.render();
-    this.dyeFilters.bindEvents();
-    this.filtersPanel.setContent(filtersContent);
+    const filtersRefs = this.buildFiltersPanel(filtersContainer, 'v4_mixer_filters');
+    this.filtersPanel = filtersRefs.panel;
+    this.dyeFilters = filtersRefs.filters;
 
     // Section 4: Market Board (collapsible)
+    // WEB-REF-003 Phase 2: Refactored to use shared builder
     const marketContainer = this.createElement('div');
     left.appendChild(marketContainer);
-    this.marketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title'),
-      storageKey: 'v4_mixer_market',
-      defaultOpen: false,
-      icon: ICON_MARKET,
-    });
-    this.marketPanel.init();
-
-    // Create market board content
-    // Note: MarketBoard delegates to MarketBoardService for state management
-    const marketContent = this.createElement('div');
-    this.marketBoard = new MarketBoard(marketContent);
-    this.marketBoard.init();
-
-    // Set up market board event listeners using shared utility
-    setupMarketBoardListeners(
-      marketContent,
-      () => this.showPrices,
-      () => this.fetchPricesForDisplayedDyes(),
-      {
-        onPricesToggled: () => {
-          if (this.showPrices) {
-            void this.fetchPricesForDisplayedDyes();
-          } else {
-            this.renderResultsGrid();
-          }
-        },
-        onServerChanged: () => {
-          this.renderResultsGrid();
-          if (this.showPrices && this.matchedResults.length > 0) {
-            void this.fetchPricesForDisplayedDyes();
-          }
-        },
-      }
-    );
-
-    this.marketPanel.setContent(marketContent);
+    const marketRefs = this.buildMarketPanel(marketContainer, 'v4_mixer_market');
+    this.marketPanel = marketRefs.panel;
+    this.marketBoard = marketRefs.marketBoard;
   }
 
   /**
    * Render dye selector section
+   * WEB-REF-003 Phase 2: Refactored to use shared builder
    */
   private renderDyeSelector(container: HTMLElement): void {
-    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
+    const refs = this.buildDyeSelectorPanel(container, 'v4_mixer');
 
-    // Instruction text
-    const instruction = this.createElement('p', {
-      className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectDyesToBlend'),
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    dyeContainer.appendChild(instruction);
+    // Store references
+    this.dyeSelector = refs.selector;
+    this.selectedDyesContainer = refs.displayContainer;
 
-    // Selected dyes display
-    const displayContainer = this.createElement('div', {
-      className: 'selected-dyes-display space-y-2',
-    });
-    dyeContainer.appendChild(displayContainer);
-    this.selectedDyesContainer = displayContainer;
-
-    this.updateSelectedDyesDisplay();
-
-    // Dye selector component
-    const selectorContainer = this.createElement('div', { className: 'mt-3' });
-    dyeContainer.appendChild(selectorContainer);
-
-    const selector = new DyeSelector(selectorContainer, {
-      maxSelections: 3,
-      allowMultiple: true,
-      allowDuplicates: true, // Allow same dye twice (not thrice)
-      showCategories: true,
-      showPrices: true,
-      excludeFacewear: true,
-      showFavorites: true,
-      compactMode: true,
-      hideSelectedChips: true, // We show selections above with Dye 1/Dye 2/Dye 3 labels
-    });
-    selector.init();
-
-    // Store reference
-    this.dyeSelector = selector;
+    // Render initial display
+    this.renderSelectedDyesDisplayInto(refs.displayContainer);
 
     // Listen for selection changes
-    selectorContainer.addEventListener('selection-changed', () => {
-      const selectedDyes = selector.getSelectedDyes();
+    refs.selector.element?.parentElement?.addEventListener('selection-changed', () => {
+      const selectedDyes = refs.selector.getSelectedDyes();
       this.handleDyeSelection(selectedDyes);
     });
-
-    // Set initial selection if dyes were loaded from storage
-    const initialDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
-    if (initialDyes.length > 0) {
-      selector.setSelectedDyes(initialDyes);
-    }
-
-    container.appendChild(dyeContainer);
   }
 
   /**
@@ -749,106 +995,11 @@ export class MixerTool extends BaseComponent {
 
   /**
    * Update the selected dyes display with Dye 1/Dye 2 labels and remove buttons
+   * WEB-REF-003 Phase 2: Refactored to use shared method
    */
   private updateSelectedDyesDisplay(): void {
     if (!this.selectedDyesContainer) return;
-    clearContainer(this.selectedDyesContainer);
-
-    const filledSlots = this.selectedDyes.filter((d): d is Dye => d !== null);
-
-    if (filledSlots.length === 0) {
-      // Empty state - dashed border placeholder
-      const placeholder = this.createElement('div', {
-        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('mixer.selectDyes'),
-        attributes: {
-          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
-        },
-      });
-      this.selectedDyesContainer.appendChild(placeholder);
-      return;
-    }
-
-    // Display each selected dye with role label
-    const labels = [
-      LanguageService.t('mixer.dye1'),
-      LanguageService.t('mixer.dye2'),
-      LanguageService.t('mixer.dye3'),
-    ];
-
-    for (let i = 0; i < 3; i++) {
-      const dye = this.selectedDyes[i];
-      if (!dye) continue;
-
-      const label = labels[i];
-
-      const card = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-background-secondary);' },
-      });
-
-      // Color swatch
-      const swatch = this.createElement('div', {
-        className: 'w-10 h-10 rounded border',
-        attributes: {
-          style: `background: ${dye.hex}; border-color: var(--theme-border);`,
-        },
-      });
-      card.appendChild(swatch);
-
-      // Info section
-      const info = this.createElement('div', { className: 'flex-1 min-w-0' });
-
-      // Role label
-      const roleLabel = this.createElement('p', {
-        className: 'text-xs font-semibold uppercase tracking-wider',
-        textContent: label,
-        attributes: { style: 'color: var(--theme-primary);' },
-      });
-      info.appendChild(roleLabel);
-
-      // Dye name
-      const name = this.createElement('p', {
-        className: 'font-medium truncate',
-        textContent: LanguageService.getDyeName(dye.itemID) || dye.name,
-        attributes: { style: 'color: var(--theme-text);' },
-      });
-      info.appendChild(name);
-
-      // Hex and price
-      const details = this.createElement('p', {
-        className: 'text-xs number',
-        attributes: { style: 'color: var(--theme-text-muted);' },
-      });
-      let detailText = dye.hex;
-      const priceText = this.formatPrice(dye);
-      if (priceText) {
-        detailText += ` • ${priceText}`;
-      }
-      details.textContent = detailText;
-      info.appendChild(details);
-
-      card.appendChild(info);
-
-      // Remove button
-      const removeBtn = this.createElement('button', {
-        className: 'w-8 h-8 flex items-center justify-center rounded-full transition-colors',
-        textContent: '\u00D7',
-        attributes: {
-          style:
-            'background: var(--theme-card-hover); color: var(--theme-text-muted); font-size: 1.25rem;',
-          title: LanguageService.t('common.remove'),
-        },
-      });
-
-      const slotIndex = i;
-      this.on(removeBtn, 'click', () => {
-        this.handleSlotRemove(slotIndex as 0 | 1 | 2);
-      });
-
-      card.appendChild(removeBtn);
-      this.selectedDyesContainer.appendChild(card);
-    }
+    this.renderSelectedDyesDisplayInto(this.selectedDyesContainer);
   }
 
   /**
@@ -883,66 +1034,12 @@ export class MixerTool extends BaseComponent {
 
   /**
    * Render mix settings (maxResults slider)
+   * WEB-REF-003 Phase 2: Refactored to use shared builder
    */
   private renderSettings(container: HTMLElement): void {
-    const settingsContainer = this.createElement('div', { className: 'space-y-4' });
-
-    // Max Results slider (3-8 range)
-    const sliderGroup = this.createElement('div');
-    const sliderLabel = this.createElement('label', {
-      className: 'flex items-center justify-between text-sm mb-2',
-    });
-
-    const labelText = this.createElement('span', {
-      textContent: LanguageService.t('mixer.maxResults'),
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-
-    this.maxResultsValueDisplay = this.createElement('span', {
-      className: 'number',
-      textContent: String(this.maxResults),
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-
-    sliderLabel.appendChild(labelText);
-    sliderLabel.appendChild(this.maxResultsValueDisplay);
-    sliderGroup.appendChild(sliderLabel);
-
-    const slider = this.createElement('input', {
-      attributes: {
-        type: 'range',
-        min: '3',
-        max: '8',
-        value: String(this.maxResults),
-        style: 'width: 100%; accent-color: var(--theme-primary);',
-      },
-    }) as HTMLInputElement;
-
-    this.on(slider, 'input', () => {
-      this.maxResults = parseInt(slider.value, 10);
-      if (this.maxResultsValueDisplay) {
-        this.maxResultsValueDisplay.textContent = String(this.maxResults);
-      }
-      if (this.mobileMaxResultsDisplay) {
-        this.mobileMaxResultsDisplay.textContent = String(this.maxResults);
-      }
-    });
-
-    this.on(slider, 'change', () => {
-      // Update ConfigController for v4 sidebar sync
-      ConfigController.getInstance().setConfig('mixer', { maxResults: this.maxResults });
-
-      this.findMatchingDyesInternal();
-      this.renderResultsGrid();
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      }
-      this.updateDrawerContent();
-    });
-
-    sliderGroup.appendChild(slider);
-    settingsContainer.appendChild(sliderGroup);
-    container.appendChild(settingsContainer);
+    const refs = this.buildSettingsSlider(container);
+    this.maxResultsValueDisplay = refs.valueDisplay;
+    this.bindSettingsSliderEvents(refs.slider, refs.valueDisplay);
   }
 
   // ============================================================================
@@ -1561,6 +1658,7 @@ export class MixerTool extends BaseComponent {
 
   /**
    * Render mobile drawer content
+   * WEB-REF-003 Phase 2: Refactored to use shared builders
    */
   private renderDrawerContent(): void {
     const drawer = this.options.drawerContent;
@@ -1573,7 +1671,7 @@ export class MixerTool extends BaseComponent {
       drawer.appendChild(existingNav);
     }
 
-    // Section 1: Dye Selection
+    // Section 1: Dye Selection - uses shared builder
     const dyeSelectionContainer = this.createElement('div');
     drawer.appendChild(dyeSelectionContainer);
     this.mobileDyeSelectionPanel = new CollapsiblePanel(dyeSelectionContainer, {
@@ -1584,10 +1682,21 @@ export class MixerTool extends BaseComponent {
     });
     this.mobileDyeSelectionPanel.init();
     const mobileDyeSelectionContent = this.createElement('div', { className: 'p-4' });
-    this.renderMobileDyeSelector(mobileDyeSelectionContent);
+    const dyeRefs = this.buildDyeSelectorPanel(mobileDyeSelectionContent, 'v4_mixer_mobile');
+    this.mobileDyeSelector = dyeRefs.selector;
+    this.mobileSelectedDyesContainer = dyeRefs.displayContainer;
+    this.renderSelectedDyesDisplayInto(dyeRefs.displayContainer);
+
+    // Listen for selection changes - sync with desktop
+    dyeRefs.selector.element?.parentElement?.addEventListener('selection-changed', () => {
+      const selectedDyes = dyeRefs.selector.getSelectedDyes();
+      this.handleDyeSelection(selectedDyes);
+      this.dyeSelector?.setSelectedDyes(selectedDyes);
+    });
+
     this.mobileDyeSelectionPanel.setContent(mobileDyeSelectionContent);
 
-    // Section 2: Mix Settings
+    // Section 2: Mix Settings - uses shared builder
     const settingsContainer = this.createElement('div');
     drawer.appendChild(settingsContainer);
     this.mobileSettingsPanel = new CollapsiblePanel(settingsContainer, {
@@ -1598,256 +1707,38 @@ export class MixerTool extends BaseComponent {
     });
     this.mobileSettingsPanel.init();
     const mobileSettingsContent = this.createElement('div', { className: 'p-4' });
-    this.renderMobileSettings(mobileSettingsContent);
+    const settingsRefs = this.buildSettingsSlider(mobileSettingsContent);
+    this.mobileMaxResultsDisplay = settingsRefs.valueDisplay;
+    this.bindSettingsSliderEvents(settingsRefs.slider, settingsRefs.valueDisplay);
     this.mobileSettingsPanel.setContent(mobileSettingsContent);
 
-    // Section 3: Filters
+    // Section 3: Filters - uses shared builder
     const filtersContainer = this.createElement('div');
     drawer.appendChild(filtersContainer);
-    this.mobileFiltersPanel = new CollapsiblePanel(filtersContainer, {
-      title: LanguageService.t('filters.advancedFilters'),
-      storageKey: 'v4_mixer_mobile_filters',
-      defaultOpen: false,
-      icon: ICON_FILTER,
-    });
-    this.mobileFiltersPanel.init();
+    const filtersRefs = this.buildFiltersPanel(filtersContainer, 'v4_mixer_mobile_filters');
+    this.mobileFiltersPanel = filtersRefs.panel;
+    this.mobileDyeFilters = filtersRefs.filters;
 
-    const mobileFiltersContent = this.createElement('div');
-    this.mobileDyeFilters = new DyeFilters(mobileFiltersContent, {
-      storageKeyPrefix: 'v4_mixer_mobile',
-      hideHeader: true,
-      onFilterChange: () => {
-        this.findMatchingDyesInternal();
-        this.renderResultsGrid();
-        if (this.showPrices) {
-          void this.fetchPricesForDisplayedDyes();
-        }
-      },
-    });
-    this.mobileDyeFilters.render();
-    this.mobileDyeFilters.bindEvents();
-    this.mobileFiltersPanel.setContent(mobileFiltersContent);
-
-    // Section 4: Market Board
+    // Section 4: Market Board - uses shared builder
     const marketContainer = this.createElement('div');
     drawer.appendChild(marketContainer);
-    this.mobileMarketPanel = new CollapsiblePanel(marketContainer, {
-      title: LanguageService.t('marketBoard.title'),
-      storageKey: 'v4_mixer_mobile_market',
-      defaultOpen: false,
-      icon: ICON_MARKET,
-    });
-    this.mobileMarketPanel.init();
-
-    // Create mobile market board content
-    // Note: MarketBoard delegates to MarketBoardService for state management
-    const mobileMarketContent = this.createElement('div');
-    this.mobileMarketBoard = new MarketBoard(mobileMarketContent);
-    this.mobileMarketBoard.init();
-
-    // Set up market board event listeners using shared utility
-    setupMarketBoardListeners(
-      mobileMarketContent,
-      () => this.showPrices,
-      () => this.fetchPricesForDisplayedDyes(),
-      {
-        onPricesToggled: () => {
-          if (this.showPrices) {
-            void this.fetchPricesForDisplayedDyes();
-          } else {
-            this.renderResultsGrid();
-          }
-        },
-        onServerChanged: () => {
-          this.renderResultsGrid();
-          if (this.showPrices && this.matchedResults.length > 0) {
-            void this.fetchPricesForDisplayedDyes();
-          }
-        },
-      }
-    );
-
-    this.mobileMarketPanel.setContent(mobileMarketContent);
+    const marketRefs = this.buildMarketPanel(marketContainer, 'v4_mixer_mobile_market');
+    this.mobileMarketPanel = marketRefs.panel;
+    this.mobileMarketBoard = marketRefs.marketBoard;
   }
 
-  /**
-   * Render mobile dye selector
-   */
-  private renderMobileDyeSelector(container: HTMLElement): void {
-    const dyeContainer = this.createElement('div', { className: 'space-y-3' });
-
-    // Instruction
-    const instruction = this.createElement('p', {
-      className: 'text-sm mb-2',
-      textContent: LanguageService.t('mixer.selectDyesToBlend'),
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-    dyeContainer.appendChild(instruction);
-
-    // Selected dyes display
-    const displayContainer = this.createElement('div', {
-      className: 'selected-dyes-display space-y-2',
-    });
-    dyeContainer.appendChild(displayContainer);
-    this.mobileSelectedDyesContainer = displayContainer;
-
-    // Mirror the desktop display
-    this.updateMobileSelectedDyesDisplay();
-
-    // Dye selector
-    const selectorContainer = this.createElement('div', { className: 'mt-3' });
-    dyeContainer.appendChild(selectorContainer);
-
-    this.mobileDyeSelector = new DyeSelector(selectorContainer, {
-      maxSelections: 3,
-      allowMultiple: true,
-      allowDuplicates: true, // Allow same dye twice (not thrice)
-      showCategories: true,
-      showPrices: true,
-      excludeFacewear: true,
-      showFavorites: true,
-      compactMode: true,
-      hideSelectedChips: true,
-    });
-    this.mobileDyeSelector.init();
-
-    // Sync with desktop
-    selectorContainer.addEventListener('selection-changed', () => {
-      const selectedDyes = this.mobileDyeSelector!.getSelectedDyes();
-      this.handleDyeSelection(selectedDyes);
-      this.dyeSelector?.setSelectedDyes(selectedDyes);
-    });
-
-    // Set initial selection
-    const initialDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
-    if (initialDyes.length > 0) {
-      this.mobileDyeSelector.setSelectedDyes(initialDyes);
-    }
-
-    container.appendChild(dyeContainer);
-  }
-
-  /**
-   * Update mobile selected dyes display
-   */
-  private updateMobileSelectedDyesDisplay(): void {
-    if (!this.mobileSelectedDyesContainer) return;
-    clearContainer(this.mobileSelectedDyesContainer);
-
-    const filledSlots = this.selectedDyes.filter((d): d is Dye => d !== null);
-
-    if (filledSlots.length === 0) {
-      const placeholder = this.createElement('div', {
-        className: 'p-3 rounded-lg border-2 border-dashed text-center text-sm',
-        textContent: LanguageService.t('mixer.selectDyes'),
-        attributes: {
-          style: 'border-color: var(--theme-border); color: var(--theme-text-muted);',
-        },
-      });
-      this.mobileSelectedDyesContainer.appendChild(placeholder);
-      return;
-    }
-
-    // Same display as desktop
-    const labels = [
-      LanguageService.t('mixer.dye1'),
-      LanguageService.t('mixer.dye2'),
-      LanguageService.t('mixer.dye3'),
-    ];
-
-    for (let i = 0; i < 3; i++) {
-      const dye = this.selectedDyes[i];
-      if (!dye) continue;
-
-      const card = this.createElement('div', {
-        className: 'flex items-center gap-3 p-3 rounded-lg',
-        attributes: { style: 'background: var(--theme-background-secondary);' },
-      });
-
-      const swatch = this.createElement('div', {
-        className: 'w-8 h-8 rounded border',
-        attributes: {
-          style: `background: ${dye.hex}; border-color: var(--theme-border);`,
-        },
-      });
-      card.appendChild(swatch);
-
-      const info = this.createElement('div', { className: 'flex-1 min-w-0' });
-      info.innerHTML = `
-        <p class="text-xs font-semibold uppercase tracking-wider" style="color: var(--theme-primary);">${labels[i]}</p>
-        <p class="font-medium truncate text-sm" style="color: var(--theme-text);">${LanguageService.getDyeName(dye.itemID) || dye.name}</p>
-      `;
-      card.appendChild(info);
-
-      this.mobileSelectedDyesContainer.appendChild(card);
-    }
-  }
-
-  /**
-   * Render mobile settings
-   */
-  private renderMobileSettings(container: HTMLElement): void {
-    const settingsContainer = this.createElement('div', { className: 'space-y-4' });
-
-    const sliderGroup = this.createElement('div');
-    const sliderLabel = this.createElement('label', {
-      className: 'flex items-center justify-between text-sm mb-2',
-    });
-
-    const labelText = this.createElement('span', {
-      textContent: LanguageService.t('mixer.maxResults'),
-      attributes: { style: 'color: var(--theme-text);' },
-    });
-
-    this.mobileMaxResultsDisplay = this.createElement('span', {
-      className: 'number',
-      textContent: String(this.maxResults),
-      attributes: { style: 'color: var(--theme-text-muted);' },
-    });
-
-    sliderLabel.appendChild(labelText);
-    sliderLabel.appendChild(this.mobileMaxResultsDisplay);
-    sliderGroup.appendChild(sliderLabel);
-
-    const slider = this.createElement('input', {
-      attributes: {
-        type: 'range',
-        min: '3',
-        max: '8',
-        value: String(this.maxResults),
-        style: 'width: 100%; accent-color: var(--theme-primary);',
-      },
-    }) as HTMLInputElement;
-
-    this.on(slider, 'input', () => {
-      this.maxResults = parseInt(slider.value, 10);
-      if (this.mobileMaxResultsDisplay) {
-        this.mobileMaxResultsDisplay.textContent = String(this.maxResults);
-      }
-      if (this.maxResultsValueDisplay) {
-        this.maxResultsValueDisplay.textContent = String(this.maxResults);
-      }
-    });
-
-    this.on(slider, 'change', () => {
-      ConfigController.getInstance().setConfig('mixer', { maxResults: this.maxResults });
-      this.findMatchingDyesInternal();
-      this.renderResultsGrid();
-      if (this.showPrices) {
-        void this.fetchPricesForDisplayedDyes();
-      }
-    });
-
-    sliderGroup.appendChild(slider);
-    settingsContainer.appendChild(sliderGroup);
-    container.appendChild(settingsContainer);
-  }
+  // WEB-REF-003 Phase 2: renderMobileDyeSelector, updateMobileSelectedDyesDisplay,
+  // and renderMobileSettings removed - now using shared builders in renderDrawerContent
 
   /**
    * Update drawer content (called when state changes)
+   * WEB-REF-003 Phase 2: Uses shared method for display update
    */
   private updateDrawerContent(): void {
-    this.updateMobileSelectedDyesDisplay();
+    // Update mobile selected dyes display using shared method
+    if (this.mobileSelectedDyesContainer) {
+      this.renderSelectedDyesDisplayInto(this.mobileSelectedDyesContainer);
+    }
 
     // Sync mobile DyeSelector with desktop
     const selectedDyes = this.selectedDyes.filter((d): d is Dye => d !== null);

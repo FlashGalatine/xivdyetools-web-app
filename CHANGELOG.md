@@ -63,7 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WEB-BUG-001**: Fixed event listener accumulation risk in DyeSelector. Changed `manageBtn.addEventListener()` to `this.on()` for proper cleanup via `unbindAllEvents()`
 - **WEB-BUG-003**: Fixed race condition in palette import count. Consolidated two separate storage reads into one to prevent TOCTOU race
 - **WEB-OPT-003**: Verified MarketBoardService lazy-loading already optimized (singleton cache, on-demand fetching, request versioning)
-- **WEB-REF-003**: Extracted pure algorithmic logic from large components. Created `mixer-blending-engine.ts` (~180 lines) and `harmony-generator.ts` (~280 lines) services, reducing MixerTool by ~120 lines and HarmonyTool by ~200 lines. Phase 1 of 4 complete (remaining phases: mobile dedup, desktop UI, shared services)
+- **WEB-REF-003 Phase 1**: Extracted pure algorithmic logic from large components. Created `mixer-blending-engine.ts` (~180 lines) and `harmony-generator.ts` (~280 lines) services, reducing MixerTool by ~120 lines and HarmonyTool by ~200 lines
+- **WEB-REF-003 Phase 2**: Eliminated desktop ↔ drawer code duplication using shared panel builder pattern. Created shared builder methods (`buildDyeSelectorPanel`, `buildSettingsSlider`, `buildHarmonyTypeSelector`, etc.) that return component references for reuse. MixerTool reduced ~180 lines, HarmonyTool reduced ~250 lines. (remaining phases: desktop UI extraction, shared services)
 
 #### Dependencies
 
