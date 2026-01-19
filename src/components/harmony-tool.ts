@@ -27,14 +27,24 @@ import {
   StorageService,
   WorldService,
   MarketBoardService,
+  // WEB-REF-003 FIX: Import from extracted harmony generator
+  HARMONY_OFFSETS,
+  getHarmonyTypes,
+  calculateHueDeviance,
+  calculateHarmonyColorDistance,
+  findClosestDyesToHue,
+  replaceExcludedDyes,
+  findHarmonyDyes,
+  generateHarmonyPanelData,
 } from '@services/index';
+import type { ScoredDyeMatch, HarmonyConfig } from '@services/index';
 import { ConfigController } from '@services/config-controller';
 import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
 import { DisplayOptionsConfig, DEFAULT_DISPLAY_OPTIONS, type MatchingMethod } from '@shared/tool-config-types';
-import { ColorConverter } from '@xivdyetools/core';
+// WEB-REF-003 FIX: ColorConverter usage moved to harmony-generator.ts
 import { HARMONY_ICONS } from '@shared/harmony-icons';
 import {
   ICON_FILTER,
@@ -69,35 +79,7 @@ export interface HarmonyToolOptions {
  */
 type SuggestionsMode = 'simple' | 'expanded';
 
-/**
- * Harmony type IDs with their SVG icon names
- */
-const HARMONY_TYPE_IDS = [
-  { id: 'complementary', icon: 'complementary' },
-  { id: 'analogous', icon: 'analogous' },
-  { id: 'triadic', icon: 'triadic' },
-  { id: 'split-complementary', icon: 'split-complementary' },
-  { id: 'tetradic', icon: 'tetradic' },
-  { id: 'square', icon: 'square' },
-  { id: 'monochromatic', icon: 'monochromatic' },
-  { id: 'compound', icon: 'compound' },
-  { id: 'shades', icon: 'shades' },
-] as const;
-
-/**
- * Harmony offsets (in degrees) for each harmony type
- */
-const HARMONY_OFFSETS: Record<string, number[]> = {
-  complementary: [180],
-  analogous: [30, 330],
-  triadic: [120, 240],
-  'split-complementary': [150, 210],
-  tetradic: [60, 180, 240],
-  square: [90, 180, 270],
-  monochromatic: [0],
-  compound: [30, 180, 330],
-  shades: [15, 345],
-};
+// WEB-REF-003 FIX: HARMONY_TYPE_IDS and HARMONY_OFFSETS moved to @services/harmony-generator
 
 /**
  * Storage keys for v3 harmony tool
@@ -109,25 +91,7 @@ const STORAGE_KEYS = {
   selectedDyeId: 'v3_harmony_selected_dye',
 } as const;
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get harmony types with localized names and descriptions
- */
-function getHarmonyTypes(): HarmonyTypeInfo[] {
-  return HARMONY_TYPE_IDS.map(({ id, icon }) => {
-    // Convert id with hyphen to camelCase for core library lookups
-    const camelCaseKey = id.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
-    return {
-      id,
-      name: LanguageService.getHarmonyType(camelCaseKey),
-      description: LanguageService.t(`harmony.types.${camelCaseKey}Desc`),
-      icon,
-    };
-  });
-}
+// WEB-REF-003 FIX: getHarmonyTypes() moved to @services/harmony-generator
 
 // ============================================================================
 // HarmonyTool Component
@@ -1429,14 +1393,14 @@ export class HarmonyTool extends BaseComponent {
       const targetColor = ColorService.hsvToHex(targetHue, baseHsv.s, baseHsv.v);
 
       // Get extra candidates to allow for filter replacements, then apply filters
-      let matches = this.findClosestDyesToHue(allDyes, targetHue, this.companionDyesCount + 10);
-      matches = this.replaceExcludedDyes(matches, targetHue);
+      let matches = this.findClosestDyesToHueInternal(allDyes, targetHue, this.companionDyesCount + 10);
+      matches = this.replaceExcludedDyesInternal(matches, targetHue);
 
       // Use swapped dye if user has selected one, otherwise use best match
       const swappedDye = this.swappedDyes.get(index);
       const displayDye = swappedDye || matches[0].dye;
       const deviance = swappedDye
-        ? this.calculateHueDeviance(swappedDye, targetHue)
+        ? calculateHueDeviance(swappedDye, targetHue)
         : matches[0].deviance;
 
       // Closest dyes excludes the currently displayed dye
@@ -1590,175 +1554,63 @@ export class HarmonyTool extends BaseComponent {
     this.generateHarmonies(); // Re-render with new selection
   }
 
+  // ============================================================================
+  // Harmony Generation Logic
+  // WEB-REF-003 FIX: Core algorithms delegated to @services/harmony-generator
+  // (~200 lines extracted to reduce component size)
+  // ============================================================================
+
   /**
-   * Calculate hue deviance between a dye and target hue
+   * Build harmony config from current tool state
    */
-  private calculateHueDeviance(dye: Dye, targetHue: number): number {
-    const dyeHsv = ColorService.hexToHsv(dye.hex);
-    const hueDiff = Math.abs(dyeHsv.h - targetHue);
-    return Math.min(hueDiff, 360 - hueDiff);
+  private getHarmonyConfig(): HarmonyConfig {
+    return {
+      usePerceptualMatching: this.usePerceptualMatching,
+      matchingMethod: this.matchingMethod,
+      companionDyesCount: this.companionDyesCount,
+    };
   }
 
   /**
-   * Replace excluded dyes with alternatives that don't match exclusion criteria.
-   * This ensures harmony panels always show the expected number of qualifying dyes.
-   * Ported from v2 harmony-generator-tool.ts
+   * Find dyes closest to a target hue (delegated to harmony-generator)
    */
-  private replaceExcludedDyes(
-    dyes: Array<{ dye: Dye; deviance: number }>,
-    targetHue: number
-  ): Array<{ dye: Dye; deviance: number }> {
-    if (!this.filterConfig || !this.dyeFilters) {
-      return dyes; // No filters active
-    }
-
-    const result: Array<{ dye: Dye; deviance: number }> = [];
-    const usedDyeIds = new Set<number>();
-    const allDyes = dyeService.getAllDyes();
-
-    for (const item of dyes) {
-      // If dye is not excluded, keep it
-      if (!this.dyeFilters.isDyeExcluded(item.dye)) {
-        result.push(item);
-        usedDyeIds.add(item.dye.itemID);
-        continue;
-      }
-
-      // Dye is excluded, find alternative using color distance
-      const targetColor = item.dye.hex;
-      let bestAlternative: Dye | null = null;
-      let bestDistance = Infinity;
-
-      for (const dye of allDyes) {
-        if (
-          usedDyeIds.has(dye.itemID) ||
-          dye.category === 'Facewear' ||
-          this.dyeFilters.isDyeExcluded(dye)
-        ) {
-          continue;
-        }
-
-        const distance = ColorService.getColorDistance(targetColor, dye.hex);
-        if (distance < bestDistance) {
-          bestDistance = distance;
-          bestAlternative = dye;
-        }
-      }
-
-      if (bestAlternative) {
-        const deviance = this.calculateHueDeviance(bestAlternative, targetHue);
-        result.push({ dye: bestAlternative, deviance });
-        usedDyeIds.add(bestAlternative.itemID);
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Find matching dyes for a specific harmony type
-   */
-  private findHarmonyDyes(typeId: string): Array<{ dye: Dye; deviance: number }> {
-    if (!this.selectedDye) return [];
-
-    const offsets = HARMONY_OFFSETS[typeId] || [];
-    const baseHsv = ColorService.hexToHsv(this.selectedDye.hex);
-    const results: Array<{ dye: Dye; deviance: number }> = [];
-
-    // Get all dyes from service
-    const allDyes = dyeService.getAllDyes();
-
-    for (const offset of offsets) {
-      const targetHue = (baseHsv.h + offset) % 360;
-
-      // Find closest dyes to the target hue
-      const matches = this.findClosestDyesToHue(allDyes, targetHue, this.companionDyesCount);
-
-      for (const match of matches) {
-        // Apply filters if configured
-        if (this.filterConfig && this.dyeFilters?.isDyeExcluded(match.dye)) {
-          continue;
-        }
-        results.push(match);
-      }
-    }
-
-    return results.slice(0, this.companionDyesCount * offsets.length);
-  }
-
-  /**
-   * Find dyes closest to a target hue
-   * Excludes Facewear dyes (generic names like "Red", "Blue")
-   * Supports both hue-based (fast) and DeltaE-based (perceptual) matching
-   */
-  /**
-   * Calculate perceptual color distance using the configured matching method
-   */
-  private calculateColorDistance(hex1: string, hex2: string): number {
-    switch (this.matchingMethod) {
-      case 'rgb':
-        return ColorService.getColorDistance(hex1, hex2);
-      case 'cie76':
-        return ColorConverter.getDeltaE(hex1, hex2, 'cie76');
-      case 'ciede2000':
-        return ColorConverter.getDeltaE(hex1, hex2, 'cie2000');
-      case 'oklab':
-        return ColorConverter.getDeltaE_Oklab(hex1, hex2);
-      case 'hyab':
-        return ColorConverter.getDeltaE_HyAB(hex1, hex2);
-      case 'oklch-weighted':
-        return ColorConverter.getDeltaE_OklchWeighted(hex1, hex2);
-      default:
-        return ColorConverter.getDeltaE_Oklab(hex1, hex2);
-    }
-  }
-
-  private findClosestDyesToHue(
+  private findClosestDyesToHueInternal(
     dyes: Dye[],
     targetHue: number,
     count: number
-  ): Array<{ dye: Dye; deviance: number }> {
-    const scored: Array<{ dye: Dye; deviance: number }> = [];
+  ): ScoredDyeMatch[] {
+    return findClosestDyesToHue(dyes, targetHue, count, this.getHarmonyConfig(), this.selectedDye);
+  }
 
-    // For perceptual matching, generate target color from hue
-    // Use selected dye's saturation and value as base for consistent matching
-    let targetHex: string | undefined;
-    if (this.usePerceptualMatching && this.selectedDye) {
-      const baseSaturation = this.selectedDye.hsv?.s ?? 50;
-      const baseValue = this.selectedDye.hsv?.v ?? 50;
-      targetHex = ColorService.hsvToHex(targetHue, baseSaturation, baseValue);
-    }
+  /**
+   * Replace excluded dyes with alternatives (delegated to harmony-generator)
+   */
+  private replaceExcludedDyesInternal(
+    dyes: ScoredDyeMatch[],
+    targetHue: number
+  ): ScoredDyeMatch[] {
+    return replaceExcludedDyes(dyes, targetHue, this.dyeFilters, this.filterConfig);
+  }
 
-    for (const dye of dyes) {
-      // Skip Facewear dyes - they have generic names and shouldn't appear in harmony results
-      if (dye.category === 'Facewear') {
-        continue;
-      }
-
-      let deviance: number;
-
-      if (this.usePerceptualMatching && targetHex) {
-        // Perceptual matching: use configured matching algorithm
-        deviance = this.calculateColorDistance(targetHex, dye.hex);
-      } else {
-        // Hue-based matching: use angular distance on color wheel
-        const dyeHsv = ColorService.hexToHsv(dye.hex);
-        const hueDiff = Math.abs(dyeHsv.h - targetHue);
-        deviance = Math.min(hueDiff, 360 - hueDiff);
-      }
-
-      scored.push({ dye, deviance });
-    }
-
-    scored.sort((a, b) => a.deviance - b.deviance);
-    return scored.slice(0, count);
+  /**
+   * Find matching dyes for a specific harmony type (delegated to harmony-generator)
+   */
+  private findHarmonyDyesInternal(typeId: string): ScoredDyeMatch[] {
+    if (!this.selectedDye) return [];
+    return findHarmonyDyes(
+      this.selectedDye,
+      typeId,
+      this.getHarmonyConfig(),
+      this.dyeFilters,
+      this.filterConfig
+    );
   }
 
   /**
    * Get matched dyes for the current harmony type (for color wheel)
    */
   private getMatchedDyesForCurrentHarmony(): Dye[] {
-    const matches = this.findHarmonyDyes(this.selectedHarmonyType);
+    const matches = this.findHarmonyDyesInternal(this.selectedHarmonyType);
     return matches.map((m) => m.dye);
   }
 
@@ -1809,8 +1661,8 @@ export class HarmonyTool extends BaseComponent {
       const targetHue = (baseHsv.h + offset) % 360;
 
       // Get matches (same logic as generateHarmonies)
-      let matches = this.findClosestDyesToHue(allDyes, targetHue, this.companionDyesCount + 10);
-      matches = this.replaceExcludedDyes(matches, targetHue);
+      let matches = this.findClosestDyesToHueInternal(allDyes, targetHue, this.companionDyesCount + 10);
+      matches = this.replaceExcludedDyesInternal(matches, targetHue);
 
       // Use swapped dye if available, otherwise best match
       const swappedDye = this.swappedDyes.get(i);

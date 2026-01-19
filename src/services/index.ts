@@ -104,6 +104,29 @@ export type {
 import { WorldService } from './world-service';
 export { WorldService };
 
+// WEB-REF-003 FIX: Extracted tool logic modules
+export {
+  blendTwoColors,
+  blendColors,
+  calculateColorDistance as calculateMixerColorDistance,
+  findMatchingDyes,
+  getContrastColor,
+} from './mixer-blending-engine';
+export type { MixedColorResult, BlendingConfig } from './mixer-blending-engine';
+
+export {
+  HARMONY_TYPE_IDS,
+  HARMONY_OFFSETS,
+  getHarmonyTypes,
+  calculateColorDistance as calculateHarmonyColorDistance,
+  calculateHueDeviance,
+  findClosestDyesToHue,
+  replaceExcludedDyes,
+  findHarmonyDyes,
+  generateHarmonyPanelData,
+} from './harmony-generator';
+export type { HarmonyTypeInfo, ScoredDyeMatch, HarmonyConfig } from './harmony-generator';
+
 // Re-export commonly used types
 export type { Dye, VisionType, ThemeName, PriceData } from '@shared/types';
 

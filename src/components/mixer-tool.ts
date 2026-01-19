@@ -29,7 +29,13 @@ import {
   StorageService,
   ToastService,
   MarketBoardService,
+  // WEB-REF-003 FIX: Import from extracted blending engine
+  blendColors,
+  calculateMixerColorDistance,
+  findMatchingDyes as findMatchingDyesEngine,
+  getContrastColor,
 } from '@services/index';
+import type { MixedColorResult } from '@services/index';
 import { ConfigController } from '@services/config-controller';
 import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { ICON_TOOL_DYE_MIXER } from '@shared/tool-icons';
@@ -44,7 +50,7 @@ import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
 import type { MixerConfig, DisplayOptionsConfig, MixingMode, MatchingMethod } from '@shared/tool-config-types';
-import { ColorConverter } from '@xivdyetools/core';
+// WEB-REF-003 FIX: ColorConverter usage moved to mixer-blending-engine.ts
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import '@components/v4/result-card';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
@@ -59,14 +65,7 @@ export interface MixerToolOptions {
   drawerContent?: HTMLElement | null;
 }
 
-/**
- * Mixed color result with matched dye
- */
-interface MixedColorResult {
-  blendedHex: string;
-  matchedDye: Dye;
-  distance: number;
-}
+// WEB-REF-003 FIX: MixedColorResult type imported from @services/mixer-blending-engine
 
 /**
  * Storage keys for Dye Mixer tool
@@ -192,7 +191,7 @@ export class MixerTool extends BaseComponent {
       // Recalculate blend if at least two dyes present (slot 3 is optional)
       if (this.selectedDyes[0] && this.selectedDyes[1]) {
         const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
-        this.blendedColor = this.blendColors(...hexColors);
+        this.blendedColor = this.blendColorsInternal(hexColors);
       }
     }
   }
@@ -211,126 +210,39 @@ export class MixerTool extends BaseComponent {
 
   // ============================================================================
   // Color Blending Logic
+  // WEB-REF-003 FIX: Delegated to mixer-blending-engine.ts (~120 lines extracted)
   // ============================================================================
 
   /**
-   * Blend two hex colors using the selected mixing algorithm
-   *
-   * Color mixing modes and their characteristics:
-   * - RGB: Light mixing (additive) - Blue + Yellow = Gray
-   * - LAB: Perceptual uniform - Blue + Yellow = Pink (LAB hue distortion)
-   * - OKLAB: Modern perceptual - Blue + Yellow = Cyan (fixes LAB issues)
-   * - RYB: Paint simulation (Gossett-Chen) - Blue + Yellow = Olive Green
-   * - HSL: Hue-based blending
-   * - Spectral: Kubelka-Munk physics - Blue + Yellow = Green (most realistic)
+   * Blend multiple hex colors using the configured mixing mode.
+   * Delegates to extracted blending engine for algorithm implementation.
    */
-  private blendTwoColors(hex1: string, hex2: string, ratio: number = 0.5): string {
-    switch (this.mixingMode) {
-      case 'rgb':
-        // RGB light mixing (averaging)
-        return ColorService.mixColorsRgb(hex1, hex2, ratio);
-      case 'lab':
-        // LAB perceptual mixing (has blue hue distortion)
-        return ColorService.mixColorsLab(hex1, hex2, ratio);
-      case 'oklab':
-        // OKLAB perceptual mixing (fixes LAB's blue issues)
-        return ColorService.mixColorsOklab(hex1, hex2, ratio);
-      case 'ryb':
-        // RYB subtractive mixing (paint-like)
-        return ColorService.mixColorsRyb(hex1, hex2, ratio);
-      case 'hsl':
-        // HSL hue-based blending
-        return ColorService.mixColorsHsl(hex1, hex2, ratio);
-      case 'spectral':
-        // Kubelka-Munk spectral mixing (most realistic paint mixing)
-        return ColorService.mixColorsSpectral(hex1, hex2, ratio);
-      default:
-        // Default to RYB for paint-like results
-        return ColorService.mixColorsRyb(hex1, hex2, ratio);
-    }
+  private blendColorsInternal(hexColors: string[]): string {
+    return blendColors(hexColors, this.mixingMode);
   }
 
   /**
-   * Blend multiple hex colors (2 or 3) using iterative mixing.
-   * Each color contributes equally to the final result.
+   * Find the closest matching dyes to the blended color.
+   * Delegates to extracted blending engine for matching algorithm.
    */
-  private blendColors(...hexColors: string[]): string {
-    if (hexColors.length === 0) return '#000000';
-    if (hexColors.length === 1) return hexColors[0];
-
-    // Blend iteratively with weighted ratios for equal contribution
-    // Color 1 + Color 2 at 50/50, then result + Color 3 at 66/33
-    let result = hexColors[0];
-    for (let i = 1; i < hexColors.length; i++) {
-      // Each new color contributes 1/(i+1) so all colors end up equal weight
-      const ratio = 1 / (i + 1);
-      result = this.blendTwoColors(result, hexColors[i], ratio);
-    }
-    return result;
-  }
-
-  /**
-   * Calculate color distance using the configured matching method
-   */
-  private calculateDistance(hex1: string, hex2: string): number {
-    switch (this.matchingMethod) {
-      case 'rgb':
-        return ColorService.getColorDistance(hex1, hex2);
-      case 'cie76':
-        return ColorConverter.getDeltaE(hex1, hex2, 'cie76');
-      case 'ciede2000':
-        return ColorConverter.getDeltaE(hex1, hex2, 'cie2000');
-      case 'oklab':
-        return ColorConverter.getDeltaE_Oklab(hex1, hex2);
-      case 'hyab':
-        return ColorConverter.getDeltaE_HyAB(hex1, hex2);
-      case 'oklch-weighted':
-        return ColorConverter.getDeltaE_OklchWeighted(hex1, hex2);
-      default:
-        return ColorConverter.getDeltaE_Oklab(hex1, hex2);
-    }
-  }
-
-  /**
-   * Find the closest matching dyes to the blended color
-   */
-  private findMatchingDyes(): void {
+  private findMatchingDyesInternal(): void {
     if (!this.blendedColor) {
       this.matchedResults = [];
       return;
     }
 
-    // Get exclude IDs (the two input dyes)
+    // Get exclude IDs (the input dyes)
     const excludeIds = this.selectedDyes
       .filter((dye): dye is Dye => dye !== null)
       .map((dye) => dye.id);
 
-    // Get all dyes and calculate distances using configured matching algorithm
-    const allDyes = dyeService.getAllDyes();
-    const results: MixedColorResult[] = [];
-
-    for (const dye of allDyes) {
-      // Skip input dyes and Facewear
-      if (excludeIds.includes(dye.id) || dye.category === 'Facewear') {
-        continue;
-      }
-
-      // Apply filters if available
-      if (this.dyeFilters?.isDyeExcluded(dye)) {
-        continue;
-      }
-
-      const distance = this.calculateDistance(this.blendedColor, dye.hex);
-      results.push({
-        blendedHex: this.blendedColor,
-        matchedDye: dye,
-        distance,
-      });
-    }
-
-    // Sort by distance and take top maxResults
-    results.sort((a, b) => a.distance - b.distance);
-    this.matchedResults = results.slice(0, this.maxResults);
+    // Delegate to extracted engine
+    this.matchedResults = findMatchingDyesEngine(
+      this.blendedColor,
+      { matchingMethod: this.matchingMethod, maxResults: this.maxResults },
+      excludeIds,
+      this.dyeFilters
+    );
   }
 
   // ============================================================================
@@ -373,8 +285,8 @@ export class MixerTool extends BaseComponent {
     // If dyes were loaded from storage, calculate blend and matches
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
       const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
-      this.blendedColor = this.blendColors(...hexColors);
-      this.findMatchingDyes();
+      this.blendedColor = this.blendColorsInternal(hexColors);
+      this.findMatchingDyesInternal();
       this.showEmptyState(false);
       this.updateCraftingUI();
       this.renderResultsGrid();
@@ -484,8 +396,8 @@ export class MixerTool extends BaseComponent {
     // Calculate blend if at least 2 dyes selected (slot 3 is optional)
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
       const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
-      this.blendedColor = this.blendColors(...hexColors);
-      this.findMatchingDyes();
+      this.blendedColor = this.blendColorsInternal(hexColors);
+      this.findMatchingDyesInternal();
       this.showEmptyState(false);
       this.updateCraftingUI();
       this.renderResultsGrid();
@@ -592,7 +504,7 @@ export class MixerTool extends BaseComponent {
       // Recalculate blended color if at least 2 dyes are selected
       if (this.selectedDyes[0] && this.selectedDyes[1]) {
         const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
-        this.blendedColor = this.blendColors(...hexColors);
+        this.blendedColor = this.blendColorsInternal(hexColors);
         this.updateCraftingUI();
       }
     }
@@ -625,7 +537,7 @@ export class MixerTool extends BaseComponent {
 
     // Apply updates
     if (needsUpdate && this.blendedColor) {
-      this.findMatchingDyes();
+      this.findMatchingDyesInternal();
       this.renderResultsGrid();
       if (this.showPrices) {
         void this.fetchPricesForDisplayedDyes();
@@ -693,7 +605,7 @@ export class MixerTool extends BaseComponent {
       storageKeyPrefix: 'v4_mixer',
       hideHeader: true,
       onFilterChange: () => {
-        this.findMatchingDyes();
+        this.findMatchingDyesInternal();
         this.renderResultsGrid();
         if (this.showPrices) {
           void this.fetchPricesForDisplayedDyes();
@@ -817,8 +729,8 @@ export class MixerTool extends BaseComponent {
     // Calculate blend if at least 2 dyes selected (slot 3 is optional)
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
       const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
-      this.blendedColor = this.blendColors(...hexColors);
-      this.findMatchingDyes();
+      this.blendedColor = this.blendColorsInternal(hexColors);
+      this.findMatchingDyesInternal();
       this.showEmptyState(false);
       this.updateCraftingUI();
       this.renderResultsGrid();
@@ -954,8 +866,8 @@ export class MixerTool extends BaseComponent {
     // Recalculate blend if at least 2 dyes remain
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
       const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
-      this.blendedColor = this.blendColors(...hexColors);
-      this.findMatchingDyes();
+      this.blendedColor = this.blendColorsInternal(hexColors);
+      this.findMatchingDyesInternal();
       this.showEmptyState(false);
     } else {
       this.blendedColor = null;
@@ -1020,7 +932,7 @@ export class MixerTool extends BaseComponent {
       // Update ConfigController for v4 sidebar sync
       ConfigController.getInstance().setConfig('mixer', { maxResults: this.maxResults });
 
-      this.findMatchingDyes();
+      this.findMatchingDyesInternal();
       this.renderResultsGrid();
       if (this.showPrices) {
         void this.fetchPricesForDisplayedDyes();
@@ -1293,7 +1205,7 @@ export class MixerTool extends BaseComponent {
           style: `
             font-size: 10px;
             font-weight: 500;
-            color: ${this.getContrastColor(dye.hex)};
+            color: ${getContrastColor(dye.hex)};
             text-align: center;
             padding: 4px 6px;
             background: rgba(0, 0, 0, 0.5);
@@ -1316,7 +1228,7 @@ export class MixerTool extends BaseComponent {
           style: `
             font-size: 12px;
             font-weight: 600;
-            color: ${this.getContrastColor(dye.hex)};
+            color: ${getContrastColor(dye.hex)};
             position: absolute;
             top: 6px;
             left: 8px;
@@ -1416,7 +1328,7 @@ export class MixerTool extends BaseComponent {
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: ${this.getContrastColor(this.blendedColor)};
+            color: ${getContrastColor(this.blendedColor)};
             position: absolute;
             top: 8px;
             background: rgba(0, 0, 0, 0.4);
@@ -1435,7 +1347,7 @@ export class MixerTool extends BaseComponent {
           style: `
             font-size: 12px;
             font-weight: 600;
-            color: ${this.getContrastColor(this.blendedColor)};
+            color: ${getContrastColor(this.blendedColor)};
             background: rgba(0, 0, 0, 0.5);
             padding: 4px 10px;
             border-radius: 4px;
@@ -1705,7 +1617,7 @@ export class MixerTool extends BaseComponent {
       storageKeyPrefix: 'v4_mixer_mobile',
       hideHeader: true,
       onFilterChange: () => {
-        this.findMatchingDyes();
+        this.findMatchingDyesInternal();
         this.renderResultsGrid();
         if (this.showPrices) {
           void this.fetchPricesForDisplayedDyes();
@@ -1919,7 +1831,7 @@ export class MixerTool extends BaseComponent {
 
     this.on(slider, 'change', () => {
       ConfigController.getInstance().setConfig('mixer', { maxResults: this.maxResults });
-      this.findMatchingDyes();
+      this.findMatchingDyesInternal();
       this.renderResultsGrid();
       if (this.showPrices) {
         void this.fetchPricesForDisplayedDyes();
@@ -1982,13 +1894,5 @@ export class MixerTool extends BaseComponent {
     }
   }
 
-  /**
-   * Get contrasting text color for a background
-   */
-  private getContrastColor(hex: string): string {
-    const rgb = ColorService.hexToRgb(hex);
-    // Calculate luminance
-    const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-    return luminance > 0.5 ? '#000000' : '#ffffff';
-  }
+  // WEB-REF-003 FIX: getContrastColor() moved to @services/mixer-blending-engine
 }
