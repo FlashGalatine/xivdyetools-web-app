@@ -219,8 +219,8 @@ export class ConfigSidebar extends BaseLitComponent {
 
   // Price category filter settings (from MarketBoardService)
   @state() private priceCategories: PriceCategorySettings = {
-    baseDyes: true,
-    craftDyes: true,
+    baseDyes: false,
+    craftDyes: false,
     alliedSocietyDyes: true,
     cosmicDyes: true,
     specialDyes: true,

@@ -334,7 +334,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   market: {
-    selectedServer: 'Balmung',
+    selectedServer: 'Crystal',
     showPrices: false,
   },
   advanced: {

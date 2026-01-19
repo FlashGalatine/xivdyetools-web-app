@@ -43,7 +43,7 @@ export const PRICE_CATEGORIES = {
   craftDyes: {
     name: 'Craft Dyes',
     acquisitions: ['Crafting', 'Treasure Chest'],
-    default: true,
+    default: false,
   },
   alliedSocietyDyes: {
     name: 'Allied Society Dyes',
@@ -54,7 +54,7 @@ export const PRICE_CATEGORIES = {
       'Kobold Vendor',
       'Sylphic Vendor',
     ],
-    default: false,
+    default: true,
   },
   cosmicDyes: {
     name: 'Cosmic Dyes',
