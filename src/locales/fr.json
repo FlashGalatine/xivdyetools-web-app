@@ -25,9 +25,6 @@
     "connect": "Connecter",
     "builtWith": "Construit avec TypeScript, Vite et Tailwind CSS"
   },
-  "common": {
-    "close": "Fermer"
-  },
   "footer": {
     "version": "Version",
     "createdBy": "Créé par Flash Galatine (Balmung) pour la communauté FFXIV",
@@ -162,6 +159,11 @@
     "market": "Marché",
     "closeModal": "Fermer la fenêtre",
     "full": "Complet",
+    "copied": "Copié !",
+    "copiedToClipboard": "Copié dans le presse-papiers !",
+    "copyFailed": "Échec de la copie",
+    "downloaded": "Téléchargé !",
+    "dismiss": "Fermer",
     "optional": "(optionnel)"
   },
   "config": {
@@ -213,12 +215,12 @@
     "hsvHueBased": "HSV (basé sur la teinte)",
     "rgbDirect": "RGB (direct)",
     "mixingMode": "Mode de mélange",
-    "mixingRgb": "RGB (Lumière)",
-    "mixingLab": "LAB (Perceptuel)",
-    "mixingOklab": "OKLAB (Perceptuel moderne)",
-    "mixingRyb": "RYB (Peinture)",
-    "mixingHsl": "HSL (Basé sur la teinte)",
-    "mixingSpectral": "Spectral (Peinture réaliste)",
+    "mixingRgb": "Lumière",
+    "mixingLab": "Perceptuel",
+    "mixingOklab": " Perceptuel moderne",
+    "mixingRyb": " Peinture",
+    "mixingHsl": " Basé sur la teinte",
+    "mixingSpectral": "Spectral - Peinture réaliste",
     "mixingRgbDesc": "Mélange additif de lumière. Bleu + Jaune = Gris.",
     "mixingLabDesc": "Mélange perceptuellement uniforme. Bleu + Jaune = Rose.",
     "mixingOklabDesc": "Espace colorimétrique perceptuel moderne. Bleu + Jaune = Cyan.",
@@ -368,6 +370,9 @@
     "acquisition": "Acquisition",
     "baseDye": "Teinture de base",
     "harmonyType": "Type d'harmonie",
+    "colorWheel": "Roue chromatique",
+    "colors": "couleurs",
+    "actionsMenu": "Menu d'actions",
     "types": {
       "complementaryDesc": "Couleurs directement opposées sur le cercle chromatique pour un contraste maximal",
       "analogousDesc": "Couleurs adjacentes sur le cercle pour un aspect harmonieux et unifié",
@@ -453,7 +458,11 @@
     "selectedColor": "Couleur sélectionnée",
     "dropImageHere": "Déposez une image ici ou cliquez pour télécharger",
     "extractedPalette": "Palette extraite",
-    "exportCss": "Exporter CSS"
+    "exportCss": "Exporter CSS",
+    "imageCleared": "Image effacée",
+    "clearImage": "Effacer l'image",
+    "noPaletteToExport": "Aucune palette à exporter",
+    "paletteExported": "Palette exportée !"
   },
   "accessibility": {
     "inspectDyes": "Inspecter les Teintures",
@@ -526,6 +535,7 @@
     "brightnessDistribution": "Distribution de Luminosité",
     "colorDistanceMatrix": "Matrice de Distance des Couleurs",
     "selectAtLeastTwoDyes": "Sélectionnez au moins 2 teintures à comparer",
+    "comparisonOptions": "Options de comparaison",
     "matrix": {
       "title": "Matrice de Distance des Couleurs",
       "description": "Des valeurs plus basses indiquent des couleurs plus similaires. Vert = très proche, Jaune = modéré, Rouge = très différent",
@@ -630,6 +640,7 @@
     "gradientResults": "Résultats du Dégradé",
     "noMatchesFound": "Aucune teinture correspondante trouvée",
     "sameDyeWarning": "Les teintures de début et de fin sont identiques. Sélectionnez des teintures différentes pour un dégradé.",
+    "slotsFull": "Tous les emplacements sont pleins. Sélectionnez-en un à remplacer :",
     "mode": {
       "rgb": "Linéaire (points médians gris)",
       "hsv": "Basé sur la teinte (vif)",
@@ -657,7 +668,9 @@
     "selected": "Sélectionné : {current}/{max}",
     "gridAriaLabel": "Grille de sélection des teintures. Utilisez les touches fléchées pour naviguer, Entrée ou Espace pour sélectionner.",
     "noResults": "Aucune teinture ne correspond à votre recherche",
-    "noResultsHint": "Essayez un autre terme de recherche ou une autre catégorie"
+    "noResultsHint": "Essayez un autre terme de recherche ou une autre catégorie",
+    "noDyesInCategory": "Aucune teinture dans cette catégorie",
+    "tryCategoryHint": "Essayez de sélectionner une autre catégorie"
   },
   "filters": {
     "title": "Filtres de Teintures",
@@ -769,6 +782,20 @@
     "failedToReadFile": "Échec de la lecture du fichier",
     "failedToLoadSubmissions": "Échec du chargement des soumissions. Veuillez réessayer.",
     "failedToDeletePreset": "Échec de la suppression du préréglage. Veuillez réessayer.",
+    "copyLinkFailed": "Échec de la copie du lien",
+    "removeVoteFailed": "Échec de la suppression du vote",
+    "voteFailed": "Échec du vote",
+    "voteProcessFailed": "Échec du traitement du vote",
+    "submitPresetFailed": "Échec de la soumission du préréglage. Veuillez réessayer.",
+    "saveChangesFailed": "Échec de l'enregistrement des modifications. Veuillez réessayer.",
+    "deletePresetFailed": "Échec de la suppression du préréglage. Veuillez réessayer.",
+    "presetDataMissing": "Impossible de supprimer : données du préréglage manquantes",
+    "presetNoApiId": "Impossible de supprimer : le préréglage n'a pas d'ID API",
+    "canvasContextFailed": "Impossible d'obtenir le contexte du canvas",
+    "regionTooSmall": "La région sélectionnée est trop petite",
+    "noPixelsInRegion": "Aucun pixel à analyser dans la région sélectionnée",
+    "noPixelsToAnalyze": "Aucun pixel à analyser",
+    "paletteExtractionFailed": "Échec de l'extraction de la palette",
     "unsupportedFormat": "Format de fichier non supporté.",
     "clipboardFailed": "Échec de la copie dans le presse-papiers.",
     "storageFailed": "Échec de l'enregistrement des paramètres. Le stockage est peut-être plein.",
@@ -1027,7 +1054,24 @@
     "voteCount": "{count} vote",
     "votesCount": "{count} votes",
     "dyes": "Teintures",
-    "tags": "Tags"
+    "tags": "Tags",
+    "linkCopied": "Lien du préréglage copié dans le presse-papiers !",
+    "voteRemoved": "Vote retiré",
+    "voteAdded": "Vote ajouté !",
+    "alreadyVoted": "Vous avez déjà voté pour ce préréglage",
+    "loginToSubmit": "Veuillez vous connecter pour soumettre des préréglages",
+    "loginToEdit": "Veuillez vous connecter pour modifier les préréglages",
+    "onlyEditOwn": "Vous ne pouvez modifier que vos propres préréglages",
+    "maxDyesAllowed": "Maximum {count} teintures autorisées",
+    "duplicateFound": "Cette combinaison de teintures existe déjà sous le nom \"{name}\"",
+    "duplicateWithVote": "Cette combinaison de teintures existe déjà sous le nom \"{name}\". Votre vote a été ajouté !",
+    "submittedPendingReview": "Préréglage soumis ! Il apparaîtra après examen par un modérateur.",
+    "submittedSuccess": "Préréglage soumis avec succès !",
+    "editPendingReview": "Modifications enregistrées ! Votre modification est en attente d'examen.",
+    "editSuccess": "Préréglage mis à jour avec succès !",
+    "deleting": "Suppression du préréglage...",
+    "deleteSuccess": "Préréglage supprimé avec succès",
+    "notFound": "Préréglage non trouvé"
   },
   "auth": {
     "logout": "Déconnexion",
@@ -1120,7 +1164,8 @@
     "moreActions": "Plus d'actions",
     "slider": "Curseur",
     "toggle": "Basculer",
-    "refreshSubmissions": "Actualiser les soumissions"
+    "refreshSubmissions": "Actualiser les soumissions",
+    "toolSelection": "Sélection d'outil"
   },
   "resultCard": {
     "inspectDyeIn": "Inspecter la teinture dans...",

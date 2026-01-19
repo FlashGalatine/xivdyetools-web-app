@@ -25,9 +25,6 @@
     "connect": "연결",
     "builtWith": "TypeScript, Vite, Tailwind CSS로 구축됨"
   },
-  "common": {
-    "close": "닫기"
-  },
   "footer": {
     "version": "버전",
     "createdBy": "Flash Galatine (Balmung)이 FFXIV 커뮤니티를 위해 제작",
@@ -162,6 +159,11 @@
     "market": "시장",
     "closeModal": "모달 닫기",
     "full": "가득 참",
+    "copied": "복사됨!",
+    "copiedToClipboard": "클립보드에 복사되었습니다!",
+    "copyFailed": "복사 실패",
+    "downloaded": "다운로드됨!",
+    "dismiss": "닫기",
     "optional": "(선택사항)"
   },
   "config": {
@@ -213,12 +215,12 @@
     "hsvHueBased": "HSV (색조 기반)",
     "rgbDirect": "RGB (직접)",
     "mixingMode": "혼합 모드",
-    "mixingRgb": "RGB (빛)",
-    "mixingLab": "LAB (지각적)",
-    "mixingOklab": "OKLAB (현대 지각적)",
-    "mixingRyb": "RYB (물감)",
-    "mixingHsl": "HSL (색조 기반)",
-    "mixingSpectral": "스펙트럼 (실제 물감)",
+    "mixingRgb": "빛",
+    "mixingLab": "지각적",
+    "mixingOklab": "현대 지각적",
+    "mixingRyb": "물감",
+    "mixingHsl": "색조 기반",
+    "mixingSpectral": "스펙트럼 - 실제 물감",
     "mixingRgbDesc": "가산 혼합. 파랑 + 노랑 = 회색.",
     "mixingLabDesc": "지각적으로 균일한 혼합. 파랑 + 노랑 = 분홍.",
     "mixingOklabDesc": "현대 지각 색 공간. 파랑 + 노랑 = 청록.",
@@ -351,6 +353,9 @@
     "acquisition": "획득 방법",
     "baseDye": "기본 염료",
     "harmonyType": "하모니 타입",
+    "colorWheel": "컬러 휠",
+    "colors": "색상",
+    "actionsMenu": "작업 메뉴",
     "types": {
       "complementaryDesc": "색상환에서 정반대에 위치한 색상으로 최대 대비 효과",
       "analogousDesc": "색상환에서 인접한 색상으로 조화롭고 통일된 느낌",
@@ -436,7 +441,11 @@
     "selectedColor": "선택된 색상",
     "dropImageHere": "이미지를 여기에 드롭하거나 클릭하여 업로드",
     "extractedPalette": "추출된 팔레트",
-    "exportCss": "CSS 내보내기"
+    "exportCss": "CSS 내보내기",
+    "imageCleared": "이미지가 삭제되었습니다",
+    "clearImage": "이미지 삭제",
+    "noPaletteToExport": "내보낼 팔레트가 없습니다",
+    "paletteExported": "팔레트가 내보내졌습니다!"
   },
   "accessibility": {
     "inspectDyes": "염료 검사",
@@ -509,6 +518,7 @@
     "brightnessDistribution": "밝기 분포",
     "colorDistanceMatrix": "색상 거리 매트릭스",
     "selectAtLeastTwoDyes": "비교하려면 2개 이상의 염료를 선택하세요",
+    "comparisonOptions": "비교 옵션",
     "matrix": {
       "title": "색상 거리 매트릭스",
       "description": "낮은 값은 더 유사한 색상을 나타냅니다. 초록 = 매우 가까움, 노랑 = 보통, 빨강 = 매우 다름",
@@ -613,6 +623,7 @@
     "gradientResults": "그라데이션 결과",
     "noMatchesFound": "일치하는 염료를 찾을 수 없습니다",
     "sameDyeWarning": "시작과 끝 염료가 동일합니다. 그라데이션을 위해 다른 염료를 선택하세요.",
+    "slotsFull": "모든 슬롯이 가득 찼습니다. 교체할 슬롯을 선택하세요:",
     "mode": {
       "rgb": "선형 (회색 중간점)",
       "hsv": "색조 기반 (선명함)",
@@ -640,7 +651,9 @@
     "selected": "선택됨: {current}/{max}",
     "gridAriaLabel": "염료 선택 그리드. 화살표 키로 이동, Enter 또는 스페이스로 선택.",
     "noResults": "검색과 일치하는 염료가 없습니다",
-    "noResultsHint": "다른 검색어나 카테고리를 시도해 보세요"
+    "noResultsHint": "다른 검색어나 카테고리를 시도해 보세요",
+    "noDyesInCategory": "이 카테고리에 염료가 없습니다",
+    "tryCategoryHint": "다른 카테고리를 선택해 보세요"
   },
   "filters": {
     "title": "염료 필터",
@@ -752,6 +765,20 @@
     "failedToReadFile": "파일을 읽지 못했습니다",
     "failedToLoadSubmissions": "제출물을 불러오지 못했습니다. 다시 시도해 주세요.",
     "failedToDeletePreset": "프리셋을 삭제하지 못했습니다. 다시 시도해 주세요.",
+    "copyLinkFailed": "링크 복사 실패",
+    "removeVoteFailed": "투표 제거 실패",
+    "voteFailed": "투표 실패",
+    "voteProcessFailed": "투표 처리 실패",
+    "submitPresetFailed": "프리셋 제출 실패. 다시 시도해 주세요.",
+    "saveChangesFailed": "변경사항 저장 실패. 다시 시도해 주세요.",
+    "deletePresetFailed": "프리셋 삭제 실패. 다시 시도해 주세요.",
+    "presetDataMissing": "삭제 불가: 프리셋 데이터 없음",
+    "presetNoApiId": "삭제 불가: 프리셋에 API ID 없음",
+    "canvasContextFailed": "캔버스 컨텍스트를 가져오지 못했습니다",
+    "regionTooSmall": "선택한 영역이 너무 작습니다",
+    "noPixelsInRegion": "선택한 영역에 분석할 픽셀이 없습니다",
+    "noPixelsToAnalyze": "분석할 픽셀이 없습니다",
+    "paletteExtractionFailed": "팔레트 추출 실패",
     "unsupportedFormat": "지원되지 않는 파일 형식입니다.",
     "clipboardFailed": "클립보드에 복사하지 못했습니다.",
     "storageFailed": "설정을 저장하지 못했습니다. 저장 공간이 가득 찼을 수 있습니다.",
@@ -1010,7 +1037,24 @@
     "voteCount": "{count}표",
     "votesCount": "{count}표",
     "dyes": "염료",
-    "tags": "태그"
+    "tags": "태그",
+    "linkCopied": "프리셋 링크가 클립보드에 복사되었습니다!",
+    "voteRemoved": "투표가 제거되었습니다",
+    "voteAdded": "투표가 추가되었습니다!",
+    "alreadyVoted": "이 프리셋에 이미 투표하셨습니다",
+    "loginToSubmit": "프리셋을 제출하려면 로그인하세요",
+    "loginToEdit": "프리셋을 편집하려면 로그인하세요",
+    "onlyEditOwn": "본인의 프리셋만 편집할 수 있습니다",
+    "maxDyesAllowed": "최대 {count}개의 염료만 허용됩니다",
+    "duplicateFound": "이 염료 조합은 이미 \"{name}\"으로 존재합니다",
+    "duplicateWithVote": "이 염료 조합은 이미 \"{name}\"으로 존재합니다. 투표가 추가되었습니다!",
+    "submittedPendingReview": "프리셋이 제출되었습니다! 검토 후 표시됩니다.",
+    "submittedSuccess": "프리셋이 성공적으로 제출되었습니다!",
+    "editPendingReview": "변경사항이 저장되었습니다! 편집이 검토 대기 중입니다.",
+    "editSuccess": "프리셋이 성공적으로 업데이트되었습니다!",
+    "deleting": "프리셋 삭제 중...",
+    "deleteSuccess": "프리셋이 성공적으로 삭제되었습니다",
+    "notFound": "프리셋을 찾을 수 없습니다"
   },
   "auth": {
     "logout": "로그아웃",
@@ -1103,7 +1147,8 @@
     "moreActions": "추가 작업",
     "slider": "슬라이더",
     "toggle": "토글",
-    "refreshSubmissions": "제출물 새로고침"
+    "refreshSubmissions": "제출물 새로고침",
+    "toolSelection": "도구 선택"
   },
   "resultCard": {
     "inspectDyeIn": "염료 검사...",

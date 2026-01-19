@@ -25,9 +25,6 @@
     "connect": "つながる",
     "builtWith": "TypeScript、Vite、Tailwind CSSで構築"
   },
-  "common": {
-    "close": "閉じる"
-  },
   "footer": {
     "version": "バージョン",
     "createdBy": "Flash Galatine (Balmung) がFFXIVコミュニティのために作成",
@@ -162,6 +159,11 @@
     "market": "マーケット",
     "closeModal": "モーダルを閉じる",
     "full": "満杯",
+    "copied": "コピーしました！",
+    "copiedToClipboard": "クリップボードにコピーしました！",
+    "copyFailed": "コピーに失敗しました",
+    "downloaded": "ダウンロードしました！",
+    "dismiss": "閉じる",
     "optional": "(任意)"
   },
   "config": {
@@ -213,12 +215,12 @@
     "hsvHueBased": "HSV（色相ベース）",
     "rgbDirect": "RGB（ダイレクト）",
     "mixingMode": "混合モード",
-    "mixingRgb": "RGB (光)",
-    "mixingLab": "LAB (知覚的)",
-    "mixingOklab": "OKLAB (現代知覚的)",
-    "mixingRyb": "RYB (絵具)",
-    "mixingHsl": "HSL (色相ベース)",
-    "mixingSpectral": "スペクトル (リアル絵具)",
+    "mixingRgb": "光",
+    "mixingLab": "知覚的",
+    "mixingOklab": "現代知覚的",
+    "mixingRyb": "絵具",
+    "mixingHsl": "色相ベース",
+    "mixingSpectral": "スペクトル - リアル絵具",
     "mixingRgbDesc": "加法混色。青 + 黄 = グレー。",
     "mixingLabDesc": "知覚的に均一なブレンド。青 + 黄 = ピンク。",
     "mixingOklabDesc": "現代知覚色空間。青 + 黄 = シアン。",
@@ -368,6 +370,9 @@
     "acquisition": "入手方法",
     "baseDye": "ベースカララント",
     "harmonyType": "ハーモニータイプ",
+    "colorWheel": "カラーホイール",
+    "colors": "色",
+    "actionsMenu": "アクションメニュー",
     "types": {
       "complementaryDesc": "カラーホイールで正反対の色、最大コントラストを実現",
       "analogousDesc": "カラーホイール上で隣接する色、調和のとれた統一感",
@@ -453,7 +458,11 @@
     "selectedColor": "選択された色",
     "dropImageHere": "画像をドロップするかクリックしてアップロード",
     "extractedPalette": "抽出されたパレット",
-    "exportCss": "CSSをエクスポート"
+    "exportCss": "CSSをエクスポート",
+    "imageCleared": "画像をクリアしました",
+    "clearImage": "画像をクリア",
+    "noPaletteToExport": "エクスポートするパレットがありません",
+    "paletteExported": "パレットをエクスポートしました！"
   },
   "accessibility": {
     "inspectDyes": "カララントを検査",
@@ -526,6 +535,7 @@
     "brightnessDistribution": "明度分布",
     "colorDistanceMatrix": "色距離マトリックス",
     "selectAtLeastTwoDyes": "2つ以上のカララントを選択して比較",
+    "comparisonOptions": "比較オプション",
     "matrix": {
       "title": "色距離マトリックス",
       "description": "値が低いほど色が似ています。緑 = 非常に近い、黄 = 中程度、赤 = 非常に異なる",
@@ -630,6 +640,7 @@
     "gradientResults": "グラデーション結果",
     "noMatchesFound": "マッチするカララントが見つかりません",
     "sameDyeWarning": "開始と終了のカララントが同じです。グラデーションには異なるカララントを選択してください。",
+    "slotsFull": "すべてのスロットが埋まっています。置き換えるスロットを選択してください：",
     "mode": {
       "rgb": "リニア（グレー中間点）",
       "hsv": "色相ベース（鮮やか）",
@@ -657,7 +668,9 @@
     "selected": "選択: {current}/{max}",
     "gridAriaLabel": "カララント選択グリッド。矢印キーで移動、EnterまたはSpaceで選択。",
     "noResults": "検索に一致するカララントがありません",
-    "noResultsHint": "別の検索語またはカテゴリをお試しください"
+    "noResultsHint": "別の検索語またはカテゴリをお試しください",
+    "noDyesInCategory": "このカテゴリにカララントがありません",
+    "tryCategoryHint": "別のカテゴリを選択してみてください"
   },
   "filters": {
     "title": "カララントフィルター",
@@ -769,6 +782,20 @@
     "failedToReadFile": "ファイルの読み取りに失敗しました",
     "failedToLoadSubmissions": "投稿の読み込みに失敗しました。もう一度お試しください。",
     "failedToDeletePreset": "プリセットの削除に失敗しました。もう一度お試しください。",
+    "copyLinkFailed": "リンクのコピーに失敗しました",
+    "removeVoteFailed": "投票の削除に失敗しました",
+    "voteFailed": "投票に失敗しました",
+    "voteProcessFailed": "投票の処理に失敗しました",
+    "submitPresetFailed": "プリセットの投稿に失敗しました。もう一度お試しください。",
+    "saveChangesFailed": "変更の保存に失敗しました。もう一度お試しください。",
+    "deletePresetFailed": "プリセットの削除に失敗しました。もう一度お試しください。",
+    "presetDataMissing": "削除できません：プリセットデータがありません",
+    "presetNoApiId": "削除できません：プリセットにAPI IDがありません",
+    "canvasContextFailed": "キャンバスコンテキストの取得に失敗しました",
+    "regionTooSmall": "選択した領域が小さすぎます",
+    "noPixelsInRegion": "選択した領域に分析するピクセルがありません",
+    "noPixelsToAnalyze": "分析するピクセルがありません",
+    "paletteExtractionFailed": "パレットの抽出に失敗しました",
     "unsupportedFormat": "サポートされていないファイル形式です。",
     "clipboardFailed": "クリップボードへのコピーに失敗しました。",
     "storageFailed": "設定の保存に失敗しました。ストレージがいっぱいの可能性があります。",
@@ -1066,7 +1093,24 @@
     "voteCount": "{count}票",
     "votesCount": "{count}票",
     "dyes": "染料",
-    "tags": "タグ"
+    "tags": "タグ",
+    "linkCopied": "プリセットリンクをクリップボードにコピーしました！",
+    "voteRemoved": "投票を削除しました",
+    "voteAdded": "投票しました！",
+    "alreadyVoted": "このプリセットには既に投票済みです",
+    "loginToSubmit": "プリセットを投稿するにはログインしてください",
+    "loginToEdit": "プリセットを編集するにはログインしてください",
+    "onlyEditOwn": "自分のプリセットのみ編集できます",
+    "maxDyesAllowed": "最大{count}個のカララントまで登録できます",
+    "duplicateFound": "このカララントの組み合わせは「{name}」として既に存在します",
+    "duplicateWithVote": "このカララントの組み合わせは「{name}」として既に存在します。投票を追加しました！",
+    "submittedPendingReview": "プリセットを投稿しました！モデレーターの審査後に表示されます。",
+    "submittedSuccess": "プリセットを正常に投稿しました！",
+    "editPendingReview": "変更を保存しました！編集は審査待ちです。",
+    "editSuccess": "プリセットを正常に更新しました！",
+    "deleting": "プリセットを削除中...",
+    "deleteSuccess": "プリセットを正常に削除しました",
+    "notFound": "プリセットが見つかりません"
   },
   "auth": {
     "logout": "ログアウト",
@@ -1120,7 +1164,8 @@
     "moreActions": "その他のアクション",
     "slider": "スライダー",
     "toggle": "切り替え",
-    "refreshSubmissions": "投稿を更新"
+    "refreshSubmissions": "投稿を更新",
+    "toolSelection": "ツール選択"
   },
   "resultCard": {
     "inspectDyeIn": "染料を確認...",

@@ -25,9 +25,6 @@
     "connect": "连接",
     "builtWith": "使用TypeScript、Vite和Tailwind CSS构建"
   },
-  "common": {
-    "close": "关闭"
-  },
   "footer": {
     "version": "版本",
     "createdBy": "由 Flash Galatine (Balmung) 为 FFXIV 社区创建",
@@ -162,6 +159,11 @@
     "market": "市场",
     "closeModal": "关闭弹窗",
     "full": "已满",
+    "copied": "已复制！",
+    "copiedToClipboard": "已复制到剪贴板！",
+    "copyFailed": "复制失败",
+    "downloaded": "已下载！",
+    "dismiss": "关闭",
     "optional": "（可选）"
   },
   "resultCard": {
@@ -233,12 +235,12 @@
     "hsvHueBased": "HSV（色相为基础）",
     "rgbDirect": "RGB（直接）",
     "mixingMode": "混合模式",
-    "mixingRgb": "RGB (光)",
-    "mixingLab": "LAB (感知)",
-    "mixingOklab": "OKLAB (现代感知)",
-    "mixingRyb": "RYB (颜料)",
-    "mixingHsl": "HSL (色相为基础)",
-    "mixingSpectral": "光谱 (真实颜料)",
+    "mixingRgb": "光",
+    "mixingLab": "感知",
+    "mixingOklab": "现代感知",
+    "mixingRyb": "颜料",
+    "mixingHsl": "色相为基础",
+    "mixingSpectral": "光谱 - 真实颜料",
     "mixingRgbDesc": "加色光混合。蓝 + 黄 = 灰。",
     "mixingLabDesc": "感知均匀混合。蓝 + 黄 = 粉红。",
     "mixingOklabDesc": "现代感知色彩空间。蓝 + 黄 = 青。",
@@ -371,6 +373,9 @@
     "acquisition": "获取方式",
     "baseDye": "基础染剂",
     "harmonyType": "和谐类型",
+    "colorWheel": "色轮",
+    "colors": "颜色",
+    "actionsMenu": "操作菜单",
     "types": {
       "complementaryDesc": "色轮上正对面的颜色，实现最大对比度",
       "analogousDesc": "色轮上相邻的颜色，营造和谐统一的外观",
@@ -456,7 +461,11 @@
     "selectedColor": "已选颜色",
     "dropImageHere": "拖放图片到此处或点击上传",
     "extractedPalette": "提取的调色板",
-    "exportCss": "导出CSS"
+    "exportCss": "导出CSS",
+    "imageCleared": "图像已清除",
+    "clearImage": "清除图像",
+    "noPaletteToExport": "没有可导出的调色板",
+    "paletteExported": "调色板已导出！"
   },
   "accessibility": {
     "inspectDyes": "检查染剂",
@@ -529,6 +538,7 @@
     "brightnessDistribution": "亮度分布",
     "colorDistanceMatrix": "颜色距离矩阵",
     "selectAtLeastTwoDyes": "选择至少2种染剂进行比较",
+    "comparisonOptions": "比较选项",
     "matrix": {
       "title": "颜色距离矩阵",
       "description": "值越低表示颜色越相似。绿色 = 非常接近，黄色 = 中等，红色 = 非常不同",
@@ -633,6 +643,7 @@
     "gradientResults": "渐变结果",
     "noMatchesFound": "未找到匹配的染剂",
     "sameDyeWarning": "起始和结束染剂相同。请选择不同的染剂以创建渐变。",
+    "slotsFull": "所有槽位已满。请选择一个要替换的槽位：",
     "mode": {
       "rgb": "线性（灰色中点）",
       "hsv": "基于色相（鲜艳）",
@@ -660,7 +671,9 @@
     "selected": "已选择：{current}/{max}",
     "gridAriaLabel": "染料选择网格。使用方向键导航，按Enter或空格键选择。",
     "noResults": "没有匹配的染料",
-    "noResultsHint": "尝试其他搜索词或类别"
+    "noResultsHint": "尝试其他搜索词或类别",
+    "noDyesInCategory": "此类别中没有染剂",
+    "tryCategoryHint": "尝试选择其他类别"
   },
   "filters": {
     "title": "染剂筛选",
@@ -772,6 +785,20 @@
     "failedToReadFile": "读取文件失败",
     "failedToLoadSubmissions": "加载提交失败。请重试。",
     "failedToDeletePreset": "删除预设失败。请重试。",
+    "copyLinkFailed": "复制链接失败",
+    "removeVoteFailed": "移除投票失败",
+    "voteFailed": "投票失败",
+    "voteProcessFailed": "处理投票失败",
+    "submitPresetFailed": "提交预设失败。请重试。",
+    "saveChangesFailed": "保存更改失败。请重试。",
+    "deletePresetFailed": "删除预设失败。请重试。",
+    "presetDataMissing": "无法删除：预设数据缺失",
+    "presetNoApiId": "无法删除：预设没有API ID",
+    "canvasContextFailed": "无法获取画布上下文",
+    "regionTooSmall": "选择的区域太小",
+    "noPixelsInRegion": "选择区域中没有可分析的像素",
+    "noPixelsToAnalyze": "没有可分析的像素",
+    "paletteExtractionFailed": "调色板提取失败",
     "unsupportedFormat": "不支持的文件格式。",
     "clipboardFailed": "复制到剪贴板失败。",
     "storageFailed": "保存设置失败。存储空间可能已满。",
@@ -1030,7 +1057,24 @@
     "voteCount": "{count}票",
     "votesCount": "{count}票",
     "dyes": "染剂",
-    "tags": "标签"
+    "tags": "标签",
+    "linkCopied": "预设链接已复制到剪贴板！",
+    "voteRemoved": "已取消投票",
+    "voteAdded": "已投票！",
+    "alreadyVoted": "您已经为此预设投过票了",
+    "loginToSubmit": "请登录以提交预设",
+    "loginToEdit": "请登录以编辑预设",
+    "onlyEditOwn": "您只能编辑自己的预设",
+    "maxDyesAllowed": "最多允许 {count} 种染剂",
+    "duplicateFound": "此染剂组合已存在，名称为「{name}」",
+    "duplicateWithVote": "此染剂组合已存在，名称为「{name}」。您的投票已添加！",
+    "submittedPendingReview": "预设已提交！审核通过后将显示。",
+    "submittedSuccess": "预设提交成功！",
+    "editPendingReview": "更改已保存！您的编辑正在等待审核。",
+    "editSuccess": "预设更新成功！",
+    "deleting": "正在删除预设...",
+    "deleteSuccess": "预设删除成功",
+    "notFound": "预设未找到"
   },
   "auth": {
     "logout": "登出",
@@ -1123,6 +1167,7 @@
     "moreActions": "更多操作",
     "slider": "滑块",
     "toggle": "切换",
-    "refreshSubmissions": "刷新提交"
+    "refreshSubmissions": "刷新提交",
+    "toolSelection": "工具选择"
   }
 }

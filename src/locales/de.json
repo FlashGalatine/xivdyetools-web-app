@@ -25,9 +25,6 @@
     "connect": "Verbinden",
     "builtWith": "Erstellt mit TypeScript, Vite und Tailwind CSS"
   },
-  "common": {
-    "close": "Schließen"
-  },
   "footer": {
     "version": "Version",
     "createdBy": "Erstellt von Flash Galatine (Balmung) für die FFXIV-Community",
@@ -162,6 +159,11 @@
     "market": "Markt",
     "closeModal": "Modal schließen",
     "full": "Voll",
+    "copied": "Kopiert!",
+    "copiedToClipboard": "In die Zwischenablage kopiert!",
+    "copyFailed": "Kopieren fehlgeschlagen",
+    "downloaded": "Heruntergeladen!",
+    "dismiss": "Schließen",
     "optional": "(optional)"
   },
   "config": {
@@ -213,12 +215,12 @@
     "hsvHueBased": "HSV (Farbton-basiert)",
     "rgbDirect": "RGB (Direkt)",
     "mixingMode": "Mischmodus",
-    "mixingRgb": "RGB (Licht)",
-    "mixingLab": "LAB (Wahrnehmung)",
-    "mixingOklab": "OKLAB (Moderne Wahrnehmung)",
-    "mixingRyb": "RYB (Farbe)",
-    "mixingHsl": "HSL (Farbton-basiert)",
-    "mixingSpectral": "Spektral (Realistische Farbe)",
+    "mixingRgb": "Licht",
+    "mixingLab": "Wahrnehmung",
+    "mixingOklab": "Moderne Wahrnehmung",
+    "mixingRyb": "Farbe",
+    "mixingHsl": "Farbton-basiert",
+    "mixingSpectral": "Spektral - Realistische Farbe",
     "mixingRgbDesc": "Additive Lichtmischung. Blau + Gelb = Grau.",
     "mixingLabDesc": "Wahrnehmungsgetreue Mischung. Blau + Gelb = Rosa.",
     "mixingOklabDesc": "Moderner Wahrnehmungsfarbraum. Blau + Gelb = Cyan.",
@@ -368,6 +370,9 @@
     "acquisition": "Beschaffung",
     "baseDye": "Basis-Farbstoff",
     "harmonyType": "Harmonie-Typ",
+    "colorWheel": "Farbkreis",
+    "colors": "Farben",
+    "actionsMenu": "Aktionsmenü",
     "types": {
       "complementaryDesc": "Farben, die sich im Farbkreis direkt gegenüberliegen, für maximalen Kontrast",
       "analogousDesc": "Benachbarte Farben im Farbkreis für ein harmonisches, einheitliches Erscheinungsbild",
@@ -453,7 +458,11 @@
     "selectedColor": "Ausgewählte Farbe",
     "dropImageHere": "Bild hier ablegen oder klicken zum Hochladen",
     "extractedPalette": "Extrahierte Palette",
-    "exportCss": "CSS exportieren"
+    "exportCss": "CSS exportieren",
+    "imageCleared": "Bild gelöscht",
+    "clearImage": "Bild löschen",
+    "noPaletteToExport": "Keine Palette zum Exportieren",
+    "paletteExported": "Palette exportiert!"
   },
   "accessibility": {
     "inspectDyes": "Farbstoffe prüfen",
@@ -526,6 +535,7 @@
     "brightnessDistribution": "Helligkeitsverteilung",
     "colorDistanceMatrix": "Farbabstand-Matrix",
     "selectAtLeastTwoDyes": "Wähle mindestens 2 Farbstoffe zum Vergleichen",
+    "comparisonOptions": "Vergleichsoptionen",
     "matrix": {
       "title": "Farbabstand-Matrix",
       "description": "Niedrigere Werte zeigen ähnlichere Farben an. Grün = sehr nah, Gelb = moderat, Rot = sehr unterschiedlich",
@@ -630,6 +640,7 @@
     "gradientResults": "Verlaufsergebnisse",
     "noMatchesFound": "Keine passenden Farbstoffe gefunden",
     "sameDyeWarning": "Start- und Endfarbstoff sind identisch. Wähle verschiedene Farbstoffe für einen Verlauf.",
+    "slotsFull": "Alle Plätze sind belegt. Wähle einen zum Ersetzen:",
     "mode": {
       "rgb": "Linear (graue Mittelpunkte)",
       "hsv": "Farbtonbasiert (lebendig)",
@@ -657,7 +668,9 @@
     "selected": "Ausgewählt: {current}/{max}",
     "gridAriaLabel": "Farbstoff-Auswahlraster. Verwenden Sie Pfeiltasten zum Navigieren, Enter oder Leertaste zum Auswählen.",
     "noResults": "Keine Farbstoffe entsprechen Ihrer Suche",
-    "noResultsHint": "Versuchen Sie einen anderen Suchbegriff oder eine andere Kategorie"
+    "noResultsHint": "Versuchen Sie einen anderen Suchbegriff oder eine andere Kategorie",
+    "noDyesInCategory": "Keine Farbstoffe in dieser Kategorie",
+    "tryCategoryHint": "Versuchen Sie, eine andere Kategorie auszuwählen"
   },
   "filters": {
     "title": "Farbstofffilter",
@@ -769,6 +782,20 @@
     "failedToReadFile": "Datei konnte nicht gelesen werden",
     "failedToLoadSubmissions": "Einreichungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
     "failedToDeletePreset": "Voreinstellung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "copyLinkFailed": "Link konnte nicht kopiert werden",
+    "removeVoteFailed": "Stimme konnte nicht entfernt werden",
+    "voteFailed": "Abstimmung fehlgeschlagen",
+    "voteProcessFailed": "Abstimmung konnte nicht verarbeitet werden",
+    "submitPresetFailed": "Voreinstellung konnte nicht eingereicht werden. Bitte versuchen Sie es erneut.",
+    "saveChangesFailed": "Änderungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+    "deletePresetFailed": "Voreinstellung konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "presetDataMissing": "Löschen nicht möglich: Voreinstellungsdaten fehlen",
+    "presetNoApiId": "Löschen nicht möglich: Voreinstellung hat keine API-ID",
+    "canvasContextFailed": "Canvas-Kontext konnte nicht abgerufen werden",
+    "regionTooSmall": "Ausgewählter Bereich ist zu klein",
+    "noPixelsInRegion": "Keine Pixel im ausgewählten Bereich zu analysieren",
+    "noPixelsToAnalyze": "Keine Pixel zu analysieren",
+    "paletteExtractionFailed": "Palette konnte nicht extrahiert werden",
     "unsupportedFormat": "Nicht unterstütztes Dateiformat.",
     "clipboardFailed": "Kopieren in die Zwischenablage fehlgeschlagen.",
     "storageFailed": "Einstellungen konnten nicht gespeichert werden. Der Speicher ist möglicherweise voll.",
@@ -1027,7 +1054,24 @@
     "voteCount": "{count} Stimme",
     "votesCount": "{count} Stimmen",
     "dyes": "Farbstoffe",
-    "tags": "Tags"
+    "tags": "Tags",
+    "linkCopied": "Voreinstellungs-Link in die Zwischenablage kopiert!",
+    "voteRemoved": "Stimme entfernt",
+    "voteAdded": "Stimme hinzugefügt!",
+    "alreadyVoted": "Sie haben bereits für diese Voreinstellung gestimmt",
+    "loginToSubmit": "Bitte anmelden, um Voreinstellungen einzureichen",
+    "loginToEdit": "Bitte anmelden, um Voreinstellungen zu bearbeiten",
+    "onlyEditOwn": "Sie können nur Ihre eigenen Voreinstellungen bearbeiten",
+    "maxDyesAllowed": "Maximal {count} Farbstoffe erlaubt",
+    "duplicateFound": "Diese Farbstoffkombination existiert bereits als \"{name}\"",
+    "duplicateWithVote": "Diese Farbstoffkombination existiert bereits als \"{name}\". Ihre Stimme wurde hinzugefügt!",
+    "submittedPendingReview": "Voreinstellung eingereicht! Sie wird nach Moderatorprüfung angezeigt.",
+    "submittedSuccess": "Voreinstellung erfolgreich eingereicht!",
+    "editPendingReview": "Änderungen gespeichert! Ihre Bearbeitung wartet auf Moderatorprüfung.",
+    "editSuccess": "Voreinstellung erfolgreich aktualisiert!",
+    "deleting": "Voreinstellung wird gelöscht...",
+    "deleteSuccess": "Voreinstellung erfolgreich gelöscht",
+    "notFound": "Voreinstellung nicht gefunden"
   },
   "auth": {
     "logout": "Abmelden",
@@ -1120,7 +1164,8 @@
     "moreActions": "Weitere Aktionen",
     "slider": "Schieberegler",
     "toggle": "Umschalten",
-    "refreshSubmissions": "Einreichungen aktualisieren"
+    "refreshSubmissions": "Einreichungen aktualisieren",
+    "toolSelection": "Werkzeugauswahl"
   },
   "resultCard": {
     "inspectDyeIn": "Farbstoff prüfen in...",
