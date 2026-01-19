@@ -272,13 +272,14 @@ export class PaletteService {
         return 0;
       }
 
-      // Store existing count BEFORE modifying storage (fixes count calculation bug)
-      const existingCount = this.getPalettes().length;
+      // WEB-BUG-003 FIX: Read existing palettes ONCE to prevent race conditions
+      // between multiple reads (e.g., another tab modifying storage)
+      const existing = this.getPalettes();
+      const existingCount = existing.length;
 
       let palettes: SavedPalette[];
 
       if (merge) {
-        const existing = this.getPalettes();
         const existingIds = new Set(existing.map((p) => p.id));
 
         // Add only new palettes (by ID)
