@@ -22,11 +22,45 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { BaseLitComponent } from './base-lit-component';
 import { ICON_CONTEXT_MENU } from '@shared/ui-icons';
 import type { Dye, DyeWithDistance } from '@shared/types';
+import type { MatchingMethod } from '@shared/tool-config-types';
 import { ColorService } from '@xivdyetools/core';
 import { LanguageService, StorageService, RouterService } from '@services/index';
 import { ToastService } from '@services/toast-service';
 import { ModalService } from '@services/modal-service';
 import { DyeService } from '@services/dye-service-wrapper';
+
+/**
+ * Human-readable labels for matching algorithms
+ */
+const MATCHING_METHOD_LABELS: Record<MatchingMethod, string> = {
+  rgb: 'RGB',
+  cie76: 'CIE76',
+  ciede2000: 'ΔE2000',
+  oklab: 'OKLAB',
+  hyab: 'HyAB',
+  'oklch-weighted': 'OKLCH',
+};
+
+/**
+ * Delta-E thresholds for each matching method.
+ * Each algorithm has different scales for what constitutes excellent/good/acceptable/noticeable/poor.
+ *
+ * RGB uses Euclidean distance in 0-255 space (max ~442), so thresholds are much higher.
+ * Perceptual algorithms (CIE76, CIEDE2000, OKLAB, HyAB, OKLCH) use similar scales:
+ * - < 1: Imperceptible difference
+ * - 1-3: Barely noticeable
+ * - 3-5: Noticeable but acceptable
+ * - 5-10: Clearly noticeable
+ * - > 10: Very different colors
+ */
+const DELTA_THRESHOLDS: Record<MatchingMethod, { excellent: number; good: number; acceptable: number; noticeable: number }> = {
+  rgb: { excellent: 15, good: 35, acceptable: 60, noticeable: 100 },
+  cie76: { excellent: 1, good: 3, acceptable: 5, noticeable: 10 },
+  ciede2000: { excellent: 1, good: 3, acceptable: 5, noticeable: 10 },
+  oklab: { excellent: 1, good: 3, acceptable: 5, noticeable: 10 },
+  hyab: { excellent: 1, good: 3, acceptable: 5, noticeable: 10 },
+  'oklch-weighted': { excellent: 1, good: 3, acceptable: 5, noticeable: 10 },
+};
 
 /**
  * Data structure for the result card
@@ -42,6 +76,11 @@ export interface ResultCardData {
   deltaE?: number;
   /** Hue deviance in degrees from ideal (optional) */
   hueDeviance?: number;
+  /**
+   * Color matching algorithm used for distance calculation.
+   * Used to display appropriate labels and adjust color coding thresholds.
+   */
+  matchingMethod?: MatchingMethod;
   /** Market server name (optional) */
   marketServer?: string;
   /** Price in Gil (optional) */
@@ -773,15 +812,28 @@ export class ResultCard extends BaseLitComponent {
   ];
 
   /**
-   * Get Delta-E color class based on value
+   * Get Delta-E color class based on value and matching method.
+   * Uses algorithm-specific thresholds since RGB has different scale than perceptual methods.
    */
-  private getDeltaEClass(deltaE?: number): string {
+  private getDeltaEClass(deltaE?: number, method?: MatchingMethod): string {
     if (deltaE === undefined) return '';
-    if (deltaE <= 1) return 'delta-excellent';
-    if (deltaE <= 3) return 'delta-good';
-    if (deltaE <= 5) return 'delta-acceptable';
-    if (deltaE <= 10) return 'delta-noticeable';
+
+    // Use method-specific thresholds, fallback to OKLAB thresholds
+    const thresholds = DELTA_THRESHOLDS[method ?? 'oklab'];
+
+    if (deltaE <= thresholds.excellent) return 'delta-excellent';
+    if (deltaE <= thresholds.good) return 'delta-good';
+    if (deltaE <= thresholds.acceptable) return 'delta-acceptable';
+    if (deltaE <= thresholds.noticeable) return 'delta-noticeable';
     return 'delta-poor';
+  }
+
+  /**
+   * Get the display label for a matching method
+   */
+  private getMatchingMethodLabel(method?: MatchingMethod): string {
+    if (!method) return 'ΔE'; // Generic fallback
+    return MATCHING_METHOD_LABELS[method];
   }
 
   /**
@@ -1234,8 +1286,8 @@ export class ResultCard extends BaseLitComponent {
             ${this.showDeltaE
         ? html`
                   <div class="detail-row">
-                    <span class="detail-label">ΔE</span>
-                    <span class="detail-value ${this.getDeltaEClass(deltaE)}">
+                    <span class="detail-label" title="${this.data?.matchingMethod ? `Distance calculated using ${this.getMatchingMethodLabel(this.data.matchingMethod)} algorithm` : 'Color distance'}">${this.getMatchingMethodLabel(this.data?.matchingMethod)}</span>
+                    <span class="detail-value ${this.getDeltaEClass(deltaE, this.data?.matchingMethod)}">
                       ${deltaE !== undefined ? deltaE.toFixed(2) : '—'}
                     </span>
                   </div>

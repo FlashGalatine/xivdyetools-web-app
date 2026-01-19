@@ -33,7 +33,8 @@ import { setupMarketBoardListeners } from '@services/pricing-mixin';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import { DisplayOptionsConfig, DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
+import { DisplayOptionsConfig, DEFAULT_DISPLAY_OPTIONS, type MatchingMethod } from '@shared/tool-config-types';
+import { ColorConverter } from '@xivdyetools/core';
 import { HARMONY_ICONS } from '@shared/harmony-icons';
 import {
   ICON_FILTER,
@@ -166,6 +167,7 @@ export class HarmonyTool extends BaseComponent {
   // Display options (from ConfigController)
   private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
   private usePerceptualMatching: boolean = false;
+  private matchingMethod: MatchingMethod = 'oklab';
 
   // Child components (desktop left panel)
   private dyeSelector: DyeSelector | null = null;
@@ -358,6 +360,7 @@ export class HarmonyTool extends BaseComponent {
     const harmonyConfig = configController.getConfig('harmony');
     this.displayOptions = harmonyConfig.displayOptions ?? { ...DEFAULT_DISPLAY_OPTIONS };
     this.usePerceptualMatching = harmonyConfig.strictMatching;
+    this.matchingMethod = harmonyConfig.matchingMethod ?? 'oklab';
 
     // Note: Market config (showPrices, server) is now managed by MarketBoardService
     // which subscribes to ConfigController automatically. MarketBoard components
@@ -376,11 +379,16 @@ export class HarmonyTool extends BaseComponent {
           this.displayOptions.showDeltaE !== newDisplayOptions.showDeltaE ||
           this.displayOptions.showAcquisition !== newDisplayOptions.showAcquisition;
 
-        // Perceptual matching changes require regenerating harmonies
-        const algorithmChanged = this.usePerceptualMatching !== config.strictMatching;
+        // Perceptual matching or matching method changes require regenerating harmonies
+        const algorithmChanged =
+          this.usePerceptualMatching !== config.strictMatching ||
+          (config.matchingMethod !== undefined && this.matchingMethod !== config.matchingMethod);
 
         this.displayOptions = newDisplayOptions;
         this.usePerceptualMatching = config.strictMatching;
+        if (config.matchingMethod !== undefined) {
+          this.matchingMethod = config.matchingMethod;
+        }
 
         if ((needsRerender || algorithmChanged) && this.selectedDye) {
           this.generateHarmonies();
@@ -1506,6 +1514,7 @@ export class HarmonyTool extends BaseComponent {
       matchedColor: options.matchedDye.hex,
       deltaE: deltaE,
       hueDeviance: options.deviance,
+      matchingMethod: this.matchingMethod,
       marketServer: marketServer,
       price: this.showPrices && priceInfo ? priceInfo.currentAverage : undefined,
       vendorCost: options.matchedDye.cost,
@@ -1682,6 +1691,28 @@ export class HarmonyTool extends BaseComponent {
    * Excludes Facewear dyes (generic names like "Red", "Blue")
    * Supports both hue-based (fast) and DeltaE-based (perceptual) matching
    */
+  /**
+   * Calculate perceptual color distance using the configured matching method
+   */
+  private calculateColorDistance(hex1: string, hex2: string): number {
+    switch (this.matchingMethod) {
+      case 'rgb':
+        return ColorService.getColorDistance(hex1, hex2);
+      case 'cie76':
+        return ColorConverter.getDeltaE(hex1, hex2, 'cie76');
+      case 'ciede2000':
+        return ColorConverter.getDeltaE(hex1, hex2, 'cie2000');
+      case 'oklab':
+        return ColorConverter.getDeltaE_Oklab(hex1, hex2);
+      case 'hyab':
+        return ColorConverter.getDeltaE_HyAB(hex1, hex2);
+      case 'oklch-weighted':
+        return ColorConverter.getDeltaE_OklchWeighted(hex1, hex2);
+      default:
+        return ColorConverter.getDeltaE_Oklab(hex1, hex2);
+    }
+  }
+
   private findClosestDyesToHue(
     dyes: Dye[],
     targetHue: number,
@@ -1689,7 +1720,7 @@ export class HarmonyTool extends BaseComponent {
   ): Array<{ dye: Dye; deviance: number }> {
     const scored: Array<{ dye: Dye; deviance: number }> = [];
 
-    // For DeltaE matching, generate target color from hue
+    // For perceptual matching, generate target color from hue
     // Use selected dye's saturation and value as base for consistent matching
     let targetHex: string | undefined;
     if (this.usePerceptualMatching && this.selectedDye) {
@@ -1707,8 +1738,8 @@ export class HarmonyTool extends BaseComponent {
       let deviance: number;
 
       if (this.usePerceptualMatching && targetHex) {
-        // DeltaE-based matching: use perceptual color difference
-        deviance = ColorService.getDeltaE(targetHex, dye.hex);
+        // Perceptual matching: use configured matching algorithm
+        deviance = this.calculateColorDistance(targetHex, dye.hex);
       } else {
         // Hue-based matching: use angular distance on color wheel
         const dyeHsv = ColorService.hexToHsv(dye.hex);

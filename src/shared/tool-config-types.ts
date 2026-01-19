@@ -8,6 +8,10 @@
  */
 
 import type { ToolId } from '@services/router-service';
+import type { MatchingMethod } from '@xivdyetools/core';
+
+// Re-export MatchingMethod for convenience
+export type { MatchingMethod } from '@xivdyetools/core';
 
 // ============================================================================
 // Global Configuration
@@ -35,6 +39,8 @@ export interface HarmonyConfig {
   harmonyType: string;
   /** Use perceptual (DeltaE) color matching instead of hue-based */
   strictMatching: boolean;
+  /** Color matching algorithm for finding closest dyes */
+  matchingMethod: MatchingMethod;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
   // Legacy fields (deprecated, for migration)
@@ -58,6 +64,8 @@ export interface ExtractorConfig {
   maxColors: number;
   /** Drag threshold in pixels for click vs drag differentiation (3-15, default 5) */
   dragThreshold: number;
+  /** Color matching algorithm for finding closest dyes */
+  matchingMethod: MatchingMethod;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
 }
@@ -113,6 +121,8 @@ export interface GradientConfig {
   stepCount: number;
   /** Interpolation color space mode */
   interpolation: InterpolationMode;
+  /** Color matching algorithm for finding closest dyes */
+  matchingMethod: MatchingMethod;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
 }
@@ -136,6 +146,8 @@ export interface MixerConfig {
   maxResults: number;
   /** Color mixing algorithm (default: 'ryb' for paint-like mixing) */
   mixingMode: MixingMode;
+  /** Color matching algorithm for finding closest dyes */
+  matchingMethod: MatchingMethod;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
 }
@@ -210,6 +222,8 @@ export interface SwatchConfig {
   gender: string;
   /** Maximum results to show (1-6) */
   maxResults: number;
+  /** Color matching algorithm for finding closest dyes */
+  matchingMethod: MatchingMethod;
   /** Display options for result cards */
   displayOptions: DisplayOptionsConfig;
 }
@@ -330,12 +344,14 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   harmony: {
     harmonyType: 'complementary',
     strictMatching: true,
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   extractor: {
     vibrancyBoost: true,
     maxColors: 4,
     dragThreshold: 5,
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   accessibility: {
@@ -360,11 +376,13 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
   gradient: {
     stepCount: 4,
     interpolation: 'hsv',
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   mixer: {
     maxResults: 4,
     mixingMode: 'ryb',
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
   presets: {
@@ -385,6 +403,7 @@ export const DEFAULT_CONFIGS: ToolConfigMap = {
     race: 'SeekerOfTheSun',
     gender: 'Female',
     maxResults: 3,
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   },
 };

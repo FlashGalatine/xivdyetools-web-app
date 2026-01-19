@@ -42,7 +42,7 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, DyeWithDistance, PriceData } from '@shared/types';
-import type { ExtractorConfig, DisplayOptionsConfig } from '@shared/tool-config-types';
+import type { ExtractorConfig, DisplayOptionsConfig, MatchingMethod } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import { PaletteService, type PaletteMatch } from '@xivdyetools/core';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
@@ -102,6 +102,7 @@ export class ExtractorTool extends BaseComponent {
   private currentImage: HTMLImageElement | null = null;
   private currentImageDataUrl: string | null = null;
   private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
+  private matchingMethod: MatchingMethod = 'oklab';
 
   // Child components
   private imageUpload: ImageUploadDisplay | null = null;
@@ -446,6 +447,13 @@ export class ExtractorTool extends BaseComponent {
     if (config.dragThreshold !== undefined && this.imageZoom) {
       this.imageZoom.setDragThreshold(config.dragThreshold);
       logger.info(`[ExtractorTool] setConfig: dragThreshold -> ${config.dragThreshold}`);
+    }
+
+    // Handle matchingMethod - re-match colors when algorithm changes
+    if (config.matchingMethod !== undefined && config.matchingMethod !== this.matchingMethod) {
+      this.matchingMethod = config.matchingMethod;
+      needsReextract = true;
+      logger.info(`[ExtractorTool] setConfig: matchingMethod -> ${config.matchingMethod}`);
     }
 
     // Re-extract palette if config changed and we're in palette mode with an image
@@ -2035,9 +2043,13 @@ export class ExtractorTool extends BaseComponent {
       this.recentColors.addRecentColor(hex);
     }
 
-    // Find closest dyes
-    let closestDye = dyeService.findClosestDye(hex);
-    let withinDistance = dyeService.findDyesWithinDistance(hex, 100, 9);
+    // Find closest dyes using configured matching algorithm
+    let closestDye = dyeService.findClosestDye(hex, { matchingMethod: this.matchingMethod });
+    let withinDistance = dyeService.findDyesWithinDistance(hex, {
+      maxDistance: 100,
+      limit: 9,
+      matchingMethod: this.matchingMethod,
+    });
 
     // Apply filters if available
     if (this.dyeFilters) {
@@ -2565,6 +2577,7 @@ export class ExtractorTool extends BaseComponent {
         originalColor: originalHex,
         matchedColor: match.matchedDye.hex,
         deltaE: match.distance,
+        matchingMethod: this.matchingMethod,
         vendorCost: match.matchedDye.cost,
       };
 

@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.0] - 2026-01-18
+
+### ⚙️ Configurable Color Matching Algorithms
+
+**Status**: ✅ RELEASE
+**Focus**: User-configurable color matching algorithms for 5 tools, with algorithm-aware result display.
+
+#### New Features ✅
+
+**Matching Algorithm Configuration**
+- Added "Matching Algorithm" dropdown to config sidebar for 5 tools:
+  - Harmony Explorer
+  - Palette Extractor
+  - Gradient Builder
+  - Dye Mixer
+  - Swatch Matcher
+- 5 algorithm choices with descriptive labels:
+  - **OKLAB** - Recommended (modern perceptual, best balance)
+  - **HyAB** - Best for Palettes (hybrid, large color differences)
+  - **CIEDE2000** - Industry Standard (accurate with correction factors)
+  - **CIE76** - Fast (simple LAB Euclidean)
+  - **RGB** - Basic (fastest but least perceptual)
+- Full i18n support for all 6 languages (EN, JA, DE, FR, KO, ZH)
+
+**Algorithm-Aware Result Display**
+- Result cards now display which algorithm calculated the distance
+- Algorithm name shows instead of generic "ΔE" label (e.g., "OKLAB", "HyAB")
+- Color coding adapts to algorithm scale:
+  - RGB uses 0-442 scale (Euclidean in 255³ space)
+  - Perceptual algorithms use 0-10+ scale (industry standard)
+- Informative tooltip explains the algorithm used
+
+**Harmony Tool UI Fix**
+- Fixed duplicate "Matching Algorithm" labels
+- Renamed section to "Matching Mode" to distinguish perceptual vs hue-based toggle
+- Matching Algorithm dropdown only appears when Perceptual Matching is enabled
+- Hue-based matching doesn't need algorithm selection (uses hue angles)
+
+#### Technical Details
+
+**New Types** (from `@xivdyetools/core`)
+- `MatchingMethod` type added to tool configs
+- `ResultCardData.matchingMethod` for passing algorithm info to cards
+
+**Files Modified**
+- `config-sidebar.ts` - Added matching method dropdown for 5 tools
+- `tool-config-types.ts` - Added `matchingMethod` to tool configs
+- `result-card.ts` - Algorithm-aware distance display
+- `harmony-tool.ts`, `gradient-tool.ts`, `extractor-tool.ts`, `mixer-tool.ts`, `swatch-tool.ts` - Wire up matching method
+- All 6 locale files - New translation keys for matching methods
+
+#### Dependencies
+
+- Updated `@xivdyetools/core` to ^1.13.0 for matching algorithm support
+
+---
+
 ## [4.0.0] - 2026-01-17
 
 ### 🎨 Major UI Overhaul: Lit.js Migration & Glassmorphism Redesign

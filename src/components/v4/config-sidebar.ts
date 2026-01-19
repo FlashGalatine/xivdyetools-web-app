@@ -36,6 +36,7 @@ import type {
   ConfigKey,
   DisplayOptionsConfig,
   PresetCategoryFilter,
+  MatchingMethod,
 } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS, DEFAULT_CONFIGS } from '@shared/tool-config-types';
 import { STORAGE_KEYS } from '@shared/constants';
@@ -136,12 +137,14 @@ export class ConfigSidebar extends BaseLitComponent {
   @state() private harmonyConfig: HarmonyConfig = {
     harmonyType: 'tetradic',
     strictMatching: false,
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private extractorConfig: ExtractorConfig = {
     vibrancyBoost: true,
     maxColors: 8,
     dragThreshold: 5,
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private accessibilityConfig: AccessibilityConfig = {
@@ -166,11 +169,13 @@ export class ConfigSidebar extends BaseLitComponent {
   @state() private gradientConfig: GradientConfig = {
     stepCount: 8,
     interpolation: 'hsv',
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private mixerConfig: MixerConfig = {
     maxResults: 3,
     mixingMode: 'ryb',
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
   @state() private presetsConfig: PresetsConfig = {
@@ -191,6 +196,7 @@ export class ConfigSidebar extends BaseLitComponent {
     race: 'Midlander',
     gender: 'Male',
     maxResults: 3,
+    matchingMethod: 'oklab',
     displayOptions: { ...DEFAULT_DISPLAY_OPTIONS },
   };
 
@@ -1007,7 +1013,7 @@ export class ConfigSidebar extends BaseLitComponent {
         </div>
 
         <div class="config-group">
-          <div class="config-label">${LanguageService.t('config.matchingAlgorithm')}</div>
+          <div class="config-label">${LanguageService.t('config.matchingMode')}</div>
           <div class="config-row">
             <v4-toggle-switch
               label=${LanguageService.t('config.perceptualMatching')}
@@ -1022,6 +1028,10 @@ export class ConfigSidebar extends BaseLitComponent {
         : LanguageService.t('config.hueMatchingDesc')}
           </div>
         </div>
+
+        ${this.harmonyConfig.strictMatching
+          ? this.renderMatchingMethodSection('harmony', this.harmonyConfig.matchingMethod)
+          : ''}
 
         <v4-display-options
           .showHex=${this.globalDisplayOptions.showHex}
@@ -1076,6 +1086,8 @@ export class ConfigSidebar extends BaseLitComponent {
             ></v4-range-slider>
           </div>
         </div>
+
+        ${this.renderMatchingMethodSection('extractor', this.extractorConfig.matchingMethod)}
 
         <v4-display-options
           .showHex=${this.globalDisplayOptions.showHex}
@@ -1242,6 +1254,8 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
         </div>
 
+        ${this.renderMatchingMethodSection('gradient', this.gradientConfig.matchingMethod)}
+
         <v4-display-options
           .showHex=${this.globalDisplayOptions.showHex}
           .showRgb=${this.globalDisplayOptions.showRgb}
@@ -1275,11 +1289,11 @@ export class ConfigSidebar extends BaseLitComponent {
       }}
           >
             <option value="spectral">${LanguageService.t('config.mixingSpectral')}</option>
-            <option value="ryb">${LanguageService.t('config.mixingRyb')}</option>
-            <option value="oklab">${LanguageService.t('config.mixingOklab')}</option>
-            <option value="lab">${LanguageService.t('config.mixingLab')}</option>
-            <option value="hsl">${LanguageService.t('config.mixingHsl')}</option>
-            <option value="rgb">${LanguageService.t('config.mixingRgb')}</option>
+            <option value="ryb">RYB - ${LanguageService.t('config.mixingRyb')}</option>
+            <option value="oklab">OKLAB - ${LanguageService.t('config.mixingOklab')}</option>
+            <option value="lab">LAB - ${LanguageService.t('config.mixingLab')}</option>
+            <option value="hsl">HSL - ${LanguageService.t('config.mixingHsl')}</option>
+            <option value="rgb">RGB - ${LanguageService.t('config.mixingRgb')}</option>
           </select>
           <div class="config-description">
             ${this.getMixingModeDescription()}
@@ -1300,6 +1314,8 @@ export class ConfigSidebar extends BaseLitComponent {
           </div>
         </div>
 
+        ${this.renderMatchingMethodSection('mixer', this.mixerConfig.matchingMethod)}
+
         <v4-display-options
           .showHex=${this.globalDisplayOptions.showHex}
           .showRgb=${this.globalDisplayOptions.showRgb}
@@ -1312,6 +1328,59 @@ export class ConfigSidebar extends BaseLitComponent {
           @display-options-change=${(e: CustomEvent<DisplayOptionsChangeDetail>) =>
         this.handleDisplayOptionsChange('mixer', e)}
         ></v4-display-options>
+      </div>
+    `;
+  }
+
+  /**
+   * Get description text for the current matching method
+   */
+  private getMatchingMethodDescription(method: MatchingMethod): string {
+    switch (method) {
+      case 'oklab':
+        return LanguageService.t('config.matchingOklabDesc');
+      case 'hyab':
+        return LanguageService.t('config.matchingHyabDesc');
+      case 'ciede2000':
+        return LanguageService.t('config.matchingCiede2000Desc');
+      case 'cie76':
+        return LanguageService.t('config.matchingCie76Desc');
+      case 'rgb':
+        return LanguageService.t('config.matchingRgbDesc');
+      case 'oklch-weighted':
+        return LanguageService.t('config.matchingOklchWeightedDesc');
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Render matching method dropdown for a tool
+   */
+  private renderMatchingMethodSection(
+    toolKey: 'harmony' | 'extractor' | 'gradient' | 'mixer' | 'swatch',
+    currentMethod: MatchingMethod
+  ): TemplateResult {
+    return html`
+      <div class="config-group">
+        <div class="config-label">${LanguageService.t('config.matchingMethod')}</div>
+        <select
+          class="config-select"
+          .value=${currentMethod}
+          @change=${(e: Event) => {
+            const value = (e.target as HTMLSelectElement).value as MatchingMethod;
+            this.handleConfigChange(toolKey, 'matchingMethod', value);
+          }}
+        >
+          <option value="oklab">OKLAB - ${LanguageService.t('config.matchingOklab')}</option>
+          <option value="hyab">HyAB - ${LanguageService.t('config.matchingHyab')}</option>
+          <option value="ciede2000">CIEDE2000 - ${LanguageService.t('config.matchingCiede2000')}</option>
+          <option value="cie76">CIE76 - ${LanguageService.t('config.matchingCie76')}</option>
+          <option value="rgb">RGB - ${LanguageService.t('config.matchingRgb')}</option>
+        </select>
+        <div class="config-description">
+          ${this.getMatchingMethodDescription(currentMethod)}
+        </div>
       </div>
     `;
   }
@@ -1679,6 +1748,8 @@ export class ConfigSidebar extends BaseLitComponent {
             ></v4-range-slider>
           </div>
         </div>
+
+        ${this.renderMatchingMethodSection('swatch', this.swatchConfig.matchingMethod)}
 
         <div class="config-group">
           <div class="config-label">${LanguageService.t('config.displayOptions')}</div>

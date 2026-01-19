@@ -41,7 +41,7 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { GradientConfig, DisplayOptionsConfig, MarketConfig, InterpolationMode } from '@shared/tool-config-types';
+import type { GradientConfig, DisplayOptionsConfig, MarketConfig, InterpolationMode, MatchingMethod } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 
 // ============================================================================
@@ -100,6 +100,7 @@ export class GradientTool extends BaseComponent {
   private selectedDyes: Dye[] = [];
   private stepCount: number;
   private colorSpace: InterpolationMode;
+  private matchingMethod: MatchingMethod = 'oklab';
   private currentSteps: InterpolationStep[] = [];
 
   // Market Board Service integration
@@ -358,6 +359,13 @@ export class GradientTool extends BaseComponent {
         needsUpdate = true;
         logger.info(`[GradientTool] setConfig: interpolation -> ${config.interpolation}`);
       }
+    }
+
+    // Handle matchingMethod - re-calculate gradient when algorithm changes
+    if (config.matchingMethod !== undefined && config.matchingMethod !== this.matchingMethod) {
+      this.matchingMethod = config.matchingMethod;
+      needsUpdate = true;
+      logger.info(`[GradientTool] setConfig: matchingMethod -> ${config.matchingMethod}`);
     }
 
     // Handle display options changes - re-render results when these change
@@ -1315,9 +1323,12 @@ export class GradientTool extends BaseComponent {
           theoreticalColor = ColorService.hsvToHex(0, 0, 50);
       }
 
-      // Find closest dye (excluding start and end)
+      // Find closest dye (excluding start and end) using configured matching algorithm
       const excludeIds = [this.startDye.id, this.endDye.id];
-      let matchedDye = dyeService.findClosestDye(theoreticalColor, excludeIds);
+      let matchedDye = dyeService.findClosestDye(theoreticalColor, {
+        excludeIds,
+        matchingMethod: this.matchingMethod,
+      });
 
       // Apply filters if available
       if (this.dyeFilters && matchedDye && this.dyeFilters.isDyeExcluded(matchedDye)) {
@@ -1439,6 +1450,7 @@ export class GradientTool extends BaseComponent {
         originalColor: step.theoreticalColor,
         matchedColor: dye.hex,
         deltaE: step.distance,
+        matchingMethod: this.matchingMethod,
         marketServer: marketServer,
         price: this.showPrices && priceInfo ? priceInfo.currentMinPrice : undefined,
         vendorCost: dye.cost,

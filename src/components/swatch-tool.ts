@@ -32,7 +32,7 @@ import { ICON_PALETTE, ICON_MARKET } from '@shared/ui-icons';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { SwatchConfig, DisplayOptionsConfig, MarketConfig } from '@shared/tool-config-types';
+import type { SwatchConfig, DisplayOptionsConfig, MarketConfig, MatchingMethod } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
 // Import v4-result-card custom element to ensure it's registered
@@ -152,6 +152,7 @@ export class SwatchTool extends BaseComponent {
 
   // Display options (from ConfigController) - for v4-result-card
   private displayOptions: DisplayOptionsConfig = { ...DEFAULT_DISPLAY_OPTIONS };
+  private matchingMethod: MatchingMethod = 'oklab';
 
   // Child components
   private marketBoard: MarketBoard | null = null;
@@ -328,6 +329,13 @@ export class SwatchTool extends BaseComponent {
       this.displayOptions = { ...this.displayOptions, ...config.displayOptions };
       needsRedraw = true;
       logger.info(`[SwatchTool] setConfig: displayOptions updated`);
+    }
+
+    // Handle matchingMethod - re-match colors when algorithm changes
+    if (config.matchingMethod !== undefined && config.matchingMethod !== this.matchingMethod) {
+      this.matchingMethod = config.matchingMethod;
+      needsRematch = true;
+      logger.info(`[SwatchTool] setConfig: matchingMethod -> ${config.matchingMethod}`);
     }
 
     // Sync UI selectors (both desktop and mobile)
@@ -1250,6 +1258,7 @@ export class SwatchTool extends BaseComponent {
         originalColor: this.selectedColor?.hex || match.dye.hex,
         matchedColor: match.dye.hex,
         deltaE: match.distance,
+        matchingMethod: this.matchingMethod,
         // Resolve worldId to actual world name
         marketServer: this.marketBoardService.getWorldNameForPrice(priceDataForDye),
         price: priceDataForDye?.currentMinPrice,
@@ -1688,7 +1697,10 @@ export class SwatchTool extends BaseComponent {
     this.matchedDyes = this.characterColorService.findClosestDyes(
       this.selectedColor,
       dyeService,
-      this.maxResults
+      {
+        count: this.maxResults,
+        matchingMethod: this.matchingMethod,
+      }
     );
 
     logger.info(`[CharacterTool] Found ${this.matchedDyes.length} matching dyes`);

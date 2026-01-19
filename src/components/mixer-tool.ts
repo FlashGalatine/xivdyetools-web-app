@@ -43,7 +43,8 @@ import {
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye, PriceData } from '@shared/types';
-import type { MixerConfig, DisplayOptionsConfig, MixingMode } from '@shared/tool-config-types';
+import type { MixerConfig, DisplayOptionsConfig, MixingMode, MatchingMethod } from '@shared/tool-config-types';
+import { ColorConverter } from '@xivdyetools/core';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import '@components/v4/result-card';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
@@ -100,6 +101,7 @@ export class MixerTool extends BaseComponent {
   private matchedResults: MixedColorResult[] = [];
   private maxResults: number = 5;
   private mixingMode: MixingMode = 'ryb';
+  private matchingMethod: MatchingMethod = 'oklab';
 
   // Market Board Service (shared price cache with race condition protection)
   private marketBoardService: MarketBoardService;
@@ -268,6 +270,28 @@ export class MixerTool extends BaseComponent {
   }
 
   /**
+   * Calculate color distance using the configured matching method
+   */
+  private calculateDistance(hex1: string, hex2: string): number {
+    switch (this.matchingMethod) {
+      case 'rgb':
+        return ColorService.getColorDistance(hex1, hex2);
+      case 'cie76':
+        return ColorConverter.getDeltaE(hex1, hex2, 'cie76');
+      case 'ciede2000':
+        return ColorConverter.getDeltaE(hex1, hex2, 'cie2000');
+      case 'oklab':
+        return ColorConverter.getDeltaE_Oklab(hex1, hex2);
+      case 'hyab':
+        return ColorConverter.getDeltaE_HyAB(hex1, hex2);
+      case 'oklch-weighted':
+        return ColorConverter.getDeltaE_OklchWeighted(hex1, hex2);
+      default:
+        return ColorConverter.getDeltaE_Oklab(hex1, hex2);
+    }
+  }
+
+  /**
    * Find the closest matching dyes to the blended color
    */
   private findMatchingDyes(): void {
@@ -281,7 +305,7 @@ export class MixerTool extends BaseComponent {
       .filter((dye): dye is Dye => dye !== null)
       .map((dye) => dye.id);
 
-    // Get all dyes and calculate distances
+    // Get all dyes and calculate distances using configured matching algorithm
     const allDyes = dyeService.getAllDyes();
     const results: MixedColorResult[] = [];
 
@@ -296,7 +320,7 @@ export class MixerTool extends BaseComponent {
         continue;
       }
 
-      const distance = ColorService.getColorDistance(this.blendedColor, dye.hex);
+      const distance = this.calculateDistance(this.blendedColor, dye.hex);
       results.push({
         blendedHex: this.blendedColor,
         matchedDye: dye,
@@ -571,6 +595,13 @@ export class MixerTool extends BaseComponent {
         this.blendedColor = this.blendColors(...hexColors);
         this.updateCraftingUI();
       }
+    }
+
+    // Handle matchingMethod - re-match dyes when algorithm changes
+    if (config.matchingMethod !== undefined && config.matchingMethod !== this.matchingMethod) {
+      this.matchingMethod = config.matchingMethod;
+      needsUpdate = true;
+      logger.info(`[MixerTool] setConfig: matchingMethod -> ${config.matchingMethod}`);
     }
 
     // Handle display options changes
@@ -1498,6 +1529,7 @@ export class MixerTool extends BaseComponent {
         originalColor: result.blendedHex,
         matchedColor: result.matchedDye.hex,
         deltaE: result.distance,
+        matchingMethod: this.matchingMethod,
         // Resolve worldId to actual world name (e.g., "Balmung" instead of "Crystal")
         marketServer: this.marketBoardService.getWorldNameForPrice(priceDataForDye),
         price: priceDataForDye?.currentMinPrice,
