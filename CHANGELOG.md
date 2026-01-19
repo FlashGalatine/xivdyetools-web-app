@@ -67,6 +67,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WEB-REF-003 Phase 2**: Eliminated desktop ↔ drawer code duplication using shared panel builder pattern. Created shared builder methods (`buildDyeSelectorPanel`, `buildSettingsSlider`, `buildHarmonyTypeSelector`, etc.) that return component references for reuse. MixerTool reduced ~180 lines, HarmonyTool reduced ~250 lines
 - **WEB-REF-003 Phase 3**: Extracted panel controllers to shared service. Created `tool-panel-builders.ts` with `buildFiltersPanel()` and `buildMarketPanel()` functions. Refactored gradient-tool (~40 lines reduced) and extractor-tool (~50 lines reduced) to use shared builders. Other tools can incrementally adopt the pattern.
 - **WEB-REF-003 Phase 4**: Completed shared services layer. Created `price-utilities.ts` (~170 lines) with formatPriceWithSuffix, getDyePriceDisplay, preparePriceCardData, and batch operation helpers. Created `display-options-helper.ts` (~120 lines) with applyDisplayOptions and mergeWithDefaults utilities. Migrated ExtractorTool to use centralized MarketBoardService with getter pattern for showPrices/priceData, providing race condition protection and shared price cache across all tools.
+- **Market Board Server Changes**: Fixed Extractor Tool not fetching new prices when Market Board server is changed via ConfigSidebar. Added event relay in MarketBoard component to bridge MarketBoardService events (EventTarget) to DOM CustomEvents that tools can listen to.
+- **Price Category Filters**: Added 5 price category toggles to ConfigSidebar Market Board section (Base Dyes, Craft Dyes, Allied Society Dyes, Cosmic Dyes, Special Dyes). Controls which dye types have their market prices fetched.
+- **Default Server/Categories**: Updated market defaults - Server: Crystal (was Balmung); Base Dyes: Off; Craft Dyes: Off; Allied Society Dyes: On; Cosmic Dyes: On; Special Dyes: On.
 
 #### Dependencies
 
