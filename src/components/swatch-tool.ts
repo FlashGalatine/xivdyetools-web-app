@@ -37,6 +37,9 @@ import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
 // Import v4-result-card custom element to ensure it's registered
 import '@components/v4/result-card';
+// Import v4-share-button for share functionality
+import '@components/v4/share-button';
+import type { ShareButton } from '@components/v4/share-button';
 
 // ============================================================================
 // Types and Constants
@@ -171,6 +174,7 @@ export class SwatchTool extends BaseComponent {
   private matchResultsContainer: HTMLElement | null = null;
   private selectedColorDisplay: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
+  private shareButton: ShareButton | null = null;
   private subraceSelect: HTMLSelectElement | null = null;
   private genderSelect: HTMLSelectElement | null = null;
   private categorySelect: HTMLSelectElement | null = null;
@@ -201,7 +205,7 @@ export class SwatchTool extends BaseComponent {
       StorageService.getItem<number>(STORAGE_KEYS.maxResults) ?? DEFAULTS.matchCount;
 
     // Load initial colors
-    this.loadColors();
+    void this.loadColors();
   }
 
   // ============================================================================
@@ -353,9 +357,10 @@ export class SwatchTool extends BaseComponent {
     // Reload colors if race/gender/category changed
     if (needsReload) {
       this.selectedColor = null;
-      this.loadColors();
-      // Update the grid header title
-      this.updateColorGrid();
+      void this.loadColors().then(() => {
+        // Update the grid header title
+        this.updateColorGrid();
+      });
     } else if (needsRematch && this.selectedColor) {
       // Just re-match if only maxResults changed
       this.findMatchingDyes();
@@ -545,9 +550,10 @@ export class SwatchTool extends BaseComponent {
       this.subrace = this.subraceSelect!.value as SubRace;
       StorageService.setItem(STORAGE_KEYS.subrace, this.subrace);
       this.syncMobileSelectors();
-      this.loadColors();
-      this.updateColorGrid();
-      this.clearSelection();
+      void this.loadColors().then(() => {
+        this.updateColorGrid();
+        this.clearSelection();
+      });
     });
 
     subraceGroup.appendChild(this.subraceSelect);
@@ -589,9 +595,10 @@ export class SwatchTool extends BaseComponent {
       this.gender = this.genderSelect!.value as Gender;
       StorageService.setItem(STORAGE_KEYS.gender, this.gender);
       this.syncMobileSelectors();
-      this.loadColors();
-      this.updateColorGrid();
-      this.clearSelection();
+      void this.loadColors().then(() => {
+        this.updateColorGrid();
+        this.clearSelection();
+      });
     });
 
     genderGroup.appendChild(this.genderSelect);
@@ -668,9 +675,10 @@ export class SwatchTool extends BaseComponent {
       this.colorCategory = this.categorySelect!.value as ColorCategory;
       StorageService.setItem(STORAGE_KEYS.colorCategory, this.colorCategory);
       this.syncMobileSelectors();
-      this.loadColors();
-      this.updateColorGrid();
-      this.clearSelection();
+      void this.loadColors().then(() => {
+        this.updateColorGrid();
+        this.clearSelection();
+      });
 
       // Update gender visibility
       const genderGroup = this.subraceSelect?.parentElement
@@ -867,13 +875,28 @@ export class SwatchTool extends BaseComponent {
     // Section header (using consistent section-header/section-title pattern)
     const matchHeader = this.createElement('div', {
       className: 'section-header',
-      attributes: { style: 'width: 100%;' },
+      attributes: {
+        style: `
+          width: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        `,
+      },
     });
     const matchTitle = this.createElement('span', {
       className: 'section-title',
       textContent: LanguageService.t('tools.character.matchingDyes'),
     });
     matchHeader.appendChild(matchTitle);
+
+    // Share button
+    this.shareButton = document.createElement('v4-share-button') as ShareButton;
+    this.shareButton.tool = 'swatch';
+    this.shareButton.compact = true;
+    this.shareButton.disabled = true; // Disabled until a color is selected
+    matchHeader.appendChild(this.shareButton);
+
     matchSection.appendChild(matchHeader);
 
     // Match results container (CSS grid with max 4 columns)
@@ -1476,9 +1499,10 @@ export class SwatchTool extends BaseComponent {
       this.subrace = this.mobileSubraceSelect!.value as SubRace;
       StorageService.setItem(STORAGE_KEYS.subrace, this.subrace);
       this.syncDesktopSelectors();
-      this.loadColors();
-      this.updateColorGrid();
-      this.clearSelection();
+      void this.loadColors().then(() => {
+        this.updateColorGrid();
+        this.clearSelection();
+      });
     });
 
     subraceGroup.appendChild(this.mobileSubraceSelect);
@@ -1520,9 +1544,10 @@ export class SwatchTool extends BaseComponent {
       this.gender = this.mobileGenderSelect!.value as Gender;
       StorageService.setItem(STORAGE_KEYS.gender, this.gender);
       this.syncDesktopSelectors();
-      this.loadColors();
-      this.updateColorGrid();
-      this.clearSelection();
+      void this.loadColors().then(() => {
+        this.updateColorGrid();
+        this.clearSelection();
+      });
     });
 
     genderGroup.appendChild(this.mobileGenderSelect);
@@ -1597,9 +1622,10 @@ export class SwatchTool extends BaseComponent {
       this.colorCategory = this.mobileCategorySelect!.value as ColorCategory;
       StorageService.setItem(STORAGE_KEYS.colorCategory, this.colorCategory);
       this.syncDesktopSelectors();
-      this.loadColors();
-      this.updateColorGrid();
-      this.clearSelection();
+      void this.loadColors().then(() => {
+        this.updateColorGrid();
+        this.clearSelection();
+      });
     });
 
     section.appendChild(this.mobileCategorySelect);
@@ -1613,12 +1639,12 @@ export class SwatchTool extends BaseComponent {
   /**
    * Load colors based on current category/race/gender
    */
-  private loadColors(): void {
+  private async loadColors(): Promise<void> {
     if (RACE_SPECIFIC_CATEGORIES.includes(this.colorCategory)) {
       if (this.colorCategory === 'hairColors') {
-        this.colors = this.characterColorService.getHairColors(this.subrace, this.gender);
+        this.colors = await this.characterColorService.getHairColors(this.subrace, this.gender);
       } else if (this.colorCategory === 'skinColors') {
-        this.colors = this.characterColorService.getSkinColors(this.subrace, this.gender);
+        this.colors = await this.characterColorService.getSkinColors(this.subrace, this.gender);
       }
     } else {
       // Shared colors
@@ -1661,6 +1687,7 @@ export class SwatchTool extends BaseComponent {
     this.updateSwatchSelection();
     this.updateSelectedColorDisplay();
     this.findMatchingDyes();
+    this.updateShareButton();
   }
 
   /**
@@ -1738,6 +1765,7 @@ export class SwatchTool extends BaseComponent {
     this.matchedDyes = [];
     this.updateSelectedColorDisplay();
     this.updateMatchResults();
+    this.updateShareButton();
   }
 
   /**
@@ -1748,6 +1776,33 @@ export class SwatchTool extends BaseComponent {
   public clearDyes(): void {
     this.clearSelection();
     logger.info('[SwatchTool] All selections cleared');
+  }
+
+  // ============================================================================
+  // Share Functionality
+  // ============================================================================
+
+  /**
+   * Get parameters for generating a share URL
+   */
+  private getShareParams(): Record<string, unknown> {
+    if (!this.selectedColor) return {};
+
+    return {
+      color: this.selectedColor.hex.replace('#', ''), // Hex without #
+      algo: this.matchingMethod,
+      limit: this.maxResults,
+    };
+  }
+
+  /**
+   * Update share button state based on current selection
+   */
+  private updateShareButton(): void {
+    if (this.shareButton) {
+      this.shareButton.shareParams = this.getShareParams();
+      this.shareButton.disabled = !this.selectedColor;
+    }
   }
 
   // ============================================================================
