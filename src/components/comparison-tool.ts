@@ -31,6 +31,9 @@ import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
 import type { Dye } from '@shared/types';
 import type { ComparisonConfig } from '@shared/tool-config-types';
+import '@components/v4/share-button';
+import type { ShareButton } from '@components/v4/share-button';
+import { ShareService } from '@services/share-service';
 
 // ============================================================================
 // Types and Constants
@@ -127,6 +130,7 @@ export class ComparisonTool extends BaseComponent {
   private optionsPanel: CollapsiblePanel | null = null;
   private marketBoard: MarketBoard | null = null;
   private marketPanel: CollapsiblePanel | null = null;
+  private shareButton: ShareButton | null = null;
 
   // Mobile drawer components
   private drawerDyeSelector: DyeSelector | null = null;
@@ -207,8 +211,12 @@ export class ComparisonTool extends BaseComponent {
       this.setConfig(config);
     });
 
-    // Load persisted dyes after DyeSelector is initialized
-    this.loadPersistedDyes();
+    // Load from share URL first, then fall back to persisted dyes
+    const loadedFromUrl = this.loadFromShareUrl();
+    if (!loadedFromUrl) {
+      // Load persisted dyes after DyeSelector is initialized
+      this.loadPersistedDyes();
+    }
 
     logger.info('[ComparisonTool] Mounted');
   }
@@ -250,6 +258,7 @@ export class ComparisonTool extends BaseComponent {
         this.updateSelectedDyesDisplay();
         this.updateResults();
         this.updateDrawerSelectedDyesDisplay();
+        this.updateShareButton(); // Enable share button after loading persisted dyes
         // Fetch prices for loaded dyes if Market Board is enabled
         if (this.comparisonOptions.showMarketPrices) {
           this.fetchAndUpdatePrices();
@@ -523,6 +532,7 @@ export class ComparisonTool extends BaseComponent {
         this.updateResults();
         this.updateDrawerSelectedDyesDisplay();
         this.saveSelectedDyes();
+        this.updateShareButton();
         // Fetch prices for newly selected dyes if Market Board is enabled
         if (this.comparisonOptions.showMarketPrices && this.selectedDyes.length > 0) {
           void this.fetchAndUpdatePrices();
@@ -881,9 +891,28 @@ export class ComparisonTool extends BaseComponent {
       className: 'mb-6',
       attributes: { style: 'display: none;' },
     });
-    this.selectedDyesSection.appendChild(
-      this.createHeader(LanguageService.t('comparison.selectedDyes'))
-    );
+
+    // Create header with Share button
+    const selectedDyesHeader = this.createElement('div', {
+      className: 'section-header',
+      attributes: {
+        style: 'display: flex; justify-content: space-between; align-items: center;',
+      },
+    });
+    const selectedDyesTitle = this.createElement('span', {
+      className: 'section-title',
+      textContent: LanguageService.t('comparison.selectedDyes'),
+    });
+    selectedDyesHeader.appendChild(selectedDyesTitle);
+
+    // Share Button - v4-share-button custom element
+    this.shareButton = document.createElement('v4-share-button') as ShareButton;
+    this.shareButton.tool = 'comparison';
+    this.shareButton.shareParams = this.getShareParams();
+    this.shareButton.disabled = this.selectedDyes.length === 0;
+    selectedDyesHeader.appendChild(this.shareButton);
+
+    this.selectedDyesSection.appendChild(selectedDyesHeader);
     this.selectedDyesCardsContainer = this.createElement('div', {
       className: 'flex flex-wrap gap-4 justify-center comparison-cards-container',
       attributes: {
@@ -2379,6 +2408,7 @@ export class ComparisonTool extends BaseComponent {
     this.showEmptyState(true);
     this.showAnalysisSections(false);
     this.updateDrawerSelectedDyesDisplay();
+    this.updateShareButton(); // Disable share button when dyes are cleared
   }
 
   /**
@@ -2415,6 +2445,7 @@ export class ComparisonTool extends BaseComponent {
     this.calculateHSVValues();
     this.updateSelectedDyesDisplay();
     this.updateResults();
+    this.updateShareButton(); // Update share button with new dye selection
   }
 
   /**
@@ -2422,5 +2453,97 @@ export class ComparisonTool extends BaseComponent {
    */
   public selectDye(dye: Dye): void {
     this.addDye(dye);
+  }
+
+  // ============================================================================
+  // Share Functionality
+  // ============================================================================
+
+  /**
+   * Get parameters for generating a share URL
+   */
+  private getShareParams(): Record<string, unknown> {
+    if (this.selectedDyes.length === 0) {
+      return {};
+    }
+
+    return {
+      dyes: this.selectedDyes.map((d) => d.itemID),
+    };
+  }
+
+  /**
+   * Update share button state based on current selection
+   */
+  private updateShareButton(): void {
+    if (this.shareButton) {
+      this.shareButton.shareParams = this.getShareParams();
+      this.shareButton.disabled = this.selectedDyes.length === 0;
+    }
+  }
+
+  /**
+   * Load tool state from share URL parameters
+   * @returns true if dyes were loaded from URL, false otherwise
+   */
+  private loadFromShareUrl(): boolean {
+    const parsed = ShareService.getShareParamsFromCurrentUrl();
+    if (!parsed || parsed.tool !== 'comparison') {
+      return false;
+    }
+
+    const params = parsed.params;
+    if (!params.dyes || !Array.isArray(params.dyes) || params.dyes.length === 0) {
+      return false;
+    }
+
+    // Load dyes by itemID
+    const dyeService = DyeService.getInstance();
+    const loadedDyes: Dye[] = [];
+
+    for (const itemId of params.dyes) {
+      if (typeof itemId === 'number') {
+        // Find by itemID
+        const allDyes = dyeService.getAllDyes();
+        const dye = allDyes.find((d) => d.itemID === itemId);
+        if (dye && !loadedDyes.some((d) => d.id === dye.id)) {
+          loadedDyes.push(dye);
+          if (loadedDyes.length >= 4) break; // Max 4 dyes
+        }
+      }
+    }
+
+    if (loadedDyes.length === 0) {
+      logger.warn('[ComparisonTool] No valid dyes found in share URL');
+      return false;
+    }
+
+    // Update state
+    this.selectedDyes = loadedDyes;
+
+    // Update DyeSelector UI
+    if (this.dyeSelector) {
+      this.dyeSelector.setSelectedDyes(loadedDyes);
+    }
+
+    // Calculate HSV and update displays
+    this.calculateHSVValues();
+    this.updateSelectedDyesDisplay();
+    this.updateResults();
+    this.updateShareButton();
+
+    // Save to persistence
+    this.saveSelectedDyes();
+
+    logger.info(
+      `[ComparisonTool] Loaded ${loadedDyes.length} dyes from share URL: ${loadedDyes.map((d) => d.name).join(', ')}`
+    );
+
+    // Fetch prices if enabled
+    if (this.comparisonOptions.showMarketPrices) {
+      void this.fetchAndUpdatePrices();
+    }
+
+    return true;
   }
 }

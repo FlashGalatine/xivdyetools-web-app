@@ -30,6 +30,9 @@ import type { AccessibilityConfig, DisplayOptionsConfig } from '@shared/tool-con
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import { ICON_TOOL_ACCESSIBILITY } from '@shared/tool-icons';
 import { ICON_WARNING, ICON_BEAKER, ICON_EYE, ICON_SLIDERS } from '@shared/ui-icons';
+import '@components/v4/share-button';
+import type { ShareButton } from '@components/v4/share-button';
+import { ShareService } from '@services/share-service';
 
 // ============================================================================
 // Types and Constants
@@ -186,12 +189,15 @@ export class AccessibilityTool extends BaseComponent {
   private cardDisplayOptions: DisplayOptionsConfig;
   private dyeResults: DyeAccessibilityResult[] = [];
   private pairResults: DyePairResult[] = [];
+  private shareVisionType: VisionTypeId = 'protanopia'; // Default vision type for sharing
 
   // Child components (Desktop)
   private dyeSelector: DyeSelector | null = null;
   private dyePanel: CollapsiblePanel | null = null;
   private visionPanel: CollapsiblePanel | null = null;
   private displayPanel: CollapsiblePanel | null = null;
+  private shareButton: ShareButton | null = null;
+  private shareVisionSelect: HTMLSelectElement | null = null;
 
   // Child components (Mobile Drawer) - separate instances for drawer vs desktop
   private drawerDyeSelector: DyeSelector | null = null;
@@ -272,12 +278,15 @@ export class AccessibilityTool extends BaseComponent {
       this.setConfig(config);
     });
 
-    // If dyes were restored from localStorage, update results now that containers exist
+    // Try to load from share URL first
+    const loadedFromUrl = this.loadFromShareUrl();
+
+    // If dyes were restored from localStorage or share URL, update results now that containers exist
     if (this.selectedDyes.length > 0) {
       this.updateResults();
       this.updateDrawerContent();
       logger.info(
-        `[AccessibilityTool] Populated results for ${this.selectedDyes.length} restored dyes`
+        `[AccessibilityTool] Populated results for ${this.selectedDyes.length} ${loadedFromUrl ? 'shared' : 'restored'} dyes`
       );
     }
 
@@ -613,6 +622,7 @@ export class AccessibilityTool extends BaseComponent {
         this.updateSelectedDyesDisplay(selectedDisplay);
         this.updateResults();
         this.updateDrawerContent();
+        this.updateShareButton();
       }
     });
 
@@ -833,9 +843,87 @@ export class AccessibilityTool extends BaseComponent {
     this.selectedDyesSection = this.createElement('div', {
       attributes: { style: 'display: none;' },
     });
-    this.selectedDyesSection.appendChild(
-      this.createHeader(LanguageService.t('accessibility.selectedDyes'))
-    );
+
+    // Create header with Share button and vision type selector
+    const selectedDyesHeader = this.createElement('div', {
+      className: 'section-header',
+      attributes: {
+        style: 'display: flex; justify-content: space-between; align-items: center;',
+      },
+    });
+    const selectedDyesTitle = this.createElement('span', {
+      className: 'section-title',
+      textContent: LanguageService.t('accessibility.selectedDyes'),
+    });
+    selectedDyesHeader.appendChild(selectedDyesTitle);
+
+    // Share controls container (vision selector + button)
+    const shareControls = this.createElement('div', {
+      attributes: {
+        style: 'display: flex; align-items: center; gap: 8px;',
+      },
+    });
+
+    // Vision type selector label
+    const visionLabel = this.createElement('span', {
+      className: 'text-xs',
+      textContent: LanguageService.t('accessibility.shareAs'),
+      attributes: {
+        style: 'color: var(--theme-text-muted);',
+      },
+    });
+    shareControls.appendChild(visionLabel);
+
+    // Vision type dropdown
+    this.shareVisionSelect = this.createElement('select', {
+      attributes: {
+        style: `
+          padding: 4px 8px;
+          font-size: 12px;
+          border-radius: 4px;
+          border: 1px solid var(--theme-border);
+          background: var(--theme-background-secondary);
+          color: var(--theme-text);
+          cursor: pointer;
+        `.replace(/\s+/g, ' ').trim(),
+      },
+    }) as HTMLSelectElement;
+
+    // Populate dropdown with vision types (excluding 'normal' since it's just the original colors)
+    const shareableVisionTypes = VISION_TYPES.filter((t) => t.id !== 'normal');
+    for (const type of shareableVisionTypes) {
+      const option = this.createElement('option', {
+        textContent: LanguageService.getVisionType(type.localeKey),
+        attributes: {
+          value: type.id,
+        },
+      }) as HTMLOptionElement;
+      if (type.id === this.shareVisionType) {
+        option.selected = true;
+      }
+      this.shareVisionSelect.appendChild(option);
+    }
+
+    // Handle vision type change
+    this.on(this.shareVisionSelect, 'change', () => {
+      if (this.shareVisionSelect) {
+        this.shareVisionType = this.shareVisionSelect.value as VisionTypeId;
+        this.updateShareButton();
+      }
+    });
+
+    shareControls.appendChild(this.shareVisionSelect);
+
+    // Share Button - v4-share-button custom element
+    this.shareButton = document.createElement('v4-share-button') as ShareButton;
+    this.shareButton.tool = 'accessibility';
+    this.shareButton.shareParams = this.getShareParams();
+    this.shareButton.disabled = this.selectedDyes.length === 0;
+    shareControls.appendChild(this.shareButton);
+
+    selectedDyesHeader.appendChild(shareControls);
+
+    this.selectedDyesSection.appendChild(selectedDyesHeader);
     // Horizontal flex layout for cards, centered
     this.selectedDyesContainer = this.createElement('div', {
       attributes: {
@@ -2266,4 +2354,108 @@ export class AccessibilityTool extends BaseComponent {
     };
   }
 
+  // ============================================================================
+  // Share Functionality
+  // ============================================================================
+
+  /**
+   * Get parameters for generating a share URL
+   */
+  private getShareParams(): Record<string, unknown> {
+    if (this.selectedDyes.length === 0) {
+      return {};
+    }
+
+    // Use the vision type selected in the share dropdown
+    return {
+      dyes: this.selectedDyes.map((d) => d.itemID),
+      vision: this.shareVisionType,
+    };
+  }
+
+  /**
+   * Update share button state based on current selection
+   */
+  private updateShareButton(): void {
+    if (this.shareButton) {
+      this.shareButton.shareParams = this.getShareParams();
+      this.shareButton.disabled = this.selectedDyes.length === 0;
+    }
+
+    // Sync dropdown value with state
+    if (this.shareVisionSelect && this.shareVisionSelect.value !== this.shareVisionType) {
+      this.shareVisionSelect.value = this.shareVisionType;
+    }
+  }
+
+  /**
+   * Load tool state from share URL parameters
+   * @returns true if state was loaded from URL, false otherwise
+   */
+  private loadFromShareUrl(): boolean {
+    const parsed = ShareService.getShareParamsFromCurrentUrl();
+    if (!parsed || parsed.tool !== 'accessibility') {
+      return false;
+    }
+
+    const params = parsed.params;
+    let hasChanges = false;
+
+    // Load dyes by itemID
+    if (params.dyes && Array.isArray(params.dyes) && params.dyes.length > 0) {
+      const allDyes = dyeService.getAllDyes();
+      const loadedDyes: Dye[] = [];
+
+      for (const itemId of params.dyes) {
+        if (typeof itemId === 'number') {
+          const dye = allDyes.find((d) => d.itemID === itemId);
+          if (dye && !loadedDyes.some((d) => d.id === dye.id)) {
+            loadedDyes.push(dye);
+            if (loadedDyes.length >= 4) break; // Max 4 dyes
+          }
+        }
+      }
+
+      if (loadedDyes.length > 0) {
+        this.selectedDyes = loadedDyes;
+        hasChanges = true;
+
+        // Update DyeSelector UI
+        if (this.dyeSelector) {
+          this.dyeSelector.setSelectedDyes(loadedDyes);
+        }
+
+        // Save to localStorage
+        const dyeIds = loadedDyes.map((d) => d.id);
+        StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
+
+        logger.info(
+          `[AccessibilityTool] Loaded ${loadedDyes.length} dyes from share URL: ${loadedDyes.map((d) => d.name).join(', ')}`
+        );
+      }
+    }
+
+    // Load vision type if specified
+    if (params.vision && typeof params.vision === 'string') {
+      const validVisionTypes: VisionTypeId[] = [
+        'normal', 'deuteranopia', 'protanopia', 'tritanopia', 'achromatopsia'
+      ];
+      if (validVisionTypes.includes(params.vision as VisionTypeId)) {
+        // Add this vision type to enabled types
+        this.enabledVisionTypes.add(params.vision as VisionTypeId);
+        StorageService.setItem(
+          STORAGE_KEYS.enabledVisionTypes,
+          Array.from(this.enabledVisionTypes)
+        );
+        hasChanges = true;
+        logger.info(`[AccessibilityTool] Loaded vision type from share URL: ${params.vision}`);
+      }
+    }
+
+    if (hasChanges) {
+      this.updateShareButton();
+    }
+
+    return hasChanges;
+  }
 }

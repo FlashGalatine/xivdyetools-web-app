@@ -1182,5 +1182,11 @@
       "gradient": "그라디언트 빌더",
       "mixer": "염료 믹서"
     }
+  },
+  "share": {
+    "button": "공유",
+    "copied": "복사됨!",
+    "copyFailed": "링크 복사 실패",
+    "generating": "링크 생성 중..."
   }
 }

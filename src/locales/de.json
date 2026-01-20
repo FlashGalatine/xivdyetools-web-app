@@ -1199,5 +1199,11 @@
       "gradient": "Farbverlauf-Ersteller",
       "mixer": "Farbstoff-Mischer"
     }
+  },
+  "share": {
+    "button": "Teilen",
+    "copied": "Kopiert!",
+    "copyFailed": "Link konnte nicht kopiert werden",
+    "generating": "Link wird erstellt..."
   }
 }

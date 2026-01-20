@@ -1199,5 +1199,11 @@
       "gradient": "Créateur de Dégradé",
       "mixer": "Mélangeur de Teintures"
     }
+  },
+  "share": {
+    "button": "Partager",
+    "copied": "Copié !",
+    "copyFailed": "Échec de la copie du lien",
+    "generating": "Génération du lien..."
   }
 }

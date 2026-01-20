@@ -24,6 +24,9 @@ import { offlineBanner } from '@components/index';
 // Import TutorialService for dev mode console access
 import { TutorialService } from '@services/index';
 
+// Import ShareService for analytics initialization
+import { ShareService } from '@services/share-service';
+
 /**
  * Initialize the application
  */
@@ -46,6 +49,10 @@ async function initializeApp(): Promise<void> {
     // Initialize language service (must be done before rendering components)
     logger.info('🌐 Initializing language service...');
     await LanguageService.initialize();
+
+    // Initialize share analytics (client-side tracking)
+    logger.info('📊 Initializing share analytics...');
+    ShareService.initializeAnalytics();
 
     // Log service status
     const status = await getServicesStatus();
@@ -90,10 +97,12 @@ async function initializeApp(): Promise<void> {
     offlineBanner.initialize();
     logger.info('📡 Offline banner initialized');
 
-    // Expose TutorialService on window for dev mode debugging
+    // Expose services on window for dev mode debugging
     if (import.meta.env.DEV) {
       (window as unknown as Record<string, unknown>).TutorialService = TutorialService;
+      (window as unknown as Record<string, unknown>).ShareService = ShareService;
       console.info('[DEV] TutorialService exposed on window for debugging');
+      console.info('[DEV] ShareService exposed on window for debugging (try ShareService.getAnalyticsStats())');
     }
   } catch (error) {
     const appError = ErrorHandler.log(error);

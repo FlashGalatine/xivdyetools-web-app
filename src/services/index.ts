@@ -89,6 +89,21 @@ export type {
 export { ConfigController, getConfigController } from './config-controller';
 export type { ConfigChangeEvent } from './config-controller';
 
+// V4 Share Service
+export { ShareService, SHARE_URL_VERSION, BASE_URL } from './share-service';
+export type {
+  ShareParams,
+  ShareResult,
+  ParsedShareUrl,
+  ShareAnalyticsEvent,
+  HarmonyShareParams,
+  GradientShareParams,
+  MixerShareParams,
+  SwatchShareParams,
+  ComparisonShareParams,
+  AccessibilityShareParams,
+} from './share-service';
+
 // V4 Market Board Service
 export { MarketBoardService, getMarketBoardService, formatPrice } from './market-board-service';
 export type {

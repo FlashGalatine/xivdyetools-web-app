@@ -61,8 +61,10 @@ import { SubscriptionManager } from '@shared/subscription-manager';
 // V4 Components - Import to register custom elements
 import '@components/v4/v4-color-wheel';
 import '@components/v4/result-card';
+import '@components/v4/share-button';
 import type { V4ColorWheel } from '@components/v4/v4-color-wheel';
 import type { ResultCard, ResultCardData, ContextAction } from '@components/v4/result-card';
+import type { ShareButton } from '@components/v4/share-button';
 
 // ============================================================================
 // Types and Constants
@@ -187,6 +189,7 @@ export class HarmonyTool extends BaseComponent {
   private harmonyGridContainer: HTMLElement | null = null;
   private emptyStateContainer: HTMLElement | null = null;
   private resultsSection: HTMLElement | null = null;
+  private shareButton: ShareButton | null = null;
 
   // Subscriptions
   private subs = new SubscriptionManager();
@@ -288,6 +291,8 @@ export class HarmonyTool extends BaseComponent {
 
     this.paletteExporter?.destroy();
     this.paletteExporter = null;
+
+    this.shareButton = null;
 
     for (const display of this.harmonyDisplays.values()) {
       display.destroy();
@@ -431,18 +436,100 @@ export class HarmonyTool extends BaseComponent {
   // ============================================================================
 
   /**
-   * Handle deep links from URL parameters (e.g., ?dyeId=5729)
-   * Used when navigating from context menus like "See Color Harmonies"
+   * Handle deep links from URL parameters
+   * Supports both legacy format (?dyeId=5729) and new share URLs
+   * (?dye=5771&harmony=tetradic&algo=oklab&perceptual=1&v=1)
    */
   private handleDeepLink(): void {
     const params = new URLSearchParams(window.location.search);
-    const dyeIdParam = params.get('dyeId');
+
+    // Support both 'dye' (new share URLs) and 'dyeId' (legacy deep links)
+    const dyeIdParam = params.get('dye') ?? params.get('dyeId');
+    const harmonyParam = params.get('harmony');
+    const algoParam = params.get('algo');
+    const perceptualParam = params.get('perceptual');
+    const versionParam = params.get('v');
 
     // Debug: Log what we're reading from the URL
     logger.info(
-      `[HarmonyTool] handleDeepLink called - URL search: "${window.location.search}", dyeIdParam: "${dyeIdParam}"`
+      `[HarmonyTool] handleDeepLink called - URL search: "${window.location.search}"`,
+      { dyeIdParam, harmonyParam, algoParam, perceptualParam, versionParam }
     );
 
+    // If no share params present, skip
+    if (!dyeIdParam && !harmonyParam) {
+      return;
+    }
+
+    // Get ConfigController instance for syncing sidebar
+    const configController = ConfigController.getInstance();
+
+    // Apply harmony type if valid
+    if (harmonyParam) {
+      const validHarmonyTypes = [
+        'complementary',
+        'analogous',
+        'triadic',
+        'split-complementary',
+        'tetradic',
+        'square',
+        'monochromatic',
+        'compound',
+        'shades',
+      ];
+
+      // Normalize to lowercase for comparison
+      const normalizedHarmony = harmonyParam.toLowerCase();
+
+      if (validHarmonyTypes.includes(normalizedHarmony)) {
+        this.selectedHarmonyType = normalizedHarmony;
+        StorageService.setItem(STORAGE_KEYS.harmonyType, normalizedHarmony);
+        logger.info(`[HarmonyTool] Share URL loaded harmony type: ${normalizedHarmony}`);
+
+        // Sync with ConfigController so sidebar updates
+        configController.setConfig('harmony', { harmonyType: normalizedHarmony });
+
+        // Update harmony type buttons UI
+        this.updateHarmonyTypeButtonStyles(this.harmonyTypesContainer, this.selectedHarmonyType);
+        this.updateHarmonyTypeButtonStyles(
+          this.drawerHarmonyTypesContainer,
+          this.selectedHarmonyType
+        );
+      } else {
+        logger.warn(`[HarmonyTool] Invalid harmony type in URL: ${harmonyParam}`);
+      }
+    }
+
+    // Apply matching algorithm if valid
+    if (algoParam) {
+      const validAlgorithms = ['oklab', 'ciede2000', 'euclidean'];
+      const normalizedAlgo = algoParam.toLowerCase();
+
+      if (validAlgorithms.includes(normalizedAlgo)) {
+        this.matchingMethod = normalizedAlgo as typeof this.matchingMethod;
+        logger.info(`[HarmonyTool] Share URL loaded matching algorithm: ${normalizedAlgo}`);
+
+        // Sync with ConfigController so sidebar updates
+        configController.setConfig('harmony', { matchingMethod: normalizedAlgo as MatchingMethod });
+      } else {
+        logger.warn(`[HarmonyTool] Invalid algorithm in URL: ${algoParam}`);
+      }
+    }
+
+    // Apply perceptual matching flag
+    if (perceptualParam !== null) {
+      // Accept '1', 'true', or 'yes' as truthy values
+      this.usePerceptualMatching =
+        perceptualParam === '1' || perceptualParam === 'true' || perceptualParam === 'yes';
+      logger.info(
+        `[HarmonyTool] Share URL loaded perceptual matching: ${this.usePerceptualMatching}`
+      );
+
+      // Sync with ConfigController so sidebar updates
+      configController.setConfig('harmony', { strictMatching: this.usePerceptualMatching });
+    }
+
+    // Load dye by itemID
     if (dyeIdParam) {
       const dyeId = parseInt(dyeIdParam, 10);
       if (!isNaN(dyeId)) {
@@ -453,7 +540,7 @@ export class HarmonyTool extends BaseComponent {
         if (dye) {
           this.selectedDye = dye;
           StorageService.setItem(STORAGE_KEYS.selectedDyeId, dye.itemID);
-          logger.info(`[HarmonyTool] Deep link loaded dye: ${dye.name} (itemID=${dye.itemID})`);
+          logger.info(`[HarmonyTool] Share URL loaded dye: ${dye.name} (itemID=${dye.itemID})`);
 
           // Update the desktop dye selector if it exists
           if (this.dyeSelector) {
@@ -479,9 +566,13 @@ export class HarmonyTool extends BaseComponent {
             this.fetchPricesForDisplayedDyes();
           }
         } else {
-          logger.warn(`[HarmonyTool] Deep link dye not found: itemID=${dyeId}`);
+          logger.warn(`[HarmonyTool] Share URL dye not found: itemID=${dyeId}`);
         }
       }
+    } else if (harmonyParam && this.selectedDye) {
+      // If only harmony type changed but we already have a dye, regenerate
+      this.swappedDyes.clear();
+      this.generateHarmonies();
     }
   }
 
@@ -989,9 +1080,12 @@ export class HarmonyTool extends BaseComponent {
       className: 'harmony-results-section',
     });
 
-    // Results Header
+    // Results Header with Share Button
     const resultsHeader = this.createElement('div', {
       className: 'section-header',
+      attributes: {
+        style: 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;',
+      },
     });
 
     const resultsTitle = this.createElement('span', {
@@ -999,7 +1093,13 @@ export class HarmonyTool extends BaseComponent {
       textContent: LanguageService.t('harmony.results'),
     });
 
+    // Share Button - v4-share-button custom element
+    this.shareButton = document.createElement('v4-share-button') as ShareButton;
+    this.shareButton.tool = 'harmony';
+    this.shareButton.shareParams = this.getShareParams();
+
     resultsHeader.appendChild(resultsTitle);
+    resultsHeader.appendChild(this.shareButton);
     this.resultsSection.appendChild(resultsHeader);
 
     // Harmony Results - horizontal row layout with inline styles for reliability
@@ -1310,6 +1410,9 @@ export class HarmonyTool extends BaseComponent {
       this.selectedHarmonyType
     );
 
+    // Update share button with current params
+    this.updateShareButton();
+
     // Fetch prices for displayed dyes if prices are enabled
     if (this.showPrices) {
       this.fetchPricesForDisplayedDyes();
@@ -1506,6 +1609,8 @@ export class HarmonyTool extends BaseComponent {
     if (this.resultsSection) {
       this.resultsSection.style.display = show ? 'none' : 'block';
     }
+    // Update share button state
+    this.updateShareButton();
   }
 
   /**
@@ -1632,6 +1737,37 @@ export class HarmonyTool extends BaseComponent {
 
     // TODO: Integrate PaletteExporter component
     // this.paletteExporter?.exportPalette(paletteData);
+  }
+
+  // ============================================================================
+  // Share Functionality
+  // ============================================================================
+
+  /**
+   * Get current share parameters for the share button
+   */
+  private getShareParams(): Record<string, unknown> {
+    if (!this.selectedDye) {
+      return {};
+    }
+
+    return {
+      dye: this.selectedDye.itemID,
+      harmony: this.selectedHarmonyType,
+      algo: this.matchingMethod,
+      perceptual: this.usePerceptualMatching,
+    };
+  }
+
+  /**
+   * Update share button parameters when state changes
+   */
+  private updateShareButton(): void {
+    if (this.shareButton) {
+      this.shareButton.shareParams = this.getShareParams();
+      // Disable share button if no dye selected
+      this.shareButton.disabled = !this.selectedDye;
+    }
   }
 
   // ============================================================================

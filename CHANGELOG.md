@@ -71,6 +71,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Price Category Filters**: Added 5 price category toggles to ConfigSidebar Market Board section (Base Dyes, Craft Dyes, Allied Society Dyes, Cosmic Dyes, Special Dyes). Controls which dye types have their market prices fetched.
 - **Default Server/Categories**: Updated market defaults - Server: Crystal (was Balmung); Base Dyes: Off; Craft Dyes: Off; Allied Society Dyes: On; Cosmic Dyes: On; Special Dyes: On.
 
+#### Share Button Improvements (2026-01-20)
+
+**Accessibility Tool**
+- Added vision type dropdown selector next to Share button, allowing users to choose which color vision deficiency type to include in shared URLs (instead of defaulting to first enabled)
+- Moved Share button from left panel to "Selected Dyes" header in right panel for better visibility
+
+**Comparison Tool**
+- Moved Share button from left panel (inside DyeSelector) to "Selected Dyes" header in right panel for consistency with other tools
+- Fixed Share button remaining disabled when dyes were loaded from localStorage on page load
+- Fixed Share button not updating when dyes added via Color Palette (only updated when added via DyeSelector)
+- Fixed Share button not updating when dyes cleared via "Clear All" button
+
+**Localization**
+- Added `shareAs` translation key ("Share as:") for vision type dropdown label
+- Added `addDye` translation key ("Add Dye") for DyeSelector button
+
 #### Dependencies
 
 - Updated `@xivdyetools/core` to ^1.13.0 for matching algorithm support

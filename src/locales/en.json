@@ -517,8 +517,9 @@
     "achromatopsiaWarning": "May be hard to see for total colorblindness",
     "dyesSelected": "dyes selected",
     "visionTypesEnabled": "vision types enabled",
-    "selectTwoDyes": "Select at least 2 dyes to see comparisons",
-    "addDye": "Add Dye"
+    "shareAs": "Share as:",
+    "addDye": "Add Dye",
+    "selectTwoDyes": "Select at least 2 dyes to see comparisons"
   },
   "comparison": {
     "selectedDyes": "Selected Dyes",
@@ -1202,5 +1203,11 @@
       "gradient": "Gradient Builder",
       "mixer": "Dye Mixer"
     }
+  },
+  "share": {
+    "button": "Share",
+    "copied": "Copied!",
+    "copyFailed": "Failed to copy link",
+    "generating": "Generating link..."
   }
 }

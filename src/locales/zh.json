@@ -1182,5 +1182,11 @@
     "toggle": "切换",
     "refreshSubmissions": "刷新提交",
     "toolSelection": "工具选择"
+  },
+  "share": {
+    "button": "分享",
+    "copied": "已复制！",
+    "copyFailed": "复制链接失败",
+    "generating": "正在生成链接..."
   }
 }

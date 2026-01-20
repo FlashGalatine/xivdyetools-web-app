@@ -33,3 +33,6 @@ export { PresetCard } from './preset-card';
 export type { PresetCardData } from './preset-card';
 export { PresetDetail } from './preset-detail';
 export { PresetTool } from './preset-tool';
+
+// Sharing components
+export { ShareButton } from './share-button';

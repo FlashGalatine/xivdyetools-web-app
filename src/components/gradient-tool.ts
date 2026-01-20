@@ -16,7 +16,10 @@ import { DyeSelector } from '@components/dye-selector';
 import { DyeFilters } from '@components/dye-filters';
 import { MarketBoard } from '@components/market-board';
 import type { ResultCard, ResultCardData, ContextAction } from '@components/v4/result-card';
+import '@components/v4/share-button';
+import type { ShareButton } from '@components/v4/share-button';
 import { RouterService } from '@services/router-service';
+import { ShareService } from '@services/share-service';
 import {
   ColorService,
   ConfigController,
@@ -157,6 +160,8 @@ export class GradientTool extends BaseComponent {
   private matchesContainer: HTMLElement | null = null;
   private exportContainer: HTMLElement | null = null;
   private resultsHeader: HTMLElement | null = null;
+  private resultsHeaderContainer: HTMLElement | null = null;
+  private shareButton: ShareButton | null = null;
 
   // V4 Result Card references (for price updates)
   private v4ResultCards: ResultCard[] = [];
@@ -242,6 +247,76 @@ export class GradientTool extends BaseComponent {
     StorageService.setItem(STORAGE_KEYS.selectedDyes, dyeIds);
   }
 
+  /**
+   * Find a dye by its itemID (FFXIV game item ID).
+   * Share URLs use itemID, but getDyeById() uses internal database id.
+   */
+  private findDyeByItemId(itemId: number): Dye | null {
+    const allDyes = dyeService.getAllDyes();
+    return allDyes.find((d) => d.itemID === itemId) ?? null;
+  }
+
+  /**
+   * Load tool state from share URL parameters if present.
+   * Called on mount to restore shared state.
+   */
+  private loadFromShareUrl(): void {
+    const parsed = ShareService.getShareParamsFromCurrentUrl();
+    if (!parsed || parsed.tool !== 'gradient') {
+      return;
+    }
+
+    const params = parsed.params;
+    let hasChanges = false;
+
+    // Load start dye
+    if (typeof params.start === 'number') {
+      const startDye = this.findDyeByItemId(params.start);
+      if (startDye) {
+        this.selectedDyes[0] = startDye;
+        hasChanges = true;
+      }
+    }
+
+    // Load end dye
+    if (typeof params.end === 'number') {
+      const endDye = this.findDyeByItemId(params.end);
+      if (endDye) {
+        this.selectedDyes[1] = endDye;
+        hasChanges = true;
+      }
+    }
+
+    // Load step count
+    if (typeof params.steps === 'number' && params.steps >= 2 && params.steps <= 10) {
+      this.stepCount = params.steps;
+      StorageService.setItem(STORAGE_KEYS.stepCount, params.steps);
+    }
+
+    // Load interpolation mode (color space)
+    if (params.interpolation && typeof params.interpolation === 'string') {
+      const validModes = ['rgb', 'hsv', 'lab', 'oklch', 'lch'];
+      if (validModes.includes(params.interpolation)) {
+        this.colorSpace = params.interpolation as typeof this.colorSpace;
+        StorageService.setItem(STORAGE_KEYS.colorSpace, params.interpolation);
+      }
+    }
+
+    // Load matching algorithm
+    if (params.algo && typeof params.algo === 'string') {
+      const validAlgos = ['oklab', 'ciede2000', 'euclidean'];
+      if (validAlgos.includes(params.algo)) {
+        this.matchingMethod = params.algo as typeof this.matchingMethod;
+      }
+    }
+
+    // If dyes were loaded, save and sync selectors
+    if (hasChanges) {
+      this.saveSelectedDyes();
+      // Sync to selector UI (will be done after render in onMount)
+    }
+  }
+
   // ============================================================================
   // Lifecycle Methods
   // ============================================================================
@@ -262,6 +337,17 @@ export class GradientTool extends BaseComponent {
   }
 
   onMount(): void {
+    // Load from share URL first (overrides localStorage if URL params present)
+    this.loadFromShareUrl();
+
+    // Sync DyeSelector with loaded dyes (from URL or localStorage)
+    if (this.selectedDyes.length > 0) {
+      this.dyeSelector?.setSelectedDyes(this.selectedDyes);
+      this.mobileDyeSelector?.setSelectedDyes(this.selectedDyes);
+      this.updateSelectedDyesDisplay();
+      this.updateMobileSelectedDyesDisplay();
+    }
+
     // Subscribe to language changes (only in onMount, NOT bindEvents - avoids infinite loop)
     this.languageUnsubscribe = LanguageService.subscribe(() => {
       this.update();
@@ -289,7 +375,7 @@ export class GradientTool extends BaseComponent {
       this.mobileMarketBoard.setShowPrices(marketConfig.showPrices);
     }
 
-    // If dyes were loaded from storage, calculate interpolation
+    // If dyes were loaded from storage or URL, calculate interpolation
     if (this.startDye && this.endDye) {
       this.updateInterpolation();
       this.updateDrawerContent();
@@ -1017,16 +1103,25 @@ export class GradientTool extends BaseComponent {
 
     // Results header (using consistent section-header/section-title pattern from other tools)
     // Hidden by default - shown when dyes are selected via showEmptyState(false)
-    const resultsHeader = this.createElement('div', {
+    this.resultsHeaderContainer = this.createElement('div', {
       className: 'section-header',
-      attributes: { style: 'width: 100%; display: none;' },
+      attributes: {
+        style: 'width: 100%; display: none; justify-content: space-between; align-items: center;',
+      },
     });
     this.resultsHeader = this.createElement('span', {
       className: 'section-title',
       textContent: `${LanguageService.t('gradient.gradientResults')} (${this.stepCount} Steps)`,
     });
-    resultsHeader.appendChild(this.resultsHeader);
-    resultsSection.appendChild(resultsHeader);
+
+    // Share Button - v4-share-button custom element
+    this.shareButton = document.createElement('v4-share-button') as ShareButton;
+    this.shareButton.tool = 'gradient';
+    this.shareButton.shareParams = this.getShareParams();
+
+    this.resultsHeaderContainer.appendChild(this.resultsHeader);
+    this.resultsHeaderContainer.appendChild(this.shareButton);
+    resultsSection.appendChild(this.resultsHeaderContainer);
 
     // Matches container (for harmony-cards)
     this.matchesContainer = this.createElement('div', {
@@ -1190,8 +1285,42 @@ export class GradientTool extends BaseComponent {
       this.matchesContainer.style.display = show ? 'none' : 'flex';
     }
     // Hide results header when showing empty state
-    if (this.resultsHeader?.parentElement) {
-      this.resultsHeader.parentElement.style.display = show ? 'none' : 'block';
+    if (this.resultsHeaderContainer) {
+      this.resultsHeaderContainer.style.display = show ? 'none' : 'flex';
+    }
+    // Update share button state
+    this.updateShareButton();
+  }
+
+  // ============================================================================
+  // Share Functionality
+  // ============================================================================
+
+  /**
+   * Get current share parameters for the share button
+   */
+  private getShareParams(): Record<string, unknown> {
+    if (!this.startDye || !this.endDye) {
+      return {};
+    }
+
+    return {
+      start: this.startDye.itemID,
+      end: this.endDye.itemID,
+      steps: this.stepCount,
+      interpolation: this.colorSpace,
+      algo: this.matchingMethod,
+    };
+  }
+
+  /**
+   * Update share button parameters when state changes
+   */
+  private updateShareButton(): void {
+    if (this.shareButton) {
+      this.shareButton.shareParams = this.getShareParams();
+      // Disable share button if not both dyes selected
+      this.shareButton.disabled = !this.startDye || !this.endDye;
     }
   }
 

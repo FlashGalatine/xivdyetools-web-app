@@ -40,6 +40,7 @@ import '@components/v4/result-card';
 // Import v4-share-button for share functionality
 import '@components/v4/share-button';
 import type { ShareButton } from '@components/v4/share-button';
+import { ShareService, type SwatchShareParams } from '@services/share-service';
 
 // ============================================================================
 // Types and Constants
@@ -228,6 +229,9 @@ export class SwatchTool extends BaseComponent {
   }
 
   onMount(): void {
+    // Load state from share URL first (async, runs after colors loaded)
+    void this.loadFromShareUrl();
+
     this.languageUnsubscribe = LanguageService.subscribe(() => {
       this.update();
     });
@@ -255,7 +259,7 @@ export class SwatchTool extends BaseComponent {
       this.mobileMarketBoard.setShowPrices(marketConfig.showPrices);
     }
 
-    logger.info('[CharacterTool] Mounted');
+    logger.info('[SwatchTool] Mounted');
   }
 
   destroy(): void {
@@ -1784,15 +1788,25 @@ export class SwatchTool extends BaseComponent {
 
   /**
    * Get parameters for generating a share URL
+   * Includes color sheet info so recipients see the correct palette
    */
   private getShareParams(): Record<string, unknown> {
     if (!this.selectedColor) return {};
 
-    return {
+    const params: Record<string, unknown> = {
       color: this.selectedColor.hex.replace('#', ''), // Hex without #
+      sheet: this.colorCategory, // Which color sheet this color is from
       algo: this.matchingMethod,
       limit: this.maxResults,
     };
+
+    // For race-specific sheets (hair, skin), include race/gender info
+    if (RACE_SPECIFIC_CATEGORIES.includes(this.colorCategory)) {
+      params.race = this.subrace;
+      params.gender = this.gender;
+    }
+
+    return params;
   }
 
   /**
@@ -1802,6 +1816,140 @@ export class SwatchTool extends BaseComponent {
     if (this.shareButton) {
       this.shareButton.shareParams = this.getShareParams();
       this.shareButton.disabled = !this.selectedColor;
+    }
+  }
+
+  /**
+   * Load tool state from share URL parameters
+   * Handles: color, sheet, race, gender, algo, limit
+   */
+  private async loadFromShareUrl(): Promise<void> {
+    const parsed = ShareService.getShareParamsFromCurrentUrl();
+    if (!parsed || parsed.tool !== 'swatch') return;
+
+    // Use generic params since we have extended params beyond SwatchShareParams
+    const params = parsed.params as Record<string, string | number | boolean | string[] | number[]>;
+    let hasChanges = false;
+    let needsReload = false;
+
+    // Load color sheet (category) if specified - do this FIRST before loading colors
+    if (params.sheet && typeof params.sheet === 'string') {
+      const validSheets: ColorCategory[] = [
+        'eyeColors', 'hairColors', 'skinColors', 'highlightColors',
+        'lipColorsDark', 'lipColorsLight', 'tattooColors',
+        'facePaintColorsDark', 'facePaintColorsLight',
+      ];
+      if (validSheets.includes(params.sheet as ColorCategory)) {
+        const newCategory = params.sheet as ColorCategory;
+        if (newCategory !== this.colorCategory) {
+          this.colorCategory = newCategory;
+          StorageService.setItem(STORAGE_KEYS.colorCategory, newCategory);
+          needsReload = true;
+          hasChanges = true;
+          logger.info(`[SwatchTool] Switched to color sheet: ${newCategory}`);
+        }
+      }
+    }
+
+    // For race-specific sheets, load race and gender
+    if (RACE_SPECIFIC_CATEGORIES.includes(this.colorCategory)) {
+      // Load race (subrace) if specified
+      if (params.race && typeof params.race === 'string') {
+        const validRaces: SubRace[] = [
+          'Midlander', 'Highlander', 'Wildwood', 'Duskwight',
+          'Plainsfolk', 'Dunesfolk', 'SeekerOfTheSun', 'KeeperOfTheMoon',
+          'SeaWolf', 'Hellsguard', 'Raen', 'Xaela',
+          'Helion', 'TheLost', 'Rava', 'Veena',
+        ];
+        if (validRaces.includes(params.race as SubRace)) {
+          const newRace = params.race as SubRace;
+          if (newRace !== this.subrace) {
+            this.subrace = newRace;
+            StorageService.setItem(STORAGE_KEYS.subrace, newRace);
+            needsReload = true;
+            hasChanges = true;
+          }
+        }
+      }
+
+      // Load gender if specified
+      if (params.gender && typeof params.gender === 'string') {
+        const validGenders: Gender[] = ['Male', 'Female'];
+        if (validGenders.includes(params.gender as Gender)) {
+          const newGender = params.gender as Gender;
+          if (newGender !== this.gender) {
+            this.gender = newGender;
+            StorageService.setItem(STORAGE_KEYS.gender, newGender);
+            needsReload = true;
+            hasChanges = true;
+          }
+        }
+      }
+    }
+
+    // Reload colors if sheet/race/gender changed
+    if (needsReload) {
+      await this.loadColors();
+      // Sync UI selectors with new values
+      this.syncMobileSelectors();
+      this.syncDesktopSelectors();
+    }
+
+    // Load matching algorithm if specified
+    if (params.algo && typeof params.algo === 'string') {
+      const validAlgos = ['oklab', 'ciede2000', 'euclidean'];
+      if (validAlgos.includes(params.algo)) {
+        this.matchingMethod = params.algo as MatchingMethod;
+        hasChanges = true;
+      }
+    }
+
+    // Load max results limit if specified
+    if (typeof params.limit === 'number' && params.limit > 0 && params.limit <= 20) {
+      this.maxResults = params.limit;
+      StorageService.setItem(STORAGE_KEYS.maxResults, params.limit);
+      hasChanges = true;
+    }
+
+    // Load color if specified
+    if (params.color && typeof params.color === 'string') {
+      // Normalize hex color (add # prefix if missing)
+      const hexColor = params.color.startsWith('#') ? params.color : `#${params.color}`;
+
+      // Ensure colors are loaded before searching
+      if (this.colors.length === 0) {
+        await this.loadColors();
+      }
+
+      // Find matching CharacterColor by hex in the current color sheet
+      const matchingColor = this.colors.find(
+        (c) => c.hex.toLowerCase() === hexColor.toLowerCase()
+      );
+
+      if (matchingColor) {
+        // Found the color - select it
+        this.selectedColor = matchingColor;
+        hasChanges = true;
+        logger.info(`[SwatchTool] Loaded color from share URL: ${hexColor}`);
+      } else {
+        // Color not found - log warning with helpful info
+        logger.warn(
+          `[SwatchTool] Shared color ${hexColor} not found in color sheet (${this.colorCategory})`
+        );
+      }
+    }
+
+    if (hasChanges) {
+      // Update UI to reflect loaded state
+      this.updateColorGrid();
+      this.updateSwatchSelection();
+      this.updateSelectedColorDisplay();
+      this.updateShareButton();
+
+      // Find matching dyes if a color was selected
+      if (this.selectedColor) {
+        this.findMatchingDyes();
+      }
     }
   }
 

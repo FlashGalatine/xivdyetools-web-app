@@ -54,6 +54,9 @@ import type { MixerConfig, DisplayOptionsConfig, MixingMode, MatchingMethod } fr
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import '@components/v4/result-card';
 import type { ResultCardData, ContextAction } from '@components/v4/result-card';
+import '@components/v4/share-button';
+import type { ShareButton } from '@components/v4/share-button';
+import { ShareService } from '@services/share-service';
 
 // ============================================================================
 // Types and Constants
@@ -167,6 +170,7 @@ export class MixerTool extends BaseComponent {
   private resultSlotElement: HTMLElement | null = null;
   private emptyStateMessage: HTMLElement | null = null;
   private emptyStateIcon: HTMLElement | null = null;
+  private shareButton: ShareButton | null = null;
 
   // Subscriptions
   private languageUnsubscribe: (() => void) | null = null;
@@ -617,7 +621,10 @@ export class MixerTool extends BaseComponent {
       this.setConfig(config);
     });
 
-    // If dyes were loaded from storage, calculate blend and matches
+    // Check for share URL parameters (takes priority over localStorage)
+    this.loadFromShareUrl();
+
+    // If dyes were loaded from storage or URL, calculate blend and matches
     if (this.selectedDyes[0] && this.selectedDyes[1]) {
       const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
       this.blendedColor = this.blendColorsInternal(hexColors);
@@ -628,6 +635,82 @@ export class MixerTool extends BaseComponent {
     }
 
     logger.info('[MixerTool] Mounted');
+  }
+
+  /**
+   * Find a dye by its itemID (FFXIV game item ID)
+   * This is different from getDyeById which uses the internal database ID
+   */
+  private findDyeByItemId(itemId: number): Dye | null {
+    const allDyes = dyeService.getAllDyes();
+    return allDyes.find((d) => d.itemID === itemId) ?? null;
+  }
+
+  /**
+   * Load dyes and settings from share URL parameters
+   * Takes priority over localStorage if share params are present
+   */
+  private loadFromShareUrl(): void {
+    const parsed = ShareService.getShareParamsFromCurrentUrl();
+    if (!parsed || parsed.tool !== 'mixer') return;
+
+    const params = parsed.params;
+    logger.info('[MixerTool] Loading from share URL:', params);
+
+    // Load dyeA (required)
+    if (typeof params.dyeA === 'number') {
+      const dyeA = this.findDyeByItemId(params.dyeA);
+      if (dyeA) {
+        this.selectedDyes[0] = dyeA;
+      }
+    }
+
+    // Load dyeB (required)
+    if (typeof params.dyeB === 'number') {
+      const dyeB = this.findDyeByItemId(params.dyeB);
+      if (dyeB) {
+        this.selectedDyes[1] = dyeB;
+      }
+    }
+
+    // Load dyeC (optional third dye)
+    if (typeof params.dyeC === 'number') {
+      const dyeC = this.findDyeByItemId(params.dyeC);
+      if (dyeC) {
+        this.selectedDyes[2] = dyeC;
+      }
+    }
+
+    // Load mixing mode
+    if (typeof params.mode === 'string' && ['rgb', 'ryb', 'cmyk'].includes(params.mode)) {
+      this.mixingMode = params.mode as MixingMode;
+      ConfigController.getInstance().setConfig('mixer', { mixingMode: this.mixingMode });
+    }
+
+    // Load matching algorithm
+    if (typeof params.algo === 'string' && ['oklab', 'ciede2000', 'rgb'].includes(params.algo)) {
+      this.matchingMethod = params.algo as MatchingMethod;
+      ConfigController.getInstance().setConfig('mixer', { matchingMethod: this.matchingMethod });
+    }
+
+    // If we loaded dyes, save to storage and update selectors
+    if (this.selectedDyes[0] || this.selectedDyes[1]) {
+      this.saveSelectedDyes();
+      const selectedDyes = this.selectedDyes.filter((d): d is Dye => d !== null);
+      this.dyeSelector?.setSelectedDyes(selectedDyes);
+      this.mobileDyeSelector?.setSelectedDyes(selectedDyes);
+      this.updateSelectedDyesDisplay();
+
+      // Recalculate blend if at least 2 dyes
+      if (this.selectedDyes[0] && this.selectedDyes[1]) {
+        const hexColors = this.selectedDyes.filter((d): d is Dye => d !== null).map((d) => d.hex);
+        this.blendedColor = this.blendColorsInternal(hexColors);
+      }
+    }
+
+    // Clear URL params after loading (optional - keeps URL clean)
+    // Commenting out to allow refreshing with same params
+    // window.history.replaceState({}, '', window.location.pathname);
   }
 
   destroy(): void {
@@ -1096,12 +1179,22 @@ export class MixerTool extends BaseComponent {
     // Results header (using consistent section-header/section-title pattern from other tools)
     const resultsHeader = this.createElement('div', {
       className: 'section-header',
+      attributes: {
+        style: 'display: flex; justify-content: space-between; align-items: center;',
+      },
     });
     const resultsTitle = this.createElement('span', {
       className: 'section-title',
       textContent: LanguageService.t('mixer.matchingDyes'),
     });
+
+    // Share Button - v4-share-button custom element
+    this.shareButton = document.createElement('v4-share-button') as ShareButton;
+    this.shareButton.tool = 'mixer';
+    this.shareButton.shareParams = this.getShareParams();
+
     resultsHeader.appendChild(resultsTitle);
+    resultsHeader.appendChild(this.shareButton);
     this.resultsSection.appendChild(resultsHeader);
     this.resultsGridContainer = this.createElement('div', {
       attributes: {
@@ -1509,6 +1602,52 @@ export class MixerTool extends BaseComponent {
     // Only show results section when we have matching dyes
     if (this.resultsSection) {
       this.resultsSection.style.display = show ? 'none' : 'block';
+    }
+
+    // Update share button state
+    this.updateShareButton();
+  }
+
+  // ============================================================================
+  // Share Functionality
+  // ============================================================================
+
+  /**
+   * Get current share parameters for the share button
+   */
+  private getShareParams(): Record<string, unknown> {
+    const dyeA = this.selectedDyes[0];
+    const dyeB = this.selectedDyes[1];
+    const dyeC = this.selectedDyes[2];
+
+    // Need at least 2 dyes to share
+    if (!dyeA || !dyeB) {
+      return {};
+    }
+
+    const params: Record<string, unknown> = {
+      dyeA: dyeA.itemID,
+      dyeB: dyeB.itemID,
+      mode: this.mixingMode,
+      algo: this.matchingMethod,
+    };
+
+    // Include optional third dye if present
+    if (dyeC) {
+      params.dyeC = dyeC.itemID;
+    }
+
+    return params;
+  }
+
+  /**
+   * Update share button parameters when state changes
+   */
+  private updateShareButton(): void {
+    if (this.shareButton) {
+      this.shareButton.shareParams = this.getShareParams();
+      // Disable share button if not at least 2 dyes selected
+      this.shareButton.disabled = !this.selectedDyes[0] || !this.selectedDyes[1];
     }
   }
 
