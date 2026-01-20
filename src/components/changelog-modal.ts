@@ -4,7 +4,7 @@
  * Shows "What's New" modal after version updates
  * Displays recent changes to returning users
  *
- * Changelog data is automatically parsed from docs/CHANGELOG.md at build time
+ * Changelog data is automatically parsed from CHANGELOG.md at build time
  * by the vite-plugin-changelog-parser plugin.
  *
  * @module components/changelog-modal
@@ -68,7 +68,7 @@ export class ChangelogModal {
 
   /**
    * Get the entries to display (current version + recent history)
-   * Uses dynamically parsed changelog data from docs/CHANGELOG.md
+   * Uses dynamically parsed changelog data from CHANGELOG.md
    */
   private getRelevantEntries(): ChangelogEntry[] {
     // Find current version entry from parsed changelog
@@ -181,7 +181,7 @@ export class ChangelogModal {
     const viewFullBtn = document.createElement('a');
     viewFullBtn.className = 'text-sm text-blue-600 dark:text-blue-400 hover:underline';
     viewFullBtn.href =
-      'https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/docs/CHANGELOG.md';
+      'https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/CHANGELOG.md';
     viewFullBtn.target = '_blank';
     viewFullBtn.rel = 'noopener noreferrer';
     viewFullBtn.textContent = LanguageService.t('changelog.viewFull');

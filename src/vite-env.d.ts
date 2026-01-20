@@ -25,7 +25,7 @@ interface ImportMeta {
 /**
  * Virtual changelog module provided by vite-plugin-changelog-parser
  *
- * This module is generated at build time by parsing docs/CHANGELOG.md
+ * This module is generated at build time by parsing CHANGELOG.md
  */
 declare module 'virtual:changelog' {
   interface ChangelogEntry {
