@@ -12,6 +12,7 @@ import { ColorService, LanguageService } from '@services/index';
 import type { Dye } from '@shared/types';
 import { logger } from '@shared/logger';
 import { clearContainer } from '@shared/utils';
+import { ICON_SUCCESS, ICON_ERROR } from '@shared/ui-icons';
 
 /**
  * Options for color display initialization
@@ -314,21 +315,35 @@ export class ColorDisplay extends BaseComponent {
       className: 'text-sm text-blue-800 dark:text-blue-200',
     });
 
-    const wcagAADiv = this.createElement('div', {});
+    const wcagAADiv = this.createElement('div', {
+      className: 'flex items-center gap-1',
+    });
     wcagAADiv.appendChild(document.createTextNode('WCAG AA: '));
     const wcagAASpan = this.createElement('span', {
-      textContent: wcagAA ? '✓ Pass' : '✗ Fail',
-      className: wcagAA ? 'text-green-600 font-semibold' : 'text-red-600',
+      className: `inline-flex items-center gap-1 ${wcagAA ? 'text-green-600 font-semibold' : 'text-red-600'}`,
     });
+    const wcagAAIcon = this.createElement('span', {
+      className: 'inline-block w-4 h-4',
+    });
+    wcagAAIcon.innerHTML = wcagAA ? ICON_SUCCESS : ICON_ERROR;
+    wcagAASpan.appendChild(wcagAAIcon);
+    wcagAASpan.appendChild(document.createTextNode(wcagAA ? ' Pass' : ' Fail'));
     wcagAADiv.appendChild(wcagAASpan);
     wcagDiv.appendChild(wcagAADiv);
 
-    const wcagAAADiv = this.createElement('div', {});
+    const wcagAAADiv = this.createElement('div', {
+      className: 'flex items-center gap-1',
+    });
     wcagAAADiv.appendChild(document.createTextNode('WCAG AAA: '));
     const wcagAAASpan = this.createElement('span', {
-      textContent: wcagAAA ? '✓ Pass' : '✗ Fail',
-      className: wcagAAA ? 'text-green-600 font-semibold' : 'text-red-600',
+      className: `inline-flex items-center gap-1 ${wcagAAA ? 'text-green-600 font-semibold' : 'text-red-600'}`,
     });
+    const wcagAAAIcon = this.createElement('span', {
+      className: 'inline-block w-4 h-4',
+    });
+    wcagAAAIcon.innerHTML = wcagAAA ? ICON_SUCCESS : ICON_ERROR;
+    wcagAAASpan.appendChild(wcagAAAIcon);
+    wcagAAASpan.appendChild(document.createTextNode(wcagAAA ? ' Pass' : ' Fail'));
     wcagAAADiv.appendChild(wcagAAASpan);
     wcagDiv.appendChild(wcagAAADiv);
     section.appendChild(wcagDiv);

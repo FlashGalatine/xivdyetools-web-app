@@ -392,7 +392,7 @@
     "supportedFormats": "지원 형식: PNG, JPG, GIF, WebP",
     "supportedFormatsWithSize": "지원 형식: PNG, JPG, WebP, GIF. 최대 크기: 20MB",
     "privacyNote": "이미지는 브라우저를 떠나지 않습니다",
-    "privacyNoticeHtml": "🔒 <strong>개인정보 보호:</strong> 사진과 이미지는 브라우저에서 로컬로 처리되며 서버에 업로드되지 않습니다. <a href=\"https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/docs/PRIVACY.md\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline font-semibold\">자세히 알아보기</a>",
+    "privacyNoticeHtml": "<strong>개인정보 보호:</strong> 사진과 이미지는 브라우저에서 로컬로 처리되며 서버에 업로드되지 않습니다. <a href=\"https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/docs/PRIVACY.md\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline font-semibold\">자세히 알아보기</a>",
     "privacyTitle": "개인정보 보호",
     "privacyMessage": "사진과 이미지는 브라우저에서 로컬로 처리되며 서버에 업로드되지 않습니다.",
     "privacyLearnMore": "자세히 알아보기",
@@ -847,7 +847,7 @@
     }
   },
   "shortcuts": {
-    "title": "⌨️ 키보드 단축키",
+    "title": "키보드 단축키",
     "navigation": "탐색",
     "switchTool": "도구 간 전환",
     "closeModal": "모달 닫기",

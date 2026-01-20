@@ -28,7 +28,7 @@ import type { CommunityPreset } from '@services/community-preset-service';
 import type { PresetsConfig, PresetCategoryFilter, PresetSortOption } from '@shared/tool-config-types';
 import { DEFAULT_DISPLAY_OPTIONS } from '@shared/tool-config-types';
 import type { PresetCategory } from '@xivdyetools/core';
-import { ICON_LOCKED, ICON_DOCUMENT } from '@shared/ui-icons';
+import { ICON_LOCKED, ICON_DOCUMENT, ICON_WARNING } from '@shared/ui-icons';
 import { ICON_EMPTY_INBOX } from '@shared/empty-state-icons';
 
 // Import child components
@@ -666,7 +666,7 @@ export class PresetTool extends BaseLitComponent {
   private renderError(): TemplateResult {
     return html`
       <div class="error-container">
-        <span class="error-icon">⚠️</span>
+        <span class="error-icon">${unsafeHTML(ICON_WARNING)}</span>
         <p class="error-message">${this._presetError}</p>
         <button class="retry-btn" @click=${this.handleRetry}>Try Again</button>
       </div>

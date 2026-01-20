@@ -412,7 +412,7 @@
     "supportedFormats": "支持格式：PNG、JPG、GIF、WebP",
     "supportedFormatsWithSize": "支持格式：PNG、JPG、WebP、GIF。最大大小：20MB",
     "privacyNote": "图像不会离开您的浏览器",
-    "privacyNoticeHtml": "🔒 <strong>隐私保护：</strong>照片和图像在浏览器中本地处理，永远不会上传到任何服务器。<a href=\"https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/docs/PRIVACY.md\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline font-semibold\">了解更多</a>",
+    "privacyNoticeHtml": "<strong>隐私保护：</strong>照片和图像在浏览器中本地处理，永远不会上传到任何服务器。<a href=\"https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/docs/PRIVACY.md\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline font-semibold\">了解更多</a>",
     "privacyTitle": "隐私保护",
     "privacyMessage": "照片和图像在浏览器中本地处理，永远不会上传到任何服务器。",
     "privacyLearnMore": "了解更多",
@@ -867,7 +867,7 @@
     }
   },
   "shortcuts": {
-    "title": "⌨️ 键盘快捷键",
+    "title": "键盘快捷键",
     "navigation": "导航",
     "switchTool": "切换工具",
     "closeModal": "关闭模态框",

@@ -409,7 +409,7 @@
     "supportedFormats": "Unterstützte Formate: PNG, JPG, GIF, WebP",
     "supportedFormatsWithSize": "Unterstützte Formate: PNG, JPG, WebP, GIF. Maximale Größe: 20MB",
     "privacyNote": "Bilder verlassen niemals deinen Browser",
-    "privacyNoticeHtml": "🔒 <strong>Datenschutz geschützt:</strong> Fotos und Bilder werden lokal in deinem Browser verarbeitet und niemals auf einen Server hochgeladen. <a href=\"https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/docs/PRIVACY.md\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline font-semibold\">Mehr erfahren</a>",
+    "privacyNoticeHtml": "<strong>Datenschutz geschützt:</strong> Fotos und Bilder werden lokal in deinem Browser verarbeitet und niemals auf einen Server hochgeladen. <a href=\"https://github.com/FlashGalatine/xivdyetools-web-app/blob/main/docs/PRIVACY.md\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"underline font-semibold\">Mehr erfahren</a>",
     "privacyTitle": "Datenschutz geschützt",
     "privacyMessage": "Fotos und Bilder werden lokal in deinem Browser verarbeitet und niemals auf einen Server hochgeladen.",
     "privacyLearnMore": "Mehr erfahren",
@@ -864,7 +864,7 @@
     }
   },
   "shortcuts": {
-    "title": "⌨️ Tastenkürzel",
+    "title": "Tastenkürzel",
     "navigation": "Navigation",
     "switchTool": "Zwischen Werkzeugen wechseln",
     "closeModal": "Modal schließen",
