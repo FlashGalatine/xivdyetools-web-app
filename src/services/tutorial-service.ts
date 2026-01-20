@@ -11,7 +11,7 @@ import { StorageService } from './storage-service';
 import { LanguageService } from './language-service';
 import { ModalService } from './modal-service';
 import { logger } from '@shared/logger';
-import { STORAGE_PREFIX } from '@shared/constants';
+import { STORAGE_PREFIX, STORAGE_KEYS } from '@shared/constants';
 
 // ============================================================================
 // Tutorial Types
@@ -370,12 +370,43 @@ export class TutorialService {
   }
 
   /**
-   * Reset all tutorial completions
+   * Reset all tutorial completions and re-enable tutorial prompts
    */
   static resetAllCompletions(): void {
     const tools: TutorialTool[] = ['harmony', 'matcher', 'comparison', 'mixer', 'accessibility'];
     tools.forEach((tool) => this.resetCompletion(tool));
+    // Also re-enable tutorial prompts if they were disabled
+    this.enableAllPrompts();
     logger.info('All tutorials reset');
+  }
+
+  // ============================================================================
+  // Tutorial Prompt Global Disable
+  // ============================================================================
+
+  /**
+   * Check if all tutorial prompts are disabled
+   */
+  static areAllPromptsDisabled(): boolean {
+    return StorageService.getItem<boolean>(STORAGE_KEYS.TUTORIALS_DISABLED, false) === true;
+  }
+
+  /**
+   * Disable all tutorial prompts globally
+   * User will no longer be prompted for any tutorials
+   */
+  static disableAllPrompts(): void {
+    StorageService.setItem(STORAGE_KEYS.TUTORIALS_DISABLED, true);
+    logger.info('All tutorial prompts disabled');
+  }
+
+  /**
+   * Re-enable tutorial prompts
+   * User will be prompted for tutorials again (for tools not yet completed)
+   */
+  static enableAllPrompts(): void {
+    StorageService.removeItem(STORAGE_KEYS.TUTORIALS_DISABLED);
+    logger.info('Tutorial prompts re-enabled');
   }
 
   // ============================================================================
@@ -544,9 +575,8 @@ export class TutorialService {
    * Show prompt to start tutorial for a tool
    */
   static promptStart(tool: TutorialTool): void {
-    if (this.isCompleted(tool)) return;
-
-    const toolName = LanguageService.t(`tools.${tool}.shortName`);
+    // Don't show prompt if tool is already completed or all prompts are disabled
+    if (this.isCompleted(tool) || this.areAllPromptsDisabled()) return;
 
     const content = document.createElement('div');
     content.className = 'text-center';
@@ -558,8 +588,9 @@ export class TutorialService {
     content.appendChild(message);
 
     const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'flex justify-center gap-3';
+    buttonContainer.className = 'flex flex-wrap justify-center gap-3';
 
+    // Skip button - skips just this tour
     const skipBtn = document.createElement('button');
     skipBtn.className = 'px-4 py-2 text-sm rounded-lg transition-colors';
     skipBtn.style.backgroundColor = 'var(--theme-card-background)';
@@ -567,9 +598,21 @@ export class TutorialService {
     skipBtn.textContent = LanguageService.t('tutorial.prompt.skip');
     skipBtn.addEventListener('click', () => {
       ModalService.dismissTop();
-      this.markCompleted(tool); // Don't ask again
+      this.markCompleted(tool); // Don't ask again for this tool
     });
 
+    // Disable all button - disables all tour prompts
+    const disableAllBtn = document.createElement('button');
+    disableAllBtn.className = 'px-4 py-2 text-sm rounded-lg transition-colors';
+    disableAllBtn.style.backgroundColor = 'var(--theme-card-background)';
+    disableAllBtn.style.color = 'var(--theme-text-muted)';
+    disableAllBtn.textContent = LanguageService.t('tutorial.prompt.disableAll');
+    disableAllBtn.addEventListener('click', () => {
+      ModalService.dismissTop();
+      this.disableAllPrompts(); // Don't ask again for any tool
+    });
+
+    // Start tour button
     const startBtn = document.createElement('button');
     startBtn.className = 'px-4 py-2 text-sm font-medium rounded-lg transition-colors';
     startBtn.style.backgroundColor = 'var(--theme-primary)';
@@ -581,6 +624,7 @@ export class TutorialService {
     });
 
     buttonContainer.appendChild(skipBtn);
+    buttonContainer.appendChild(disableAllBtn);
     buttonContainer.appendChild(startBtn);
     content.appendChild(buttonContainer);
 

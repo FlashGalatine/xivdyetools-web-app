@@ -977,6 +977,7 @@
       "title": "Quick Tour",
       "message": "Would you like a quick tour of this tool?",
       "skip": "Skip",
+      "disableAll": "Disable All Tours",
       "start": "Start Tour"
     },
     "harmony": {

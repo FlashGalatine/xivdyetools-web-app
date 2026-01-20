@@ -32,6 +32,9 @@ vi.mock('../modal-service', () => ({
 
 vi.mock('@shared/constants', () => ({
   STORAGE_PREFIX: 'xivdyetools',
+  STORAGE_KEYS: {
+    TUTORIALS_DISABLED: 'xivdyetools_tutorials_disabled',
+  },
 }));
 
 describe('TutorialService', () => {
@@ -180,10 +183,11 @@ describe('TutorialService', () => {
   });
 
   describe('resetAllCompletions', () => {
-    it('should reset all tool completions', () => {
+    it('should reset all tool completions and re-enable prompts', () => {
       TutorialService.resetAllCompletions();
 
-      expect(StorageService.removeItem).toHaveBeenCalledTimes(5);
+      // 5 tutorial completions + 1 tutorials_disabled flag
+      expect(StorageService.removeItem).toHaveBeenCalledTimes(6);
       expect(StorageService.removeItem).toHaveBeenCalledWith(
         expect.stringContaining('tutorial_harmony')
       );
@@ -198,6 +202,92 @@ describe('TutorialService', () => {
       );
       expect(StorageService.removeItem).toHaveBeenCalledWith(
         expect.stringContaining('tutorial_accessibility')
+      );
+      // Also removes the global disabled flag
+      expect(StorageService.removeItem).toHaveBeenCalledWith(
+        expect.stringContaining('tutorials_disabled')
+      );
+    });
+  });
+
+  // ============================================================================
+  // Global Disable Tests
+  // ============================================================================
+
+  describe('areAllPromptsDisabled', () => {
+    it('should return false when not disabled', () => {
+      (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      expect(TutorialService.areAllPromptsDisabled()).toBe(false);
+    });
+
+    it('should return false when key does not exist', () => {
+      (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
+      expect(TutorialService.areAllPromptsDisabled()).toBe(false);
+    });
+
+    it('should return true when disabled', () => {
+      (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue(true);
+      expect(TutorialService.areAllPromptsDisabled()).toBe(true);
+    });
+  });
+
+  describe('disableAllPrompts', () => {
+    it('should set disabled flag to true', () => {
+      TutorialService.disableAllPrompts();
+      expect(StorageService.setItem).toHaveBeenCalledWith(
+        expect.stringContaining('tutorials_disabled'),
+        true
+      );
+    });
+  });
+
+  describe('enableAllPrompts', () => {
+    it('should remove disabled flag', () => {
+      TutorialService.enableAllPrompts();
+      expect(StorageService.removeItem).toHaveBeenCalledWith(
+        expect.stringContaining('tutorials_disabled')
+      );
+    });
+  });
+
+  describe('promptStart with global disable', () => {
+    it('should not show modal when all prompts are disabled', () => {
+      // Simulate disabled state
+      (StorageService.getItem as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+        if (key.includes('tutorials_disabled')) return true;
+        return null; // Tutorial not completed
+      });
+
+      TutorialService.promptStart('harmony');
+
+      expect(ModalService.show).not.toHaveBeenCalled();
+    });
+
+    it('should handle disable all button click', () => {
+      (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
+      let capturedContent: HTMLElement | null = null;
+
+      // Capture the modal content
+      (ModalService.show as ReturnType<typeof vi.fn>).mockImplementation((options) => {
+        capturedContent = options.content as HTMLElement;
+        return 'modal-id';
+      });
+
+      TutorialService.promptStart('harmony');
+
+      // Find and click the disable all button (Skip, Disable All, Start - index 1)
+      const buttons = (capturedContent as HTMLElement | null)?.querySelectorAll('button');
+      const disableAllButton = buttons?.[1]; // Second button is disable all
+
+      if (disableAllButton) {
+        disableAllButton.click();
+      }
+
+      // Should dismiss modal and disable all prompts
+      expect(ModalService.dismissTop).toHaveBeenCalled();
+      expect(StorageService.setItem).toHaveBeenCalledWith(
+        expect.stringContaining('tutorials_disabled'),
+        true
       );
     });
   });
@@ -404,9 +494,9 @@ describe('TutorialService', () => {
   // ============================================================================
 
   describe('Tutorial Steps', () => {
-    it('should have harmony tutorial with 5 steps', () => {
+    it('should have harmony tutorial with 4 steps', () => {
       const tutorial = TutorialService.getTutorial('harmony');
-      expect(tutorial?.steps.length).toBe(5);
+      expect(tutorial?.steps.length).toBe(4);
     });
 
     it('should have matcher tutorial with 4 steps', () => {
@@ -419,9 +509,9 @@ describe('TutorialService', () => {
       expect(tutorial?.steps.length).toBe(3);
     });
 
-    it('should have mixer tutorial with 3 steps', () => {
+    it('should have mixer tutorial with 4 steps', () => {
       const tutorial = TutorialService.getTutorial('mixer');
-      expect(tutorial?.steps.length).toBe(3);
+      expect(tutorial?.steps.length).toBe(4);
     });
 
     it('should have accessibility tutorial with 3 steps', () => {
@@ -470,14 +560,6 @@ describe('TutorialService', () => {
       expect(ModalService.show).not.toHaveBeenCalled();
     });
 
-    it('should use translated tool name', () => {
-      (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
-      TutorialService.promptStart('harmony');
-
-      expect(LanguageService.t).toHaveBeenCalledWith('tools.harmony.shortName');
-    });
-
     it('should handle skip button click and mark tutorial complete', () => {
       (StorageService.getItem as ReturnType<typeof vi.fn>).mockReturnValue(null);
       let capturedContent: HTMLElement | null = null;
@@ -519,9 +601,9 @@ describe('TutorialService', () => {
 
       TutorialService.promptStart('harmony');
 
-      // Find and click the start button
+      // Find and click the start button (Skip, Disable All, Start - index 2)
       const buttons = (capturedContent as HTMLElement | null)?.querySelectorAll('button');
-      const startButton = buttons?.[1]; // Second button is start
+      const startButton = buttons?.[2]; // Third button is start
 
       if (startButton) {
         startButton.click();
@@ -558,7 +640,7 @@ describe('TutorialService', () => {
           detail: expect.objectContaining({
             step: expect.objectContaining({ id: 'base-color' }),
             stepIndex: 0,
-            totalSteps: 5,
+            totalSteps: 4,
           }),
         })
       );

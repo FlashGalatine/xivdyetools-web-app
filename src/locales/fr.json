@@ -934,6 +934,7 @@
       "title": "Visite rapide",
       "message": "Voulez-vous une visite rapide de cet outil ?",
       "skip": "Passer",
+      "disableAll": "Désactiver toutes les visites",
       "start": "Commencer la visite"
     },
     "harmony": {

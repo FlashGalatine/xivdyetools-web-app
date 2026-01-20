@@ -934,6 +934,7 @@
       "title": "Schnelltour",
       "message": "Möchten Sie eine kurze Tour durch dieses Tool?",
       "skip": "Überspringen",
+      "disableAll": "Alle Touren deaktivieren",
       "start": "Tour starten"
     },
     "harmony": {

@@ -215,6 +215,8 @@ export const STORAGE_KEYS = {
   // Phase 2.2: Collections & Favorites
   FAVORITES: `${STORAGE_PREFIX}_favorites`,
   COLLECTIONS: `${STORAGE_PREFIX}_collections`,
+  // Phase 2: Tutorials
+  TUTORIALS_DISABLED: `${STORAGE_PREFIX}_tutorials_disabled`,
 } as const;
 
 // ============================================================================
