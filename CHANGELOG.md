@@ -40,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Charts display side-by-side (two columns) on desktop viewports (≥768px)
 - Uses JavaScript-based viewport detection since Tailwind responsive classes don't work in dynamically created DOM
 
+**Swatch Tool Mobile Layout**
+- Fixed color grid bleeding off left/right edges on mobile (was 420px fixed on 390px viewport)
+- Grid now dynamically resizes swatch buttons to fit viewport while maintaining 8-column layout (mimics in-game arrangement)
+- Results section now stacks below the grid on mobile instead of requiring horizontal scroll
+- Added auto-scroll to results when selecting a color on mobile, so users immediately see matching dyes
+- Desktop layout unchanged: horizontal layout with grid on left, results on right
+
 #### Technical Details
 
 **Files Modified**
@@ -58,6 +65,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `updateChartsLayout()` method for responsive grid columns
   - Added window resize listener in `onMount()` to update layout on viewport changes
   - Charts container uses `display: grid` with dynamic `grid-template-columns` (1fr on mobile, repeat(2, 1fr) on desktop)
+- `src/components/swatch-tool.ts`
+  - Added `mainLayout` and `gridPanel` DOM references for responsive manipulation
+  - Added `updateSwatchLayout()` method that switches between column (mobile) and row (desktop) flex direction
+  - Dynamically calculates swatch button size based on viewport width: `(viewportWidth - padding - gaps) / 8`
+  - Added resize listener in `onMount()` using BaseComponent's `this.on()` for automatic cleanup
+  - Added auto-scroll to results in `selectColor()` using `scrollIntoView({ behavior: 'smooth', block: 'start' })`
 
 ---
 

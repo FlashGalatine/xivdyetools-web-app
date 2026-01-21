@@ -180,6 +180,10 @@ export class SwatchTool extends BaseComponent {
   private genderSelect: HTMLSelectElement | null = null;
   private categorySelect: HTMLSelectElement | null = null;
 
+  // Layout containers for responsive behavior
+  private mainLayout: HTMLElement | null = null;
+  private gridPanel: HTMLElement | null = null;
+
   // Mobile DOM References
   private mobileSubraceSelect: HTMLSelectElement | null = null;
   private mobileGenderSelect: HTMLSelectElement | null = null;
@@ -258,6 +262,10 @@ export class SwatchTool extends BaseComponent {
       this.mobileMarketBoard.setSelectedServer(marketConfig.selectedServer);
       this.mobileMarketBoard.setShowPrices(marketConfig.showPrices);
     }
+
+    // Set initial layout and listen for viewport changes
+    this.updateSwatchLayout();
+    this.on(window, 'resize', this.updateSwatchLayout);
 
     logger.info('[SwatchTool] Mounted');
   }
@@ -734,7 +742,8 @@ export class SwatchTool extends BaseComponent {
 
     // Main layout container: Color Grid (LEFT) | Results Area (RIGHT)
     // Use align-items: flex-start so children size to their content, not stretch to fill
-    const mainLayout = this.createElement('div', {
+    // On mobile, switches to column layout via updateSwatchLayout()
+    this.mainLayout = this.createElement('div', {
       attributes: {
         style: `
           display: flex;
@@ -750,7 +759,8 @@ export class SwatchTool extends BaseComponent {
 
     // LEFT: Color Grid Panel (glassmorphism container)
     // height: fit-content ensures panel sizes to contain all swatches (96 or 192)
-    const gridPanel = this.createElement('div', {
+    // Width and swatch sizes adjusted via updateSwatchLayout() for mobile
+    this.gridPanel = this.createElement('div', {
       className: 'glass',
       attributes: {
         style: `
@@ -796,9 +806,10 @@ export class SwatchTool extends BaseComponent {
       },
     });
     gridHeader.appendChild(gridTitle);
-    gridPanel.appendChild(gridHeader);
+    this.gridPanel.appendChild(gridHeader);
 
     // Color grid (8 columns with larger swatches)
+    // Swatch size adjusted via updateSwatchLayout() for mobile
     this.colorGridContainer = this.createElement('div', {
       attributes: {
         style: `
@@ -809,8 +820,8 @@ export class SwatchTool extends BaseComponent {
         `,
       },
     });
-    gridPanel.appendChild(this.colorGridContainer);
-    mainLayout.appendChild(gridPanel);
+    this.gridPanel.appendChild(this.colorGridContainer);
+    this.mainLayout.appendChild(this.gridPanel);
 
     // RIGHT: Results Area (wider to accommodate 4 cards per row)
     const resultsArea = this.createElement('div', {
@@ -968,8 +979,8 @@ export class SwatchTool extends BaseComponent {
     // Add empty state to results area (will be shown/hidden by updateMatchResults)
     resultsArea.appendChild(this.emptyStateContainer);
 
-    mainLayout.appendChild(resultsArea);
-    right.appendChild(mainLayout);
+    this.mainLayout.appendChild(resultsArea);
+    right.appendChild(this.mainLayout);
 
     // Initialize displays
     this.updateSelectedColorDisplay();
@@ -996,6 +1007,67 @@ export class SwatchTool extends BaseComponent {
       if (matchHeader && matchHeader !== this.matchResultsContainer) {
         matchHeader.style.display = hasSelection && hasResults ? 'flex' : 'none';
       }
+    }
+  }
+
+  /**
+   * Update layout based on viewport width
+   * Mobile: Vertical stack with responsive swatch sizes
+   * Desktop: Horizontal layout with fixed 44px swatches
+   */
+  private updateSwatchLayout(): void {
+    if (!this.mainLayout || !this.gridPanel || !this.colorGridContainer) return;
+
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+      // Mobile: Stack vertically, responsive swatch sizes
+      this.mainLayout.style.flexDirection = 'column';
+      this.mainLayout.style.alignItems = 'center';
+
+      // Calculate available width for grid (viewport - padding)
+      const viewportWidth = window.innerWidth;
+      const containerPadding = 32; // From right panel padding
+      const gridPadding = 20; // From gridPanel padding on each side
+      const availableWidth = viewportWidth - (containerPadding * 2);
+
+      // Calculate swatch size: (available - grid padding - gaps) / 8 columns
+      // 7 gaps at 4px each = 28px
+      const gridInnerWidth = availableWidth - (gridPadding * 2);
+      const swatchSize = Math.floor((gridInnerWidth - 28) / 8);
+      // Clamp to reasonable range (min 28px, max 44px)
+      const clampedSwatchSize = Math.max(28, Math.min(44, swatchSize));
+
+      // Update grid panel width
+      this.gridPanel.style.width = '100%';
+      this.gridPanel.style.maxWidth = `${availableWidth}px`;
+
+      // Update grid template
+      this.colorGridContainer.style.gridTemplateColumns = `repeat(8, ${clampedSwatchSize}px)`;
+
+      // Update individual swatch sizes
+      const swatches = this.colorGridContainer.querySelectorAll('button');
+      swatches.forEach((swatch) => {
+        (swatch as HTMLElement).style.width = `${clampedSwatchSize}px`;
+        (swatch as HTMLElement).style.height = `${clampedSwatchSize}px`;
+      });
+    } else {
+      // Desktop: Horizontal layout, fixed swatch sizes
+      this.mainLayout.style.flexDirection = 'row';
+      this.mainLayout.style.alignItems = 'flex-start';
+
+      // Restore fixed width
+      this.gridPanel.style.width = '420px';
+      this.gridPanel.style.maxWidth = '';
+
+      // Restore fixed swatch sizes
+      this.colorGridContainer.style.gridTemplateColumns = 'repeat(8, 44px)';
+
+      const swatches = this.colorGridContainer.querySelectorAll('button');
+      swatches.forEach((swatch) => {
+        (swatch as HTMLElement).style.width = '44px';
+        (swatch as HTMLElement).style.height = '44px';
+      });
     }
   }
 
@@ -1039,6 +1111,9 @@ export class SwatchTool extends BaseComponent {
 
       this.colorGridContainer.appendChild(swatch);
     }
+
+    // Apply responsive sizing to newly created swatches
+    this.updateSwatchLayout();
   }
 
   /**
@@ -1692,6 +1767,14 @@ export class SwatchTool extends BaseComponent {
     this.updateSelectedColorDisplay();
     this.findMatchingDyes();
     this.updateShareButton();
+
+    // On mobile, scroll to results section so user can see the matches
+    if (window.innerWidth < 768 && this.selectedColorDisplay) {
+      // Small delay to allow DOM updates before scrolling
+      this.safeTimeout(() => {
+        this.selectedColorDisplay?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
   }
 
   /**
