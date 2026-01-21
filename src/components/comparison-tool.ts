@@ -218,6 +218,10 @@ export class ComparisonTool extends BaseComponent {
       this.loadPersistedDyes();
     }
 
+    // Set initial charts layout and listen for viewport changes
+    this.updateChartsLayout();
+    this.on(window, 'resize', this.updateChartsLayout);
+
     logger.info('[ComparisonTool] Mounted');
   }
 
@@ -942,11 +946,12 @@ export class ComparisonTool extends BaseComponent {
       className: 'mb-8',
       attributes: { style: 'display: none; margin-top: 1.5rem;' },
     });
+    // Charts grid - single column on mobile (<768px), 2 columns on larger screens
+    // grid-template-columns is set dynamically by updateChartsLayout() based on viewport width
     this.chartsContainer = this.createElement('div', {
       className: 'grid gap-4 md:grid-cols-2',
       attributes: {
-        style:
-          'display: grid; gap: 1rem; grid-template-columns: repeat(2, 1fr); max-width: 1168px; margin: 0 auto;',
+        style: 'display: grid; gap: 1rem; max-width: 1168px; margin: 0 auto;',
       },
     });
     this.chartsSection.appendChild(this.chartsContainer);
@@ -1362,6 +1367,17 @@ export class ComparisonTool extends BaseComponent {
     }
 
     this.closestPair = closest;
+  }
+
+  /**
+   * Update charts container layout based on viewport width
+   * Single column on mobile (<768px), two columns on larger screens
+   */
+  private updateChartsLayout(): void {
+    if (!this.chartsContainer) return;
+
+    const isDesktop = window.innerWidth >= 768;
+    this.chartsContainer.style.gridTemplateColumns = isDesktop ? 'repeat(2, 1fr)' : '1fr';
   }
 
   /**

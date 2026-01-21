@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tables now scroll horizontally within their container instead of shifting the entire page
 - Added `overflow-x: auto` to table containers for proper mobile scrolling behavior
 
+**Compare Tool Charts Responsive Layout**
+- Fixed Hue-Saturation Plot and Brightness Distribution charts being cramped side-by-side on mobile
+- Charts now stack vertically (single column) on mobile viewports (<768px)
+- Charts display side-by-side (two columns) on desktop viewports (≥768px)
+- Uses JavaScript-based viewport detection since Tailwind responsive classes don't work in dynamically created DOM
+
 #### Technical Details
 
 **Files Modified**
@@ -48,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Changed `isOpen` property default from `true` to `false`
 - `src/components/accessibility-tool.ts`
   - Added `overflow-x: auto` to Contrast Ratios table container
+- `src/components/comparison-tool.ts`
+  - Added `updateChartsLayout()` method for responsive grid columns
+  - Added window resize listener in `onMount()` to update layout on viewport changes
+  - Charts container uses `display: grid` with dynamic `grid-template-columns` (1fr on mobile, repeat(2, 1fr) on desktop)
 
 ---
 
