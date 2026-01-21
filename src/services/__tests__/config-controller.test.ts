@@ -351,7 +351,7 @@ describe('ConfigController', () => {
       controller.resetAllConfigs();
 
       // Storage should have been called for each config
-      expect(StorageService.setItem).toHaveBeenCalledTimes(13); // 2 sets + 11 resets
+      expect(StorageService.setItem).toHaveBeenCalledTimes(14); // 2 sets + 12 resets (9 tools + global + market + advanced)
     });
 
     it('should notify all listeners', () => {

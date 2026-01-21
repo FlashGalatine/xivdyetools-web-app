@@ -68,6 +68,7 @@ export default defineConfig({
         'src/components/v4/glass-panel.ts', // Lit component - E2E tested
         'src/components/v4/range-slider-v4.ts', // Lit component - E2E tested
         'src/components/v4/toggle-switch-v4.ts', // Lit component - E2E tested
+        'src/components/v4/share-button.ts', // Complex share UI with browser APIs
         // Layout and complex UI components
         'src/components/app-layout.ts', // Main app layout - E2E tested
         'src/components/v4-layout.ts', // V4 layout shell
@@ -80,6 +81,9 @@ export default defineConfig({
         'src/components/changelog-modal.ts', // Modal with version logic
         'src/components/toast-container.ts', // Animation-based component
         'src/components/dye-grid.ts', // Complex grid with many branches
+        // Services better suited for E2E testing
+        'src/services/share-service.ts', // URL sharing/analytics - E2E tested
+        'src/services/tool-panel-builders.ts', // UI helper functions - E2E tested
       ],
       lines: 80,
       functions: 80,

@@ -37,6 +37,8 @@ const { mockMarketBoardService } = vi.hoisted(() => ({
     shouldFetchPrice: vi.fn().mockReturnValue(true),
     fetchPricesForDyes: vi.fn().mockResolvedValue(new Map()),
     refreshPrices: vi.fn().mockResolvedValue(undefined),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
   },
 }));
 

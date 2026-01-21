@@ -8,6 +8,17 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// Mock tool-panel-builders to prevent circular dependency when running with other tests
+vi.mock('@services/tool-panel-builders', () => ({
+  buildFiltersPanel: vi.fn(),
+  buildMarketPanel: vi.fn(),
+  buildPanelSection: vi.fn(),
+  buildCheckboxPanelSection: vi.fn(),
+  buildSelectPanelSection: vi.fn(),
+  buildRadioPanelSection: vi.fn(),
+}));
+
 import { BaseComponent } from '../base-component';
 import {
   createTestContainer,

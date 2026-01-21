@@ -443,6 +443,12 @@ describe('UI Icons', () => {
         'book',
         'success',
         'error',
+        'refresh',
+        'import',
+        'folder',
+        'zap',
+        'chart',
+        'keyboard',
       ]);
     });
 

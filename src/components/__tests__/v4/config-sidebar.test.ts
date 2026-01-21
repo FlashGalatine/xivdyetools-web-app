@@ -49,12 +49,31 @@ vi.mock('@shared/ui-icons', () => ({
   ICON_CLOSE: '<svg></svg>',
 }));
 
-vi.mock('@shared/tool-config-types', () => ({
-  DEFAULT_DISPLAY_OPTIONS: {
+vi.mock('@shared/tool-config-types', () => {
+  const DEFAULT_DISPLAY_OPTIONS = {
     showDyeName: true,
     showDeltaE: true,
-  },
-}));
+    showPrice: false,
+    showAcquisition: false,
+  };
+  return {
+    DEFAULT_DISPLAY_OPTIONS,
+    DEFAULT_CONFIGS: {
+      global: { theme: '', displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      market: { selectedServer: 'Crystal', showPrices: false },
+      advanced: { analyticsEnabled: false, performanceMode: false },
+      harmony: { harmonyType: 'complementary', strictMatching: true, matchingMethod: 'oklab', displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      extractor: { vibrancyBoost: true, maxColors: 4, dragThreshold: 5, matchingMethod: 'oklab', displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      accessibility: { normalVision: true, deuteranopia: true, protanopia: true, tritanopia: true, achromatopsia: true, showLabels: true, showHexValues: false, highContrastMode: false, displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      comparison: { displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      gradient: { stepCount: 4, interpolation: 'hsv', matchingMethod: 'oklab', displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      mixer: { maxResults: 4, mixingMode: 'ryb', matchingMethod: 'oklab', displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      presets: { showMyPresetsOnly: false, showFavorites: false, sortBy: 'popular', category: 'all', displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      budget: { maxPrice: 100000, maxResults: 8, maxDeltaE: 50, displayOptions: DEFAULT_DISPLAY_OPTIONS },
+      swatch: { colorSheet: 'hairColors', race: 'SeekerOfTheSun', gender: 'Female', displayOptions: DEFAULT_DISPLAY_OPTIONS },
+    },
+  };
+});
 
 vi.mock('@components/preset-submission-form', () => ({
   showPresetSubmissionForm: vi.fn(),
