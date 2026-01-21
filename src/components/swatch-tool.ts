@@ -743,10 +743,12 @@ export class SwatchTool extends BaseComponent {
     // Main layout container: Color Grid (LEFT) | Results Area (RIGHT)
     // Use align-items: flex-start so children size to their content, not stretch to fill
     // On mobile, switches to column layout via updateSwatchLayout()
+    // flex: 0 0 auto prevents flexbox from constraining height, allowing natural content sizing
     this.mainLayout = this.createElement('div', {
       attributes: {
         style: `
           display: flex;
+          flex: 0 0 auto;
           gap: 24px;
           min-height: 500px;
           justify-content: center;

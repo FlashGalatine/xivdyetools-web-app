@@ -45,7 +45,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Grid now dynamically resizes swatch buttons to fit viewport while maintaining 8-column layout (mimics in-game arrangement)
 - Results section now stacks below the grid on mobile instead of requiring horizontal scroll
 - Added auto-scroll to results when selecting a color on mobile, so users immediately see matching dyes
+- Fixed bug where users couldn't scroll back up to the grid after selecting a color on mobile
+  - Root cause: `mainLayout` container was constrained by flexbox to 620px while grid was 935px, causing grid to overflow above the scroll container's viewport
+  - Fix: Changed `mainLayout` from implicit `flex: 0 1 auto` to explicit `flex: 0 0 auto` to prevent height shrinking
 - Desktop layout unchanged: horizontal layout with grid on left, results on right
+
+**Gradient Tool Mobile Layout**
+- Fixed gradient builder UI being cramped on mobile (80px circles + 24px step markers on 390px viewport)
+- Node circles now scale down from 80px (desktop) to 60px (mobile)
+- Step markers scale down from 24px to 16px on mobile for better fit
+- Reduced path margins (16px → 8px) and builder padding (20px → 12px) on mobile
+- Added `updateGradientLayout()` method for responsive behavior
+- Added window resize listener to update layout dynamically
+
+**Extractor Tool Mobile Layout**
+- Fixed image drop zone taking up too much vertical space on mobile (300px on 390px viewport)
+- Image section now scales down from 300px (desktop) to 180px (mobile) when an image is loaded
+- Empty drop zone (no image) uses 220px height on mobile to still show upload UI clearly
+- Reduced layout padding (32px → 16px) and gap (32px → 16px) on mobile
+- Users can now see at least one full result card without scrolling after extracting a palette
+- Added `updateExtractorLayout()` method for responsive behavior
+- Added window resize listener to update layout dynamically
 
 #### Technical Details
 
@@ -71,6 +91,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Dynamically calculates swatch button size based on viewport width: `(viewportWidth - padding - gaps) / 8`
   - Added resize listener in `onMount()` using BaseComponent's `this.on()` for automatic cleanup
   - Added auto-scroll to results in `selectColor()` using `scrollIntoView({ behavior: 'smooth', block: 'start' })`
+  - Changed `mainLayout` style from implicit `flex: 0 1 auto` to `flex: 0 0 auto` to prevent flexbox from constraining height
+- `src/components/gradient-tool.ts`
+  - Added DOM references for `gradientBuilderUI`, `startNodeElement`, `endNodeElement`, `pathContainerElement`
+  - Added `updateGradientLayout()` method that adjusts element sizes based on viewport width
+  - Node circles: 80px → 60px on mobile; step markers: 24px → 16px on mobile
+  - Padding, margins, and gaps adjusted for tighter mobile layout
+  - Updated `renderGradientPreview()` to use responsive step marker sizes
+  - Added resize listener in `onMount()` using BaseComponent's `this.on()` for automatic cleanup
+- `src/components/extractor-tool.ts`
+  - Added DOM references for `imageSectionElement` and `extractorLayoutElement`
+  - Added `updateExtractorLayout()` method that adjusts image section height and layout spacing based on viewport width
+  - Image section height: 300px (desktop) → 180px (mobile with image) / 220px (mobile without image)
+  - Layout padding and gap: 32px → 16px on mobile
+  - Added resize listener in `onMount()` using BaseComponent's `this.on()` for automatic cleanup
+  - Calls `updateExtractorLayout()` in image load handlers (bindEvents, restoreSavedImage, handleDroppedFile, mobile upload) and clearImage
 
 ---
 

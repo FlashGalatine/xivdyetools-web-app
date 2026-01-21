@@ -150,6 +150,8 @@ export class ExtractorTool extends BaseComponent {
   private dropZone: HTMLElement | null = null;
   private dropContent: HTMLElement | null = null;
   private dropZoneFileInput: HTMLInputElement | null = null;
+  private imageSectionElement: HTMLElement | null = null;
+  private extractorLayoutElement: HTMLElement | null = null;
 
   // Mobile-specific DOM References (separate from desktop to avoid conflicts)
   private mobileSampleSlider: HTMLInputElement | null = null;
@@ -257,6 +259,9 @@ export class ExtractorTool extends BaseComponent {
       this.showEmptyState(false);
       this.updateDrawerContent();
 
+      // Update responsive layout now that image is loaded
+      this.updateExtractorLayout();
+
       // V4: Auto-extract palette on image load
       void this.extractPalette();
     });
@@ -347,6 +352,14 @@ export class ExtractorTool extends BaseComponent {
       }, 100);
     }
 
+    // Initial responsive layout update
+    this.updateExtractorLayout();
+
+    // Listen for window resize to update responsive layout
+    this.on(window, 'resize', () => {
+      this.updateExtractorLayout();
+    });
+
     logger.info('[MatcherTool] Mounted');
   }
 
@@ -380,6 +393,9 @@ export class ExtractorTool extends BaseComponent {
 
       this.showEmptyState(false);
       this.updateDrawerContent();
+
+      // Update responsive layout now that image is restored
+      this.updateExtractorLayout();
 
       logger.info('[ExtractorTool] Restored saved image from storage');
 
@@ -734,6 +750,39 @@ export class ExtractorTool extends BaseComponent {
   }
 
   /**
+   * Update extractor layout for responsive design
+   * Reduces image section height on mobile when an image is loaded
+   * so users can see at least one result card
+   */
+  private updateExtractorLayout(): void {
+    const isMobile = window.innerWidth < 768;
+    const hasImage = this.currentImage !== null;
+
+    // Image section height:
+    // - Desktop: 300px (unchanged)
+    // - Mobile without image: 220px (reduced but shows drop zone UI)
+    // - Mobile with image: 180px (compact to show results)
+    if (this.imageSectionElement) {
+      if (isMobile) {
+        this.imageSectionElement.style.height = hasImage ? '180px' : '220px';
+      } else {
+        this.imageSectionElement.style.height = '300px';
+      }
+    }
+
+    // Adjust layout padding and gap on mobile
+    if (this.extractorLayoutElement) {
+      if (isMobile) {
+        this.extractorLayoutElement.style.padding = '16px';
+        this.extractorLayoutElement.style.gap = '16px';
+      } else {
+        this.extractorLayoutElement.style.padding = '32px';
+        this.extractorLayoutElement.style.gap = '32px';
+      }
+    }
+  }
+
+  /**
    * Render dye filters collapsible panel
    * WEB-REF-003 Phase 3: Refactored to use shared builder
    */
@@ -806,7 +855,8 @@ export class ExtractorTool extends BaseComponent {
     clearContainer(right);
 
     // Create main extractor layout container with inline styles
-    const extractorLayout = this.createElement('div', {
+    // Store reference for responsive updates
+    this.extractorLayoutElement = this.createElement('div', {
       className: 'extractor-layout',
       attributes: {
         style: `
@@ -822,9 +872,11 @@ export class ExtractorTool extends BaseComponent {
         `.replace(/\s+/g, ' ').trim(),
       },
     });
+    const extractorLayout = this.extractorLayoutElement;
 
     // === Top Section: Image Input ===
-    const imageSection = this.createElement('div', {
+    // Store reference for responsive height updates
+    this.imageSectionElement = this.createElement('div', {
       className: 'image-input-section',
       attributes: {
         style: `
@@ -834,6 +886,7 @@ export class ExtractorTool extends BaseComponent {
         `.replace(/\s+/g, ' ').trim(),
       },
     });
+    const imageSection = this.imageSectionElement;
 
     // Image drop zone
     // overflow: hidden clips the image content; zoom controls remain visible via inline styles
@@ -1192,6 +1245,9 @@ export class ExtractorTool extends BaseComponent {
         this.showEmptyState(false);
         this.updateDrawerContent();
 
+        // Update responsive layout now that image is loaded
+        this.updateExtractorLayout();
+
         ToastService.success(LanguageService.t('matcher.imageLoaded'));
 
         // Auto-extract palette (v4 default behavior)
@@ -1249,6 +1305,9 @@ export class ExtractorTool extends BaseComponent {
     // Show empty state
     this.showEmptyState(true);
     this.updateDrawerContent();
+
+    // Update responsive layout (image cleared, may expand drop zone)
+    this.updateExtractorLayout();
 
     // Re-render the canvas area to clear zoom controller
     this.renderImageCanvas();
@@ -1820,6 +1879,9 @@ export class ExtractorTool extends BaseComponent {
       }
 
       this.showEmptyState(false);
+
+      // Update responsive layout now that image is loaded
+      this.updateExtractorLayout();
     });
 
     contentWrapper.appendChild(contentInner);

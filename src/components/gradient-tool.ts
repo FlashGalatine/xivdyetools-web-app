@@ -381,7 +381,15 @@ export class GradientTool extends BaseComponent {
       this.updateDrawerContent();
     }
 
-    logger.info('[MixerTool] Mounted');
+    // Initial responsive layout update
+    this.updateGradientLayout();
+
+    // Listen for window resize to update responsive layout
+    this.on(window, 'resize', () => {
+      this.updateGradientLayout();
+    });
+
+    logger.info('[GradientTool] Mounted');
   }
 
   destroy(): void {
@@ -935,7 +943,8 @@ export class GradientTool extends BaseComponent {
     });
 
     // Gradient Builder UI section (Start node -> Path -> End node)
-    const gradientBuilderUI = this.createElement('div', {
+    // Store reference for responsive layout updates
+    this.gradientBuilderUI = this.createElement('div', {
       className: 'gradient-builder-ui',
       attributes: {
         'data-testid': 'gradient-builder-ui',
@@ -953,9 +962,10 @@ export class GradientTool extends BaseComponent {
         `,
       },
     });
+    const gradientBuilderUI = this.gradientBuilderUI;
 
-    // Start Node
-    const startNode = this.createElement('div', {
+    // Start Node - store reference for responsive layout
+    this.startNodeElement = this.createElement('div', {
       className: 'gradient-node main start',
       attributes: {
         'data-testid': 'gradient-start-node',
@@ -970,6 +980,7 @@ export class GradientTool extends BaseComponent {
         `,
       },
     });
+    const startNode = this.startNodeElement;
     const startCircle = this.createElement('div', {
       className: 'node-circle start-circle',
       attributes: {
@@ -1039,10 +1050,11 @@ export class GradientTool extends BaseComponent {
 
     // Step markers container (we'll update these dynamically)
     this.gradientContainer = pathContainer; // Repurpose for step markers
+    this.pathContainerElement = pathContainer; // Also store for responsive layout
     gradientBuilderUI.appendChild(pathContainer);
 
-    // End Node
-    const endNode = this.createElement('div', {
+    // End Node - store reference for responsive layout
+    this.endNodeElement = this.createElement('div', {
       className: 'gradient-node main end',
       attributes: {
         'data-testid': 'gradient-end-node',
@@ -1057,6 +1069,7 @@ export class GradientTool extends BaseComponent {
         `,
       },
     });
+    const endNode = this.endNodeElement;
     const endCircle = this.createElement('div', {
       className: 'node-circle end-circle',
       attributes: {
@@ -1191,6 +1204,11 @@ export class GradientTool extends BaseComponent {
   private endCircleElement: HTMLElement | null = null;
   private endLabelElement: HTMLElement | null = null;
   private gradientTrackElement: HTMLElement | null = null;
+  // Additional references for responsive layout
+  private gradientBuilderUI: HTMLElement | null = null;
+  private startNodeElement: HTMLElement | null = null;
+  private endNodeElement: HTMLElement | null = null;
+  private pathContainerElement: HTMLElement | null = null;
 
   /**
    * Update gradient nodes and track based on current dye selections
@@ -1246,6 +1264,74 @@ export class GradientTool extends BaseComponent {
         this.gradientTrackElement.style.background =
           'repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 4px, transparent 4px, transparent 8px)';
       }
+    }
+  }
+
+  /**
+   * Update gradient builder UI layout for responsive display.
+   * On mobile (<768px), reduces circle sizes and step marker sizes to fit better.
+   * Called on mount and window resize.
+   */
+  private updateGradientLayout(): void {
+    const isMobile = window.innerWidth < 768;
+
+    // Circle sizes: 80px desktop, 60px mobile
+    const circleSize = isMobile ? '60px' : '80px';
+    // Plus sign font size: 32px desktop, 24px mobile
+    const plusFontSize = isMobile ? '24px' : '32px';
+    // Node gap: 12px desktop, 8px mobile
+    const nodeGap = isMobile ? '8px' : '12px';
+    // Path margin: 16px desktop, 8px mobile
+    const pathMargin = isMobile ? '0 8px' : '0 16px';
+    // Builder padding: 20px desktop, 12px mobile
+    const builderPadding = isMobile ? '12px' : '20px';
+    // Min-height: 150px desktop, 120px mobile
+    const minHeight = isMobile ? '120px' : '150px';
+
+    // Update gradient builder UI container
+    if (this.gradientBuilderUI) {
+      this.gradientBuilderUI.style.padding = builderPadding;
+      this.gradientBuilderUI.style.minHeight = minHeight;
+    }
+
+    // Update start circle
+    if (this.startCircleElement) {
+      this.startCircleElement.style.width = circleSize;
+      this.startCircleElement.style.height = circleSize;
+      // Update plus sign if no dye selected
+      if (!this.startDye) {
+        this.startCircleElement.innerHTML =
+          `<span style="font-size: ${plusFontSize}; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>`;
+      }
+    }
+
+    // Update end circle
+    if (this.endCircleElement) {
+      this.endCircleElement.style.width = circleSize;
+      this.endCircleElement.style.height = circleSize;
+      // Update plus sign if no dye selected
+      if (!this.endDye) {
+        this.endCircleElement.innerHTML =
+          `<span style="font-size: ${plusFontSize}; color: rgba(255, 255, 255, 0.4); font-weight: 300;">+</span>`;
+      }
+    }
+
+    // Update node containers gap
+    if (this.startNodeElement) {
+      this.startNodeElement.style.gap = nodeGap;
+    }
+    if (this.endNodeElement) {
+      this.endNodeElement.style.gap = nodeGap;
+    }
+
+    // Update path container margin
+    if (this.pathContainerElement) {
+      this.pathContainerElement.style.margin = pathMargin;
+    }
+
+    // Re-render step markers with appropriate sizes if we have dyes selected
+    if (this.startDye && this.endDye && this.currentSteps.length > 0) {
+      this.renderGradientPreview();
     }
   }
 
@@ -1483,6 +1569,11 @@ export class GradientTool extends BaseComponent {
     const existingSteps = this.gradientContainer.querySelectorAll('.gradient-step');
     existingSteps.forEach((el) => el.remove());
 
+    // Responsive step marker size: 24px desktop, 16px mobile
+    const isMobile = window.innerWidth < 768;
+    const stepMarkerSize = isMobile ? 16 : 24;
+    const borderWidth = isMobile ? 1 : 2;
+
     // Add step markers for each interpolation step
     for (let i = 0; i < this.currentSteps.length; i++) {
       const step = this.currentSteps[i];
@@ -1496,11 +1587,11 @@ export class GradientTool extends BaseComponent {
             position: absolute;
             top: 50%;
             left: ${leftPercent}%;
-            width: 24px;
-            height: 24px;
+            width: ${stepMarkerSize}px;
+            height: ${stepMarkerSize}px;
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: ${borderWidth}px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
             cursor: pointer;
             z-index: 1;
