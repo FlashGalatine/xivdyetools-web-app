@@ -1419,9 +1419,12 @@ export class AccessibilityTool extends BaseComponent {
     if (!this.contrastTableContainer) return;
     clearContainer(this.contrastTableContainer);
 
-    // Container with rounded corners and border
+    // Container with rounded corners and border, overflow-x for mobile horizontal scroll
     const tableContainer = this.createElement('div', {
       className: 'contrast-table-container',
+      attributes: {
+        style: 'overflow-x: auto;',
+      },
     });
 
     // Create proper HTML table

@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Drawer now correctly stays closed when switching from a tool with palette (e.g., Harmony) to a tool without (e.g., Swatch) and back to another tool with palette (e.g., Mixer)
 - Changed drawer's default `isOpen` state from `true` to `false` to fix Lit property binding edge case
 
+**Vision Tool Contrast Table Horizontal Scroll**
+- Fixed Contrast Ratios and Pairwise Contrast Comparison tables being cut off on mobile
+- Tables now scroll horizontally within their container instead of shifting the entire page
+- Added `overflow-x: auto` to table containers for proper mobile scrolling behavior
+
 #### Technical Details
 
 **Files Modified**
@@ -41,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `justify-content: flex-start` for `.v4-tool-banner` in mobile media query
 - `src/components/v4/dye-palette-drawer.ts`
   - Changed `isOpen` property default from `true` to `false`
+- `src/components/accessibility-tool.ts`
+  - Added `overflow-x: auto` to Contrast Ratios table container
 
 ---
 
