@@ -201,8 +201,12 @@ export class ToolBanner extends BaseLitComponent {
         }
       }
 
-      /* Mobile: Smaller buttons */
+      /* Mobile: Smaller buttons, left-aligned for proper scroll */
       @media (max-width: 768px) {
+        .v4-tool-banner {
+          justify-content: flex-start;
+        }
+
         .v4-tool-btn {
           min-width: 60px;
           padding: 6px 8px;

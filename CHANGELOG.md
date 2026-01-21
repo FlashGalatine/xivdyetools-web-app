@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Follows the same pattern as the existing sidebar overlay for consistency
 - Improves mobile UX by matching expected "tap outside to dismiss" behavior
 
+**Tool Banner First Tool Hidden**
+- Fixed the Harmony tool being cut off on the left side of the tool banner on mobile
+- Changed tool banner alignment from `center` to `flex-start` on mobile viewports
+- First tool (Harmony) is now always visible; users can scroll right to see remaining tools
+
 #### Technical Details
 
 **Files Modified**
@@ -26,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `.v4-drawer-overlay` CSS class (z-index 99, rgba overlay)
   - Added `handleDrawerOverlayClick()` handler
   - Added overlay `<div>` in template with mobile-only visibility
+- `src/components/v4/tool-banner.ts`
+  - Added `justify-content: flex-start` for `.v4-tool-banner` in mobile media query
 
 ---
 
