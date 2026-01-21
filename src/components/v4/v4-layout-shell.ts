@@ -743,9 +743,10 @@ export class V4LayoutShell extends BaseLitComponent {
       this.activeTool = toolId;
       this.emit('tool-change', { toolId });
 
-      // Collapse sidebar on mobile after tool selection
+      // Collapse sidebar and close drawer on mobile after tool selection
       if (this.isMobile) {
         this.sidebarCollapsed = true;
+        this.paletteDrawerOpen = false;
       }
     }
   }

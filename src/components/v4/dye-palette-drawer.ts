@@ -80,10 +80,11 @@ const CATEGORY_TRANSLATION_KEYS: Record<string, string> = {
 @customElement('dye-palette-drawer')
 export class DyePaletteDrawer extends BaseLitComponent {
   /**
-   * Whether the drawer is open/visible
+   * Whether the drawer is open/visible.
+   * Defaults to false; parent component controls via is-open attribute.
    */
   @property({ type: Boolean, reflect: true, attribute: 'is-open' })
-  isOpen = true;
+  isOpen = false;
 
   /**
    * Currently active tool ID - used to conditionally show Custom Color section

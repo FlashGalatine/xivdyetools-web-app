@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed tool banner alignment from `center` to `flex-start` on mobile viewports
 - First tool (Harmony) is now always visible; users can scroll right to see remaining tools
 
+**Drawer Reappears After Tool Switch**
+- Fixed bug where the Color Palette drawer would reappear when switching between tools
+- Drawer now correctly stays closed when switching from a tool with palette (e.g., Harmony) to a tool without (e.g., Swatch) and back to another tool with palette (e.g., Mixer)
+- Changed drawer's default `isOpen` state from `true` to `false` to fix Lit property binding edge case
+
 #### Technical Details
 
 **Files Modified**
@@ -31,8 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `.v4-drawer-overlay` CSS class (z-index 99, rgba overlay)
   - Added `handleDrawerOverlayClick()` handler
   - Added overlay `<div>` in template with mobile-only visibility
+  - Added `paletteDrawerOpen = false` in `handleToolSelect()` for mobile
 - `src/components/v4/tool-banner.ts`
   - Added `justify-content: flex-start` for `.v4-tool-banner` in mobile media query
+- `src/components/v4/dye-palette-drawer.ts`
+  - Changed `isOpen` property default from `true` to `false`
 
 ---
 
