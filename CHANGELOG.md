@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.1] - 2026-01-21
+
+### 📱 Mobile UX Improvements
+
+#### Fixed
+
+**Tap Outside to Close Drawer**
+- Added semi-transparent overlay behind the Color Palette drawer on mobile
+- Tapping outside the drawer (on the darkened area) now closes it
+- Follows the same pattern as the existing sidebar overlay for consistency
+- Improves mobile UX by matching expected "tap outside to dismiss" behavior
+
+#### Technical Details
+
+**Files Modified**
+- `src/components/v4/v4-layout-shell.ts`
+  - Added `.v4-drawer-overlay` CSS class (z-index 99, rgba overlay)
+  - Added `handleDrawerOverlayClick()` handler
+  - Added overlay `<div>` in template with mobile-only visibility
+
+---
+
 ## [4.1.0] - 2026-01-18
 
 ### ⚙️ Configurable Color Matching Algorithms

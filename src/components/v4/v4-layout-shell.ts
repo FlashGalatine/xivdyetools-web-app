@@ -163,6 +163,23 @@ export class V4LayoutShell extends BaseLitComponent {
         display: block;
       }
 
+      /* Mobile Drawer Overlay (for tap-outside-to-close on palette drawer) */
+      .v4-drawer-overlay {
+        display: none;
+        position: fixed;
+        top: calc(var(--v4-header-height, 48px) + var(--v4-tool-bar-height, 64px));
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99;
+        cursor: pointer;
+      }
+
+      .v4-drawer-overlay.visible {
+        display: block;
+      }
+
       /* Mobile Toggle Button */
       .v4-mobile-sidebar-toggle {
         display: none;
@@ -755,6 +772,13 @@ export class V4LayoutShell extends BaseLitComponent {
   }
 
   /**
+   * Handle drawer overlay click (close palette drawer on mobile)
+   */
+  private handleDrawerOverlayClick(): void {
+    this.paletteDrawerOpen = false;
+  }
+
+  /**
    * Handle config changes from ConfigSidebar
    * Re-emits the event for parent (v4-layout.ts) to handle
    */
@@ -894,13 +918,22 @@ export class V4LayoutShell extends BaseLitComponent {
           @settings-imported=${this.handleSettingsImported}
         ></v4-config-sidebar>
 
-        <!-- Mobile Overlay -->
+        <!-- Mobile Sidebar Overlay -->
         <div
           class="v4-sidebar-overlay ${!this.sidebarCollapsed && this.isMobile ? 'visible' : ''}"
           @click=${this.handleOverlayClick}
           role="button"
           tabindex="-1"
           aria-label="${LanguageService.t('aria.closeSidebar')}"
+        ></div>
+
+        <!-- Mobile Drawer Overlay (tap outside to close palette) -->
+        <div
+          class="v4-drawer-overlay ${this.paletteDrawerOpen && this.isMobile && this.shouldShowPalette ? 'visible' : ''}"
+          @click=${this.handleDrawerOverlayClick}
+          role="button"
+          tabindex="-1"
+          aria-label="${LanguageService.t('aria.closePalette')}"
         ></div>
 
         <!-- Content Area -->
