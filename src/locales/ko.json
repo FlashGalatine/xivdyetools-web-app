@@ -285,7 +285,24 @@
     "loginWithDiscord": "Discord로 로그인",
     "loginWithXIVAuth": "XIVAuth로 로그인",
     "submitPreset": "프리셋 제출",
-    "logout": "로그아웃"
+    "logout": "로그아웃",
+    "advancedSettings": "고급 설정",
+    "resetSettings": "설정 초기화",
+    "resetSettingsConfirm": "모든 설정을 기본값으로 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "clearDyes": "염료 지우기",
+    "clearDyesConfirm": "모든 도구에서 선택한 염료를 지우시겠습니까?",
+    "clearFavorites": "즐겨찾기 지우기",
+    "clearFavoritesConfirm": "모든 즐겨찾기 염료를 지우시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "clearPalettes": "저장된 팔레트 지우기",
+    "clearPalettesConfirm": "모든 저장된 팔레트를 지우시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "resetTutorial": "튜토리얼 초기화",
+    "performanceMode": "성능 모드",
+    "performanceModeDesc": "느린 기기에서 더 나은 성능을 위해 애니메이션과 효과를 줄입니다",
+    "enableAnalytics": "분석 활성화",
+    "analyticsDesc": "익명 사용 데이터를 공유하여 XIV 염색 도구 개선에 도움을 주세요",
+    "exportSettings": "내보내기",
+    "importSettings": "가져오기",
+    "importError": "설정을 가져오지 못했습니다. 파일 형식을 확인해 주세요."
   },
   "colorPalette": {
     "title": "색상 팔레트",
@@ -497,6 +514,7 @@
     "achromatopsiaWarning": "전색맹인 경우 보기 어려울 수 있습니다",
     "dyesSelected": "개 염료 선택됨",
     "visionTypesEnabled": "개 색각 유형 활성화됨",
+    "shareAs": "공유 형식:",
     "selectTwoDyes": "비교를 보려면 2개 이상의 염료를 선택하세요",
     "addDye": "염료 추가"
   },
@@ -750,19 +768,10 @@
     "currentlySelected": "현재 선택됨"
   },
   "export": {
-    "title": "팔레트 내보내기",
-    "button": "내보내기",
-    "format": "형식",
     "exportAsJson": "JSON으로 내보내기",
     "exportAsCss": "CSS로 내보내기",
     "exportAsScss": "SCSS로 내보내기",
-    "copyAllHexCodes": "모든 Hex 코드 복사",
-    "json": "JSON",
-    "css": "CSS 변수",
-    "text": "일반 텍스트",
-    "copyToClipboard": "클립보드에 복사",
-    "download": "다운로드",
-    "preview": "미리보기"
+    "copyAllHexCodes": "모든 Hex 코드 복사"
   },
   "errors": {
     "invalidHex": "잘못된 16진수 색상 형식입니다. #RRGGBB를 사용하세요.",
@@ -837,14 +846,7 @@
     "quickTips": "빠른 팁",
     "tip1": "헤더의 도구 이름을 클릭하여 도구 간 전환",
     "tip2": "가격은 Universalis에서 제공되는 실시간 마켓 데이터입니다",
-    "tip3": "설정은 브라우저에 로컬로 저장됩니다",
-    "tools": {
-      "harmony": "색채 이론에 기반한 조화로운 색상 팔레트 생성",
-      "matcher": "어떤 색상이든 가장 가까운 FFXIV 염료 찾기",
-      "comparison": "상세 정보와 함께 염료를 나란히 비교",
-      "mixer": "염료 조합과 그라데이션 실험",
-      "accessibility": "색상 접근성 확인 및 색맹 시뮬레이션"
-    }
+    "tip3": "설정은 브라우저에 로컬로 저장됩니다"
   },
   "shortcuts": {
     "title": "키보드 단축키",
@@ -863,7 +865,6 @@
     "useModifier": "시스템 단축키에는 Ctrl을 사용"
   },
   "palette": {
-    "saved": "저장됨",
     "savePalette": "팔레트 저장",
     "savedPalettes": "저장된 팔레트",
     "savedCount": "{count}개의 팔레트 저장됨",
@@ -882,8 +883,7 @@
     "saveFailed": "팔레트 저장에 실패했습니다",
     "loaded": "팔레트를 불러왔습니다!",
     "deleted": "팔레트가 삭제되었습니다",
-    "confirmDelete": "이 팔레트를 삭제하시겠습니까?",
-    "harmonyType": "하모니 유형"
+    "confirmDelete": "이 팔레트를 삭제하시겠습니까?"
   },
   "camera": {
     "title": "카메라 캡처",
@@ -1072,8 +1072,6 @@
   },
   "auth": {
     "logout": "로그아웃",
-    "loggedInAs": "로그인됨:",
-    "notLoggedIn": "로그인되지 않음",
     "loginWithDiscord": "Discord로 로그인",
     "loginWithXIVAuth": "XIVAuth로 로그인",
     "userMenu": "사용자 메뉴",
@@ -1186,8 +1184,6 @@
   },
   "share": {
     "button": "공유",
-    "copied": "복사됨!",
-    "copyFailed": "링크 복사 실패",
-    "generating": "링크 생성 중..."
+    "copied": "복사됨!"
   }
 }

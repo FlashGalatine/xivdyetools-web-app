@@ -514,6 +514,7 @@
     "achromatopsiaWarning": "全色盲の方には見えにくい可能性があります",
     "dyesSelected": "個のカララントを選択中",
     "visionTypesEnabled": "個の色覚タイプが有効",
+    "shareAs": "形式を選択:",
     "selectTwoDyes": "比較を見るには2つ以上のカララントを選択してください",
     "addDye": "カララントを追加"
   },
@@ -767,19 +768,10 @@
     "currentlySelected": "現在選択中"
   },
   "export": {
-    "title": "パレットをエクスポート",
-    "button": "エクスポート",
-    "format": "形式",
     "exportAsJson": "JSONとしてエクスポート",
     "exportAsCss": "CSSとしてエクスポート",
     "exportAsScss": "SCSSとしてエクスポート",
-    "copyAllHexCodes": "すべての16進コードをコピー",
-    "json": "JSON",
-    "css": "CSS変数",
-    "text": "プレーンテキスト",
-    "copyToClipboard": "クリップボードにコピー",
-    "download": "ダウンロード",
-    "preview": "プレビュー"
+    "copyAllHexCodes": "すべての16進コードをコピー"
   },
   "errors": {
     "invalidHex": "無効な16進カラー形式です。#RRGGBBを使用してください。",
@@ -854,14 +846,7 @@
     "quickTips": "クイックヒント",
     "tip1": "ヘッダーのツール名をクリックしてツールを切り替え",
     "tip2": "価格はUniversalisからのリアルタイムマーケットデータです",
-    "tip3": "設定はブラウザにローカル保存されます",
-    "tools": {
-      "harmony": "色彩理論に基づいた調和のとれたカラーパレットを生成",
-      "matcher": "任意の色に最も近いFFXIVカララントを見つける",
-      "comparison": "カララントを並べて詳細な統計情報と比較",
-      "mixer": "カララントの組み合わせとグラデーションを試す",
-      "accessibility": "色のアクセシビリティをチェックし、色覚異常をシミュレート"
-    }
+    "tip3": "設定はブラウザにローカル保存されます"
   },
   "shortcuts": {
     "title": "キーボードショートカット",
@@ -880,7 +865,6 @@
     "useModifier": "システムショートカットにはCtrlを使用"
   },
   "palette": {
-    "saved": "保存済み",
     "savePalette": "パレットを保存",
     "savedPalettes": "保存したパレット",
     "savedCount": "{count}件のパレットを保存中",
@@ -899,8 +883,7 @@
     "saveFailed": "パレットの保存に失敗しました",
     "loaded": "パレットを読み込みました！",
     "deleted": "パレットを削除しました",
-    "confirmDelete": "このパレットを削除してもよろしいですか？",
-    "harmonyType": "ハーモニータイプ"
+    "confirmDelete": "このパレットを削除してもよろしいですか？"
   },
   "camera": {
     "title": "カメラキャプチャ",
@@ -1128,8 +1111,6 @@
   },
   "auth": {
     "logout": "ログアウト",
-    "loggedInAs": "ログイン中:",
-    "notLoggedIn": "未ログイン",
     "loginWithDiscord": "Discordでログイン",
     "loginWithXIVAuth": "XIVAuthでログイン",
     "userMenu": "ユーザーメニュー",
@@ -1203,8 +1184,6 @@
   },
   "share": {
     "button": "共有",
-    "copied": "コピーしました！",
-    "copyFailed": "リンクのコピーに失敗しました",
-    "generating": "リンクを生成中..."
+    "copied": "コピーしました！"
   }
 }

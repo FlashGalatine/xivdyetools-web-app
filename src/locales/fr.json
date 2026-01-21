@@ -514,6 +514,7 @@
     "achromatopsiaWarning": "Peut être difficile à voir pour le daltonisme total",
     "dyesSelected": "teintures sélectionnées",
     "visionTypesEnabled": "types de vision activés",
+    "shareAs": "Partager en tant que :",
     "selectTwoDyes": "Sélectionnez au moins 2 teintures pour voir les comparaisons",
     "addDye": "Ajouter une Teinture"
   },
@@ -767,19 +768,10 @@
     "currentlySelected": "Actuellement sélectionnée"
   },
   "export": {
-    "title": "Exporter la Palette",
-    "button": "Exporter",
-    "format": "Format",
     "exportAsJson": "Exporter en JSON",
     "exportAsCss": "Exporter en CSS",
     "exportAsScss": "Exporter en SCSS",
-    "copyAllHexCodes": "Copier Tous les Codes Hex",
-    "json": "JSON",
-    "css": "Variables CSS",
-    "text": "Texte Brut",
-    "copyToClipboard": "Copier dans le Presse-papiers",
-    "download": "Télécharger",
-    "preview": "Aperçu"
+    "copyAllHexCodes": "Copier Tous les Codes Hex"
   },
   "errors": {
     "invalidHex": "Format de couleur hexadécimal invalide. Utilisez #RRVVBB.",
@@ -854,14 +846,7 @@
     "quickTips": "Astuces rapides",
     "tip1": "Cliquez sur les noms des outils dans l'en-tête pour changer d'outil",
     "tip2": "Les prix proviennent d'Universalis (données de marché en direct)",
-    "tip3": "Vos paramètres sont enregistrés localement dans votre navigateur",
-    "tools": {
-      "harmony": "Générez des palettes de couleurs harmonieuses basées sur la théorie des couleurs",
-      "matcher": "Trouvez la teinture FFXIV la plus proche de n'importe quelle couleur",
-      "comparison": "Comparez les teintures côte à côte avec des statistiques détaillées",
-      "mixer": "Expérimentez avec des combinaisons et des dégradés de teintures",
-      "accessibility": "Vérifiez l'accessibilité des couleurs et simulez le daltonisme"
-    }
+    "tip3": "Vos paramètres sont enregistrés localement dans votre navigateur"
   },
   "shortcuts": {
     "title": "Raccourcis Clavier",
@@ -880,7 +865,6 @@
     "useModifier": "Utilisez Ctrl pour les raccourcis système"
   },
   "palette": {
-    "saved": "Enregistré",
     "savePalette": "Enregistrer la palette",
     "savedPalettes": "Palettes enregistrées",
     "savedCount": "{count} palette(s) enregistrée(s)",
@@ -899,8 +883,7 @@
     "saveFailed": "Échec de l'enregistrement de la palette",
     "loaded": "Palette chargée !",
     "deleted": "Palette supprimée",
-    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette palette ?",
-    "harmonyType": "Type d'harmonie"
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette palette ?"
   },
   "camera": {
     "title": "Capture caméra",
@@ -1089,8 +1072,6 @@
   },
   "auth": {
     "logout": "Déconnexion",
-    "loggedInAs": "Connecté en tant que",
-    "notLoggedIn": "Non connecté",
     "loginWithDiscord": "Connexion avec Discord",
     "loginWithXIVAuth": "Connexion avec XIVAuth",
     "userMenu": "Menu utilisateur",
@@ -1203,8 +1184,6 @@
   },
   "share": {
     "button": "Partager",
-    "copied": "Copié !",
-    "copyFailed": "Échec de la copie du lien",
-    "generating": "Génération du lien..."
+    "copied": "Copié !"
   }
 }

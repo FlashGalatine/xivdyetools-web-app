@@ -305,7 +305,24 @@
     "loginWithDiscord": "使用Discord登录",
     "loginWithXIVAuth": "使用XIVAuth登录",
     "submitPreset": "提交预设",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "advancedSettings": "高级设置",
+    "resetSettings": "重置设置",
+    "resetSettingsConfirm": "将所有设置重置为默认值？此操作无法撤销。",
+    "clearDyes": "清除染剂",
+    "clearDyesConfirm": "清除所有工具中选择的染剂？",
+    "clearFavorites": "清除收藏夹",
+    "clearFavoritesConfirm": "清除所有收藏的染剂？此操作无法撤销。",
+    "clearPalettes": "清除已保存的调色板",
+    "clearPalettesConfirm": "清除所有已保存的调色板？此操作无法撤销。",
+    "resetTutorial": "重置教程",
+    "performanceMode": "性能模式",
+    "performanceModeDesc": "减少动画和效果，以在较慢的设备上获得更好的性能",
+    "enableAnalytics": "启用分析",
+    "analyticsDesc": "通过分享匿名使用数据来帮助改进 XIV 染色工具",
+    "exportSettings": "导出",
+    "importSettings": "导入",
+    "importError": "导入设置失败。请检查文件格式。"
   },
   "colorPalette": {
     "title": "调色板",
@@ -517,6 +534,7 @@
     "achromatopsiaWarning": "全色盲患者可能难以看到",
     "dyesSelected": "种染剂已选择",
     "visionTypesEnabled": "种色觉类型已启用",
+    "shareAs": "分享为：",
     "selectTwoDyes": "请选择至少2种染剂以查看对比",
     "addDye": "添加染剂"
   },
@@ -770,19 +788,10 @@
     "currentlySelected": "当前选择"
   },
   "export": {
-    "title": "导出调色板",
-    "button": "导出",
-    "format": "格式",
     "exportAsJson": "导出为 JSON",
     "exportAsCss": "导出为 CSS",
     "exportAsScss": "导出为 SCSS",
-    "copyAllHexCodes": "复制所有十六进制代码",
-    "json": "JSON",
-    "css": "CSS 变量",
-    "text": "纯文本",
-    "copyToClipboard": "复制到剪贴板",
-    "download": "下载",
-    "preview": "预览"
+    "copyAllHexCodes": "复制所有十六进制代码"
   },
   "errors": {
     "invalidHex": "无效的十六进制颜色格式。请使用 #RRGGBB。",
@@ -857,14 +866,7 @@
     "quickTips": "快速提示",
     "tip1": "点击标题栏中的工具名称可切换工具",
     "tip2": "价格来自 Universalis（实时市场数据）",
-    "tip3": "您的设置将保存在浏览器本地",
-    "tools": {
-      "harmony": "基于色彩理论生成和谐的颜色调色板",
-      "matcher": "找到与任何颜色最接近的 FFXIV 染剂",
-      "comparison": "并排比较染剂，查看详细统计信息",
-      "mixer": "尝试染剂组合和渐变效果",
-      "accessibility": "检查颜色无障碍性并模拟色盲"
-    }
+    "tip3": "您的设置将保存在浏览器本地"
   },
   "shortcuts": {
     "title": "键盘快捷键",
@@ -883,7 +885,6 @@
     "useModifier": "使用 Ctrl 进行系统快捷键"
   },
   "palette": {
-    "saved": "已保存",
     "savePalette": "保存调色板",
     "savedPalettes": "已保存的调色板",
     "savedCount": "已保存 {count} 个调色板",
@@ -902,8 +903,7 @@
     "saveFailed": "保存调色板失败",
     "loaded": "调色板已加载！",
     "deleted": "调色板已删除",
-    "confirmDelete": "确定要删除此调色板吗？",
-    "harmonyType": "和谐类型"
+    "confirmDelete": "确定要删除此调色板吗？"
   },
   "camera": {
     "title": "相机捕获",
@@ -1092,8 +1092,6 @@
   },
   "auth": {
     "logout": "登出",
-    "loggedInAs": "已登录为",
-    "notLoggedIn": "未登录",
     "loginWithDiscord": "使用Discord登录",
     "loginWithXIVAuth": "使用XIVAuth登录",
     "userMenu": "用户菜单",
@@ -1186,8 +1184,6 @@
   },
   "share": {
     "button": "分享",
-    "copied": "已复制！",
-    "copyFailed": "复制链接失败",
-    "generating": "正在生成链接..."
+    "copied": "已复制！"
   }
 }

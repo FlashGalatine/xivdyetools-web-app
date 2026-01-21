@@ -25,9 +25,6 @@
     "connect": "Connect",
     "builtWith": "Built with TypeScript, Vite, and Tailwind CSS"
   },
-  "common": {
-    "close": "Close"
-  },
   "footer": {
     "version": "Version",
     "createdBy": "Created by Flash Galatine (Balmung) for the FFXIV community",
@@ -771,19 +768,10 @@
     "currentlySelected": "Currently Selected"
   },
   "export": {
-    "title": "Export Palette",
-    "button": "Export",
-    "format": "Format",
     "exportAsJson": "Export as JSON",
     "exportAsCss": "Export as CSS",
     "exportAsScss": "Export as SCSS",
-    "copyAllHexCodes": "Copy All Hex Codes",
-    "json": "JSON",
-    "css": "CSS Variables",
-    "text": "Plain Text",
-    "copyToClipboard": "Copy to Clipboard",
-    "download": "Download",
-    "preview": "Preview"
+    "copyAllHexCodes": "Copy All Hex Codes"
   },
   "errors": {
     "invalidHex": "Invalid hexadecimal color format. Use #RRGGBB.",
@@ -858,14 +846,7 @@
     "quickTips": "Quick Tips",
     "tip1": "Click tool names in the header to switch between tools",
     "tip2": "Prices are from Universalis (live market data)",
-    "tip3": "Your settings are saved locally in your browser",
-    "tools": {
-      "harmony": "Generate harmonious color palettes based on color theory",
-      "matcher": "Find the closest FFXIV dye to any color",
-      "comparison": "Compare dyes side-by-side with detailed stats",
-      "mixer": "Experiment with dye combinations and gradients",
-      "accessibility": "Check color accessibility and simulate color blindness"
-    }
+    "tip3": "Your settings are saved locally in your browser"
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
@@ -884,7 +865,6 @@
     "useModifier": "Use Ctrl for system shortcuts"
   },
   "palette": {
-    "saved": "Saved",
     "savePalette": "Save Palette",
     "savedPalettes": "Saved Palettes",
     "savedCount": "{count} palette(s) saved",
@@ -903,8 +883,7 @@
     "saveFailed": "Failed to save palette",
     "loaded": "Palette loaded!",
     "deleted": "Palette deleted",
-    "confirmDelete": "Are you sure you want to delete this palette?",
-    "harmonyType": "Harmony Type"
+    "confirmDelete": "Are you sure you want to delete this palette?"
   },
   "camera": {
     "title": "Camera Capture",
@@ -1132,8 +1111,6 @@
   },
   "auth": {
     "logout": "Logout",
-    "loggedInAs": "Logged in as",
-    "notLoggedIn": "Not logged in",
     "loginWithDiscord": "Login with Discord",
     "loginWithXIVAuth": "Login with XIVAuth",
     "userMenu": "User menu",
@@ -1207,8 +1184,6 @@
   },
   "share": {
     "button": "Share",
-    "copied": "Copied!",
-    "copyFailed": "Failed to copy link",
-    "generating": "Generating link..."
+    "copied": "Copied!"
   }
 }

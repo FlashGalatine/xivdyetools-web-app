@@ -514,6 +514,7 @@
     "achromatopsiaWarning": "Für vollständige Farbenblindheit möglicherweise schwer sichtbar",
     "dyesSelected": "Farbstoffe ausgewählt",
     "visionTypesEnabled": "Sehtypen aktiviert",
+    "shareAs": "Teilen als:",
     "selectTwoDyes": "Wähle mindestens 2 Farbstoffe für Vergleiche",
     "addDye": "Farbstoff hinzufügen"
   },
@@ -767,19 +768,10 @@
     "currentlySelected": "Aktuell ausgewählt"
   },
   "export": {
-    "title": "Palette exportieren",
-    "button": "Exportieren",
-    "format": "Format",
     "exportAsJson": "Als JSON exportieren",
     "exportAsCss": "Als CSS exportieren",
     "exportAsScss": "Als SCSS exportieren",
-    "copyAllHexCodes": "Alle Hex-Codes kopieren",
-    "json": "JSON",
-    "css": "CSS-Variablen",
-    "text": "Reintext",
-    "copyToClipboard": "In Zwischenablage kopieren",
-    "download": "Herunterladen",
-    "preview": "Vorschau"
+    "copyAllHexCodes": "Alle Hex-Codes kopieren"
   },
   "errors": {
     "invalidHex": "Ungültiges Hexadezimal-Farbformat. Verwende #RRGGBB.",
@@ -854,14 +846,7 @@
     "quickTips": "Schnelltipps",
     "tip1": "Klicke auf Werkzeugnamen im Header, um zwischen Werkzeugen zu wechseln",
     "tip2": "Preise stammen von Universalis (Live-Marktdaten)",
-    "tip3": "Deine Einstellungen werden lokal im Browser gespeichert",
-    "tools": {
-      "harmony": "Generiere harmonische Farbpaletten basierend auf Farbtheorie",
-      "matcher": "Finde den am besten passenden FFXIV-Farbstoff zu jeder Farbe",
-      "comparison": "Vergleiche Farbstoffe nebeneinander mit detaillierten Statistiken",
-      "mixer": "Experimentiere mit Farbstoffkombinationen und Verläufen",
-      "accessibility": "Prüfe Farbzugänglichkeit und simuliere Farbenblindheit"
-    }
+    "tip3": "Deine Einstellungen werden lokal im Browser gespeichert"
   },
   "shortcuts": {
     "title": "Tastenkürzel",
@@ -880,7 +865,6 @@
     "useModifier": "Verwende Strg für Systemkürzel"
   },
   "palette": {
-    "saved": "Gespeichert",
     "savePalette": "Palette speichern",
     "savedPalettes": "Gespeicherte Paletten",
     "savedCount": "{count} Palette(n) gespeichert",
@@ -899,8 +883,7 @@
     "saveFailed": "Palette konnte nicht gespeichert werden",
     "loaded": "Palette geladen!",
     "deleted": "Palette gelöscht",
-    "confirmDelete": "Möchtest du diese Palette wirklich löschen?",
-    "harmonyType": "Harmonietyp"
+    "confirmDelete": "Möchtest du diese Palette wirklich löschen?"
   },
   "camera": {
     "title": "Kameraaufnahme",
@@ -1089,8 +1072,6 @@
   },
   "auth": {
     "logout": "Abmelden",
-    "loggedInAs": "Angemeldet als",
-    "notLoggedIn": "Nicht angemeldet",
     "loginWithDiscord": "Mit Discord anmelden",
     "loginWithXIVAuth": "Mit XIVAuth anmelden",
     "userMenu": "Benutzermenü",
@@ -1203,8 +1184,6 @@
   },
   "share": {
     "button": "Teilen",
-    "copied": "Kopiert!",
-    "copyFailed": "Link konnte nicht kopiert werden",
-    "generating": "Link wird erstellt..."
+    "copied": "Kopiert!"
   }
 }

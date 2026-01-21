@@ -5,14 +5,19 @@
  * Validates that all LanguageService.t() and LanguageService.tInterpolate() calls
  * reference keys that exist in the locale files.
  *
+ * Also performs cross-locale structural comparison to detect keys missing in
+ * non-English locale files.
+ *
  * Usage:
  *   npm run validate:i18n
  *   node scripts/validate-i18n.js
- *   node scripts/validate-i18n.js --fix  # Shows suggested keys for typos
+ *   node scripts/validate-i18n.js --fix     # Shows suggested keys for typos
+ *   node scripts/validate-i18n.js --strict  # Fail on cross-locale missing keys
  *
  * Exit codes:
  *   0 - All translation keys are valid
  *   1 - One or more missing keys found
+ *   2 - Cross-locale keys missing (only with --strict)
  */
 
 import { readFileSync, readdirSync, statSync } from 'fs';
@@ -30,6 +35,7 @@ const __dirname = dirname(__filename);
 const SRC_DIR = join(__dirname, '..', 'src');
 const LOCALES_DIR = join(SRC_DIR, 'locales');
 const PRIMARY_LOCALE = 'en.json';
+const ALL_LOCALES = ['en.json', 'ja.json', 'de.json', 'fr.json', 'ko.json', 'zh.json'];
 
 // Directories to skip
 const SKIP_DIRS = ['node_modules', '__tests__', 'test', 'tests', '.git', 'dist'];
@@ -204,12 +210,57 @@ function levenshteinDistance(a, b) {
   return matrix[b.length][a.length];
 }
 
+/**
+ * Compare all locale files against the primary locale (en.json)
+ * @param {Set<string>} primaryKeys - Keys from en.json
+ * @returns {{locale: string, missing: string[]}[]} Array of locales with their missing keys
+ */
+function compareLocales(primaryKeys) {
+  const results = [];
+
+  for (const localeFile of ALL_LOCALES) {
+    if (localeFile === PRIMARY_LOCALE) continue;
+
+    const localePath = join(LOCALES_DIR, localeFile);
+    let localeData;
+
+    try {
+      const content = readFileSync(localePath, 'utf-8');
+      localeData = JSON.parse(content);
+    } catch (error) {
+      console.error(`  ⚠️  Error loading ${localeFile}: ${error.message}`);
+      continue;
+    }
+
+    const localeKeys = flattenKeys(localeData);
+    const missing = [];
+
+    for (const key of primaryKeys) {
+      if (!localeKeys.has(key)) {
+        missing.push(key);
+      }
+    }
+
+    if (missing.length > 0) {
+      results.push({
+        locale: localeFile.replace('.json', ''),
+        file: localeFile,
+        missing,
+        totalKeys: localeKeys.size,
+      });
+    }
+  }
+
+  return results;
+}
+
 // ============================================================================
 // Main
 // ============================================================================
 
 function validateI18n() {
   const showFix = process.argv.includes('--fix');
+  const strictMode = process.argv.includes('--strict');
 
   console.log('\n🌐 i18n Translation Key Validator\n');
   console.log('='.repeat(70));
@@ -290,8 +341,70 @@ function validateI18n() {
       }
     }
 
-    console.log('');
-    process.exit(0);
+    // Cross-locale structural comparison
+    console.log('\n' + '='.repeat(70));
+    console.log('\n🌍 Cross-Locale Structural Comparison\n');
+
+    const localeIssues = compareLocales(validKeys);
+
+    if (localeIssues.length === 0) {
+      console.log('✅ All locale files have matching key structure!\n');
+      console.log('📊 Locale Summary:');
+      for (const localeFile of ALL_LOCALES) {
+        const localePath = join(LOCALES_DIR, localeFile);
+        try {
+          const content = readFileSync(localePath, 'utf-8');
+          const data = JSON.parse(content);
+          const keys = flattenKeys(data);
+          const locale = localeFile.replace('.json', '');
+          const status = localeFile === PRIMARY_LOCALE ? '(reference)' : '✓';
+          console.log(`   • ${locale}: ${keys.size} keys ${status}`);
+        } catch {
+          console.log(`   • ${localeFile.replace('.json', '')}: ⚠️ Error reading file`);
+        }
+      }
+      console.log('');
+      process.exit(0);
+    } else {
+      const totalMissing = localeIssues.reduce((sum, l) => sum + l.missing.length, 0);
+      console.log(`⚠️  Found ${totalMissing} missing key(s) across ${localeIssues.length} locale(s):\n`);
+
+      for (const { locale, file, missing, totalKeys } of localeIssues) {
+        console.log(`📄 ${file} (${totalKeys} keys, missing ${missing.length}):`);
+
+        // Group missing keys by namespace
+        const byNamespace = new Map();
+        for (const key of missing) {
+          const namespace = key.split('.')[0];
+          if (!byNamespace.has(namespace)) {
+            byNamespace.set(namespace, []);
+          }
+          byNamespace.get(namespace).push(key);
+        }
+
+        for (const [namespace, keys] of byNamespace) {
+          console.log(`   ${namespace}.*: ${keys.length} missing`);
+          for (const key of keys.slice(0, 5)) {
+            console.log(`      • ${key}`);
+          }
+          if (keys.length > 5) {
+            console.log(`      ... and ${keys.length - 5} more in ${namespace}`);
+          }
+        }
+        console.log('');
+      }
+
+      console.log('='.repeat(70));
+      if (strictMode) {
+        console.log(`\n❌ Cross-locale validation FAILED (--strict mode)`);
+        console.log('   Add missing keys to the affected locale files.\n');
+        process.exit(2);
+      } else {
+        console.log(`\n⚠️  Cross-locale keys missing (run with --strict to fail on this)`);
+        console.log('   Consider adding missing keys to maintain translation parity.\n');
+        process.exit(0);
+      }
+    }
   } else {
     console.log(`\n❌ Found ${missingKeys.length} missing translation key(s):\n`);
 
