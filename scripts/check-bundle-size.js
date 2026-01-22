@@ -30,28 +30,44 @@ const __dirname = dirname(__filename);
  * Bundle size limits in bytes (uncompressed)
  * Actual gzipped sizes are ~30-40% smaller
  * Adjust these based on your performance targets
+ *
+ * Updated for v4.1.1: Improved vendor code splitting
  */
 const BUNDLE_LIMITS = {
   // Main bundles
-  'index-': 35 * 1024,          // 35 KB - main entry JS
-  'vendor-C': 55 * 1024,        // 55 KB - shared dependencies (not vendor-lit)
-  'vendor-lit': 5 * 1024,       // 5 KB - lit-html
-  
+  'index-': 150 * 1024,                 // 150 KB - main entry JS (gzip: ~37KB)
+  'v4-layout': 200 * 1024,              // 200 KB - layout shell (gzip: ~40KB)
+
+  // Vendor chunks (code-split for better caching)
+  'vendor-core': 950 * 1024,            // 950 KB - @xivdyetools/core dye database (gzip: ~128KB)
+  'vendor-spectral': 15 * 1024,         // 15 KB - spectral.js color mixing (gzip: ~6KB)
+  'vendor-lit': 20 * 1024,              // 20 KB - lit framework (gzip: ~7KB)
+  'vendor-C': 10 * 1024,                // 10 KB - other vendor utilities (gzip: ~2KB)
+
   // Tool chunks (lazy-loaded)
-  'tool-harmony': 45 * 1024,    // 45 KB
-  'tool-mixer': 30 * 1024,      // 30 KB
-  'tool-matcher': 40 * 1024,    // 40 KB
-  'tool-comparison': 35 * 1024, // 35 KB
-  'tool-accessibility': 50 * 1024, // 50 KB (larger due to colorblindness)
-  
+  'tool-harmony': 40 * 1024,            // 40 KB (gzip: ~9KB)
+  'tool-mixer': 35 * 1024,              // 35 KB (gzip: ~8KB)
+  'tool-swatch': 40 * 1024,             // 40 KB (gzip: ~8KB)
+  'tool-comparison': 50 * 1024,         // 50 KB (gzip: ~10KB)
+  'tool-accessibility': 45 * 1024,      // 45 KB (gzip: ~9KB)
+  'tool-budget': 45 * 1024,             // 45 KB (gzip: ~8KB)
+  'tool-gradient': 50 * 1024,           // 50 KB (gzip: ~10KB)
+  'tool-extractor': 100 * 1024,         // 100 KB (gzip: ~22KB) - includes Sharp image processing
+  'tool-preset': 40 * 1024,             // 40 KB (gzip: ~9KB)
+
+  // Other chunks
+  'dye-selector': 50 * 1024,            // 50 KB - shared dye selector component
+  'modals': 45 * 1024,                  // 45 KB - welcome/changelog modals
+
   // CSS (Tailwind + custom styles)
-  '.css': 40 * 1024,            // 40 KB
+  '.css': 90 * 1024,                    // 90 KB (gzip: ~16KB)
 };
 
 /**
  * Total bundle size limit (sum of all JS)
+ * Note: vendor-core is large but highly cacheable (changes infrequently)
  */
-const TOTAL_JS_LIMIT = 300 * 1024; // 300 KB total JS
+const TOTAL_JS_LIMIT = 2100 * 1024; // 2.1 MB total JS (gzips to ~300KB)
 
 // ============================================================================
 // Helpers

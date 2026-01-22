@@ -30,10 +30,20 @@ export default defineConfig({
             if (id.includes('lit') || id.includes('@lit')) {
               return 'vendor-lit';
             }
-            // All other vendors (Tailwind, utilities, etc.)
-            if (id.includes('node_modules')) {
-              return 'vendor';
+
+            // Separate @xivdyetools/core (contains large dye database)
+            // This is the biggest dependency (~900KB) and changes infrequently
+            if (id.includes('@xivdyetools/core')) {
+              return 'vendor-core';
             }
+
+            // Separate spectral.js (color mixing library ~50KB)
+            if (id.includes('spectral.js')) {
+              return 'vendor-spectral';
+            }
+
+            // All other vendors (utilities, types, etc.)
+            return 'vendor';
           }
 
           // V3 tools are dynamically imported in v3-layout.ts

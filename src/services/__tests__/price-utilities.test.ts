@@ -26,20 +26,28 @@ const createMockDye = (overrides: Partial<Dye> = {}): Dye => ({
   id: 1,
   name: 'Test Dye',
   itemID: 12345,
-  color: '#FF0000',
+  stainID: 1,
+  hex: '#FF0000',
   rgb: { r: 255, g: 0, b: 0 },
+  hsv: { h: 0, s: 100, v: 100 },
   category: 'General-purpose',
   acquisition: 'NPC',
+  cost: 0,
+  isMetallic: false,
+  isPastel: false,
+  isDark: false,
+  isCosmic: false,
   ...overrides,
 });
 
 // Mock price data
 const createMockPriceData = (overrides: Partial<PriceData> = {}): PriceData => ({
   itemID: 12345,
+  currentAverage: 1200,
   currentMinPrice: 1000,
-  averagePrice: 1200,
-  lastUpdated: Date.now(),
-  worldID: 1,
+  currentMaxPrice: 1500,
+  lastUpdate: Date.now(),
+  worldId: 1,
   worldName: 'Cactuar',
   ...overrides,
 });
