@@ -102,6 +102,10 @@ export class CollectionService {
   private static collectionsListeners: Set<(collections: Collection[]) => void> = new Set();
   private static initialized = false;
 
+  // OPT-004: Map-based indexes for O(1) lookups
+  private static collectionsById: Map<string, Collection> = new Map();
+  private static collectionsByDyeId: Map<DyeId, Set<string>> = new Map();
+
   // ============================================================================
   // Initialization
   // ============================================================================
@@ -173,6 +177,34 @@ export class CollectionService {
         lastModified: new Date().toISOString(),
       };
     }
+    this.rebuildIndexes();
+  }
+
+  /**
+   * Rebuild Map-based indexes for O(1) lookups
+   * Called after loading or modifying collections data
+   * Per OPT-004: Trades O(n) rebuild on write for O(1) reads
+   */
+  private static rebuildIndexes(): void {
+    this.collectionsById.clear();
+    this.collectionsByDyeId.clear();
+
+    if (!this.collectionsData) return;
+
+    for (const collection of this.collectionsData.collections) {
+      // Index by ID
+      this.collectionsById.set(collection.id, collection);
+
+      // Index by dye ID
+      for (const dyeId of collection.dyes) {
+        let collectionIds = this.collectionsByDyeId.get(dyeId);
+        if (!collectionIds) {
+          collectionIds = new Set();
+          this.collectionsByDyeId.set(dyeId, collectionIds);
+        }
+        collectionIds.add(collection.id);
+      }
+    }
   }
 
   /**
@@ -192,6 +224,7 @@ export class CollectionService {
     if (!this.collectionsData) return;
     this.collectionsData.lastModified = new Date().toISOString();
     StorageService.setItem(COLLECTIONS_KEY, this.collectionsData);
+    this.rebuildIndexes(); // OPT-004: Keep indexes in sync
     this.notifyCollectionsListeners();
   }
 
@@ -328,10 +361,11 @@ export class CollectionService {
 
   /**
    * Get a specific collection by ID
+   * OPT-004: O(1) Map lookup instead of O(n) array search
    */
   static getCollection(id: string): Collection | undefined {
     this.initialize();
-    return this.collectionsData?.collections.find((c) => c.id === id);
+    return this.collectionsById.get(id);
   }
 
   /**
@@ -528,9 +562,19 @@ export class CollectionService {
 
   /**
    * Get all collections that contain a specific dye
+   * OPT-004: O(1) Map lookup instead of O(n*m) array search
    */
   static getCollectionsContainingDye(dyeId: DyeId): Collection[] {
-    return this.getCollections().filter((c) => c.dyes.includes(dyeId));
+    this.initialize();
+    const collectionIds = this.collectionsByDyeId.get(dyeId);
+    if (!collectionIds) return [];
+
+    const collections: Collection[] = [];
+    for (const id of collectionIds) {
+      const collection = this.collectionsById.get(id);
+      if (collection) collections.push(collection);
+    }
+    return collections;
   }
 
   // ============================================================================
@@ -749,6 +793,9 @@ export class CollectionService {
       collections: [],
       lastModified: new Date().toISOString(),
     };
+    // OPT-004: Clear indexes
+    this.collectionsById.clear();
+    this.collectionsByDyeId.clear();
     this.saveFavorites();
     this.saveCollections();
     logger.info('CollectionService reset');

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.3] - 2026-01-25
+
+### Performance
+
+- **OPT-004**: Optimized `CollectionService` with Map-based indexes for O(1) lookups
+  - Added `collectionsById` Map for fast collection lookups by ID
+  - Added `collectionsByDyeId` Map for fast lookups of collections containing a dye
+  - `getCollection(id)`: O(n) → O(1)
+  - `getCollectionsContainingDye(dyeId)`: O(n×m) → O(1)
+  - Indexes are rebuilt on collection data changes (write-time cost for read-time benefit)
+  - **Reference**: Security audit OPT-004 (2026-01-25)
+
+---
+
 ## [4.1.2] - 2026-01-25
 
 ### Refactored
