@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.5] - 2026-01-26
+
+### Fixed
+
+- **Gradient Tool**: Gradient bar now updates when changing color spaces
+  - Previously the gradient track only showed RGB interpolation regardless of selected color space
+  - Now builds multi-stop CSS gradient using calculated theoretical colors from each interpolation step
+  - Gradient bar correctly reflects OKLCH, LCH, LAB, HSV, and RGB interpolation paths
+
+---
+
 ## [4.1.4] - 2026-01-26
 
 ### Changed

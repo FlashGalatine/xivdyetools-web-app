@@ -1565,6 +1565,15 @@ export class GradientTool extends BaseComponent {
   private renderGradientPreview(): void {
     if (!this.gradientContainer || !this.startDye || !this.endDye) return;
 
+    // Update the gradient track to reflect the actual color space interpolation
+    // CSS linear-gradient always uses RGB, so we create multi-stop gradient from calculated colors
+    if (this.gradientTrackElement && this.currentSteps.length > 0) {
+      const colorStops = this.currentSteps
+        .map((step) => `${step.theoreticalColor} ${step.position * 100}%`)
+        .join(', ');
+      this.gradientTrackElement.style.background = `linear-gradient(to right, ${colorStops})`;
+    }
+
     // Remove existing step markers (but keep the gradient track element)
     const existingSteps = this.gradientContainer.querySelectorAll('.gradient-step');
     existingSteps.forEach((el) => el.remove());

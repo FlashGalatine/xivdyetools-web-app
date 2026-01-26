@@ -1,3 +1,19 @@
+# What's New in Version 4.1.5
+
+*Released: January 26, 2026*
+
+---
+
+## 🎨 Gradient Tool Visual Fix
+
+**Gradient Bar Now Matches Your Color Space Selection**
+- The gradient bar (the track behind the step markers) now correctly shows the color transition for your chosen color space
+- Previously it always showed a straight RGB blend, even when you selected OKLCH or LCH
+- Now when you pick LCH and go from blue to yellow, you'll see the bar travel through purples and reds—just like the step markers do
+- This makes it much easier to visualize how different color spaces create different gradient paths
+
+---
+
 # What's New in Version 4.1.1
 
 *Released: January 21, 2026*
