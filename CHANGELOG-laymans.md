@@ -14,6 +14,29 @@
 
 ---
 
+## 📰 What's New Gets Friendlier
+
+**User-Friendly Release Notes**
+- The "What's New" popup now shows these easy-to-read release notes instead of technical developer jargon
+- You're actually reading content from this very file!
+
+---
+
+## ⚡ Behind-the-Scenes Improvements
+
+**Faster Collection Lookups**
+- Your saved palettes and collections now load faster
+- Looking up which collections contain a specific dye is now instant
+
+**Code Cleanup**
+- Internal housekeeping and code organization - no visible changes, just tidier code under the hood
+
+---
+
+*For the full technical changelog, see [CHANGELOG.md](./CHANGELOG.md)*
+
+---
+
 # What's New in Version 4.1.1
 
 *Released: January 21, 2026*
