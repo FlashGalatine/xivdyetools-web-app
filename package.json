@@ -43,7 +43,7 @@
     "@playwright/test": "^1.57.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^22.10.2",
+    "@types/node": "^25.0.10",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
     "@vitejs/plugin-vue": "^6.0.2",
