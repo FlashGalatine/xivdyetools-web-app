@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.2] - 2026-01-25
+
+### Refactored
+
+- **REFACTOR-004**: Deduplicated `generateChecksum` utility
+  - Now re-exports from `@xivdyetools/core` instead of maintaining local implementation
+  - Uses the more robust implementation (with `|0` for 32-bit conversion instead of `& hash`)
+  - Reduces code duplication and ensures single source of truth
+
+---
+
 ## [4.1.1] - 2026-01-21
 
 ### 📱 Mobile UX Improvements

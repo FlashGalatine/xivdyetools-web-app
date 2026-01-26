@@ -7,20 +7,9 @@
  * @module shared/utils
  */
 
-/**
- * Generate a simple checksum for data integrity checking
- * Uses a simple hash function (not cryptographically secure, but sufficient for cache validation)
- */
-export function generateChecksum(data: unknown): string {
-  const str = JSON.stringify(data);
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash).toString(36);
-}
+// REFACTOR-004: Re-export generateChecksum from @xivdyetools/core to avoid duplication
+// The core implementation is more robust (uses |0 instead of & for 32-bit conversion)
+export { generateChecksum } from '@xivdyetools/core';
 
 import {
   RGB_MIN,
