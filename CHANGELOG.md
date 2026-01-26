@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.4] - 2026-01-26
+
+### Changed
+
+- **What's New Modal**: Now displays user-friendly content from `CHANGELOG-laymans.md`
+  - Updated Vite changelog parser plugin to parse laymans format instead of developer changelog
+  - Extracts bold headings (`**Title**`) as highlights for cleaner, more readable entries
+  - "View full changelog" link now points to `CHANGELOG-laymans.md`
+
+---
+
 ## [4.1.3] - 2026-01-25
 
 ### Performance
@@ -2998,7 +3009,7 @@ All 10 themes fully functional:
 
 **For Users**: None - All v1.6.x features work identically
 
-**For Developers**: 
+**For Developers**:
 - Build system changed to Vite
 - Import paths use @ aliases
 - TypeScript required

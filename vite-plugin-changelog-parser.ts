@@ -1,8 +1,8 @@
 /**
- * Vite plugin to parse CHANGELOG.md and provide changelog data at build time
+ * Vite plugin to parse CHANGELOG-laymans.md and provide changelog data at build time
  *
- * This plugin reads CHANGELOG.md from the project root, extracts version entries with their
- * highlights, and exposes them as a virtual module that can be imported.
+ * This plugin reads CHANGELOG-laymans.md (user-friendly changelog) from the project root,
+ * extracts version entries with their highlights, and exposes them as a virtual module.
  *
  * Usage in code:
  *   import { changelogEntries } from 'virtual:changelog'
@@ -36,22 +36,28 @@ const MAX_HIGHLIGHT_LENGTH = 100; // Truncate very long highlights
 // ============================================================================
 
 /**
- * Parse CHANGELOG.md and extract version entries
+ * Parse CHANGELOG-laymans.md and extract version entries
+ *
+ * Format:
+ *   # What's New in Version X.Y.Z
+ *   *Released: Month Day, Year*
+ *   ## 🐛 Section Header
+ *   **Bold Highlight Title**
+ *   - Explanation bullet points
  */
 function parseChangelog(content: string): ChangelogEntry[] {
   const entries: ChangelogEntry[] = [];
 
-  // Regex to match version headers: ## [2.3.0] - 2025-11-30
-  const versionHeaderRegex = /^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})/gm;
+  // Regex to match version headers: # What's New in Version 4.1.1
+  const versionHeaderRegex = /^# What's New in Version (\d+\.\d+\.\d+)/gm;
 
   // Find all version headers with their positions
-  const headers: Array<{ version: string; date: string; startIndex: number }> = [];
+  const headers: Array<{ version: string; startIndex: number }> = [];
   let match;
 
   while ((match = versionHeaderRegex.exec(content)) !== null) {
     headers.push({
       version: match[1],
-      date: match[2],
       startIndex: match.index,
     });
   }
@@ -66,13 +72,17 @@ function parseChangelog(content: string): ChangelogEntry[] {
     const sectionEnd = nextHeader ? nextHeader.startIndex : content.length;
     const sectionContent = content.slice(sectionStart, sectionEnd);
 
-    // Extract bullet points from this section
+    // Extract date from section: *Released: Month Day, Year*
+    const dateMatch = sectionContent.match(/\*Released: ([^*]+)\*/);
+    const date = dateMatch ? dateMatch[1].trim() : '';
+
+    // Extract bold headings from this section
     const highlights = extractHighlights(sectionContent);
 
     if (highlights.length > 0) {
       entries.push({
         version: header.version,
-        date: header.date,
+        date,
         highlights,
       });
     }
@@ -82,84 +92,36 @@ function parseChangelog(content: string): ChangelogEntry[] {
 }
 
 /**
- * Extract highlight bullet points from a version section
+ * Extract highlight titles from a version section
  *
- * Strategy:
- * 1. Find all lines starting with `- ` (bullet points)
- * 2. Prefer bullet points that start with action verbs (Fixed, Added, Updated, etc.)
- * 3. Skip very technical or internal-only changes
- * 4. Truncate overly long highlights
+ * Strategy for CHANGELOG-laymans.md:
+ * 1. Find all bold headings: **Title Text**
+ * 2. These are user-friendly feature/fix titles
+ * 3. Truncate overly long highlights
  */
 function extractHighlights(sectionContent: string): string[] {
   const highlights: string[] = [];
-  const lines = sectionContent.split('\n');
 
-  // Patterns to identify user-facing changes (prioritize these)
-  const userFacingPatterns = [
-    /^- (?:Fixed|Added|New|Updated|Improved|Enhanced|Implemented|Created)/i,
-    /^- .*(?:feature|support|option|button|modal|dialog|menu|theme|language)/i,
-  ];
+  // Match bold headings: **Title Text**
+  // These appear at the start of a line (possibly with whitespace)
+  const boldHeadingRegex = /^\s*\*\*([^*]+)\*\*/gm;
 
-  // Patterns to skip (internal/technical changes)
-  const skipPatterns = [
-    /^- .*(?:refactor|internal|technical|test coverage|branch coverage)/i,
-    /^- .*(?:TypeScript|eslint|vitest|npm|dependency)/i,
-  ];
+  let match;
+  while ((match = boldHeadingRegex.exec(sectionContent)) !== null) {
+    let highlight = match[1].trim();
 
-  // First pass: collect all bullet points
-  const allBullets: string[] = [];
+    // Skip empty or very short headings
+    if (highlight.length < 5) continue;
 
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    // Match bullet points (- text)
-    if (trimmed.startsWith('- ')) {
-      let highlight = trimmed.slice(2).trim();
-
-      // Skip empty or very short bullets
-      if (highlight.length < 10) continue;
-
-      // Skip technical/internal changes
-      const shouldSkip = skipPatterns.some(pattern => pattern.test(trimmed));
-      if (shouldSkip) continue;
-
-      // Truncate if too long
-      if (highlight.length > MAX_HIGHLIGHT_LENGTH) {
-        highlight = highlight.slice(0, MAX_HIGHLIGHT_LENGTH - 3) + '...';
-      }
-
-      // Clean up markdown formatting
-      highlight = highlight
-        .replace(/`([^`]+)`/g, '$1') // Remove code backticks
-        .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // Remove links, keep text
-
-      allBullets.push(highlight);
+    // Truncate if too long
+    if (highlight.length > MAX_HIGHLIGHT_LENGTH) {
+      highlight = highlight.slice(0, MAX_HIGHLIGHT_LENGTH - 3) + '...';
     }
-  }
 
-  // Second pass: prioritize user-facing changes
-  const prioritized: string[] = [];
-  const other: string[] = [];
+    highlights.push(highlight);
 
-  for (const bullet of allBullets) {
-    const isPriority = userFacingPatterns.some(pattern =>
-      pattern.test('- ' + bullet)
-    );
-
-    if (isPriority) {
-      prioritized.push(bullet);
-    } else {
-      other.push(bullet);
-    }
-  }
-
-  // Combine prioritized first, then others, up to max
-  highlights.push(...prioritized.slice(0, MAX_HIGHLIGHTS_PER_VERSION));
-
-  if (highlights.length < MAX_HIGHLIGHTS_PER_VERSION) {
-    const remaining = MAX_HIGHLIGHTS_PER_VERSION - highlights.length;
-    highlights.push(...other.slice(0, remaining));
+    // Stop once we have enough
+    if (highlights.length >= MAX_HIGHLIGHTS_PER_VERSION) break;
   }
 
   return highlights;
@@ -180,8 +142,8 @@ export function changelogParser(): Plugin {
     name: 'changelog-parser',
 
     configResolved(config) {
-      // Resolve the changelog path relative to project root
-      changelogPath = resolve(config.root, '..', 'CHANGELOG.md');
+      // Resolve the changelog path relative to project root (use laymans version for user-friendly content)
+      changelogPath = resolve(config.root, 'CHANGELOG-laymans.md');
     },
 
     resolveId(id) {
@@ -199,7 +161,7 @@ export function changelogParser(): Plugin {
             cachedEntries = parseChangelog(content);
             console.log(`[changelog-parser] Parsed ${cachedEntries.length} changelog entries`);
           } catch (error) {
-            console.warn('[changelog-parser] Failed to parse CHANGELOG.md:', error);
+            console.warn('[changelog-parser] Failed to parse CHANGELOG-laymans.md:', error);
             cachedEntries = [];
           }
         }
@@ -214,7 +176,7 @@ export function changelogParser(): Plugin {
       server.watcher.add(changelogPath);
       server.watcher.on('change', (path) => {
         if (path === changelogPath) {
-          console.log('[changelog-parser] CHANGELOG.md changed, invalidating cache');
+          console.log('[changelog-parser] CHANGELOG-laymans.md changed, invalidating cache');
           cachedEntries = null;
 
           // Invalidate the virtual module to trigger HMR
