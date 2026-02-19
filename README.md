@@ -1,3 +1,5 @@
+# NOTICE! This repo has been DEPRECATED! For the latest updates to the XIV Dye Tools app, see the mono-repo here: https://github.com/FlashGalatine/xivdyetools
+
 # XIV Dye Tools v4.0.0
 
 **Status**: ✅ Stable | **Version**: 4.0.0 | **Release**: January 2026 | **Phase**: Glassmorphism UI Overhaul
